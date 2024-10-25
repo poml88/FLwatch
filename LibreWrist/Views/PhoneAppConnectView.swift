@@ -50,14 +50,14 @@ struct PhoneAppConnectView: View {
     var body: some View {
         VStack {
             
-            Text("LibreWrist")
+            Text("FLwatch")
                 .padding(EdgeInsets(top: 20, leading: 0, bottom: 0, trailing: 0))
                 .font(.system(.title))
                 .foregroundColor(.green)
             
             
             Form {
-                Section(header: Text("Credentials"), footer: Text("Enter the credentials for your [LibreLinkUp follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.".attributed)) {
+                Section(header: Text("Credentials"), footer: Text("Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.".attributed)) {
                     TextField(text: $username, prompt: Text("Username (email adress)")) {
                         Text("Username")
                     }.textContentType(.emailAddress)

@@ -7,10 +7,10 @@
 
 // Configuration settings file format documentation can be found at:
 // https://help.apple.com/xcode/#/dev745c5c974
-DEVELOPMENT_TEAM = ##TEAM_ID##
+DEVELOPMENT_TEAM = 49Z678ZK52
 PRODUCT_BUNDLE_IDENTIFIER = de.poeml.philipp.LibreWrist
 WATCHKIT_COMPANION_APP_BUNDLE_IDENTIFIER = de.poeml.philipp.LibreWrist
 APP_GROUP_ID = group.group.com.${DEVELOPMENT_TEAM}.LibreWrist
-MARKETING_VERSION = 1.0.10
-CURRENT_PROJECT_VERSION = 27
+MARKETING_VERSION = 1.0.12
+CURRENT_PROJECT_VERSION = 29
 

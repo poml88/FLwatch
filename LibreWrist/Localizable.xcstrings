@@ -69,6 +69,9 @@
     "Do you want to reset insulin history?" : {
 
     },
+    "FLwatch" : {
+
+    },
     "Glucose" : {
 
     },
@@ -82,9 +85,6 @@
 
     },
     "Keep phone screen always on" : {
-
-    },
-    "LibreWrist" : {
 
     },
     "Lower limit" : {
