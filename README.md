@@ -40,7 +40,7 @@ For example there are no widgets or complications yet. Chart is not scrollable, 
 - More insulin types
 
 ### Support and Feedback ###
-For support please open an issue, start a discussion or email librewrist [ a t ] cmdline [ d o t ] net. Feedback is very welcome, please use the same methods as for support.
+For support please open an issue, start a discussion or email librewrist@cmdline.net. Feedback is very welcome, please use the same methods as for support.
 
 ### Donations... ###
 ...are always very welcome! [paypal.me/lovemyhusky](paypal.me/lovemyhusky)
