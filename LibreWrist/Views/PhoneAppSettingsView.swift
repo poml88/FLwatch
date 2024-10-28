@@ -41,7 +41,7 @@ struct PhoneAppSettingsView: View {
                 Text("Sensor: \(SensorSettingsSingleton.shared.sensorType)")
 
                 
-                Link(destination: URL(string: "https://github.com/poml88/LibreWrist/issues")!) {
+                Link(destination: URL(string: "https://github.com/poml88/FLwatch/issues")!) {
                     Text("Open issue on GitHub")
                         .frame(width: 200, height: 50)
                         .foregroundColor(.accentColor)

@@ -48,8 +48,8 @@ struct MailView: UIViewControllerRepresentable {
 
         let vc = MFMailComposeViewController()
         vc.mailComposeDelegate = context.coordinator
-        vc.setToRecipients(["librewrist@cmdline.net"])
-        vc.setSubject("Support LibreWrist")
+        vc.setToRecipients(["flwatch@cmdline.net"])
+        vc.setSubject("Support FLwatch")
         vc.setMessageBody("Hello,\n\n\n\n\n\nKind regards\n\n\n\n Debug info:\nApp Version: \(versionNumber) Build: \(buildNumber)\nDevice Info: \(systemName) \(systemVersion) on \(name)\nSensor: \(sensorType)", isHTML: false)
         return vc
     }
