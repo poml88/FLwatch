@@ -46,7 +46,7 @@ struct WatchAppHomeView: View {
 //                    .minimumScaleFactor(0.1)
 //                    .padding()
 //                } else {
-                Text("\(libreLinkUpHistory.currentGlucose)")
+                Text("\(libreLinkUpHistory.currentGlucose.units)")
                     .font(.system(size: 60)) //, weight: .bold
                     .foregroundStyle(libreLinkUpHistory.libreLinkUpGlucose[0].color.color)
                         .minimumScaleFactor(0.1)
@@ -128,8 +128,9 @@ struct WatchAppHomeView: View {
 //                        .foregroundStyle(.red)
 //                        .symbolSize(3)
                         
+                        var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                         LineMark(x: .value("Time", item.glucose.date),
-                                 y: .value("Glucose", item.glucose.value))
+                                 y: .value("Glucose", itemValue))
                         .interpolationMethod(.linear)
                         .lineStyle(.init(lineWidth: 3))
                         .symbol(){
@@ -158,8 +159,9 @@ struct WatchAppHomeView: View {
                     }
                     
                     ForEach(libreLinkUpHistory.libreLinkUpMinuteGlucose) { item in
+                        var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                         PointMark(x: .value("Time", item.glucose.date),
-                                  y: .value("Glucose", item.glucose.value)
+                                  y: .value("Glucose", itemValue)
                         )
                         .foregroundStyle(.yellow)
                         .symbolSize(8)

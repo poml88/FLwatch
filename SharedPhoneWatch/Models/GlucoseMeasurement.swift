@@ -17,7 +17,7 @@ struct GlucoseMeasurement: Codable {
     let trendMessage: String?
     let measurementColor: MeasurementColor
     let glucoseUnits: Int        // 0: mmoll, 1: mgdl
-    let value: Int
+    let value: Double
     let isHigh: Bool
     let isLow: Bool
     enum CodingKeys: String, CodingKey { case factoryTimestamp = "FactoryTimestamp", timestamp = "Timestamp", type, alarmType, valueInMgPerDl = "ValueInMgPerDl", trendArrow = "TrendArrow", trendMessage = "TrendMessage", measurementColor = "MeasurementColor", glucoseUnits = "GlucoseUnits", value = "Value", isHigh, isLow }

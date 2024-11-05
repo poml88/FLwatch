@@ -224,9 +224,9 @@ class LibreLinkUp  {
                     if let redirect = data?["redirect"] as? Bool,
                        let region = data?["region"] as? String {
                         redirected = redirect
-                        DispatchQueue.main.async { [self] in
+//                        DispatchQueue.main.async { [self] in
                             settings.libreLinkUpRegion = region
-                        }
+//                        }
                         Logger.general.info("LibreLinkUp: redirecting to \(self.regionalSiteURL)/\(self.loginEndpoint) ") // The very first time this will be "eu" instead of the "region" because UserDefaults has not been set.
                         request.url = URL(string: "\(regionalSiteURL)/\(loginEndpoint)")!
                         continue loop
@@ -264,11 +264,11 @@ class LibreLinkUp  {
                                    let data = json["data"] as? [String: Any],
                                    let server = data["lslApi"] as? String {
                                     let regionIndex = server.firstIndex(of: "-")
-                                    let region = regionIndex == nil ? defaultRegion : String(server[server.index(regionIndex!, offsetBy: 1) ... server.index(regionIndex!, offsetBy: 2)])
+                                    let region = regionIndex == nil ? defaultRegion : String(server[server.index(regionIndex!, offsetBy: 1) ..< server.firstIndex(of: ".")!])
                                     Logger.general.info("LibreLinkUp: regional server: \(server), saved default region: \(region)")
-                                    DispatchQueue.main.async { [self] in
+//                                    DispatchQueue.main.async { [self] in
                                         settings.libreLinkUpRegion = region
-                                    }
+//                                    }
                                     //                                        if settings.userLevel >= .test {
                                     var countryCodes = [String]()
                                     if let countryList = data["CountryList"] as? [String: Any],

@@ -252,6 +252,10 @@ class Settings {
     var hasSeenDisclaimer: Bool = UserDefaults.group.bool(forKey: "hasSeenDisclaimer") {
         didSet { UserDefaults.group.set(self.hasSeenDisclaimer, forKey: "hasSeenDisclaimer") }
     }
+    
+    var hasSeenNotification: Bool = UserDefaults.group.bool(forKey: "hasSeenNotification001") {
+        didSet { UserDefaults.group.set(self.hasSeenNotification, forKey: "hasSeenNotification001") }
+    }
 
 
     var lastOnlineDate: Date = Date(timeIntervalSince1970: UserDefaults.group.double(forKey: "lastOnlineDate")) {

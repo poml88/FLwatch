@@ -30,6 +30,7 @@ struct PhoneAppHomeView: View {
 //    @State private var libreLinkUpLogbookHistory: [LibreLinkUpGlucose] = []
     @State private var isReloading: Bool = false
     @State private var isShowingDisclaimer = false
+    @State private var isShowingNotification = false
     @State private var isShowingInsulinDeliverySheet = false
 //    @State private var currentIOB: Double = 0.0
     @State private var scrollPosition: Date = Date.now
@@ -51,7 +52,7 @@ struct PhoneAppHomeView: View {
             if colorScheme == .dark {
                 HStack {
                     
-                    Text("\(libreLinkUpHistory.currentGlucose)")
+                    Text("\(libreLinkUpHistory.currentGlucose.units)")
                         .font(.system(size: 128)) //, weight: .bold)
                         .foregroundStyle(libreLinkUpHistory.libreLinkUpGlucose[0].color.color)
                         .minimumScaleFactor(0.1)
@@ -90,7 +91,7 @@ struct PhoneAppHomeView: View {
                 }
             } else {
                 HStack {
-                    Text("\(libreLinkUpHistory.currentGlucose)")
+                    Text("\(libreLinkUpHistory.currentGlucose.units)")
                         .font(.system(size: 128)) //, weight: .bold)
                         .minimumScaleFactor(0.1)
                         .padding()
@@ -197,9 +198,9 @@ struct PhoneAppHomeView: View {
 //                        )
 //                        .foregroundStyle(item.color.color)
 //                        .symbolSize(12)
-                        
+                        var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                         LineMark(x: .value("Time", item.glucose.date),
-                                 y: .value("Glucose", item.glucose.value))
+                                 y: .value("Glucose", itemValue))
                         .interpolationMethod(.linear)
                         .lineStyle(.init(lineWidth: 5))
                         .symbol(){
@@ -216,7 +217,7 @@ struct PhoneAppHomeView: View {
                                     VStack(alignment: .leading, spacing: 6){
                                         Text("\(selectedlibreLinkHistoryPoint.glucose.date.toLocalTime())")
                                         
-                                        Text("\(selectedlibreLinkHistoryPoint.glucose.value) \(unitString)")
+                                        Text("\(selectedlibreLinkHistoryPoint.glucose.value.units) \(unitString)")
                                             .font(.title3.bold())
                                     }
                                     .padding(.horizontal,10)
@@ -231,8 +232,9 @@ struct PhoneAppHomeView: View {
                     
                     #warning ("breaks preview")
                     ForEach(libreLinkUpHistory.libreLinkUpMinuteGlucose) { item in
+                        var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                         PointMark(x: .value("Time", item.glucose.date),
-                                  y: .value("Glucose", item.glucose.value)
+                                  y: .value("Glucose", itemValue)
                         )
                         .foregroundStyle(Color.yellow)
                         .symbolSize(20)
@@ -305,6 +307,12 @@ struct PhoneAppHomeView: View {
             Text("!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.")
         }
         
+    .alert ("Update note", isPresented: $isShowingNotification) {
+        Button("Understood", role: .cancel, action: {settings.hasSeenNotification = true})
+    }
+message: {
+        Text("Please reboot phone and watch once if widgets do not work!")
+    }
         
         .overlay
         {
@@ -337,6 +345,10 @@ struct PhoneAppHomeView: View {
             print("onAppear")
             if settings.hasSeenDisclaimer == false {
                 isShowingDisclaimer = true
+            }
+            
+            if settings.hasSeenNotification == false {
+                isShowingNotification = true
             }
             
             CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()

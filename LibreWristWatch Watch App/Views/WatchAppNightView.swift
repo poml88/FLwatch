@@ -24,7 +24,7 @@ struct WatchAppNightView: View {
     //                    .minimumScaleFactor(0.1)
     //                    .padding()
     //                } else {
-                Text("\(libreLinkUpHistory.libreLinkUpGlucose[0].glucose.value)")
+                Text("\(libreLinkUpHistory.libreLinkUpGlucose[0].glucose.value.units)")
                     .font(.system(size: 100)) //, weight: .bold
                     .foregroundStyle(libreLinkUpHistory.libreLinkUpGlucose[0].color.color)
                         .minimumScaleFactor(0.9)

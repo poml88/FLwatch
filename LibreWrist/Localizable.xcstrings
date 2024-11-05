@@ -13,25 +13,22 @@
     "%@" : {
 
     },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
     "%@ %@ on %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ %2$@ on %3$@"
-          }
-        }
-      }
-    },
-    "%lld" : {
-
-    },
-    "%lld %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld %2$@"
           }
         }
       }
@@ -76,6 +73,9 @@
 
     },
     "If you like this app, buy the developer quality coffee beans!\n🤝☕️" : {
+
+    },
+    "Info" : {
 
     },
     "Insulin units" : {
@@ -153,6 +153,12 @@
           }
         }
       }
+    },
+    "Understood" : {
+
+    },
+    "Update note:\nPlease reboot phone and watch once if widgets do not work!" : {
+
     },
     "Username" : {
 
