@@ -147,9 +147,10 @@ struct PhoneAppHomeView: View {
                 var yAxisSteps: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 3 : 50 }
                 
                 
-                let chartRectangleYStart = sensorSettingsSingleton.sensorSettings.targetLow
-                let chartRectangleYEnd = sensorSettingsSingleton.sensorSettings.targetHigh
-                let chartRuleAlarmLL = sensorSettingsSingleton.sensorSettings.alarmLow
+                var chartRectangleYStart: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? sensorSettingsSingleton.sensorSettings.targetLow.toMmolL() : Double(sensorSettingsSingleton.sensorSettings.targetLow) }
+                var chartRectangleYEnd: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? sensorSettingsSingleton.sensorSettings.targetHigh.toMmolL() : Double(sensorSettingsSingleton.sensorSettings.targetHigh) }
+                var chartRuleAlarmLL: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? sensorSettingsSingleton.sensorSettings.alarmLow.toMmolL() : Double(sensorSettingsSingleton.sensorSettings.alarmLow) }
+
                 // Setting to 6 hours below by deleting half of the values.
                 let unitString = sensorSettingsSingleton.sensorSettings.uom == 0 ? "mmol/L" : "mg/dL"
                 

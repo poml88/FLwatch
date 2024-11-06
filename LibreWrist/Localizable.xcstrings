@@ -75,9 +75,6 @@
     "If you like this app, buy the developer quality coffee beans!\n🤝☕️" : {
 
     },
-    "Info" : {
-
-    },
     "Insulin units" : {
 
     },
@@ -100,6 +97,9 @@
 
     },
     "Please enter a date" : {
+
+    },
+    "Please reboot phone and watch once if widgets do not work!" : {
 
     },
     "Press \"Connect\" again to resend credentials to watch." : {
@@ -157,7 +157,7 @@
     "Understood" : {
 
     },
-    "Update note:\nPlease reboot phone and watch once if widgets do not work!" : {
+    "Update note" : {
 
     },
     "Username" : {
