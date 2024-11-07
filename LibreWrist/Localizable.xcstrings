@@ -2,10 +2,52 @@
   "sourceLanguage" : "en",
   "strings" : {
     "!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "!! Nicht für Behandlungsentscheidungen !!\n\nNutzung auf eigene Gefahr!\n\nDie Informationen in dieser App und ihrer Erweiterungen dürfen nicht für Behandlungs- oder Dosierungsentscheidungen benutzt werden. Wenden Sie sich an Ihr Glukose-Monitor-System und/oder einen Arzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡¡No para decisiones de tratamiento!!\n\t\t\nUtilícela bajo su propia responsabilidad.\n\t\t\nLa información presentada en esta app y sus extensiones no debe utilizarse para tomar decisiones de tratamiento o dosificación. Consulte su sistema de monitorización de glucosa y/o a un profesional sanitario."
+          }
+        }
+      }
+    },
+    "**Not for treatment decisions.**\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "!! Nicht für Behandlungsentscheidungen !!\n\nDie Informationen in dieser App und ihrer Erweiterungen dürfen nicht für Behandlungs- oder Dosierungsentscheidungen benutzt werden. Wenden Sie sich an Ihr Glukose-Monitor-System und/oder einen Arzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡¡No para decisiones de tratamiento!!\n\t\t\nLa información presentada en esta app y sus extensiones no debe utilizarse para tomar decisiones de tratamiento o dosificación. Consulte su sistema de monitorización de glucosa y/o a un profesional sanitario."
+          }
+        }
+      }
     },
     "**Watch app not installed / detected**\nCredentials will not be transferred to watch. Install watch app and press \"Connect\" again to resend credentials to watch." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Watch App nicht installiert / gefunden**\nZugangsdaten werden nicht an die Watch gesendet. Bitte Watch App installieren und erneut \"Verbinden\" drücken um Zugangsdaten an die Watch zu senden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**App del reloj no instalada / detectada**\nLas credenciales no se transferirán al reloj. Instale la app del reloj y pulse de nuevo «Conectar» para reenviar las credenciales al reloj."
+          }
+        }
+      }
     },
     "%.1f" : {
 
@@ -34,76 +76,360 @@
       }
     },
     "Accept" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akzeptieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aceptar"
+          }
+        }
+      }
     },
     "Add insulin" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulin hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir insulina"
+          }
+        }
+      }
     },
     "Bolus Insulin (Novorapid)" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bolo de Insulina (Novorapid)"
+          }
+        }
+      }
     },
     "Cancel" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abbrechen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar"
+          }
+        }
+      }
     },
     "Confirm" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestätigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmar"
+          }
+        }
+      }
     },
     "Connect" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conectar"
+          }
+        }
+      }
     },
     "Credentials" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zugangsdaten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credenciales"
+          }
+        }
+      }
     },
     "Debug Info" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug Info"
+          }
+        }
+      }
     },
     "Dismiss" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schliessen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descartar"
+          }
+        }
+      }
     },
     "Do you want to add %.1f units?" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Möchten Sie %.1f Einheiten Insulin hinzufügen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quiere añadir %.1f unidades?"
+          }
+        }
+      }
     },
     "Do you want to reset insulin history?" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Möchten Sie den Insulin Verlauf zurücksetzen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Desea restablecer el historial de insulina?"
+          }
+        }
+      }
+    },
+    "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geben Sie die Zugangsdaten für Ihr [LLU Followe Konto](https://www.librelinkup.com/) ein und drücken Sie \"Verbinden\". Zugangsdaten werden automatisch an die Watch App gesendet, falls diese installiert ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingresa las credenciales de tu [cuenta de seguidor de LLU](https://www.librelinkup.com/) y presiona el botón «Conectar». Las credenciales se enviarán automáticamente a la app del reloj si está instalada."
+          }
+        }
+      }
     },
     "FLwatch" : {
 
     },
     "Glucose" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glukose"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucosa"
+          }
+        }
+      }
     },
     "If you like this app, buy the developer quality coffee beans!\n🤝☕️" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn Ihnen diese App gefällt, spendieren Sie dem Entwickler ein paar Kaffeebohnen!\n🤝☕️"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si le gusta esta app, compre café en grano de calidad para el desarrollador!\n🤝☕️"
+          }
+        }
+      }
     },
     "Insulin units" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulin Einheiten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unidades de insulina"
+          }
+        }
+      }
     },
     "IOB: %.2fu" : {
 
     },
     "Keep phone screen always on" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halte iPhone Bildschirm aktiv"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantenga la pantalla del teléfono siempre encendida"
+          }
+        }
+      }
     },
     "Lower limit" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unteres Limit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Límite inferior"
+          }
+        }
+      }
     },
     "No data received since %lld min.\n\nCheck network and bluetooth connections." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Daten empfangen seit %lld Min.\n\nÜberprüfen Sie die Netzwerk- und Bluetoothverbindungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han recibido datos desde hace %lld min.\n\nCompruebe las conexiones de red y bluetooth."
+          }
+        }
+      }
     },
     "Open issue on GitHub" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Problem auf GitHub melden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuestión abierta en GitHub"
+          }
+        }
+      }
     },
     "Password" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraseña"
+          }
+        }
+      }
     },
     "Please enter a date" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte ein Datum eingeben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por favor, introduzca una fecha"
+          }
+        }
+      }
     },
     "Please reboot phone and watch once if widgets do not work!" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte einmal Telefon und Uhr neu starten, falls die Widgets nicht funktionieren!"
+          }
+        }
+      }
     },
     "Press \"Connect\" again to resend credentials to watch." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte \"Verbinden\" drücken und die Zugangsdaten an die Watch zu senden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pulse otra vez «Conectar» para volver a enviar las credenciales para al reloj."
+          }
+        }
+      }
     },
     "Rect End Height" : {
 
@@ -118,53 +444,215 @@
 
     },
     "Reload widget" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widget aktualisieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recargar el widget"
+          }
+        }
+      }
     },
     "Reload widget." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widget aktualisieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recargar el widget."
+          }
+        }
+      }
     },
     "Reset" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar"
+          }
+        }
+      }
     },
     "Reset IOB" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IOB zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar IOB"
+          }
+        }
+      }
     },
     "Send Email to Support" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email an Support schicken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar un e-mail a Soporte Técnico"
+          }
+        }
+      }
     },
     "Settings" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuración"
+          }
+        }
+      }
     },
     "Something went wrong..." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etwas lief falsch..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algo ha ido mal..."
+          }
+        }
+      }
     },
     "Submit" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Absenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar"
+          }
+        }
+      }
     },
     "Time" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo"
+          }
+        }
+      }
     },
     "Time: %@       Units: %.1f" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeit: %1$@       Einheiten: %2$.1f"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Time: %1$@       Units: %2$.1f"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hora: %1$@       Unidades: %2$.1f"
+          }
         }
       }
     },
     "Understood" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verstanden"
+          }
+        }
+      }
     },
     "Update note" : {
 
     },
     "Username" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzername"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de usuario"
+          }
+        }
+      }
     },
     "Username (email adress)" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzername (Email Adresse)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de usuario (correo electrónico)"
+          }
+        }
+      }
     },
     "V%@.%@" : {
       "localizations" : {
@@ -177,7 +665,20 @@
       }
     },
     "Warning" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advertencia"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

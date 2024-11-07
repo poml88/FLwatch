@@ -53,6 +53,7 @@ struct PhoneAppSettingsView: View {
                     showingMailView.toggle()
                 } label: {
                  Text("Send Email to Support")
+                        .padding(-5)
                         .frame(width: 177, height: 35)
                 }
                 .buttonStyle(.bordered)
