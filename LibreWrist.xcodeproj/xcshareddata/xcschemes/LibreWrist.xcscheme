@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7BA0AE282C582F63004226FE"
-               BuildableName = "LibreWrist.app"
-               BlueprintName = "LibreWrist"
+               BuildableName = "FLwatch.app"
+               BlueprintName = "FLwatch"
                ReferencedContainer = "container:LibreWrist.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -69,8 +69,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7BA0AE282C582F63004226FE"
-            BuildableName = "LibreWrist.app"
-            BlueprintName = "LibreWrist"
+            BuildableName = "FLwatch.app"
+            BlueprintName = "FLwatch"
             ReferencedContainer = "container:LibreWrist.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -86,8 +86,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7BA0AE282C582F63004226FE"
-            BuildableName = "LibreWrist.app"
-            BlueprintName = "LibreWrist"
+            BuildableName = "FLwatch.app"
+            BlueprintName = "FLwatch"
             ReferencedContainer = "container:LibreWrist.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

@@ -12,7 +12,7 @@
 		7B022CA02CADDBE800CA64B4 /* LibreWristWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B022C9F2CADDBE800CA64B4 /* LibreWristWidgetBundle.swift */; };
 		7B022CA22CADDBE800CA64B4 /* LibreWristWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B022CA12CADDBE800CA64B4 /* LibreWristWidget.swift */; };
 		7B022CA42CADDBEA00CA64B4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7B022CA32CADDBEA00CA64B4 /* Assets.xcassets */; };
-		7B022CA82CADDBEA00CA64B4 /* LibreWristWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7B022C992CADDBE800CA64B4 /* LibreWristWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7B022CA82CADDBEA00CA64B4 /* FLwatchWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7B022C992CADDBE800CA64B4 /* FLwatchWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7B183E972C84B09D0018A24F /* PhoneToWatchConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B183E962C84B09D0018A24F /* PhoneToWatchConnector.swift */; };
 		7B183E992C84B0AA0018A24F /* WatchToPhoneConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B183E982C84B0AA0018A24F /* WatchToPhoneConnector.swift */; };
 		7B183E9B2C84C9540018A24F /* PhoneAppInsulinDeliveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B183E9A2C84C9540018A24F /* PhoneAppInsulinDeliveryView.swift */; };
@@ -36,7 +36,7 @@
 		7B2E7EAE2CB59C9300A3473B /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B022C9C2CADDBE800CA64B4 /* SwiftUI.framework */; };
 		7B2E7EB12CB59C9300A3473B /* LibreWristWatchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2E7EB02CB59C9300A3473B /* LibreWristWatchWidget.swift */; };
 		7B2E7EB32CB59C9500A3473B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7B2E7EB22CB59C9500A3473B /* Assets.xcassets */; };
-		7B2E7EB72CB59C9500A3473B /* LibreWristWatchWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7B2E7EAC2CB59C9300A3473B /* LibreWristWatchWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7B2E7EB72CB59C9500A3473B /* FlwatchWatchWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7B2E7EAC2CB59C9300A3473B /* FlwatchWatchWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7B2E7EBD2CB59DEB00A3473B /* GlucoseMeasurementIOBEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2E7EBC2CB59DEB00A3473B /* GlucoseMeasurementIOBEntry.swift */; };
 		7B2E7EBE2CB59DEB00A3473B /* GlucoseMeasurementIOBEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2E7EBC2CB59DEB00A3473B /* GlucoseMeasurementIOBEntry.swift */; };
 		7B2E7EBF2CB59FA600A3473B /* GlucoseMeasurement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B299A132C90B06C002A15C8 /* GlucoseMeasurement.swift */; };
@@ -96,7 +96,7 @@
 		7BC51F3A2C7C77B2009542D2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC51F392C7C77B2009542D2 /* ContentView.swift */; };
 		7BC51F3C2C7C77B3009542D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7BC51F3B2C7C77B3009542D2 /* Assets.xcassets */; };
 		7BC51F3F2C7C77B3009542D2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7BC51F3E2C7C77B3009542D2 /* Preview Assets.xcassets */; };
-		7BC51F422C7C77B3009542D2 /* LibreWristWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 7BC51F352C7C77B2009542D2 /* LibreWristWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7BC51F422C7C77B3009542D2 /* FLwatchWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 7BC51F352C7C77B2009542D2 /* FLwatchWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7BC51F482C7C7FA3009542D2 /* WatchAppHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC51F472C7C7FA3009542D2 /* WatchAppHomeView.swift */; };
 		7BC51F4A2C7C80FE009542D2 /* WatchAppNightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC51F492C7C80FE009542D2 /* WatchAppNightView.swift */; };
 		7BC51F4B2C7C822C009542D2 /* LibreLinkUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1A7CA32C79E413006D603C /* LibreLinkUp.swift */; };
@@ -179,7 +179,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				7B022CA82CADDBEA00CA64B4 /* LibreWristWidgetExtension.appex in Embed Foundation Extensions */,
+				7B022CA82CADDBEA00CA64B4 /* FLwatchWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -190,7 +190,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				7B2E7EB72CB59C9500A3473B /* LibreWristWatchWidgetExtension.appex in Embed Foundation Extensions */,
+				7B2E7EB72CB59C9500A3473B /* FlwatchWatchWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -201,7 +201,7 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
-				7BC51F422C7C77B3009542D2 /* LibreWristWatch Watch App.app in Embed Watch Content */,
+				7BC51F422C7C77B3009542D2 /* FLwatchWatchApp.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -209,7 +209,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		7B022C992CADDBE800CA64B4 /* LibreWristWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LibreWristWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7B022C992CADDBE800CA64B4 /* FLwatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FLwatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B022C9A2CADDBE800CA64B4 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		7B022C9C2CADDBE800CA64B4 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		7B022C9F2CADDBE800CA64B4 /* LibreWristWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreWristWidgetBundle.swift; sourceTree = "<group>"; };
@@ -228,7 +228,7 @@
 		7B299A162C90B089002A15C8 /* LibreLinkUpGlucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreLinkUpGlucose.swift; sourceTree = "<group>"; };
 		7B299A192C90B0A1002A15C8 /* LibreLinkUpAlarm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreLinkUpAlarm.swift; sourceTree = "<group>"; };
 		7B299A1C2C90DC43002A15C8 /* LibreLinkUpHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreLinkUpHistory.swift; sourceTree = "<group>"; };
-		7B2E7EAC2CB59C9300A3473B /* LibreWristWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LibreWristWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7B2E7EAC2CB59C9300A3473B /* FlwatchWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FlwatchWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B2E7EB02CB59C9300A3473B /* LibreWristWatchWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreWristWatchWidget.swift; sourceTree = "<group>"; };
 		7B2E7EB22CB59C9500A3473B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7B2E7EB42CB59C9500A3473B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -244,7 +244,7 @@
 		7B631AAB2CB85F6600CE9EEF /* Reload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reload.swift; sourceTree = "<group>"; };
 		7B69F7C22CDD74DF00E3A50C /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSettingsView.swift; sourceTree = "<group>"; };
-		7BA0AE292C582F63004226FE /* LibreWrist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LibreWrist.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7BA0AE292C582F63004226FE /* FLwatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FLwatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7BA0AE2C2C582F63004226FE /* LibreWristApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreWristApp.swift; sourceTree = "<group>"; };
 		7BA0AE2E2C582F63004226FE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		7BA0AE302C582F64004226FE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -268,7 +268,7 @@
 		7BB762FF2C82642900C43600 /* WatchAppDonateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAppDonateView.swift; sourceTree = "<group>"; };
 		7BB98DFD2CB14CE2000A354D /* LibreWristWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibreWristWidgetExtension.entitlements; sourceTree = "<group>"; };
 		7BBD27892C7155BE001A71E7 /* SecureDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureDefaults.swift; sourceTree = "<group>"; };
-		7BC51F352C7C77B2009542D2 /* LibreWristWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LibreWristWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7BC51F352C7C77B2009542D2 /* FLwatchWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FLwatchWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7BC51F372C7C77B2009542D2 /* LibreWristWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreWristWatchApp.swift; sourceTree = "<group>"; };
 		7BC51F392C7C77B2009542D2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		7BC51F3B2C7C77B3009542D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -430,25 +430,25 @@
 				7BC51F612C7C9CD1009542D2 /* LibreWristConfig.xcconfig */,
 				7B183E952C84AE540018A24F /* SharedPhoneWatch */,
 				7BA0AE2B2C582F63004226FE /* LibreWrist */,
-				7BA0AE3C2C582F64004226FE /* LibreWristTests */,
-				7BA0AE462C582F64004226FE /* LibreWristUITests */,
 				7BC51F362C7C77B2009542D2 /* LibreWristWatch Watch App */,
 				7B022C9E2CADDBE800CA64B4 /* LibreWristWidget */,
 				7B2E7EAF2CB59C9300A3473B /* LibreWristWatchWidget */,
 				7BA0AE2A2C582F63004226FE /* Products */,
 				7BC51F4C2C7C82B7009542D2 /* Frameworks */,
+				7BA0AE3C2C582F64004226FE /* LibreWristTests */,
+				7BA0AE462C582F64004226FE /* LibreWristUITests */,
 			);
 			sourceTree = "<group>";
 		};
 		7BA0AE2A2C582F63004226FE /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7BA0AE292C582F63004226FE /* LibreWrist.app */,
+				7BA0AE292C582F63004226FE /* FLwatch.app */,
 				7BA0AE392C582F64004226FE /* LibreWristTests.xctest */,
 				7BA0AE432C582F64004226FE /* LibreWristUITests.xctest */,
-				7BC51F352C7C77B2009542D2 /* LibreWristWatch Watch App.app */,
-				7B022C992CADDBE800CA64B4 /* LibreWristWidgetExtension.appex */,
-				7B2E7EAC2CB59C9300A3473B /* LibreWristWatchWidgetExtension.appex */,
+				7BC51F352C7C77B2009542D2 /* FLwatchWatchApp.app */,
+				7B022C992CADDBE800CA64B4 /* FLwatchWidgetExtension.appex */,
+				7B2E7EAC2CB59C9300A3473B /* FlwatchWatchWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -572,9 +572,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		7B022C982CADDBE800CA64B4 /* LibreWristWidgetExtension */ = {
+		7B022C982CADDBE800CA64B4 /* FLwatchWidgetExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7B022CAC2CADDBEA00CA64B4 /* Build configuration list for PBXNativeTarget "LibreWristWidgetExtension" */;
+			buildConfigurationList = 7B022CAC2CADDBEA00CA64B4 /* Build configuration list for PBXNativeTarget "FLwatchWidgetExtension" */;
 			buildPhases = (
 				7B022C952CADDBE800CA64B4 /* Sources */,
 				7B022C962CADDBE800CA64B4 /* Frameworks */,
@@ -584,14 +584,14 @@
 			);
 			dependencies = (
 			);
-			name = LibreWristWidgetExtension;
+			name = FLwatchWidgetExtension;
 			productName = LibreWristWidgetExtension;
-			productReference = 7B022C992CADDBE800CA64B4 /* LibreWristWidgetExtension.appex */;
+			productReference = 7B022C992CADDBE800CA64B4 /* FLwatchWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		7B2E7EAB2CB59C9300A3473B /* LibreWristWatchWidgetExtension */ = {
+		7B2E7EAB2CB59C9300A3473B /* FlwatchWatchWidgetExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7B2E7EBB2CB59C9500A3473B /* Build configuration list for PBXNativeTarget "LibreWristWatchWidgetExtension" */;
+			buildConfigurationList = 7B2E7EBB2CB59C9500A3473B /* Build configuration list for PBXNativeTarget "FlwatchWatchWidgetExtension" */;
 			buildPhases = (
 				7B2E7EA82CB59C9300A3473B /* Sources */,
 				7B2E7EA92CB59C9300A3473B /* Frameworks */,
@@ -601,14 +601,14 @@
 			);
 			dependencies = (
 			);
-			name = LibreWristWatchWidgetExtension;
+			name = FlwatchWatchWidgetExtension;
 			productName = LibreWristWatchWidgetExtension;
-			productReference = 7B2E7EAC2CB59C9300A3473B /* LibreWristWatchWidgetExtension.appex */;
+			productReference = 7B2E7EAC2CB59C9300A3473B /* FlwatchWatchWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		7BA0AE282C582F63004226FE /* LibreWrist */ = {
+		7BA0AE282C582F63004226FE /* FLwatch */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7BA0AE4D2C582F64004226FE /* Build configuration list for PBXNativeTarget "LibreWrist" */;
+			buildConfigurationList = 7BA0AE4D2C582F64004226FE /* Build configuration list for PBXNativeTarget "FLwatch" */;
 			buildPhases = (
 				7BA0AE252C582F63004226FE /* Sources */,
 				7BA0AE262C582F63004226FE /* Frameworks */,
@@ -622,12 +622,12 @@
 				7BC51F412C7C77B3009542D2 /* PBXTargetDependency */,
 				7B022CA72CADDBEA00CA64B4 /* PBXTargetDependency */,
 			);
-			name = LibreWrist;
+			name = FLwatch;
 			packageProductDependencies = (
 				7BBD27872C7154F4001A71E7 /* SecureDefaults */,
 			);
 			productName = LibreWrist;
-			productReference = 7BA0AE292C582F63004226FE /* LibreWrist.app */;
+			productReference = 7BA0AE292C582F63004226FE /* FLwatch.app */;
 			productType = "com.apple.product-type.application";
 		};
 		7BA0AE382C582F64004226FE /* LibreWristTests */ = {
@@ -666,9 +666,9 @@
 			productReference = 7BA0AE432C582F64004226FE /* LibreWristUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		7BC51F342C7C77B2009542D2 /* LibreWristWatch Watch App */ = {
+		7BC51F342C7C77B2009542D2 /* FLwatchWatchApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7BC51F432C7C77B3009542D2 /* Build configuration list for PBXNativeTarget "LibreWristWatch Watch App" */;
+			buildConfigurationList = 7BC51F432C7C77B3009542D2 /* Build configuration list for PBXNativeTarget "FLwatchWatchApp" */;
 			buildPhases = (
 				7BC51F312C7C77B2009542D2 /* Sources */,
 				7BC51F322C7C77B2009542D2 /* Frameworks */,
@@ -680,12 +680,12 @@
 			dependencies = (
 				7B2E7EB62CB59C9500A3473B /* PBXTargetDependency */,
 			);
-			name = "LibreWristWatch Watch App";
+			name = FLwatchWatchApp;
 			packageProductDependencies = (
 				7BC51F4D2C7C82B7009542D2 /* SecureDefaults */,
 			);
 			productName = "LibreWristWatch Watch App";
-			productReference = 7BC51F352C7C77B2009542D2 /* LibreWristWatch Watch App.app */;
+			productReference = 7BC51F352C7C77B2009542D2 /* FLwatchWatchApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -739,12 +739,12 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				7BA0AE282C582F63004226FE /* LibreWrist */,
+				7BA0AE282C582F63004226FE /* FLwatch */,
 				7BA0AE382C582F64004226FE /* LibreWristTests */,
 				7BA0AE422C582F64004226FE /* LibreWristUITests */,
-				7BC51F342C7C77B2009542D2 /* LibreWristWatch Watch App */,
-				7B022C982CADDBE800CA64B4 /* LibreWristWidgetExtension */,
-				7B2E7EAB2CB59C9300A3473B /* LibreWristWatchWidgetExtension */,
+				7BC51F342C7C77B2009542D2 /* FLwatchWatchApp */,
+				7B022C982CADDBE800CA64B4 /* FLwatchWidgetExtension */,
+				7B2E7EAB2CB59C9300A3473B /* FlwatchWatchWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -958,27 +958,27 @@
 /* Begin PBXTargetDependency section */
 		7B022CA72CADDBEA00CA64B4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 7B022C982CADDBE800CA64B4 /* LibreWristWidgetExtension */;
+			target = 7B022C982CADDBE800CA64B4 /* FLwatchWidgetExtension */;
 			targetProxy = 7B022CA62CADDBEA00CA64B4 /* PBXContainerItemProxy */;
 		};
 		7B2E7EB62CB59C9500A3473B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 7B2E7EAB2CB59C9300A3473B /* LibreWristWatchWidgetExtension */;
+			target = 7B2E7EAB2CB59C9300A3473B /* FlwatchWatchWidgetExtension */;
 			targetProxy = 7B2E7EB52CB59C9500A3473B /* PBXContainerItemProxy */;
 		};
 		7BA0AE3B2C582F64004226FE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 7BA0AE282C582F63004226FE /* LibreWrist */;
+			target = 7BA0AE282C582F63004226FE /* FLwatch */;
 			targetProxy = 7BA0AE3A2C582F64004226FE /* PBXContainerItemProxy */;
 		};
 		7BA0AE452C582F64004226FE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 7BA0AE282C582F63004226FE /* LibreWrist */;
+			target = 7BA0AE282C582F63004226FE /* FLwatch */;
 			targetProxy = 7BA0AE442C582F64004226FE /* PBXContainerItemProxy */;
 		};
 		7BC51F412C7C77B3009542D2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 7BC51F342C7C77B2009542D2 /* LibreWristWatch Watch App */;
+			target = 7BC51F342C7C77B2009542D2 /* FLwatchWatchApp */;
 			targetProxy = 7BC51F402C7C77B3009542D2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -1446,7 +1446,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7B022CAC2CADDBEA00CA64B4 /* Build configuration list for PBXNativeTarget "LibreWristWidgetExtension" */ = {
+		7B022CAC2CADDBEA00CA64B4 /* Build configuration list for PBXNativeTarget "FLwatchWidgetExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7B022CAA2CADDBEA00CA64B4 /* Debug */,
@@ -1455,7 +1455,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7B2E7EBB2CB59C9500A3473B /* Build configuration list for PBXNativeTarget "LibreWristWatchWidgetExtension" */ = {
+		7B2E7EBB2CB59C9500A3473B /* Build configuration list for PBXNativeTarget "FlwatchWatchWidgetExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7B2E7EB92CB59C9500A3473B /* Debug */,
@@ -1473,7 +1473,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7BA0AE4D2C582F64004226FE /* Build configuration list for PBXNativeTarget "LibreWrist" */ = {
+		7BA0AE4D2C582F64004226FE /* Build configuration list for PBXNativeTarget "FLwatch" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7BA0AE4E2C582F64004226FE /* Debug */,
@@ -1500,7 +1500,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7BC51F432C7C77B3009542D2 /* Build configuration list for PBXNativeTarget "LibreWristWatch Watch App" */ = {
+		7BC51F432C7C77B3009542D2 /* Build configuration list for PBXNativeTarget "FLwatchWatchApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7BC51F442C7C77B3009542D2 /* Debug */,
