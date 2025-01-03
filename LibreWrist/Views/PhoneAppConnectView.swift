@@ -24,7 +24,7 @@ struct PhoneAppConnectView: View {
     private let timer = Timer.publish(every: 1, tolerance: 0.5, on: .main, in: .common).autoconnect()
     
     
-    func statusMessage() -> String {
+    func statusMessage() -> LocalizedStringResource {
         switch connected {
         case .connected: return "Connected."
         case .newlyConnected: return "Connected."

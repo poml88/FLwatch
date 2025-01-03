@@ -59,6 +59,7 @@
 		7B631AAC2CB85F6600CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
 		7B631AAD2CB85FB800CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
 		7B631AAE2CB85FBB00CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
+		7B69F7C32CDD74DF00E3A50C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7B69F7C22CDD74DF00E3A50C /* Localizable.xcstrings */; };
 		7B7D08802CB9C64C00FC1973 /* ExponentialInsulinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD835D2C84E48E00A9B195 /* ExponentialInsulinModel.swift */; };
 		7B7D08812CB9C64E00FC1973 /* ExponentialInsulinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD835D2C84E48E00A9B195 /* ExponentialInsulinModel.swift */; };
 		7B7D08822CB9C6BA00FC1973 /* InsulinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD835A2C84E48800A9B195 /* InsulinModel.swift */; };
@@ -241,6 +242,7 @@
 		7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasurementColor.swift; sourceTree = "<group>"; };
 		7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7B631AAB2CB85F6600CE9EEF /* Reload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reload.swift; sourceTree = "<group>"; };
+		7B69F7C22CDD74DF00E3A50C /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSettingsView.swift; sourceTree = "<group>"; };
 		7BA0AE292C582F63004226FE /* LibreWrist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LibreWrist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7BA0AE2C2C582F63004226FE /* LibreWristApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreWristApp.swift; sourceTree = "<group>"; };
@@ -506,6 +508,7 @@
 				7BC51F372C7C77B2009542D2 /* LibreWristWatchApp.swift */,
 				7B183E982C84B0AA0018A24F /* WatchToPhoneConnector.swift */,
 				7BC51FBF2C7D3D4B009542D2 /* Views */,
+				7B69F7C22CDD74DF00E3A50C /* Localizable.xcstrings */,
 				7BC51F642C7CA68D009542D2 /* LibreWristWatch-Watch-App-Info.plist */,
 				7BC51F632C7C9E96009542D2 /* LibreWristWatch Watch App.entitlements */,
 				7BC51F3B2C7C77B3009542D2 /* Assets.xcassets */,
@@ -794,6 +797,7 @@
 			files = (
 				7B5CD22B2C946D340066B92B /* PrivacyInfo.xcprivacy in Resources */,
 				7BC51F3F2C7C77B3009542D2 /* Preview Assets.xcassets in Resources */,
+				7B69F7C32CDD74DF00E3A50C /* Localizable.xcstrings in Resources */,
 				7BC51F3C2C7C77B3009542D2 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

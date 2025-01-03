@@ -91,6 +91,9 @@
         }
       }
     },
+    "Access temporarly locked." : {
+
+    },
     "Add insulin" : {
       "localizations" : {
         "de" : {
@@ -165,6 +168,15 @@
         }
       }
     },
+    "Connected." : {
+
+    },
+    "Connecting..." : {
+
+    },
+    "Connection failed." : {
+
+    },
     "Credentials" : {
       "localizations" : {
         "de" : {
@@ -190,6 +202,9 @@
           }
         }
       }
+    },
+    "Disconnected" : {
+
     },
     "Dismiss" : {
       "localizations" : {
@@ -244,7 +259,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geben Sie die Zugangsdaten für Ihr [LLU Followe Konto](https://www.librelinkup.com/) ein und drücken Sie \"Verbinden\". Zugangsdaten werden automatisch an die Watch App gesendet, falls diese installiert ist."
+            "value" : "Geben Sie die Zugangsdaten für Ihr [LLU Follower Konto](https://www.librelinkup.com/) ein und drücken Sie \"Verbinden\". Zugangsdaten werden automatisch an die Watch App gesendet, falls diese installiert ist."
           }
         },
         "es" : {
