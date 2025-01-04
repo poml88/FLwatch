@@ -2,7 +2,20 @@
   "sourceLanguage" : "en",
   "strings" : {
     "!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "!! Nicht für Behandlungsentscheidungen !!\n\nNutzung auf eigene Gefahr!\n\nDie Informationen in dieser App und ihrer Erweiterungen dürfen nicht für Behandlungs- oder Dosierungsentscheidungen benutzt werden. Wenden Sie sich an Ihr Glukose-Monitor-System und/oder einen Arzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡¡No para decisiones de tratamiento!!\n\t\t\nUtilícela bajo su propia responsabilidad.\n\t\t\nLa información presentada en esta app y sus extensiones no debe utilizarse para tomar decisiones de tratamiento o dosificación. Consulte su sistema de monitorización de glucosa y/o a un profesional sanitario."
+          }
+        }
+      }
     },
     "%.2fu" : {
 
@@ -21,16 +34,55 @@
       }
     },
     "Accept" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akzeptieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aceptar"
+          }
+        }
+      }
     },
     "Buy the developer quality coffee beans!\n🤝☕️" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spendieren Sie dem Entwickler ein paar Kaffeebohnen!\n🤝☕️"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compre café en grano de calidad para el desarrollador!\n🤝☕️"
+          }
+        }
+      }
     },
     "Debug info:" : {
 
     },
     "Glucose" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glukose"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucosa"
+          }
+        }
+      }
     },
     "Hello, World!" : {
 
@@ -39,10 +91,36 @@
 
     },
     "No credentials (yet) received from phone. Try tapping 'Connect' on phone to resend to watch and wait a minute." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(Noch) keine Zugangsdaten vom iPhone erhalten. Drücken Sie \"Verbinden\" auf dem iPhone und warten Sie 1 Minute."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No he recibido las credenciales (aún) desde el teléfono. Prueba a pulsar \"Conectar\" en el teléfono para volver a enviarlas al reloj y espera un minuto."
+          }
+        }
+      }
     },
     "No data since %lld min." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Daten empfangen seit %lld Min."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han recibido datos desde hace %lld min."
+          }
+        }
+      }
     },
     "Rect End Height" : {
 
@@ -63,10 +141,30 @@
 
     },
     "Something went wrong..." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etwas lief falsch..."
+          }
+        }
+      }
     },
     "Time" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo"
+          }
+        }
+      }
     },
     "V%@.%@" : {
       "localizations" : {
@@ -79,7 +177,20 @@
       }
     },
     "Warning" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advertencia"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

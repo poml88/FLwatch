@@ -1,0 +1,21 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "default" : {
+
+    },
+    "Glucose Widget" : {
+
+    },
+    "Reload widget" : {
+
+    },
+    "Reload widget." : {
+
+    },
+    "This widget displays the latest blood glucose value." : {
+
+    }
+  },
+  "version" : "1.0"
+}

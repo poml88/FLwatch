@@ -996,7 +996,7 @@
 				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LibreWristWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = LibreWristWidget;
+				INFOPLIST_KEY_CFBundleDisplayName = FLwatchWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1025,7 +1025,7 @@
 				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LibreWristWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = LibreWristWidget;
+				INFOPLIST_KEY_CFBundleDisplayName = FLwatchWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1054,7 +1054,7 @@
 				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LibreWristWatchWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = LibreWristWatchWidget;
+				INFOPLIST_KEY_CFBundleDisplayName = FLwatchWatchWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1086,7 +1086,7 @@
 				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LibreWristWatchWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = LibreWristWatchWidget;
+				INFOPLIST_KEY_CFBundleDisplayName = FLwatchWatchWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1390,7 +1390,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "LibreWristWatch-Watch-App-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = LibreWristWatch;
+				INFOPLIST_KEY_CFBundleDisplayName = FLwatch;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(WATCHKIT_COMPANION_APP_BUNDLE_IDENTIFIER)";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1424,7 +1424,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "LibreWristWatch-Watch-App-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = LibreWristWatch;
+				INFOPLIST_KEY_CFBundleDisplayName = FLwatch;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(WATCHKIT_COMPANION_APP_BUNDLE_IDENTIFIER)";
 				LD_RUNPATH_SEARCH_PATHS = (

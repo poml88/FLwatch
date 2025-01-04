@@ -1,0 +1,86 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional." : {
+
+    },
+    "%.2fu" : {
+
+    },
+    "%@" : {
+
+    },
+    "%@ %@ on %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ on %3$@"
+          }
+        }
+      }
+    },
+    "Accept" : {
+
+    },
+    "Buy the developer quality coffee beans!\n🤝☕️" : {
+
+    },
+    "Debug info:" : {
+
+    },
+    "Glucose" : {
+
+    },
+    "Hello, World!" : {
+
+    },
+    "Lower limit" : {
+
+    },
+    "No credentials (yet) received from phone. Try tapping 'Connect' on phone to resend to watch and wait a minute." : {
+
+    },
+    "No data since %lld min." : {
+
+    },
+    "Rect End Height" : {
+
+    },
+    "Rect End Width" : {
+
+    },
+    "Rect Start Height" : {
+
+    },
+    "Rect Start Width" : {
+
+    },
+    "Reload widget" : {
+
+    },
+    "Reload widget." : {
+
+    },
+    "Something went wrong..." : {
+
+    },
+    "Time" : {
+
+    },
+    "V%@.%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "V%1$@.%2$@"
+          }
+        }
+      }
+    },
+    "Warning" : {
+
+    }
+  },
+  "version" : "1.0"
+}

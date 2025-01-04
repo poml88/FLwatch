@@ -1,0 +1,574 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 http://docs.oasis-open.org/xliff/v1.2/os/xliff-core-1.2-strict.xsd">
+  <file original="LibreWrist/InfoPlist.xcstrings" source-language="en" target-language="en" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="15.4" build-num="15F31d"/>
+    </header>
+    <body>
+      <trans-unit id="CFBundleName" xml:space="preserve">
+        <source>FLwatch</source>
+        <target state="new">FLwatch</target>
+        <note>Bundle name</note>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="LibreWrist/Localizable.xcstrings" source-language="en" target-language="en" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="15.4" build-num="15F31d"/>
+    </header>
+    <body>
+      <trans-unit id="!! Not for treatment decisions !!&#10;&#10;Use at your own risk!&#10;&#10;The information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional." xml:space="preserve">
+        <source>!! Not for treatment decisions !!
+
+Use at your own risk!
+
+The information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.</source>
+        <target state="new">!! Not for treatment decisions !!
+
+Use at your own risk!
+
+The information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%.1f" xml:space="preserve">
+        <source>%.1f</source>
+        <target state="new">%.1f</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@" xml:space="preserve">
+        <source>%@</source>
+        <target state="new">%@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@ %@" xml:space="preserve">
+        <source>%1$@ %2$@</source>
+        <target state="new">%1$@ %2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@ %@ on %@" xml:space="preserve">
+        <source>%1$@ %2$@ on %3$@</source>
+        <target state="new">%1$@ %2$@ on %3$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="**Not for treatment decisions.**&#10;&#10;The information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional." xml:space="preserve">
+        <source>**Not for treatment decisions.**
+
+The information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.</source>
+        <target state="new">**Not for treatment decisions.**
+
+The information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="**Watch app not installed / detected**&#10;Credentials will not be transferred to watch. Install watch app and press &quot;Connect&quot; again to resend credentials to watch." xml:space="preserve">
+        <source>**Watch app not installed / detected**
+Credentials will not be transferred to watch. Install watch app and press "Connect" again to resend credentials to watch.</source>
+        <target state="new">**Watch app not installed / detected**
+Credentials will not be transferred to watch. Install watch app and press "Connect" again to resend credentials to watch.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Accept" xml:space="preserve">
+        <source>Accept</source>
+        <target state="new">Accept</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Access temporarly locked." xml:space="preserve">
+        <source>Access temporarly locked.</source>
+        <target state="new">Access temporarly locked.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Add insulin" xml:space="preserve">
+        <source>Add insulin</source>
+        <target state="new">Add insulin</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Bolus Insulin (Novorapid)" xml:space="preserve">
+        <source>Bolus Insulin (Novorapid)</source>
+        <target state="new">Bolus Insulin (Novorapid)</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target state="new">Cancel</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Confirm" xml:space="preserve">
+        <source>Confirm</source>
+        <target state="new">Confirm</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Connect" xml:space="preserve">
+        <source>Connect</source>
+        <target state="new">Connect</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Connected." xml:space="preserve">
+        <source>Connected.</source>
+        <target state="new">Connected.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Connecting..." xml:space="preserve">
+        <source>Connecting...</source>
+        <target state="new">Connecting...</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Connection failed." xml:space="preserve">
+        <source>Connection failed.</source>
+        <target state="new">Connection failed.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Credentials" xml:space="preserve">
+        <source>Credentials</source>
+        <target state="new">Credentials</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Debug Info" xml:space="preserve">
+        <source>Debug Info</source>
+        <target state="new">Debug Info</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Disconnected" xml:space="preserve">
+        <source>Disconnected</source>
+        <target state="new">Disconnected</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Dismiss" xml:space="preserve">
+        <source>Dismiss</source>
+        <target state="new">Dismiss</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Do you want to add %.1f units?" xml:space="preserve">
+        <source>Do you want to add %.1f units?</source>
+        <target state="new">Do you want to add %.1f units?</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Do you want to reset insulin history?" xml:space="preserve">
+        <source>Do you want to reset insulin history?</source>
+        <target state="new">Do you want to reset insulin history?</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed." xml:space="preserve">
+        <source>Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.</source>
+        <target state="new">Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="FLwatch" xml:space="preserve">
+        <source>FLwatch</source>
+        <target state="new">FLwatch</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Glucose" xml:space="preserve">
+        <source>Glucose</source>
+        <target state="new">Glucose</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="IOB: %.2fu" xml:space="preserve">
+        <source>IOB: %.2fu</source>
+        <target state="new">IOB: %.2fu</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="If you like this app, buy the developer quality coffee beans!&#10;🤝☕️" xml:space="preserve">
+        <source>If you like this app, buy the developer quality coffee beans!
+🤝☕️</source>
+        <target state="new">If you like this app, buy the developer quality coffee beans!
+🤝☕️</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Insulin units" xml:space="preserve">
+        <source>Insulin units</source>
+        <target state="new">Insulin units</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Keep phone screen always on" xml:space="preserve">
+        <source>Keep phone screen always on</source>
+        <target state="new">Keep phone screen always on</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Lower limit" xml:space="preserve">
+        <source>Lower limit</source>
+        <target state="new">Lower limit</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="No data received since %lld min.&#10;&#10;Check network and bluetooth connections." xml:space="preserve">
+        <source>No data received since %lld min.
+
+Check network and bluetooth connections.</source>
+        <target state="new">No data received since %lld min.
+
+Check network and bluetooth connections.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Open issue on GitHub" xml:space="preserve">
+        <source>Open issue on GitHub</source>
+        <target state="new">Open issue on GitHub</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Password" xml:space="preserve">
+        <source>Password</source>
+        <target state="new">Password</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Please enter a date" xml:space="preserve">
+        <source>Please enter a date</source>
+        <target state="new">Please enter a date</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Please reboot phone and watch once if widgets do not work!" xml:space="preserve">
+        <source>Please reboot phone and watch once if widgets do not work!</source>
+        <target state="new">Please reboot phone and watch once if widgets do not work!</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Press &quot;Connect&quot; again to resend credentials to watch." xml:space="preserve">
+        <source>Press "Connect" again to resend credentials to watch.</source>
+        <target state="new">Press "Connect" again to resend credentials to watch.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Rect End Height" xml:space="preserve">
+        <source>Rect End Height</source>
+        <target state="new">Rect End Height</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Rect End Width" xml:space="preserve">
+        <source>Rect End Width</source>
+        <target state="new">Rect End Width</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Rect Start Height" xml:space="preserve">
+        <source>Rect Start Height</source>
+        <target state="new">Rect Start Height</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Rect Start Width" xml:space="preserve">
+        <source>Rect Start Width</source>
+        <target state="new">Rect Start Width</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Reload widget" xml:space="preserve">
+        <source>Reload widget</source>
+        <target state="new">Reload widget</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Reload widget." xml:space="preserve">
+        <source>Reload widget.</source>
+        <target state="new">Reload widget.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Reset" xml:space="preserve">
+        <source>Reset</source>
+        <target state="new">Reset</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Reset IOB" xml:space="preserve">
+        <source>Reset IOB</source>
+        <target state="new">Reset IOB</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Send Email to Support" xml:space="preserve">
+        <source>Send Email to Support</source>
+        <target state="new">Send Email to Support</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Settings" xml:space="preserve">
+        <source>Settings</source>
+        <target state="new">Settings</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Something went wrong..." xml:space="preserve">
+        <source>Something went wrong...</source>
+        <target state="new">Something went wrong...</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Submit" xml:space="preserve">
+        <source>Submit</source>
+        <target state="new">Submit</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Time" xml:space="preserve">
+        <source>Time</source>
+        <target state="new">Time</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Time: %@       Units: %.1f" xml:space="preserve">
+        <source>Time: %1$@       Units: %2$.1f</source>
+        <target state="new">Time: %1$@       Units: %2$.1f</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Understood" xml:space="preserve">
+        <source>Understood</source>
+        <target state="new">Understood</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Update note" xml:space="preserve">
+        <source>Update note</source>
+        <target state="new">Update note</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Username" xml:space="preserve">
+        <source>Username</source>
+        <target state="new">Username</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Username (email adress)" xml:space="preserve">
+        <source>Username (email adress)</source>
+        <target state="new">Username (email adress)</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="V%@.%@" xml:space="preserve">
+        <source>V%1$@.%2$@</source>
+        <target state="new">V%1$@.%2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Warning" xml:space="preserve">
+        <source>Warning</source>
+        <target state="new">Warning</target>
+        <note/>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="LibreWristWatch Watch App/LibreWristWatch-Watch-App-InfoPlist.xcstrings" source-language="en" target-language="en" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="15.4" build-num="15F31d"/>
+    </header>
+    <body>
+      <trans-unit id="CFBundleDisplayName" xml:space="preserve">
+        <source>FLwatch</source>
+        <target state="new">FLwatch</target>
+        <note>Bundle display name</note>
+      </trans-unit>
+      <trans-unit id="CFBundleName" xml:space="preserve">
+        <source>FLwatchWatchApp</source>
+        <target state="new">FLwatchWatchApp</target>
+        <note>Bundle name</note>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="LibreWristWatch Watch App/Localizable.xcstrings" source-language="en" target-language="en" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="15.4" build-num="15F31d"/>
+    </header>
+    <body>
+      <trans-unit id="!! Not for treatment decisions !!&#10;&#10;Use at your own risk!&#10;&#10;The information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional." xml:space="preserve">
+        <source>!! Not for treatment decisions !!
+
+Use at your own risk!
+
+The information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.</source>
+        <target state="new">!! Not for treatment decisions !!
+
+Use at your own risk!
+
+The information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%.2fu" xml:space="preserve">
+        <source>%.2fu</source>
+        <target state="new">%.2fu</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@" xml:space="preserve">
+        <source>%@</source>
+        <target state="new">%@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@ %@ on %@" xml:space="preserve">
+        <source>%1$@ %2$@ on %3$@</source>
+        <target state="new">%1$@ %2$@ on %3$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Accept" xml:space="preserve">
+        <source>Accept</source>
+        <target state="new">Accept</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Buy the developer quality coffee beans!&#10;🤝☕️" xml:space="preserve">
+        <source>Buy the developer quality coffee beans!
+🤝☕️</source>
+        <target state="new">Buy the developer quality coffee beans!
+🤝☕️</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Debug info:" xml:space="preserve">
+        <source>Debug info:</source>
+        <target state="new">Debug info:</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Glucose" xml:space="preserve">
+        <source>Glucose</source>
+        <target state="new">Glucose</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Hello, World!" xml:space="preserve">
+        <source>Hello, World!</source>
+        <target state="new">Hello, World!</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Lower limit" xml:space="preserve">
+        <source>Lower limit</source>
+        <target state="new">Lower limit</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="No credentials (yet) received from phone. Try tapping 'Connect' on phone to resend to watch and wait a minute." xml:space="preserve">
+        <source>No credentials (yet) received from phone. Try tapping 'Connect' on phone to resend to watch and wait a minute.</source>
+        <target state="new">No credentials (yet) received from phone. Try tapping 'Connect' on phone to resend to watch and wait a minute.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="No data since %lld min." xml:space="preserve">
+        <source>No data since %lld min.</source>
+        <target state="new">No data since %lld min.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Rect End Height" xml:space="preserve">
+        <source>Rect End Height</source>
+        <target state="new">Rect End Height</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Rect End Width" xml:space="preserve">
+        <source>Rect End Width</source>
+        <target state="new">Rect End Width</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Rect Start Height" xml:space="preserve">
+        <source>Rect Start Height</source>
+        <target state="new">Rect Start Height</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Rect Start Width" xml:space="preserve">
+        <source>Rect Start Width</source>
+        <target state="new">Rect Start Width</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Reload widget" xml:space="preserve">
+        <source>Reload widget</source>
+        <target state="new">Reload widget</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Reload widget." xml:space="preserve">
+        <source>Reload widget.</source>
+        <target state="new">Reload widget.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Something went wrong..." xml:space="preserve">
+        <source>Something went wrong...</source>
+        <target state="new">Something went wrong...</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Time" xml:space="preserve">
+        <source>Time</source>
+        <target state="new">Time</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="V%@.%@" xml:space="preserve">
+        <source>V%1$@.%2$@</source>
+        <target state="new">V%1$@.%2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Warning" xml:space="preserve">
+        <source>Warning</source>
+        <target state="new">Warning</target>
+        <note/>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="LibreWristWatchWidget/InfoPlist.xcstrings" source-language="en" target-language="en" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="15.4" build-num="15F31d"/>
+    </header>
+    <body>
+      <trans-unit id="CFBundleDisplayName" xml:space="preserve">
+        <source>LibreWristWatchWidget</source>
+        <target state="new">LibreWristWatchWidget</target>
+        <note>Bundle display name</note>
+      </trans-unit>
+      <trans-unit id="CFBundleName" xml:space="preserve">
+        <source>FlwatchWatchWidgetExtension</source>
+        <target state="new">FlwatchWatchWidgetExtension</target>
+        <note>Bundle name</note>
+      </trans-unit>
+      <trans-unit id="NSHumanReadableCopyright" xml:space="preserve">
+        <source/>
+        <target state="new"/>
+        <note>Copyright (human-readable)</note>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="LibreWristWatchWidget/Localizable.xcstrings" source-language="en" target-language="en" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="15.4" build-num="15F31d"/>
+    </header>
+    <body>
+      <trans-unit id="%@  %@  %@" xml:space="preserve">
+        <source>%1$@  %2$@  %3$@</source>
+        <target state="new">%1$@  %2$@  %3$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="%@ %@" xml:space="preserve">
+        <source>%1$@ %2$@</source>
+        <target state="new">%1$@ %2$@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Glucose Widget" xml:space="preserve">
+        <source>Glucose Widget</source>
+        <target state="new">Glucose Widget</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="This widget displays the latest blood glucose value." xml:space="preserve">
+        <source>This widget displays the latest blood glucose value.</source>
+        <target state="new">This widget displays the latest blood glucose value.</target>
+        <note/>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="LibreWristWidget/InfoPlist.xcstrings" source-language="en" target-language="en" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="15.4" build-num="15F31d"/>
+    </header>
+    <body>
+      <trans-unit id="CFBundleDisplayName" xml:space="preserve">
+        <source>LibreWristWidget</source>
+        <target state="new">LibreWristWidget</target>
+        <note>Bundle display name</note>
+      </trans-unit>
+      <trans-unit id="CFBundleName" xml:space="preserve">
+        <source>FLwatchWidgetExtension</source>
+        <target state="new">FLwatchWidgetExtension</target>
+        <note>Bundle name</note>
+      </trans-unit>
+      <trans-unit id="NSHumanReadableCopyright" xml:space="preserve">
+        <source/>
+        <target state="new"/>
+        <note>Copyright (human-readable)</note>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="LibreWristWidget/Localizable.xcstrings" source-language="en" target-language="en" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="15.4" build-num="15F31d"/>
+    </header>
+    <body>
+      <trans-unit id="Glucose Widget" xml:space="preserve">
+        <source>Glucose Widget</source>
+        <target state="new">Glucose Widget</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Reload widget" xml:space="preserve">
+        <source>Reload widget</source>
+        <target state="new">Reload widget</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="Reload widget." xml:space="preserve">
+        <source>Reload widget.</source>
+        <target state="new">Reload widget.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="This widget displays the latest blood glucose value." xml:space="preserve">
+        <source>This widget displays the latest blood glucose value.</source>
+        <target state="new">This widget displays the latest blood glucose value.</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="default" xml:space="preserve">
+        <source>default</source>
+        <target state="new">default</target>
+        <note/>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

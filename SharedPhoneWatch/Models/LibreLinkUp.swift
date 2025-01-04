@@ -27,10 +27,11 @@ class LibreLinkUp  {
     let connectionsEndpoint = "llu/connections"
     let measurementsEndpoint = "lsl/api/measurements"
     
-    let regions = ["ae", "ap", "au", "ca", "de", "eu", "eu2", "fr", "jp", "la", "us"]  // eu2: GB and IE
+    let regions = ["ae", "ap", "au", "ca", "de", "eu", "eu2", "fr", "jp", "la", "us", "ru"]  // eu2: GB and IE
     
-    var regionalSiteURL: String { "https://api-\(settings.libreLinkUpRegion).libreview.io" }
-    
+    let regionalSiteURLRU: String = "https://api.libreview.ru"
+    var regionalSiteURL: String { settings.libreLinkUpRegion == "ru" ? regionalSiteURLRU : "https://api-\(settings.libreLinkUpRegion).libreview.io" }
+        
     var unit: GlucoseUnit = .mgdl
     
     var libreLinkUpResponse: String = "[...]"
@@ -362,6 +363,8 @@ class LibreLinkUp  {
             let status = (response as! HTTPURLResponse).statusCode
             Logger.general.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)")
             // TODO: {"status":911}: server maintenance
+            // LibreLinkUp: response data: {"status":4,"error":{"message":"followerNotConnectToPatient"}}, status: 200
+            // LibreLinkUp: response data: {"message":"invalid or expired jwt"}, status: 401
             do {
                 if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                    let data = json["data"] as? [String: Any],

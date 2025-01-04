@@ -92,7 +92,14 @@
       }
     },
     "Access temporarly locked." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zugang temporär gesperrt."
+          }
+        }
+      }
     },
     "Add insulin" : {
       "localizations" : {
@@ -169,13 +176,34 @@
       }
     },
     "Connected." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden."
+          }
+        }
+      }
     },
     "Connecting..." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde..."
+          }
+        }
+      }
     },
     "Connection failed." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung fehlgeschlagen."
+          }
+        }
+      }
     },
     "Credentials" : {
       "localizations" : {
@@ -204,7 +232,14 @@
       }
     },
     "Disconnected" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getrennt"
+          }
+        }
+      }
     },
     "Dismiss" : {
       "localizations" : {

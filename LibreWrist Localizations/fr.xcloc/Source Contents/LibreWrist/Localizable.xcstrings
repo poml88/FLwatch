@@ -1,0 +1,205 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional." : {
+
+    },
+    "**Not for treatment decisions.**\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional." : {
+
+    },
+    "**Watch app not installed / detected**\nCredentials will not be transferred to watch. Install watch app and press \"Connect\" again to resend credentials to watch." : {
+
+    },
+    "%.1f" : {
+
+    },
+    "%@" : {
+
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ %@ on %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ on %3$@"
+          }
+        }
+      }
+    },
+    "Accept" : {
+
+    },
+    "Access temporarly locked." : {
+
+    },
+    "Add insulin" : {
+
+    },
+    "Bolus Insulin (Novorapid)" : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Confirm" : {
+
+    },
+    "Connect" : {
+
+    },
+    "Connected." : {
+
+    },
+    "Connecting..." : {
+
+    },
+    "Connection failed." : {
+
+    },
+    "Credentials" : {
+
+    },
+    "Debug Info" : {
+
+    },
+    "Disconnected" : {
+
+    },
+    "Dismiss" : {
+
+    },
+    "Do you want to add %.1f units?" : {
+
+    },
+    "Do you want to reset insulin history?" : {
+
+    },
+    "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed." : {
+
+    },
+    "FLwatch" : {
+
+    },
+    "Glucose" : {
+
+    },
+    "If you like this app, buy the developer quality coffee beans!\n🤝☕️" : {
+
+    },
+    "Insulin units" : {
+
+    },
+    "IOB: %.2fu" : {
+
+    },
+    "Keep phone screen always on" : {
+
+    },
+    "Lower limit" : {
+
+    },
+    "No data received since %lld min.\n\nCheck network and bluetooth connections." : {
+
+    },
+    "Open issue on GitHub" : {
+
+    },
+    "Password" : {
+
+    },
+    "Please enter a date" : {
+
+    },
+    "Please reboot phone and watch once if widgets do not work!" : {
+
+    },
+    "Press \"Connect\" again to resend credentials to watch." : {
+
+    },
+    "Rect End Height" : {
+
+    },
+    "Rect End Width" : {
+
+    },
+    "Rect Start Height" : {
+
+    },
+    "Rect Start Width" : {
+
+    },
+    "Reload widget" : {
+
+    },
+    "Reload widget." : {
+
+    },
+    "Reset" : {
+
+    },
+    "Reset IOB" : {
+
+    },
+    "Send Email to Support" : {
+
+    },
+    "Settings" : {
+
+    },
+    "Something went wrong..." : {
+
+    },
+    "Submit" : {
+
+    },
+    "Time" : {
+
+    },
+    "Time: %@       Units: %.1f" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Time: %1$@       Units: %2$.1f"
+          }
+        }
+      }
+    },
+    "Understood" : {
+
+    },
+    "Update note" : {
+
+    },
+    "Username" : {
+
+    },
+    "Username (email adress)" : {
+
+    },
+    "V%@.%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "V%1$@.%2$@"
+          }
+        }
+      }
+    },
+    "Warning" : {
+
+    }
+  },
+  "version" : "1.0"
+}
