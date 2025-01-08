@@ -4,3 +4,6 @@
 
 ### Support and Feedback ###
 For support please open an issue, start a discussion or email **flwatch [ a t ] cmdline [ d o t ] net**. Feedback is very welcome, please use the same methods as for support.
+
+### Instructions ###
+Please read the [Usage Instructions](README.md) on the main page.
