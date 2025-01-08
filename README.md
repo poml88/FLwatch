@@ -10,17 +10,15 @@
 
 This software is free and open source. It is being developed out of personal needs, but everyone should be able to benefit from it.
 
-It is not meant to replace the vendor's app, but rather enhance it and make diabetes life a bit easier. It is at a very early stage.
-For example there are no widgets or complications yet. Chart is not scrollable, because I don't know how to jump to the current data programmatically. Many other shortcomings for now.
-
 ### Usage ###
 ***Installation:*** Make sure that the watchOS app is installed, ideally before starting the iOS app. Depending on your configuration, the watchOS app is either installed automatically, or has to be installed via the "watch" app on the phone.
 - The app needs iOS 17.5 and watchOS 10.5
 - TestFlight: https://testflight.apple.com/join/HwgkwcGz
 - AppStore: https://apps.apple.com/app/flwatch/id6670172928
 - Settings are made in the iOS app and are then transferred to the watchOS app. This only works if the watchOS app is installed on the watch.
-- To create a LibreLinkUp follower account install the [LibreLinkUp App](https://apps.apple.com/us/app/librelinkup/id1234323923) on the phone and follow the instructions. The LibreLinkUp app can then be closed or uninstalled, but maybe needed later to accept new Terms of Use or just check that the account / connection works.
-- To connect to your LibreLinkUp follower account, enter your credentials in LibreWrist on the connect tab. If the watchOS app is installed, the credentials are transferred to the watch app. It is possible to re-transfer the credentials by pressing the "connect" button again.
+- ***Establishing the connection between the apps:*** To make things work, you have to first invite yourself to become your own follower. *LibreView credentials do not work.* To do this, in the LibreLink / Libre 3 app under Share / Connected Apps, there is a Connect / Manage LibreLinkUp item. Tap "Add Connection" and enter the email address you would like to use for the follower account, and an invitation is sent to that address (the email address can be the same as for LibreView). Then, to set up the LibreLinkUp follower account, install the [LibreLinkUp App](https://apps.apple.com/us/app/librelinkup/id1234323923) on the phone and follow the instructions using the email address you just invited. There is a [Step by Step Guide](https://www.librelinkup.com/articles/getting-started) you might find useful. Lastly, enter the credentials of the follower account in FLwatch, see below. Only one followed patient per follower account is currently supported by FLwatch.
+- The LibreLinkUp app can then be closed or uninstalled, but maybe needed later to accept new Terms of Use or just check that the account / connection works.
+- To connect to your LibreLinkUp follower account, enter your credentials in FLwatch on the connect tab. If the watchOS app is installed, the credentials are transferred to the watch app. It is possible to re-transfer the credentials by pressing the "connect" button again.
 - It can take up to a minute for the data to be fetched and displayed.
 - To use the insulin calculation, tap on the IOB label on the home screen. I have added only Novorapid for the moment, but more insulins can be added on request. *Please let me know.*
   - The app is using the exponetial model from LoopKit. The model takes three paramters: actionDuration, peakActivityTime, and delay. For Novorapid I have set 270, 120, and 15 minutes.
