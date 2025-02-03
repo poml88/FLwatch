@@ -290,6 +290,7 @@
       }
     },
     "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -301,6 +302,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ingresa las credenciales de tu [cuenta de seguidor de LLU](https://www.librelinkup.com/) y presiona el botón «Conectar». Las credenciales se enviarán automáticamente a la app del reloj si está instalada."
+          }
+        }
+      }
+    },
+    "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geben Sie die Zugangsdaten für Ihr [LLU Follower Konto](https://www.librelinkup.com/) ein und drücken Sie \"Verbinden\". Zugangsdaten werden automatisch an die Watch App gesendet, falls diese installiert ist.\n[PROBLEME? TIPPEN UM HILFE ZU ÖFFNEN](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)"
           }
         }
       }
@@ -355,9 +372,6 @@
           }
         }
       }
-    },
-    "IOB: %.2fu" : {
-
     },
     "Keep phone screen always on" : {
       "localizations" : {

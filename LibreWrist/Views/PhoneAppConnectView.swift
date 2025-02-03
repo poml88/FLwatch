@@ -57,7 +57,7 @@ struct PhoneAppConnectView: View {
             
             
             Form {
-                Section(header: Text("Credentials"), footer: Text("Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.")) {
+                Section(header: Text("Credentials"), footer: Text("Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)")) {
                     TextField(text: $username, prompt: Text("Username (email adress)")) {
                         Text("Username")
                     }.textContentType(.emailAddress)
@@ -79,8 +79,15 @@ struct PhoneAppConnectView: View {
                     Button("Connect") {
                         tryToConnect()
                     }
+                    
                 }
                 .disabled(username.isBlank || password.isBlank)
+                
+//                Section {
+//                    Link(destination: URL(string: "https://github.com/poml88/FLwatch?tab=readme-ov-file#usage")!) {
+//                        Text("Tap to open user's guide")
+//                    }
+//                }
                 
                 if watchConnector.session.activationState == .activated && !watchConnector.session.isWatchAppInstalled {
                     Text("**Watch app not installed / detected**\nCredentials will not be transferred to watch. Install watch app and press \"Connect\" again to resend credentials to watch.")

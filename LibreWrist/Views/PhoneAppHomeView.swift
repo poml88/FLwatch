@@ -55,6 +55,7 @@ struct PhoneAppHomeView: View {
                     Text("\(libreLinkUpHistory.currentGlucose.units)")
                         .font(.system(size: 128)) //, weight: .bold)
                         .foregroundStyle(libreLinkUpHistory.libreLinkUpGlucose[0].color.color)
+                        .lineLimit(1)
                         .minimumScaleFactor(0.1)
                         .padding()
                    
@@ -93,6 +94,7 @@ struct PhoneAppHomeView: View {
                 HStack {
                     Text("\(libreLinkUpHistory.currentGlucose.units)")
                         .font(.system(size: 128)) //, weight: .bold)
+                        .lineLimit(1)
                         .minimumScaleFactor(0.1)
                         .padding()
                     VStack {
@@ -348,9 +350,11 @@ message: {
                 isShowingDisclaimer = true
             }
             
-            if settings.hasSeenNotification == false {
-                isShowingNotification = true
-            }
+//            Uncomment to show a notification at app start
+//            Increase counter in Settings (hasSeenNotification000)
+//            if settings.hasSeenNotification == false {
+//                isShowingNotification = true
+//            }
             
             CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
             

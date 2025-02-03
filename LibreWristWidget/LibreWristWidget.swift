@@ -13,6 +13,7 @@ struct LibreWristWidgetEntryView : View {
     var entry: Provider.Entry
 
     @Environment(\.widgetFamily) private var family
+    @Environment(\.colorScheme) var colorScheme
     
     var glucose: String {
         if entry.glucoseMeasurement.value <= 0 {
@@ -37,32 +38,32 @@ struct LibreWristWidgetEntryView : View {
         switch family {
         case .systemSmall:
             ZStack {
-                entry.glucoseMeasurement.measurementColor.color
+                colorScheme == .dark ? .black : entry.glucoseMeasurement.measurementColor.color
                 VStack(alignment: .center, spacing: -10) {
                     HStack {
                         Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
                             .font(.system(size: 48, weight: .heavy, design: .monospaced))
-                            .foregroundColor(.black)
+                            .foregroundColor(colorScheme == .dark ? entry.glucoseMeasurement.measurementColor.color : .black)
                             .padding(.leading, 60)
                             .padding(.trailing, 5)
                         Button(intent: ReloadWidgetIntent()) {
                             Image(systemName: "arrow.clockwise")
                                 .font(.system(size: 20, weight: .heavy, design: .monospaced))
-                                .foregroundColor(.black)
+                                .foregroundColor(colorScheme == .dark ? .gray : .black)
                         }
                     }
                     Text(verbatim: glucose)
                         .font(.system(size: 52, weight: .heavy))
-                        .foregroundColor(.black)
+                        .foregroundColor(colorScheme == .dark ? entry.glucoseMeasurement.measurementColor.color : .black)
                     HStack (spacing: 15){
                         Text(currentIOB)
                             .font(.system(size: 20, weight: .heavy))
-                            .foregroundColor(.black)
+                            .foregroundColor(colorScheme == .dark ? .gray : .black)
 //                        Text("88:88")
                         Text(Date(), style: .timer)
                         //Text(verbatim: " ")
                             .font(.system(size: 20, weight: .heavy))
-                            .foregroundColor(.black)
+                            .foregroundColor(colorScheme == .dark ? .gray : .black)
                             .frame(width: 60)
                         //.colorInvert()
                         //                                .multilineTextAlignment(.center)
@@ -70,8 +71,6 @@ struct LibreWristWidgetEntryView : View {
                         //.frame(width: 10)
                     }
                     .padding(.top, 4)
-
-                    
                 }
             }
             .containerBackground(for: .widget) {
@@ -120,9 +119,10 @@ struct LibreWristWidgetEntryView : View {
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                 HStack {
                     VStack (alignment: .center, spacing: 6){
-                        Text(currentIOB)
-                            .font(.system(size: 15, weight: .heavy))
-                        
+                        if entry.currentIOB > 0 {
+                            Text(currentIOB)
+                                .font(.system(size: 15, weight: .heavy))
+                        }
                         Text(Date(), style: .timer)
                         //Text(verbatim: " ")
                             .font(.system(size: 12, weight: .heavy))
@@ -142,6 +142,7 @@ struct LibreWristWidgetEntryView : View {
                             .font(.system(size: 25, weight: .heavy))
                         //.colorInvert()
                     }
+                    .fixedSize()
                     Button(intent: ReloadWidgetIntent()) {
                         Image(systemName: "arrow.clockwise")
                             .font(.system(size: 20, weight: .heavy))
