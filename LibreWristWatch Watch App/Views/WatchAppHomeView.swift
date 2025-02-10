@@ -85,7 +85,18 @@ struct WatchAppHomeView: View {
                 //Configuration
                 // 0 = mmoll  1 = mgdl  0.0555
                 var chartYScaleMin: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 2.75 : 50 }
-                var chartYScaleMax: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 12.5 : 225 }
+                
+                let indexOfMaxGlucoseItem = libreLinkUpHistory.libreLinkUpGlucose.indices.max(by:
+                                                                                                { libreLinkUpHistory.libreLinkUpGlucose[$0].glucose.value < libreLinkUpHistory.libreLinkUpGlucose[$1].glucose.value }
+                ) ?? 250
+                let maxBG: Int = libreLinkUpHistory.libreLinkUpGlucose[indexOfMaxGlucoseItem].glucose.value
+                
+                
+                var chartYScaleMax: Double { if maxBG > 350 { sensorSettingsSingleton.sensorSettings.uom == 0 ? 21 : 400}
+                    else if maxBG > 250 { sensorSettingsSingleton.sensorSettings.uom == 0 ? 18 : 300}
+                    else { sensorSettingsSingleton.sensorSettings.uom == 0 ? 12.5 : 225}
+                }
+//                var chartYScaleMax: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 12.5 : 225 }
                 var yAxisSteps: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 3 : 50 }
                 
                 

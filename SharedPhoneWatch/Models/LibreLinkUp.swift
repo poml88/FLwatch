@@ -111,7 +111,7 @@ class LibreLinkUp  {
                         //                        let a: String = "\(lastMeasurement)"
                         //                        Logger.general.info("LibreLinkUp: lastMeasurement: \(a)")
                         
-                        if trend.isEmpty || lastMeasurement.id > trend[0].id {
+                        if trend.isEmpty || lastMeasurement.id > trend[0].id { // FIME: for the first hour of a new sensor values are not inserted into trend or are they filtered out below?
                             trend.insert(lastMeasurement, at: 0)
                         }
                         // keep only the latest 16 minutes considering the 17-minute latency of the historic values update. seems to vary between 21 and 17 minutes.

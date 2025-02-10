@@ -373,6 +373,9 @@
         }
       }
     },
+    "IOB: %.2fu" : {
+
+    },
     "Keep phone screen always on" : {
       "localizations" : {
         "de" : {
