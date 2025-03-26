@@ -26,7 +26,11 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
             dateFormatter.locale = Locale(identifier: "en_US_POSIX")
             dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
             
-            var request = URLRequest(url: URL(string: "https://api-\(settings.libreLinkUpRegion).libreview.io/llu/connections")!)
+            let regionalSiteURLRU: String = "https://api.libreview.ru"
+            let regionalSiteURLCN: String = "https://api-cn.myfreestyle.cn"
+            var regionalSiteURL: String { settings.libreLinkUpRegion == "ru" ? regionalSiteURLRU : settings.libreLinkUpRegion == "cn" ? regionalSiteURLCN : "https://api-\(settings.libreLinkUpRegion).libreview.io" }
+            
+            var request = URLRequest(url: URL(string: "\(regionalSiteURL)/llu/connections")!)
             request.timeoutInterval = 15
             request.httpMethod = "GET"
             print("\(request)")

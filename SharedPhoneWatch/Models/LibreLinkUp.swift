@@ -27,10 +27,11 @@ class LibreLinkUp  {
     let connectionsEndpoint = "llu/connections"
     let measurementsEndpoint = "lsl/api/measurements"
     
-    let regions = ["ae", "ap", "au", "ca", "de", "eu", "eu2", "fr", "jp", "la", "us", "ru"]  // eu2: GB and IE
+    let regions = ["ae", "ap", "au", "ca", "de", "eu", "eu2", "fr", "jp", "la", "us", "ru", "cn"]  // eu2: GB and IE
     
     let regionalSiteURLRU: String = "https://api.libreview.ru"
-    var regionalSiteURL: String { settings.libreLinkUpRegion == "ru" ? regionalSiteURLRU : "https://api-\(settings.libreLinkUpRegion).libreview.io" }
+    let regionalSiteURLCN: String = "https://api-cn.myfreestyle.cn"
+    var regionalSiteURL: String { settings.libreLinkUpRegion == "ru" ? regionalSiteURLRU : settings.libreLinkUpRegion == "cn" ? regionalSiteURLCN : "https://api-\(settings.libreLinkUpRegion).libreview.io" }
         
     var unit: GlucoseUnit = .mgdl
     
