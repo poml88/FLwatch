@@ -75,6 +75,9 @@
         }
       }
     },
+    "%lld" : {
+
+    },
     "Accept" : {
       "localizations" : {
         "de" : {
@@ -322,6 +325,9 @@
         }
       }
     },
+    "Error message: %@" : {
+
+    },
     "FLwatch" : {
 
     },
@@ -340,6 +346,9 @@
           }
         }
       }
+    },
+    "Hour" : {
+
     },
     "If you like this app, buy the developer quality coffee beans!\n🤝☕️" : {
       "localizations" : {
@@ -408,6 +417,9 @@
         }
       }
     },
+    "Minute" : {
+
+    },
     "No data received since %lld min.\n\nCheck network and bluetooth connections." : {
       "localizations" : {
         "de" : {
@@ -440,6 +452,9 @@
         }
       }
     },
+    "or: Time since injection" : {
+
+    },
     "Password" : {
       "localizations" : {
         "de" : {
@@ -457,6 +472,7 @@
       }
     },
     "Please enter a date" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -654,7 +670,11 @@
         }
       }
     },
+    "Time: " : {
+
+    },
     "Time: %@       Units: %.1f" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -672,6 +692,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hora: %1$@       Unidades: %2$.1f"
+          }
+        }
+      }
+    },
+    "Time: %@  (%@ h)      Units: %.1f" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Time: %1$@  (%2$@ h)      Units: %3$.1f"
           }
         }
       }

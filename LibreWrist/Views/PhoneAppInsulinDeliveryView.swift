@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PhoneAppInsulinDeliveryView: View {
     
-    @AppStorage(SharedData.Keys.insulinSelected.key, store: SharedData.defaultsGroup) private var insulinSelected: Double = 0.0
+    @AppStorage(SharedData.Keys.insulinSelected.key, store: SharedData.defaultsGroup) private var insulinSelected: Double = 0.5
     
     @Environment(\.dismiss) var dismiss
     
@@ -19,6 +19,7 @@ struct PhoneAppInsulinDeliveryView: View {
     @State private var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
     @State private var isShowingInsulinDeliverySubmitAlert = false
     @State private var isShowingInsulinDeliveryResetAlert = false
+    @State private var isShowingDifferenceTimePickerSheet = false
     
     //    @Binding var selectedTab: String
     
@@ -45,8 +46,21 @@ struct PhoneAppInsulinDeliveryView: View {
                     }
                     .pickerStyle(.menu)
                     
-                    DatePicker("Please enter a date", selection: $pickerTimeStamp)
-                        .labelsHidden()
+                    DatePicker(selection: $pickerTimeStamp) {
+                        Text("Time: ")
+                    }
+//                        .labelsHidden()
+                    
+                    Button {
+                        isShowingDifferenceTimePickerSheet = true
+                    } label: {
+                        Text("or: Time since injection")
+                    }
+                    .buttonStyle(.bordered)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .sheet(isPresented: $isShowingDifferenceTimePickerSheet, content: {
+                        TimeDifferencePicker(pickerTimeStamp: $pickerTimeStamp)
+                    })
                     
                     Button {
                         isShowingInsulinDeliverySubmitAlert = true
@@ -102,7 +116,13 @@ struct PhoneAppInsulinDeliveryView: View {
             }
             List{
                 ForEach(insulinDeliveryHistory, id: \.id) {item in
-                    Text("Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())       Units: \(item.insulinUnits, specifier: "%.1f")")
+                    let timeInterval = Date(timeIntervalSince1970: item.timeStamp).timeIntervalSinceNow
+                    let timeSinceInjection = Duration(
+                        secondsComponent: Int64(-timeInterval),
+                        attosecondsComponent: 0
+                    ).formatted(.time(pattern: .hourMinute))  // "2:05"
+
+                    Text("Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())  (\(timeSinceInjection) h)      Units: \(item.insulinUnits, specifier: "%.1f")")
                 }
                 
             }

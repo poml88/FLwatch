@@ -262,7 +262,7 @@ struct WatchAppHomeView: View {
             
             connected = UserDefaults.group.connected
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-            if minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
+            if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
                 Task {
                     isReloading = true
                     await libreLinkUp.reloadLibreLinkUp()
@@ -284,7 +284,7 @@ struct WatchAppHomeView: View {
             
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
             connected = UserDefaults.group.connected
-            if minutesSinceLastReading >= 1 && connected == .newlyConnected {
+            if isReloading == false && minutesSinceLastReading >= 1 && connected == .newlyConnected {
                 Task {
                     isReloading = true
                     await libreLinkUp.reloadLibreLinkUp()
@@ -304,7 +304,7 @@ struct WatchAppHomeView: View {
                 
                 connected = UserDefaults.group.connected
                 minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-                if minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
+                if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
                     Task {
                         isReloading = true
                         await libreLinkUp.reloadLibreLinkUp()

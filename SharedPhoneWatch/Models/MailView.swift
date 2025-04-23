@@ -45,12 +45,14 @@ struct MailView: UIViewControllerRepresentable {
         let name = UIDevice.current.name
         
         let sensorType = SensorSettingsSingleton.shared.sensorType
+        
+        let libreLinkUpDebug = DebugMessageSingleton.shared.libreLinkUpResponseError
 
         let vc = MFMailComposeViewController()
         vc.mailComposeDelegate = context.coordinator
         vc.setToRecipients(["flwatch@cmdline.net"])
         vc.setSubject("Support FLwatch")
-        vc.setMessageBody("Hello,\n\n\n\n\n\nKind regards\n\n\n\n Debug info:\nApp Version: \(versionNumber) Build: \(buildNumber)\nDevice Info: \(systemName) \(systemVersion) on \(name)\nSensor: \(sensorType)", isHTML: false)
+        vc.setMessageBody("Hello,\n\n\n\n\n\nKind regards\n\n\n\n Debug info:\nApp Version: \(versionNumber) Build: \(buildNumber)\nDevice Info: \(systemName) \(systemVersion) on \(name)\nSensor: \(sensorType)\nErroe Message: \(libreLinkUpDebug)\n\n", isHTML: false)
         return vc
     }
     

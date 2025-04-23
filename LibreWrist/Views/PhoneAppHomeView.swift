@@ -36,6 +36,7 @@ struct PhoneAppHomeView: View {
     @State private var scrollPosition: Date = Date.now
 //    @State private var sensorSettings = SensorSettings()
     @State private var connected = UserDefaults.group.connected
+    @State private var isShowingReloadFailed = false
     
 //    @State var lastReadingDate: Date = Date(timeIntervalSinceNow: -999 * 60)
 //    @State var currentGlucose: Int = 0
@@ -319,16 +320,23 @@ struct PhoneAppHomeView: View {
         .alert ("Warning", isPresented: $isShowingDisclaimer) {
             Button("Accept", role: .cancel, action: {settings.hasSeenDisclaimer = true})
         }
-    message: {
+        message: {
             Text("!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.")
         }
         
-    .alert ("Update note", isPresented: $isShowingNotification) {
-        Button("Understood", role: .cancel, action: {settings.hasSeenNotification = true})
-    }
-message: {
-        Text("Please reboot phone and watch once if widgets do not work!")
-    }
+        .alert ("Update note", isPresented: $isShowingNotification) {
+            Button("Understood", role: .cancel, action: {settings.hasSeenNotification = true})
+        }
+        message: {
+            Text("Please reboot phone and watch once if widgets do not work!")
+        }
+        .alert ("Warning", isPresented: $isShowingReloadFailed) {
+            //            Button("Accept", role: .cancel, action: {settings.hasSeenDisclaimer = true})
+        }
+        message: {
+            Text(libreLinkUp.libreLinkUpResponse)
+        }
+        
         
         .overlay
         {
@@ -347,12 +355,18 @@ message: {
             
             connected = UserDefaults.group.connected
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-            if minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
+            if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
                 Task {
+                    
                     isReloading = true
                     await libreLinkUp.reloadLibreLinkUp()
+                    if libreLinkUp.libreLinkUpErrorBool == true {
+                        print(libreLinkUp.libreLinkUpResponse)
+                        isShowingReloadFailed = true
+                    }
                     minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
                     isReloading = false
+                    
                 }
                 scrollPosition = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date.now
             }
@@ -373,10 +387,14 @@ message: {
             
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
             connected = UserDefaults.group.connected
-            if minutesSinceLastReading >= 1 && connected == .newlyConnected {
+            if isReloading == false && minutesSinceLastReading >= 1 && connected == .newlyConnected {
                 Task {
                     isReloading = true
                     await libreLinkUp.reloadLibreLinkUp()
+                    if libreLinkUp.libreLinkUpErrorBool == true {
+                        print(libreLinkUp.libreLinkUpResponse)
+                        isShowingReloadFailed = true
+                    }
                     isReloading = false
                     connected = .connected
                     UserDefaults.group.connected = .connected
@@ -392,10 +410,14 @@ message: {
                 
                 connected = UserDefaults.group.connected
                 minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-                if minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
+                if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
                     Task {
                         isReloading = true
                         await libreLinkUp.reloadLibreLinkUp()
+                        if libreLinkUp.libreLinkUpErrorBool == true {
+                            print(libreLinkUp.libreLinkUpResponse)
+                            isShowingReloadFailed = true
+                        }
                         minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
                         isReloading = false
                     }

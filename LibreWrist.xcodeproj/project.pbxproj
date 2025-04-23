@@ -54,6 +54,7 @@
 		7B435CD42C6D57F5006F6E53 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CD32C6D57F5006F6E53 /* String.swift */; };
 		7B462BFD2C7FBAC8003FEDC3 /* MeasurementColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */; };
 		7B462BFE2C7FC46A003FEDC3 /* MeasurementColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */; };
+		7B4855DF2DB58DC90089409E /* TimeDifferencePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */; };
 		7B5CD22A2C946D330066B92B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */; };
 		7B5CD22B2C946D340066B92B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */; };
 		7B631AAC2CB85F6600CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
@@ -83,6 +84,8 @@
 		7BADE01D2C73E4E70074A47F /* Int.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE01C2C73E4E70074A47F /* Int.swift */; };
 		7BADE0212C73EB060074A47F /* Double.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE0202C73EB060074A47F /* Double.swift */; };
 		7BADE0232C73EB450074A47F /* GlucoseUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE0222C73EB450074A47F /* GlucoseUnit.swift */; };
+		7BB617F32DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */; };
+		7BB617F42DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */; };
 		7BB762FE2C8262E600C43600 /* WatchAppActionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB762FD2C8262E600C43600 /* WatchAppActionView.swift */; };
 		7BB763002C82642900C43600 /* WatchAppDonateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB762FF2C82642900C43600 /* WatchAppDonateView.swift */; };
 		7BB763032C8348BE00C43600 /* SecureDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BBD27892C7155BE001A71E7 /* SecureDefaults.swift */; };
@@ -240,6 +243,7 @@
 		7B435CD32C6D57F5006F6E53 /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		7B435CD52C6D5C1D006F6E53 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasurementColor.swift; sourceTree = "<group>"; };
+		7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeDifferencePicker.swift; sourceTree = "<group>"; };
 		7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7B631AAB2CB85F6600CE9EEF /* Reload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reload.swift; sourceTree = "<group>"; };
 		7B69F7C22CDD74DF00E3A50C /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
@@ -264,6 +268,7 @@
 		7BADE01C2C73E4E70074A47F /* Int.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Int.swift; sourceTree = "<group>"; };
 		7BADE0202C73EB060074A47F /* Double.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Double.swift; sourceTree = "<group>"; };
 		7BADE0222C73EB450074A47F /* GlucoseUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseUnit.swift; sourceTree = "<group>"; };
+		7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMessageSignleton.swift; sourceTree = "<group>"; };
 		7BB762FD2C8262E600C43600 /* WatchAppActionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAppActionView.swift; sourceTree = "<group>"; };
 		7BB762FF2C82642900C43600 /* WatchAppDonateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAppDonateView.swift; sourceTree = "<group>"; };
 		7BB98DFD2CB14CE2000A354D /* LibreWristWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibreWristWidgetExtension.entitlements; sourceTree = "<group>"; };
@@ -394,6 +399,7 @@
 			isa = PBXGroup;
 			children = (
 				7B299A0A2C90AF8C002A15C8 /* AuthTicket.swift */,
+				7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */,
 				7B299A102C90AFFC002A15C8 /* Glucose.swift */,
 				7B299A132C90B06C002A15C8 /* GlucoseMeasurement.swift */,
 				7BADE0222C73EB450074A47F /* GlucoseUnit.swift */,
@@ -556,6 +562,7 @@
 				7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */,
 				7BA0AE5C2C5AEB89004226FE /* PhoneAppDonateView.swift */,
 				7B183E9A2C84C9540018A24F /* PhoneAppInsulinDeliveryView.swift */,
+				7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -864,8 +871,10 @@
 				7BADE01D2C73E4E70074A47F /* Int.swift in Sources */,
 				7BA567992CBA974D003244EE /* MailView.swift in Sources */,
 				7B183E9B2C84C9540018A24F /* PhoneAppInsulinDeliveryView.swift in Sources */,
+				7B4855DF2DB58DC90089409E /* TimeDifferencePicker.swift in Sources */,
 				7B435CCC2C6D46DF006F6E53 /* Logger.swift in Sources */,
 				7BFD835E2C84E48E00A9B195 /* ExponentialInsulinModel.swift in Sources */,
+				7BB617F42DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */,
 				7B183E972C84B09D0018A24F /* PhoneToWatchConnector.swift in Sources */,
 				7B299A112C90AFFC002A15C8 /* Glucose.swift in Sources */,
 				7BADE01B2C73E4B60074A47F /* Data.swift in Sources */,
@@ -948,6 +957,7 @@
 				7B299A1E2C90DC43002A15C8 /* LibreLinkUpHistory.swift in Sources */,
 				7B299A152C90B06C002A15C8 /* GlucoseMeasurement.swift in Sources */,
 				7BC51F582C7C854F009542D2 /* Date.swift in Sources */,
+				7BB617F32DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */,
 				7BC51F4A2C7C80FE009542D2 /* WatchAppNightView.swift in Sources */,
 				7B299A1B2C90B0A1002A15C8 /* LibreLinkUpAlarm.swift in Sources */,
 			);

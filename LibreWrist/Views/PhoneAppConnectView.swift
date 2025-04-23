@@ -60,8 +60,10 @@ struct PhoneAppConnectView: View {
                 Section(header: Text("Credentials"), footer: Text("Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)")) {
                     TextField(text: $username, prompt: Text("Username (email adress)")) {
                         Text("Username")
-                    }.textContentType(.emailAddress)
+                    }
+                    .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
+                        .submitLabel(.done)
                         .autocorrectionDisabled(true)
                         .textInputAutocapitalization(.never)
                         .onChange(of: username) { _ in
@@ -70,7 +72,8 @@ struct PhoneAppConnectView: View {
                         }
                     SecureField(text: $password, prompt: Text("Password")) {
                         Text("Password")
-                    }.onChange(of: password) { _ in
+                    }.submitLabel(.done)
+                    .onChange(of: password) { _ in
                         UserDefaults.group.connected = .disconnected
                         settings.libreLinkUpToken = ""
                     }
@@ -151,7 +154,7 @@ struct PhoneAppConnectView: View {
         UserDefaults.group.connected = .connecting
         Task {
             do {
-                print("do")
+                print("do tryToConnect")
                 try await LibreLinkUp().login()
                 UserDefaults.group.connected = .newlyConnected
                 let messageToWatch: [String: Any] = ["content": "credentials",
@@ -159,7 +162,7 @@ struct PhoneAppConnectView: View {
                                                      "password": password]
                 sendMessagetoWatch(message: messageToWatch)
             } catch {
-                print("catch")
+                print("catch tryToConnect")
                 isShowingConnectionFailed = true
                 libreLinkUpResponse = error.localizedDescription
                 UserDefaults.group.connected = .disconnected

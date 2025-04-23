@@ -24,23 +24,10 @@ struct PhoneAppSettingsView: View {
                         UIApplication.shared.isIdleTimerDisabled.toggle()
                     }
             } header: {
-            Text("Settings")
-        }
+                Text("Settings")
+            }
             
             Section {
-                let versionNumber: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
-                let buildNumber: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as! String
-                Text("V\(versionNumber).\(buildNumber)")
-                
-                let systemVersion = UIDevice.current.systemVersion
-                let systemName = UIDevice.current.systemName
-                let model = UIDevice.current.model
-                let name = UIDevice.current.name
-                Text("\(systemName) \(systemVersion) on \(name)")
-                
-                Text("Sensor: \(SensorSettingsSingleton.shared.sensorType)")
-
-                
                 Link(destination: URL(string: "https://github.com/poml88/FLwatch/issues")!) {
                     Text("Open issue on GitHub")
                         .frame(width: 200, height: 50)
@@ -62,6 +49,20 @@ struct PhoneAppSettingsView: View {
                 .sheet(isPresented: $showingMailView) {
                     MailView(result: $mailResult)
                 }
+                
+                let versionNumber: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
+                let buildNumber: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as! String
+                Text("V\(versionNumber).\(buildNumber)")
+                
+                let systemVersion = UIDevice.current.systemVersion
+                let systemName = UIDevice.current.systemName
+                let model = UIDevice.current.model
+                let name = UIDevice.current.name
+                Text("\(systemName) \(systemVersion) on \(name)")
+                
+                Text("Sensor: \(SensorSettingsSingleton.shared.sensorType)")
+                
+                Text("Error message: \(DebugMessageSingleton.shared.libreLinkUpResponseError)")
                
             } header: {
             Text("Debug Info")
