@@ -1,0 +1,35 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "What is my glucose in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Wie ist mein ${applicationName} Blutzucker",
+              "Sage mir den aktuellen Wert aus ${applicationName}"
+            ]
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "What is my glucose in ${applicationName}",
+              "What's my glucose in ${applicationName}",
+              "What is my glucose level in ${applicationName}",
+              "What's my glucose level in ${applicationName}",
+              "What is my ${applicationName} glucose",
+              "What's my ${applicationName} glucose",
+              "What is my ${applicationName} glucose level",
+              "What's my ${applicationName} glucose level"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

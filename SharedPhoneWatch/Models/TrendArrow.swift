@@ -28,6 +28,18 @@ enum TrendArrow: Int, CustomStringConvertible, CaseIterable, Codable {
         }
     }
     
+    var descriptionSiri: LocalizedStringResource {
+        switch self {
+        case .notDetermined:  "not determined"
+        case .fallingQuickly: "falling quickly"
+        case .falling:        "falling"
+        case .stable:         "stable"
+        case .rising:         "rising"
+        case .risingQuickly:  "rising quickly"
+        default:              ""
+        }
+    }
+    
     init(string: String) {
         self = Self.allCases.first { $0.description == string } ?? .unknown
     }

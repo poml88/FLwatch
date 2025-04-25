@@ -83,39 +83,49 @@ struct LibreWristWidgetEntryView : View {
 ////                    Color(.white)
 ////                }
 //                AccessoryWidgetBackground()
-                HStack (spacing: 20){
-                    VStack (alignment: .center, spacing: 6){
-                        if entry.currentIOB > 0 {
-                            Text(currentIOB)
-                                .font(.system(size: 18, weight: .heavy))
-                        }
-                        Text(Date(), style: .timer)
-                        //Text(verbatim: " ")
-                            .font(.system(size: 14, weight: .heavy))
-                        //.colorInvert()
-                            .multilineTextAlignment(.center)
-                            .monospacedDigit()
-                            .frame(width: 60)
-//                            .padding(4)
+            HStack {//}(spacing: 0){
+                VStack (alignment: .center, spacing: 6){
+                    if entry.currentIOB > 0 {
+                        Text(currentIOB)
+                            .font(.system(size: 18, weight: .heavy))
                     }
-                    
-                    VStack(alignment: .center, spacing: -6)
-                    {
-                        Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
-                            .font(.system(size: 25, weight: .heavy, design: .monospaced))
-                            .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
-                        //.colorInvert()
+                    Text(Date(), style: .timer)
+                    //Text(verbatim: " ")
+                        .font(.system(size: 14, weight: .heavy))
+                    //.colorInvert()
+                        .multilineTextAlignment(.center)
+                        .monospacedDigit()
+                        .frame(width: 60)
+                    //                            .padding(4)
+                }
+                
+                VStack(alignment: .center, spacing: -6)
+                {
+                    Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
+                        .font(.system(size: 25, weight: .heavy, design: .monospaced))
+                        .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
+                    //.colorInvert()
                         .widgetAccentable()
-                        
-                        Text(verbatim: glucose)
-                            .font(.system(size: 27, weight: .heavy))
-                            .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
-                        //.colorInvert()
-                            .widgetAccentable()
-
-                    }
+                    
+                    Text(verbatim: glucose)
+                        .font(.system(size: 27, weight: .heavy))
+                        .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
+                    //.colorInvert()
+                        .widgetAccentable()
                     
                 }
+                //                    .frame(width: 50)
+                //                    .padding(.leading,-10)
+                if #available(watchOS 11.0, *) {
+                    Button(intent: ReloadWidgetIntent()) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 25, weight: .heavy))
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    //                    .padding(.trailing,5)
+                    .padding(.leading,10)
+                }
+            }
 //            }
             .containerBackground(for: .widget) {
                 EmptyView()
