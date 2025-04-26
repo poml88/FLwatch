@@ -9,6 +9,7 @@
             "state" : "translated",
             "values" : [
               "Wie ist mein ${applicationName} Blutzucker",
+              "Sage mir den aktuellen Wert aus der app ${applicationName}",
               "Sage mir den aktuellen Wert aus ${applicationName}"
             ]
           }

@@ -28,6 +28,18 @@ struct PhoneAppSettingsView: View {
             }
             
             Section {
+                Link(destination: URL(string: "https://github.com/poml88/FLwatch/#usage")!) {
+                    Text("Setup and usage guide")
+                        .frame(width: 200, height: 50)
+                        .foregroundColor(.accentColor)
+                        .background(Color(.systemGray5))
+                        .cornerRadius(10)
+                }
+                
+                Text("Siri integration: Siri can tell you your blood glucose by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\". In the shortcuts app you can create a shortcut for this action with any custom name, like \"Current glucose level\" and select \"show shortcut on watch\".")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
                 Link(destination: URL(string: "https://github.com/poml88/FLwatch/issues")!) {
                     Text("Open issue on GitHub")
                         .frame(width: 200, height: 50)
@@ -49,6 +61,12 @@ struct PhoneAppSettingsView: View {
                 .sheet(isPresented: $showingMailView) {
                     MailView(result: $mailResult)
                 }
+            } header: {
+                Text("Support")
+            }
+            
+            Section {
+                
                 
                 let versionNumber: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
                 let buildNumber: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as! String

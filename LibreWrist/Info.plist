@@ -3,13 +3,19 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleSpokenName</key>
-	<string>F L watch</string>
+	<string>F L wotsch</string>
 	<key>CFBundleDisplayName</key>
 	<string>FLwatch</string>
 	<key>APP_GROUP_ID</key>
 	<string>${APP_GROUP_ID}</string>
 	<key>INAlternativeAppNames</key>
 	<array>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>Efelwotsch</string>
+			<key>INAlternativeAppNamePronunciationHint</key>
+			<string>ef el wotch</string>
+		</dict>
 		<dict>
 			<key>INAlternativeAppName</key>
 			<string>F L watch</string>

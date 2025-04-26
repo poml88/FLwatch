@@ -6,6 +6,12 @@
 	<array>
 		<dict>
 			<key>INAlternativeAppName</key>
+			<string>Efelwotch</string>
+			<key>INAlternativeAppNamePronunciationHint</key>
+			<string>ef el wotsch</string>
+		</dict>
+		<dict>
+			<key>INAlternativeAppName</key>
 			<string>F L watch</string>
 			<key>INAlternativeAppNamePronunciationHint</key>
 			<string>ef el wotsch</string>

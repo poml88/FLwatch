@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
     "!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional." : {
       "localizations" : {
         "de" : {
@@ -16,6 +19,9 @@
           }
         }
       }
+    },
+    "[...]" : {
+
     },
     "**Not for treatment decisions.**\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional." : {
       "localizations" : {
@@ -50,6 +56,9 @@
       }
     },
     "%.1f" : {
+
+    },
+    "%.2fu" : {
 
     },
     "%@" : {
@@ -120,12 +129,44 @@
         }
       }
     },
+    "Blood Glucose" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blutzucker"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucosa en sangre"
+          }
+        }
+      }
+    },
     "Bolus Insulin (Novorapid)" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bolo de Insulina (Novorapid)"
+          }
+        }
+      }
+    },
+    "Buy the developer quality coffee beans!\n🤝☕️" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spendieren Sie dem Entwickler ein paar Kaffeebohnen!\n🤝☕️"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compre café en grano de calidad para el desarrollador!\n🤝☕️"
           }
         }
       }
@@ -234,6 +275,9 @@
         }
       }
     },
+    "Debug info:" : {
+
+    },
     "Disconnected" : {
       "localizations" : {
         "de" : {
@@ -320,7 +364,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)"
+            "value" : "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[¿PROBLEMAS? TOCA PARA ABRIR LA AYUDA](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)"
           }
         }
       }
@@ -328,7 +372,45 @@
     "Error message: %@" : {
 
     },
+    "falling" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fallend"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "descendente"
+          }
+        }
+      }
+    },
+    "falling quickly" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "schnell fallend"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cayendo rápidamente"
+          }
+        }
+      }
+    },
     "FLwatch" : {
+
+    },
+    "Get Current Blood Glucose" : {
+
+    },
+    "Get the current blood glucose." : {
 
     },
     "Glucose" : {
@@ -347,8 +429,24 @@
         }
       }
     },
-    "Hour" : {
+    "Hello, World!" : {
 
+    },
+    "Hour" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stunde"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hora"
+          }
+        }
+      }
     },
     "If you like this app, buy the developer quality coffee beans!\n🤝☕️" : {
       "localizations" : {
@@ -418,7 +516,30 @@
       }
     },
     "Minute" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minuto"
+          }
+        }
+      }
+    },
+    "No credentials (yet) received from phone. Try tapping 'Connect' on phone to resend to watch and wait a minute." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(Noch) keine Zugangsdaten vom iPhone erhalten. Drücken Sie \"Verbinden\" auf dem iPhone und warten Sie 1 Minute."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No he recibido las credenciales (aún) desde el teléfono. Prueba a pulsar \"Conectar\" en el teléfono para volver a enviarlas al reloj y espera un minuto."
+          }
+        }
+      }
     },
     "No data received since %lld min.\n\nCheck network and bluetooth connections." : {
       "localizations" : {
@@ -432,6 +553,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No se han recibido datos desde hace %lld min.\n\nCompruebe las conexiones de red y bluetooth."
+          }
+        }
+      }
+    },
+    "No data since %lld min." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Daten empfangen seit %lld Min."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han recibido datos desde hace %lld min."
+          }
+        }
+      }
+    },
+    "not determined" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nicht bestimmt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no determinado"
           }
         }
       }
@@ -453,7 +606,20 @@
       }
     },
     "or: Time since injection" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "oder: Zeit seit Injektion"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "o: Tiempo transcurrido desde la inyección"
+          }
+        }
+      }
     },
     "Password" : {
       "localizations" : {
@@ -590,6 +756,41 @@
         }
       }
     },
+    "Return the current blood glucose." : {
+
+    },
+    "rising" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steigend"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "creciente"
+          }
+        }
+      }
+    },
+    "rising quickly" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "schnell steigend"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aumentando rápidamente"
+          }
+        }
+      }
+    },
     "Send Email to Support" : {
       "localizations" : {
         "de" : {
@@ -622,6 +823,12 @@
         }
       }
     },
+    "Setup and usage guide" : {
+
+    },
+    "Siri integration: Siri can tell you your blood glucose by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\". In the shortcuts app you can create a shortcut for this action with any custom name, like \"Current glucose level\" and select \"show shortcut on watch\"." : {
+
+    },
     "Something went wrong..." : {
       "localizations" : {
         "de" : {
@@ -634,6 +841,25 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Algo ha ido mal..."
+          }
+        }
+      }
+    },
+    "Sorry, there are no recent blood glucose values." : {
+
+    },
+    "stable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "stabil"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "estable"
           }
         }
       }
@@ -654,6 +880,12 @@
         }
       }
     },
+    "Support" : {
+
+    },
+    "There could be some more info here..." : {
+
+    },
     "Time" : {
       "localizations" : {
         "de" : {
@@ -671,7 +903,20 @@
       }
     },
     "Time: " : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeit:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo:"
+          }
+        }
+      }
     },
     "Time: %@       Units: %.1f" : {
       "extractionState" : "stale",
@@ -698,10 +943,22 @@
     },
     "Time: %@  (%@ h)      Units: %.1f" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeit: %1$@  (%2$@ h)      Einheiten: %3$.1f"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Time: %1$@  (%2$@ h)      Units: %3$.1f"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hora: %1$@  (%2$@ h)      Unidades: %3$.1f"
           }
         }
       }
@@ -712,6 +969,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verstanden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprendido"
           }
         }
       }
@@ -773,6 +1036,44 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Advertencia"
+          }
+        }
+      }
+    },
+    "Your blood glucose is currently %@ and %@." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Blutzucker ist %1$@ und %2$@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your blood glucose is currently %1$@ and %2$@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su nivel de glucosa en sangre actualmente es %1$@ y %2$@."
+          }
+        }
+      }
+    },
+    "Your blood glucose value is currently not available." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Blutzuckerwert ist aktuell nicht verfügbar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su valor de glucosa en sangre no está disponible actualmente."
           }
         }
       }
