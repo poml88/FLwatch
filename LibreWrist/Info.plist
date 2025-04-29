@@ -11,6 +11,12 @@
 	<key>INAlternativeAppNames</key>
 	<array>
 		<dict>
+			<key>INAlternativeAppNamePronunciationHint</key>
+			<string>ef el wotsch</string>
+			<key>INAlternativeAppName</key>
+			<string>FL watch</string>
+		</dict>
+		<dict>
 			<key>INAlternativeAppName</key>
 			<string>Efelwotsch</string>
 			<key>INAlternativeAppNamePronunciationHint</key>

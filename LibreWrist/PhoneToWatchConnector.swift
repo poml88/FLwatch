@@ -4,12 +4,13 @@
 //
 //  Created by Peter Müller on 01.09.24.
 //
-
+#if false
 import Foundation
 import WatchConnectivity
 import OSLog
 
 class PhoneToWatchConnector: NSObject, WCSessionDelegate, ObservableObject {
+    
     @Published var receivedMessage: String = ""
     
     private var messageHandlers: [WatchMessageHandler] = []
@@ -32,7 +33,14 @@ class PhoneToWatchConnector: NSObject, WCSessionDelegate, ObservableObject {
         DispatchQueue.main.async { [self] in
             receivedMessage = message["message"] as? String ?? "Not found"
         }
-        
+        Logger.connectivity.info("Message received: \(message)")
+
+        if message["content"] as? String == "insulinDelivery" {
+            let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: message["timeStamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600, insulinUnits: message["units"] as? Double ?? 0.0)
+            var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
+            insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
+            UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
+        }
         
         if let replyHandler = replyHandler {
             
@@ -73,13 +81,10 @@ class PhoneToWatchConnector: NSObject, WCSessionDelegate, ObservableObject {
             Logger.connectivity.warning("Session not reachable / counterpart app not available for live messaging")
 //            try? WCSession.default.updateApplicationContext(message)
             WCSession.default.transferUserInfo(message)
-            
         }
     }
     
     func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
-//        print(message)
-        
         received(message)
     }
     
@@ -93,13 +98,14 @@ class PhoneToWatchConnector: NSObject, WCSessionDelegate, ObservableObject {
     
     var session: WCSession
     
+    static let shared = PhoneToWatchConnector()
+    
     init(session: WCSession = .default) {
         self.session = session
         super.init()
         session.delegate = self
         session.activate()
     }
-    
 }
 
 protocol WatchMessage {
@@ -115,7 +121,7 @@ private protocol WatchRequestHandler {
     func handle(dictionary: [String : Any], responseHandler: @escaping (WatchMessage) -> Void) -> Bool
 }
 
-
+#endif
 //extension WatchMessage {
 //        
 //    func send(replyHandler: (([String : Any]) -> Void)? = nil) {

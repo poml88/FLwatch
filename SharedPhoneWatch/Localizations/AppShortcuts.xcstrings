@@ -1,6 +1,37 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "${applicationName} record insulin" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Notiere ${insulinUnitsEnum} Insulineinheiten in ${applicationName}",
+              "Protokolliere ${insulinUnitsEnum} Insulineinheiten in ${applicationName}",
+              "Protokolliere  Insulingabe in ${applicationName}",
+              "Speichere eine Insulingabe in der app ${applicationName}"
+            ]
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "${applicationName} record insulin",
+              "${applicationName} note insulin",
+              "${applicationName} add insulin",
+              "${insulinUnitsEnum} insulin units in ${applicationName}",
+              "${applicationName} ${insulinUnitsEnum} unit",
+              "${applicationName} ${insulinUnitsEnum} units",
+              "${insulinUnitsEnum} unit ${applicationName}",
+              "${insulinUnitsEnum} units ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
     "What is my glucose in ${applicationName}" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

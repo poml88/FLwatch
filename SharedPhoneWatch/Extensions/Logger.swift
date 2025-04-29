@@ -26,6 +26,8 @@ extension Logger {
     static let general = Logger(subsystem: subsystem, category: "statistics")
     
     static let connectivity = Logger(subsystem: subsystem, category: "statistics")
+    
+    static let libreLinkUp = Logger(subsystem: subsystem, category: "LibreLinkUp")
 
 }
 

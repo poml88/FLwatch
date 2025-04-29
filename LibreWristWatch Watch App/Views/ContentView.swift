@@ -10,7 +10,7 @@ import SwiftUI
 
 struct ContentView: View {
     
-    @StateObject var watchConnector = WatchToPhoneConnector()
+    @StateObject var watchConnector = WatchConnectivityManager()
     
     @State var selected = "Home"
     

@@ -1,16 +1,16 @@
 //
-//  WatchToIOSConnection.swift
-//  TestWatchConnectivityWatchApp Watch App
+//  WatchConnectivityManager.swift
+//  LibreWrist
 //
-//  Created by Peter Müller on 01.09.24.
+//  Created by Peter Müller on 29.04.25.
 //
-#if false
-import Foundation
+
+//import Foundation
 import WatchConnectivity
 import OSLog
 import SecureDefaults
 
-class WatchToPhoneConnector: NSObject, WCSessionDelegate, ObservableObject {
+class WatchConnectivityManager: NSObject, WCSessionDelegate, ObservableObject {
     
     @Published var receivedMessage: String = ""
     
@@ -18,8 +18,18 @@ class WatchToPhoneConnector: NSObject, WCSessionDelegate, ObservableObject {
     private var requestHandlers: [WatchRequestHandler] = []
     
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: (any Error)?) {
-        
+        Logger.connectivity.info("Session activation complete: \(activationState.rawValue)")
     }
+    
+#if os(iOS)
+    func sessionDidBecomeInactive(_ session: WCSession) {
+        Logger.connectivity.info("Session did become inactive")
+    }
+    
+    func sessionDidDeactivate(_ session: WCSession) {
+        Logger.connectivity.info("Session did deactivate")
+    }
+#endif
     
     private func received(_ message: [String : Any], replyHandler: (([String : Any]) -> Void)? = nil) {
         
@@ -51,7 +61,7 @@ class WatchToPhoneConnector: NSObject, WCSessionDelegate, ObservableObject {
         if message["content"] as? String == "clearInsulinHistory" {
             UserDefaults.group.insulinDeliveryHistory = []
         }
-
+        
         
         if let replyHandler = replyHandler {
             
@@ -65,12 +75,9 @@ class WatchToPhoneConnector: NSObject, WCSessionDelegate, ObservableObject {
                 return
             }
         }
-        
-        // iterate through the message handlers until one of them handles it
-        let _ = messageHandlers.firstIndex(where: { $0.handle(dictionary: message) })
     }
     
-    func sendMessagetoPhone(_ message: [String : Any], replyHandler: (([String : Any]) -> Void)? = nil) {
+    func sendMessageToPairedDevice(_ message: [String : Any], replyHandler: (([String : Any]) -> Void)? = nil) {
         guard WCSession.isSupported() else {
             Logger.connectivity.error("Device does not support WatchConnectivity")
             return
@@ -80,17 +87,19 @@ class WatchToPhoneConnector: NSObject, WCSessionDelegate, ObservableObject {
             return
         }
         if session.isReachable {
-//            let message: [String: Any] = ["message": message]
+            //            let message: [String: Any] = ["message": message]
             Logger.connectivity.info("Sending message: \(message)")
-            session.sendMessage(message, replyHandler: replyHandler, errorHandler: { error in
+            session.sendMessage(message, replyHandler: replyHandler, errorHandler: { error in // sendMessage on watch only works if app is active in foreground
                 Logger.connectivity.error("\(error)")
-                Logger.connectivity.warning("Error, trying ApplicationContext")//                try? WCSession.default.updateApplicationContext(message)
+                Logger.connectivity.warning("Error, trying transferUserInfo")
+                //                try? WCSession.default.updateApplicationContext(message)
                 WCSession.default.transferUserInfo(message)
             })
         } else {
             Logger.connectivity.warning("Session not reachable / counterpart app not available for live messaging")
-//            try? WCSession.default.updateApplicationContext(message)
-            WCSession.default.transferUserInfo(message)
+            Logger.connectivity.warning("...trying transferUserInfo with message: \(message)")
+            //            try? WCSession.default.updateApplicationContext(message)
+            WCSession.default.transferUserInfo(message) // transferUserInfo does not work in Simulator!!
         }
     }
     
@@ -108,7 +117,7 @@ class WatchToPhoneConnector: NSObject, WCSessionDelegate, ObservableObject {
     
     var session: WCSession
     
-    static let shared = WatchToPhoneConnector()
+    static let shared = WatchConnectivityManager()
     
     init(session: WCSession = .default) {
         self.session = session
@@ -130,4 +139,15 @@ private protocol WatchMessageHandler {
 private protocol WatchRequestHandler {
     func handle(dictionary: [String : Any], responseHandler: @escaping (WatchMessage) -> Void) -> Bool
 }
-#endif
+
+
+//extension WatchMessage {
+//
+//    func send(replyHandler: (([String : Any]) -> Void)? = nil) {
+//        WatchMessageService.singleton.send(message: self, replyHandler: replyHandler)
+//    }
+//
+//    func send<T: WatchMessage>(responseHandler: @escaping (T) -> Void) {
+//        WatchMessageService.singleton.send(request: self, responseHandler: responseHandler)
+//    }
+//}

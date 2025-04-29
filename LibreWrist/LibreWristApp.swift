@@ -18,6 +18,7 @@ struct LibreWristApp: App {
         if UserDefaults.group.connected == .connecting {
             UserDefaults.group.connected = .disconnected
         }
+        FLwatchShortcuts.updateAppShortcutParameters()
     }
     
 //    @State private var history = History()

@@ -12,6 +12,7 @@ struct PhoneAppSettingsView: View {
     
     @State private var isScreenAlwaysOn = false
     @State private var showingMailView = false
+    @State private var isShowingSiriSheet = false
     @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
     
     var body: some View {
@@ -36,9 +37,19 @@ struct PhoneAppSettingsView: View {
                         .cornerRadius(10)
                 }
                 
-                Text("Siri integration: Siri can tell you your blood glucose by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\". In the shortcuts app you can create a shortcut for this action with any custom name, like \"Current glucose level\" and select \"show shortcut on watch\".")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Button {
+                    isShowingSiriSheet.toggle()
+                } label: {
+                    Text("Siri integration")
+                           .padding(-5)
+                           .frame(width: 177, height: 35)
+                   }
+                   .buttonStyle(.bordered)
+                .sheet(isPresented: $isShowingSiriSheet, content: {
+                    PhoneAppSiriSheetView()
+                })
+                
+                
                 
                 Link(destination: URL(string: "https://github.com/poml88/FLwatch/issues")!) {
                     Text("Open issue on GitHub")

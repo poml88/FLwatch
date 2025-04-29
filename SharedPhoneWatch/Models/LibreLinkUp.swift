@@ -117,9 +117,9 @@ class LibreLinkUp  {
                         //                        history.rawValues = []
                         //                        history.factoryValues = libreLinkUpHistory.libreLinkUpGlucose.dropFirst().map(\.glucose) // TEST
                         var trend = LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose
-                        //                        Logger.general.info("LibreLinkUp: trend: \(trend)")
+                        //                        Logger.libreLinkUp.info("LibreLinkUp: trend: \(trend)")
                         //                        let a: String = "\(lastMeasurement)"
-                        //                        Logger.general.info("LibreLinkUp: lastMeasurement: \(a)")
+                        //                        Logger.libreLinkUp.info("LibreLinkUp: lastMeasurement: \(a)")
                         
                         if trend.isEmpty || lastMeasurement.id > trend[0].id { // FIME: for the first hour of a new sensor values are not inserted into trend or are they filtered out below?
                             trend.insert(lastMeasurement, at: 0)
@@ -131,7 +131,7 @@ class LibreLinkUp  {
                             trend = trend.filter { $0.id - lastGraphItem < 60 }
                         }
                         LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose = trend
-                        Logger.general.info("LibreLinkUp: libreLinkUpHistory.libreLinkUpMinuteGlucose: \(LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose)")
+                        Logger.libreLinkUp.info("LibreLinkUp: libreLinkUpHistory.libreLinkUpMinuteGlucose: \(LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose)")
                         // TODO: merge and update sensor history / trend
                         //                            app.main.didParseSensor(app.sensor)
                     }
@@ -178,16 +178,16 @@ class LibreLinkUp  {
             var redirected: Bool
             loop: repeat {
                 redirected = false
-                Logger.general.info("LibreLinkUp: posting to \(request.url!.absoluteString) \(jsonData!.string), headers: \(self.headers)")
+                Logger.libreLinkUp.info("LibreLinkUp: posting to \(request.url!.absoluteString) \(jsonData!.string), headers: \(self.headers)")
                 let (data, response) = try await URLSession.shared.data(for: request)
                 if let response = response as? HTTPURLResponse {
                     let status = response.statusCode
-                    Logger.general.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)")
+                    Logger.libreLinkUp.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)")
                     responseData = "LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)"
                     if status == 401 {
-                        Logger.general.info("LibreLinkUp: POST not authorized")
+                        Logger.libreLinkUp.info("LibreLinkUp: POST not authorized")
                     } else {
-                        Logger.general.info("LibreLinkUp: POST \((200..<300).contains(status) ? "success" : "error")")
+                        Logger.libreLinkUp.info("LibreLinkUp: POST \((200..<300).contains(status) ? "success" : "error")")
                     }
                 }
                 do {
@@ -215,7 +215,7 @@ class LibreLinkUp  {
                                        let failures = data["failures"] as? Int,
                                        let interval = data["interval"] as? Int,
                                        let lockout = data["lockout"] as? Int {
-                                        Logger.general.info("LibreLinkUp: login failures: \(failures), interval: \(interval) s, lockout: \(lockout) s")
+                                        Logger.libreLinkUp.info("LibreLinkUp: login failures: \(failures), interval: \(interval) s, lockout: \(lockout) s")
                                     }
                                 }
                             }
@@ -232,7 +232,7 @@ class LibreLinkUp  {
                                let type = step["type"] as? String {
                                 if type == "verifyEmail" {
                                     print("verifyemail")
-                                    Logger.general.info("LibreLinkUp: User has not yet verified his LLU email (tip: log out and re-login)")
+                                    Logger.libreLinkUp.info("LibreLinkUp: User has not yet verified his LLU email (tip: log out and re-login)")
                                     throw LibreLinkUpError.verifyEmail
                                     
                                     //                        LibreLinkUp: response data: {"status":4,"data":{"step":{"type":"verifyEmail","componentName":"VerifyEmail","props":{"email":"xxxxxxxx@cmdline.net"}},"user":{"accountType":"pat","country":"DE","uiLanguage":"de-DE"},"authTicket":{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQ5OGY3YTAwLTFhZjctMTFmMC05NGViLTVhMzc4MGRlMDYzNiIsImZpcnN0TmFtZSI6IkZMIiwibGFzdE5hbWUiOiJ3YXRjaCAiLCJjb3VudHJ5IjoiREUiLCJyZWdpb24iOiJkZSIsInJvbGUiOiJwYXRpZW50IiwiZW1haWwiOiJmbHdhdGNoQGNtZGxpbmUubmV0IiwicyI6ImxsdS5pb3MiLCJzaWQiOiJiYzMwNzI3MS03ODdjLTQ3NjEtOTIyNy0yMjQwMzliZGQ2MWYiLCJleHAiOjE3NDQ4MzQ4NDEsImlhdCI6MTc0NDgzMTI0MSwianRpIjoiYTk4NTNmZmMtMTYzMC00MDcwLTgyZmUtZjlhOTc2MTUyNzIzIn0.M7nsO65mDx5lFq9IDBFf6OG419Qkaa2avjL1SYoT1tg","expires":1744834841,"duration":3600000}}}, status: 200
@@ -240,14 +240,14 @@ class LibreLinkUp  {
                                     
                                 } else if type == "tou" {
                                     print("tou")
-                                    Logger.general.info("LibreLinkUp: Terms of Use have been updated and must be accepted by running LibreLink (tip: log out and re-login)")
+                                    Logger.libreLinkUp.info("LibreLinkUp: Terms of Use have been updated and must be accepted by running LibreLink (tip: log out and re-login)")
                                     if                                    let user = data["user"] as? [String: Any],
                                                                           let country = user["country"] as? String,
                                                                           let authTicketDict = data["authTicket"] as? [String: Any],
                                                                           let authTicketData = try? JSONSerialization.data(withJSONObject: authTicketDict),
                                                                           let authTicket = try? JSONDecoder().decode(AuthTicket.self, from: authTicketData) {
                                         let authTicketString = "\(authTicket)"
-                                        Logger.general.info("LibreLinkUp: ToU: authTicket: \(authTicketString), expires on \(Date(timeIntervalSince1970: Double(authTicket.expires)))")
+                                        Logger.libreLinkUp.info("LibreLinkUp: ToU: authTicket: \(authTicketString), expires on \(Date(timeIntervalSince1970: Double(authTicket.expires)))")
                                         //call accepttou
                                         //loginResponse = try await tou(apiRegion: apiRegion, authToken: authToken)
                                     }
@@ -271,7 +271,7 @@ class LibreLinkUp  {
                             //                        DispatchQueue.main.async { [self] in
                             settings.libreLinkUpRegion = region
                             //                        }
-                            Logger.general.info("LibreLinkUp: redirecting to \(self.regionalSiteURL)/\(self.loginEndpoint) ") // The very first time this will be "eu" instead of the "region" because UserDefaults has not been set.
+                            Logger.libreLinkUp.info("LibreLinkUp: redirecting to \(self.regionalSiteURL)/\(self.loginEndpoint) ") // The very first time this will be "eu" instead of the "region" because UserDefaults has not been set.
                             request.url = URL(string: "\(regionalSiteURL)/\(loginEndpoint)")!
                             continue loop
                         }
@@ -284,7 +284,7 @@ class LibreLinkUp  {
                            let authTicketData = try? JSONSerialization.data(withJSONObject: authTicketDict),
                            let authTicket = try? JSONDecoder().decode(AuthTicket.self, from: authTicketData) {
                             let authTicketString = "\(authTicket)"
-                            Logger.general.info("LibreLinkUp: user id: \(id), country: \(country), authTicket: \(authTicketString), expires on \(Date(timeIntervalSince1970: Double(authTicket.expires)))")
+                            Logger.libreLinkUp.info("LibreLinkUp: user id: \(id), country: \(country), authTicket: \(authTicketString), expires on \(Date(timeIntervalSince1970: Double(authTicket.expires)))")
                             DispatchQueue.main.async { [self] in
                                 settings.libreLinkUpUserId = id
                                 settings.libreLinkUpPatientId = id  // avoid scraping patientId when following ourselves
@@ -300,16 +300,16 @@ class LibreLinkUp  {
                                 for (header, value) in headers {
                                     request.setValue(value, forHTTPHeaderField: header)
                                 }
-                                Logger.general.info("LibreLinkUp: URL request: \(request.url!.absoluteString), headers: \(request.allHTTPHeaderFields!)")
+                                Logger.libreLinkUp.info("LibreLinkUp: URL request: \(request.url!.absoluteString), headers: \(request.allHTTPHeaderFields!)")
                                 let (data, response) = try await URLSession.shared.data(for: request)
-                                Logger.general.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
+                                Logger.libreLinkUp.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
                                 do {
                                     if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                                        let data = json["data"] as? [String: Any],
                                        let server = data["lslApi"] as? String {
                                         let regionIndex = server.firstIndex(of: "-")
                                         let region = regionIndex == nil ? defaultRegion : String(server[server.index(regionIndex!, offsetBy: 1) ..< server.firstIndex(of: ".")!])
-                                        Logger.general.info("LibreLinkUp: regional server: \(server), saved default region: \(region)")
+                                        Logger.libreLinkUp.info("LibreLinkUp: regional server: \(server), saved default region: \(region)")
                                         //                                    DispatchQueue.main.async { [self] in
                                         settings.libreLinkUpRegion = region
                                         //                                    }
@@ -320,18 +320,18 @@ class LibreLinkUp  {
                                             for country in countries {
                                                 countryCodes.append(country["ValueMember"] as! String)
                                             }
-                                            Logger.general.info("LibreLinkUp: country codes: \(countryCodes)")
+                                            Logger.libreLinkUp.info("LibreLinkUp: country codes: \(countryCodes)")
                                         }
                                         //                                        }
                                     }
                                 } catch {
-                                    Logger.general.info("LibreLinkUp: error while decoding response: \(error.localizedDescription)")
+                                    Logger.libreLinkUp.info("LibreLinkUp: error while decoding response: \(error.localizedDescription)")
                                     throw LibreLinkUpError.jsonDecoding
                                 }
                             }
                             
                             if settings.libreLinkUpFollowing {
-                                Logger.general.info("LibreLinkUp: getting connections for follower user id: \(id)")
+                                Logger.libreLinkUp.info("LibreLinkUp: getting connections for follower user id: \(id)")
                                 var request = URLRequest(url: URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)")!)
                                 var authenticatedHeaders = headers
                                 authenticatedHeaders["Authorization"] = "Bearer \(settings.libreLinkUpToken)"
@@ -339,15 +339,15 @@ class LibreLinkUp  {
                                 for (header, value) in authenticatedHeaders {
                                     request.setValue(value, forHTTPHeaderField: header)
                                 }
-                                Logger.general.info("LibreLinkUp: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
+                                Logger.libreLinkUp.info("LibreLinkUp: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
                                 let (data, response) = try await URLSession.shared.data(for: request)
-                                Logger.general.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
+                                Logger.libreLinkUp.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
                                 if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                                    let data = json["data"] as? [[String: Any]] {
                                     if data.count > 0 {
                                         let connection = data[0]
                                         let patientId = connection["patientId"] as! String
-                                        Logger.general.info("LibreLinkUp: first patient Id: \(patientId)")
+                                        Logger.libreLinkUp.info("LibreLinkUp: first patient Id: \(patientId)")
                                         DispatchQueue.main.async { [self] in
                                             settings.libreLinkUpPatientId = patientId
                                         }
@@ -364,28 +364,28 @@ class LibreLinkUp  {
             
         
         } catch LibreLinkUpError.notAuthenticated {
-            Logger.general.info("LibreLinkUp: error: \(LibreLinkUpError.notAuthenticated.localizedDescription)")
+            Logger.libreLinkUp.info("LibreLinkUp: error: \(LibreLinkUpError.notAuthenticated.localizedDescription)")
             throw LibreLinkUpError.notAuthenticated
         } catch LibreLinkUpError.lockedAccount {
-            Logger.general.info("LibreLinkUp: error: \(LibreLinkUpError.lockedAccount.localizedDescription)")
+            Logger.libreLinkUp.info("LibreLinkUp: error: \(LibreLinkUpError.lockedAccount.localizedDescription)")
             throw LibreLinkUpError.lockedAccount
         } catch LibreLinkUpError.loggingIntoWrongRegionalServer {
-            Logger.general.info("LibreLinkUp: error: \(LibreLinkUpError.loggingIntoWrongRegionalServer.localizedDescription)")
+            Logger.libreLinkUp.info("LibreLinkUp: error: \(LibreLinkUpError.loggingIntoWrongRegionalServer.localizedDescription)")
             throw LibreLinkUpError.lockedAccount
         } catch LibreLinkUpError.verifyEmail {
-            Logger.general.info("LibreLinkUp: error: \(LibreLinkUpError.verifyEmail.localizedDescription)")
+            Logger.libreLinkUp.info("LibreLinkUp: error: \(LibreLinkUpError.verifyEmail.localizedDescription)")
             throw LibreLinkUpError.verifyEmail
         } catch LibreLinkUpError.touNotAccepted {
-            Logger.general.info("LibreLinkUp: error: \(LibreLinkUpError.touNotAccepted.localizedDescription)")
+            Logger.libreLinkUp.info("LibreLinkUp: error: \(LibreLinkUpError.touNotAccepted.localizedDescription)")
             throw LibreLinkUpError.touNotAccepted
         } catch LibreLinkUpError.unknownStatus4 {
-            Logger.general.info("LibreLinkUp: error: \(LibreLinkUpError.unknownStatus4.localizedDescription)")
+            Logger.libreLinkUp.info("LibreLinkUp: error: \(LibreLinkUpError.unknownStatus4.localizedDescription)")
             throw LibreLinkUpError.unknownStatus4
         } catch LibreLinkUpError.jsonDecoding {
-            Logger.general.info("LibreLinkUp: error while decoding response: \(LibreLinkUpError.jsonDecoding.localizedDescription)")
+            Logger.libreLinkUp.info("LibreLinkUp: error while decoding response: \(LibreLinkUpError.jsonDecoding.localizedDescription)")
             throw LibreLinkUpError.jsonDecoding
         } catch {
-            Logger.general.info("LibreLinkUp: server error: \(error.localizedDescription)")
+            Logger.libreLinkUp.info("LibreLinkUp: server error: \(error.localizedDescription)")
             let errorAsString = "\(error)"
             DebugMessageSingleton.shared.libreLinkUpResponseError = errorAsString
             throw LibreLinkUpError.noConnectionLogin
@@ -402,7 +402,7 @@ class LibreLinkUp  {
         for (header, value) in authenticatedHeaders {
             request.setValue(value, forHTTPHeaderField: header)
         }
-        Logger.general.info("LibreLinkUp: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
+        Logger.libreLinkUp.info("LibreLinkUp: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
         
         var history: [LibreLinkUpGlucose] = []
         var logbookData: Data = Data()
@@ -418,7 +418,7 @@ class LibreLinkUp  {
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             let status = (response as! HTTPURLResponse).statusCode
-            Logger.general.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)")
+            Logger.libreLinkUp.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)")
             responseData = "LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)"
             // TODO: {"status":911}: server maintenance
             // LibreLinkUp: response data: {"status":4,"error":{"message":"followerNotConnectToPatient"}}, status: 200
@@ -451,10 +451,10 @@ class LibreLinkUp  {
                    let connection = data["connection"] as? [String: Any],
                    let patientDevice = connection["patientDevice"] as? [String: Any]
                 {
-                    Logger.general.info("LibreLinkUp: connection data: \(connection)")
+                    Logger.libreLinkUp.info("LibreLinkUp: connection data: \(connection)")
                     unit = connection["uom"] as? Int ?? 1 == 1 ? .mgdl : .mmoll
                     let unitString = "\(unit)"
-                    Logger.general.info("LibreLinkUp: measurement unit: \(unitString)")
+                    Logger.libreLinkUp.info("LibreLinkUp: measurement unit: \(unitString)")
                     
                     let uom = connection["uom"] as? Int ?? 1
                     let targetLow = connection["targetLow"] as? Int ?? 0
@@ -471,7 +471,7 @@ class LibreLinkUp  {
                     
                     if let activeSensors = data["activeSensors"] as? [[String: Any]]
                     {
-                        Logger.general.info("LibreLinkUp: active sensors: \(activeSensors)")
+                        Logger.libreLinkUp.info("LibreLinkUp: active sensors: \(activeSensors)")
                         for (i, activeSensor) in activeSensors.enumerated() {
                             if let sensor = activeSensor["sensor"] as? [String: Any],
                                let device = activeSensor["device"] as? [String: Any],
@@ -508,7 +508,7 @@ class LibreLinkUp  {
                                 }
                                 let activationDate = Date(timeIntervalSince1970: Double(a))
                                 let sensorTypeString = "\(sensorType)"
-                                Logger.general.info("LibreLinkUp: active sensor # \(i + 1) of \(activeSensors.count): serial: \(sn), activation date: \(activationDate) (timestamp = \(a)), LibreLink version: \(v), device id: \(deviceId), product type: \(pt), sensor type: \(sensorTypeString), alarms: \(alarms)")
+                                Logger.libreLinkUp.info("LibreLinkUp: active sensor # \(i + 1) of \(activeSensors.count): serial: \(sn), activation date: \(activationDate) (timestamp = \(a)), LibreLink version: \(v), device id: \(deviceId), product type: \(pt), sensor type: \(sensorTypeString), alarms: \(alarms)")
                             }
                         }
                     }
@@ -573,7 +573,7 @@ class LibreLinkUp  {
                         //                                main.status("\(sensor.type)  +  LLU")
                         //                            }
                         //                        }
-                        Logger.general.info("LibreLinkUp: sensor serial: \(serial), activation date: \(activationDate) (timestamp = \(activationTime)), device id: \(deviceId),  product type: \(pt), sensor type: \(sensorType), alarms: \(alarms)")
+                        Logger.libreLinkUp.info("LibreLinkUp: sensor serial: \(serial), activation date: \(activationDate) (timestamp = \(activationTime)), device id: \(deviceId),  product type: \(pt), sensor type: \(sensorType), alarms: \(alarms)")
                         
                         if let lastGlucoseMeasurement = connection["glucoseMeasurement"] as? [String: Any],
                            let measurementData = try? JSONSerialization.data(withJSONObject: lastGlucoseMeasurement),
@@ -584,7 +584,7 @@ class LibreLinkUp  {
                             let lastGlucose = LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow)
                             
                             let measurementString = "\(measurement)"
-                            Logger.general.info("LibreLinkUp: last glucose measurement: \(measurementString) (JSON: \(lastGlucoseMeasurement))")
+                            Logger.libreLinkUp.info("LibreLinkUp: last glucose measurement: \(measurementString) (JSON: \(lastGlucoseMeasurement))")
 #warning ("Do something with trend arrow")
                             //                            if lastGlucose.trendArrow != nil {
                             //                                DispatchQueue.main.async { [self] in
@@ -606,13 +606,13 @@ class LibreLinkUp  {
                                         if lifeCount % 5 == 1 { lifeCount -= 1 }
                                         history.append(LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow))
                                         let measurementString = "\(measurement)"
-                                        Logger.general.info("LibreLinkUp: graph measurement # \(i) of \(graphData.count): \(measurementString) (JSON: \(glucoseMeasurement)), lifeCount = \(lifeCount)")
+                                        Logger.libreLinkUp.info("LibreLinkUp: graph measurement # \(i) of \(graphData.count): \(measurementString) (JSON: \(glucoseMeasurement)), lifeCount = \(lifeCount)")
                                     }
                                 }
                             }
                             
                             history.append(lastGlucose)
-                            Logger.general.info("LibreLinkUp: graph values: \(history.map { ($0.glucose.id, $0.glucose.value, $0.glucose.date.shortDateTime, $0.color) })")
+                            Logger.libreLinkUp.info("LibreLinkUp: graph values: \(history.map { ($0.glucose.id, $0.glucose.value, $0.glucose.date.shortDateTime, $0.color) })")
                             
                             // TODO: https://api-eu.libreview.io/glucoseHistory?from=1700092800&numPeriods=5&period=14
                             //                            if settings.userLevel >= .test {
@@ -620,13 +620,13 @@ class LibreLinkUp  {
                             //                                let numPeriods = 2
                             //                                if let ticketDict = json["ticket"] as? [String: Any],
                             //                                   let token = ticketDict["token"] as? String {
-                            //                                    Logger.general.info("LibreView: new token for glucoseHistory: \(token)")
+                            //                                    Logger.libreLinkUp.info("LibreView: new token for glucoseHistory: \(token)")
                             //                                    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                             //                                    request.setValue(settings.libreLinkUpUserId.SHA256, forHTTPHeaderField: "Account-Id")
                             //                                    request.url = URL(string: "https://api.libreview.io/glucoseHistory?numPeriods=\(numPeriods)&period=\(period)")!
-                            //                                    Logger.general.info("LibreView: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
+                            //                                    Logger.libreLinkUp.info("LibreView: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
                             //                                    let (data, response) = try await URLSession.shared.data(for: request)
-                            //                                    Logger.general.info("LibreView: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
+                            //                                    Logger.libreLinkUp.info("LibreView: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
                             //                                    if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                             //                                       // let status = json["status"] as? Int,
                             //                                       let data = json["data"] as? [String: Any] {
@@ -639,7 +639,7 @@ class LibreLinkUp  {
                             //                                        let reminderSent = data["reminderSent"] as! Bool
                             //                                        let devices = data["devices"] as! [Int]
                             //                                        let periods = data["periods"] as! [[String: Any]]
-                            //                                        Logger.general.info("LibreView: last upload date: \(lastUploadDate.local), last upload CGM date: \(lastUploadCGMDate.local), last upload pro date: \(lastUploadProDate.local), reminder sent: \(reminderSent), devices: \(devices), periods: \(periods.count)")
+                            //                                        Logger.libreLinkUp.info("LibreView: last upload date: \(lastUploadDate.local), last upload CGM date: \(lastUploadCGMDate.local), last upload pro date: \(lastUploadProDate.local), reminder sent: \(reminderSent), devices: \(devices), periods: \(periods.count)")
                             //                                        var i = 0
                             //                                        for period in periods {
                             //                                            let dateEnd = period["dateEnd"] as! Int
@@ -650,11 +650,11 @@ class LibreLinkUp  {
                             //                                            let data = period["data"] as! [String: Any]
                             //                                            let blocks = data["blocks"] as! [[[String: Any]]]
                             //                                            i += 1
-                            //                                            Logger.general.info("LibreView: period # \(i) of \(periods.count), start date: \(startDate.local), end date: \(endDate.local), days of data: \(daysOfData)")
+                            //                                            Logger.libreLinkUp.info("LibreView: period # \(i) of \(periods.count), start date: \(startDate.local), end date: \(endDate.local), days of data: \(daysOfData)")
                             //                                            var j = 0
                             //                                            for block in blocks {
                             //                                                j += 1
-                            //                                                Logger.general.info("LibreView: block # \(j) of period # \(i): \(block.count) percentiles times: \(block.map { $0["time"] as! Int })")
+                            //                                                Logger.libreLinkUp.info("LibreView: block # \(j) of period # \(i): \(block.count) percentiles times: \(block.map { $0["time"] as! Int })")
                             //                                            }
                             //                                        }
                             //                                    }
@@ -664,13 +664,13 @@ class LibreLinkUp  {
                             if settings.libreLinkUpScrapingLogbook, // currently this block is not used
                                let ticketDict = json["ticket"] as? [String: Any],
                                let token = ticketDict["token"] as? String {
-                                Logger.general.info("LibreLinkUp: new token for logbook: \(token)")
+                                Logger.libreLinkUp.info("LibreLinkUp: new token for logbook: \(token)")
                                 request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                                 request.setValue(settings.libreLinkUpUserId.SHA256, forHTTPHeaderField: "Account-Id")
                                 request.url = URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)/\(settings.libreLinkUpPatientId)/logbook")!
-                                Logger.general.info("LibreLinkUp: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
+                                Logger.libreLinkUp.info("LibreLinkUp: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
                                 let (data, response) = try await URLSession.shared.data(for: request)
-                                Logger.general.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
+                                Logger.libreLinkUp.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
                                 logbookData = data
                                 if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                                    let data = json["data"] as? [[String: Any]] {
@@ -686,7 +686,7 @@ class LibreLinkUp  {
                                                 let date = dateFormatter.date(from: measurement.timestamp)!
                                                 logbookHistory.append(LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: i, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow))
                                                 let measurementString = "\(measurement)"
-                                                Logger.general.info("LibreLinkUp: logbook measurement # \(i - history.count) of \(data.count): \(measurementString) (JSON: \(entry))")
+                                                Logger.libreLinkUp.info("LibreLinkUp: logbook measurement # \(i - history.count) of \(data.count): \(measurementString) (JSON: \(entry))")
                                             }
                                             
                                         } else if type == 2 {  // alarm
@@ -694,12 +694,12 @@ class LibreLinkUp  {
                                                var alarm = try? JSONDecoder().decode(LibreLinkUpAlarm.self, from: alarmData) {
                                                 alarm.date = dateFormatter.date(from: alarm.timestamp)!
                                                 logbookAlarms.append(alarm)
-                                                Logger.general.info("LibreLinkUp: logbook alarm: \(alarm) (JSON: \(entry))")
+                                                Logger.libreLinkUp.info("LibreLinkUp: logbook alarm: \(alarm) (JSON: \(entry))")
                                             }
                                         }
                                     }
                                     // TODO: merge with history and display trend arrow
-                                    Logger.general.info("LibreLinkUp: logbook values: \(logbookHistory.map { ($0.glucose.id, $0.glucose.value, $0.glucose.date.shortDateTime, $0.color, $0.trendArrow!.symbol) }), alarms: \(logbookAlarms.map(\.description))")
+                                    Logger.libreLinkUp.info("LibreLinkUp: logbook values: \(logbookHistory.map { ($0.glucose.id, $0.glucose.value, $0.glucose.date.shortDateTime, $0.color, $0.trendArrow!.symbol) }), alarms: \(logbookAlarms.map(\.description))")
                                 }
                             }
                         }
@@ -707,16 +707,16 @@ class LibreLinkUp  {
                 }
                 return (data, response, history, logbookData, logbookHistory, logbookAlarms, sensorSettingsRead, sensorType)
             }  catch {
-                Logger.general.info("LibreLinkUp: error while decoding response: \(error.localizedDescription)")
+                Logger.libreLinkUp.info("LibreLinkUp: error while decoding response: \(error.localizedDescription)")
                 let errorAsString = "\(error)"
                 DebugMessageSingleton.shared.libreLinkUpResponseError = errorAsString
                 throw LibreLinkUpError.jsonDecoding
             }
         } catch LibreLinkUpError.followerNotConnectToPatient {
-            Logger.general.info("LibreLinkUp: error: \(LibreLinkUpError.followerNotConnectToPatient.localizedDescription)")
+            Logger.libreLinkUp.info("LibreLinkUp: error: \(LibreLinkUpError.followerNotConnectToPatient.localizedDescription)")
             throw LibreLinkUpError.followerNotConnectToPatient
         } catch {
-            Logger.general.info("LibreLinkUp: server error: \(error.localizedDescription)")
+            Logger.libreLinkUp.info("LibreLinkUp: server error: \(error.localizedDescription)")
             let errorAsString = "\(error)"
             DebugMessageSingleton.shared.libreLinkUpResponseError = errorAsString
             if errorAsString.contains("NSURLErrorDomain") == true {
@@ -731,7 +731,7 @@ class LibreLinkUp  {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
-        Logger.general.info("LibreLinkUp: getting last glucose data")
+        Logger.libreLinkUp.info("LibreLinkUp: getting last glucose data")
         var request = URLRequest(url: URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)")!)
         var authenticatedHeaders = headers
         authenticatedHeaders["Authorization"] = "Bearer \(settings.libreLinkUpToken)"
@@ -739,9 +739,9 @@ class LibreLinkUp  {
         for (header, value) in authenticatedHeaders {
             request.setValue(value, forHTTPHeaderField: header)
         }
-        Logger.general.info("LibreLinkUp: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
+        Logger.libreLinkUp.info("LibreLinkUp: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
         let (data, response) = try await URLSession.shared.data(for: request)
-        Logger.general.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
+        Logger.libreLinkUp.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
         if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
            let data = json["data"] as? [[String: Any]] {
             if data.count > 0 {
@@ -754,7 +754,7 @@ class LibreLinkUp  {
                     let lastGlucose = LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow)
                     
                     let measurementString = "\(measurement)"
-                    Logger.general.info("LibreLinkUp: last glucose measurement: \(measurementString) (JSON: \(lastGlucoseMeasurement))")
+                    Logger.libreLinkUp.info("LibreLinkUp: last glucose measurement: \(measurementString) (JSON: \(lastGlucoseMeasurement))")
                     //                DispatchQueue.main.async { [self] in
                     //                    settings.libreLinkUpPatientId = patientId
                     //                }
@@ -832,9 +832,9 @@ class LibreLinkUp  {
             for (header, value) in authenticatedHeaders {
                 request.setValue(value, forHTTPHeaderField: header)
             }
-            Logger.general.info("LibreLinkUp: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
+            Logger.libreLinkUp.info("LibreLinkUp: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
             let (data, response) = try await URLSession.shared.data(for: request)
-            Logger.general.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
+            Logger.libreLinkUp.info("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
                         
                         if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                            let data = json["data"] as? [[String: Any]] {

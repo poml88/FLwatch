@@ -12,7 +12,7 @@ import SecureDefaults
 
 struct PhoneAppConnectView: View {
     
-    @StateObject var watchConnector = PhoneToWatchConnector()
+    @StateObject var watchConnector = WatchConnectivityManager()
     
     @State private var username = UserDefaults.group.username
     @State private var password = SecureDefaults.sgroup.string(forKey: "llu.password") ?? ""
@@ -160,7 +160,7 @@ struct PhoneAppConnectView: View {
                 let messageToWatch: [String: Any] = ["content": "credentials",
                                                      "username": username,
                                                      "password": password]
-                sendMessagetoWatch(message: messageToWatch)
+                sendMessagetoOther(message: messageToWatch)
             } catch {
                 print("catch tryToConnect")
                 isShowingConnectionFailed = true
@@ -169,10 +169,10 @@ struct PhoneAppConnectView: View {
             }
         }
         
-        func sendMessagetoWatch(message: [String: Any]){
+        func sendMessagetoOther(message: [String: Any]){
             
             //            let messageToSend: [String: Any] = ["message": message]
-            watchConnector.sendMessagetoWatch(message)
+            watchConnector.sendMessageToPairedDevice(message)
         }
         
 //        libreViewAPI.fetchCurrentGlucoseEntry { glucose, error in

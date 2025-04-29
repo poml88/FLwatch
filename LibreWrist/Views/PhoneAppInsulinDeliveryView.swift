@@ -13,7 +13,7 @@ struct PhoneAppInsulinDeliveryView: View {
     
     @Environment(\.dismiss) var dismiss
     
-    @StateObject var watchConnector = PhoneToWatchConnector()
+    @StateObject var watchConnector = WatchConnectivityManager()
     
     @State private var pickerTimeStamp: Date = Date.now
     @State private var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
@@ -92,7 +92,7 @@ struct PhoneAppInsulinDeliveryView: View {
                     let messageToWatch: [String: Any] = ["content": "insulinDelivery",
                                                          "timeStamp": insulinDeliveryTimeStamp,
                                                          "units": insulinDeliveryUnits]
-                    sendMessagetoWatch(message: messageToWatch)
+                    sendMessagetoOther(message: messageToWatch)
                     dismiss()
                     //                        selectedTab = "Home"
                 })
@@ -108,7 +108,7 @@ struct PhoneAppInsulinDeliveryView: View {
                     insulinDeliveryHistory = []
                     UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
                     let messageToWatch: [String: Any] = ["content": "clearInsulinHistory"]
-                    sendMessagetoWatch(message: messageToWatch)
+                    sendMessagetoOther(message: messageToWatch)
                 })
                 Button("Cancel", role: .cancel, action: {})
             } message: {
@@ -130,8 +130,8 @@ struct PhoneAppInsulinDeliveryView: View {
                     }
     }
     
-    func sendMessagetoWatch(message: [String: Any]) {
-        watchConnector.sendMessagetoWatch(message)
+    func sendMessagetoOther(message: [String: Any]) {
+        watchConnector.sendMessageToPairedDevice(message)
     }
 }
 

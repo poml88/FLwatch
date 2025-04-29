@@ -10,7 +10,7 @@ import OSLog
 
 struct ContentView: View {
     
-    @StateObject var watchConnector = PhoneToWatchConnector()
+    @StateObject var watchConnector = WatchConnectivityManager()
     
     @State var selectedTab = "Home"
     
