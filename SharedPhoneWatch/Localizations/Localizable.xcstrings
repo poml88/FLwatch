@@ -317,6 +317,7 @@
       }
     },
     "Ask Siri to record an insulin injection for IOB calculation." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -325,6 +326,9 @@
           }
         }
       }
+    },
+    "Ask the system to record insulin units for IOB calculation." : {
+
     },
     "Blood Glucose" : {
       "localizations" : {

@@ -37,7 +37,7 @@ struct AddInsulin: AppIntent {
     
     
     static var title: LocalizedStringResource = "Record Insulin Injection"
-    static var description: LocalizedStringResource = "Ask Siri to record an insulin injection for IOB calculation."
+    static var description: LocalizedStringResource = "Ask the system to record insulin units for IOB calculation."
     
     
     // We provide two parameters, one used only for AppShortcuts with a limited value of options,
