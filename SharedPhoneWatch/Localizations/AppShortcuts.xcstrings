@@ -12,7 +12,7 @@
               "Insulingabe in ${applicationName}",
               "Protokolliere ${insulinUnitsEnum} Insulineinheiten in ${applicationName}",
               "Protokolliere  Insulingabe in ${applicationName}",
-              "Speichere eine Insulingabe in der app ${applicationName}"
+              "Speichere eine Insulingabe in ${applicationName}"
             ]
           }
         },

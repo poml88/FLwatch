@@ -27,7 +27,7 @@ struct PhoneAppSiriSheetView: View {
                 Text("Siri integration")
                     .font(.title)
                 
-                let longString = """
+                let longString: LocalizedStringKey = """
                 Siri integration is still work in progress!
                 
                 Siri can tell you your blood glucose by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\".

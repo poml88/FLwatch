@@ -316,17 +316,6 @@
         }
       }
     },
-    "Ask Siri to record an insulin injection for IOB calculation." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bitte Siri eine Insulingabe zu protokollieren für die IOB Berechnung."
-          }
-        }
-      }
-    },
     "Ask the system to record insulin units for IOB calculation." : {
 
     },
@@ -468,6 +457,12 @@
     },
     "Current glucose: %@. Trend: %@" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktueller Glukosewert: %1$@. Trend: %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -547,23 +542,6 @@
         }
       }
     },
-    "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geben Sie die Zugangsdaten für Ihr [LLU Follower Konto](https://www.librelinkup.com/) ein und drücken Sie \"Verbinden\". Zugangsdaten werden automatisch an die Watch App gesendet, falls diese installiert ist."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ingresa las credenciales de tu [cuenta de seguidor de LLU](https://www.librelinkup.com/) y presiona el botón «Conectar». Las credenciales se enviarán automáticamente a la app del reloj si está instalada."
-          }
-        }
-      }
-    },
     "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)" : {
       "localizations" : {
         "de" : {
@@ -619,10 +597,24 @@
 
     },
     "Get Current Blood Glucose" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hole aktuellen Blutzuckerwert"
+          }
+        }
+      }
     },
     "Get the current blood glucose." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hole den aktuellen Blutzuckerwert."
+          }
+        }
+      }
     },
     "Glucose" : {
       "localizations" : {
@@ -878,23 +870,6 @@
         }
       }
     },
-    "Please enter a date" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bitte ein Datum eingeben"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Por favor, introduzca una fecha"
-          }
-        }
-      }
-    },
     "Please reboot phone and watch once if widgets do not work!" : {
       "localizations" : {
         "de" : {
@@ -937,17 +912,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Protokolliere Insulingabe"
-          }
-        }
-      }
-    },
-    "Recorded %@ of insulin." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ich protokolliere "
           }
         }
       }
@@ -1039,7 +1003,14 @@
       }
     },
     "Return the current blood glucose." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenne den aktuellen Blutzuckerwert."
+          }
+        }
+      }
     },
     "rising" : {
       "localizations" : {
@@ -1110,6 +1081,16 @@
     },
     "Siri integration" : {
 
+    },
+    "Siri integration is still work in progress!\n\nSiri can tell you your blood glucose by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\".\n\nSince Siri has sometimes trouble understanding \"FLwatch\" you can also use \"glucose monitor\" as an app name synonym: \"Siri, what is my glucose in glucose monitor\", or \"What is my glucose monitor glucose level\".\n\nIn the shortcuts app you can create a shortcut for this action with any custom name, like \"Current glucose level\" and select \"show shortcut on watch\" to make the command work on the watch as well.\n\nSiri (hopefully) will also be able to record insulin injections for the IOB, but it is not fully working yet.\n\nExplore the options in the Shortcuts app.\n\nHere is the full list of phrases:\n\nWhat is my glucose in FLwatch\nWhat's my glucose in FLwatch\nWhat is my glucose level in FLwatch\nWhat's my glucose level in FLwatch\nWhat is my FLwatch glucose\nWhat's my FLwatch glucose\nWhat is my FLwatch glucose level\nWhat's my FLwatch glucose level\nFLwatch get current blood glucose\nFLwatch what's my current blood glucose\nWhat's my current blood glucose in FLwatch\n\nFLwatch record insulin\nFLwatch note insulin\nFLwatch add insulin\nXX insulin units in FLwatch\nFLwatch XX unit\nFLwatch XX units\nXX unit FLwatch\nXX units FLwatch" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siri integration is still work in progress!\n\nSiri can tell you your blood glucose by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\".\n\nSince Siri has sometimes trouble understanding \"FLwatch\" you can also use \"glucose monitor\" as an app name synonym: \"Siri, what is my glucose in glucose monitor\", or \"What is my glucose monitor glucose level\".\n\nIn the shortcuts app you can create a shortcut for this action with any custom name, like \"Current glucose level\" and select \"show shortcut on watch\" to make the command work on the watch as well.\n\nSiri (hopefully) will also be able to record insulin injections for the IOB, but it is not fully working yet.\n\nExplore the options in the Shortcuts app.\n\nHere is the full list of phrases:\n\nWie ist mein FLwatch Blutzucker\n\"Blutzuckerwert aus FLwatch\n\"Wie ist mFLwatcheiFLwatchn Blutzucker in FLwatch\nFLwatch Blutzuckerwert\n\"Glukosewert aus FLwatch\n\n\n\"Notiere XX Insulineinheiten in FLwatch\n\"Insulingabe in FLwatch\n\"Protokolliere XX Insulineinheiten in FLwatch\n\"Protokolliere  Insulingabe in FLwatch\n\"Speichere eine Insulingabe in FLwatch\n              "
+          }
+        }
+      }
     },
     "Something went wrong..." : {
       "localizations" : {
@@ -1200,29 +1181,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tiempo:"
-          }
-        }
-      }
-    },
-    "Time: %@       Units: %.1f" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeit: %1$@       Einheiten: %2$.1f"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Time: %1$@       Units: %2$.1f"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hora: %1$@       Unidades: %2$.1f"
           }
         }
       }
