@@ -88,16 +88,25 @@ struct AddInsulin: AppIntent {
         
         return .result(
             dialog: dialogString,
-            view: TestView()
+            view: AddInsulinSnippetView(units: units)
         )
     }
     
     func sendMessagetoOther(message: [String: Any]) {
         WatchConnectivityManager.shared.sendMessageToPairedDevice(message)
     }
+    
+    
+    
+    
 }
 
-
+struct AddInsulinSnippetView: View {
+    var units: String
+    var body: some View {
+        Text("Units recorded: \(units).")
+    }
+}
 
 enum InsulinUnitsEnum: String, Codable, Sendable {
     case value0_5 = "0.5"

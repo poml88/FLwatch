@@ -23,6 +23,9 @@ class FLwatchShortcuts: AppShortcutsProvider {
                 "What's my \(.applicationName) glucose",
                 "What is my \(.applicationName) glucose level",
                 "What's my \(.applicationName) glucose level",
+                "\(.applicationName) get current blood glucose",
+                "\(.applicationName) what's my current blood glucose",
+                "What's my current blood glucose in \(.applicationName)",
           ],
             shortTitle: "Blood Glucose",
             systemImageName: "drop"

@@ -124,6 +124,8 @@
 		7BC51FBE2C7D31C3009542D2 /* History.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC51FBC2C7D31C3009542D2 /* History.swift */; };
 		7BCA58692C8A292600C50F11 /* SensorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCA58682C8A292600C50F11 /* SensorSettings.swift */; };
 		7BCA586A2C8A292600C50F11 /* SensorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCA58682C8A292600C50F11 /* SensorSettings.swift */; };
+		7BD2C65D2DC3BE6D0079EE4A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7BD2C65B2DC3BE6D0079EE4A /* InfoPlist.strings */; };
+		7BD2C65E2DC3BE6D0079EE4A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7BD2C65B2DC3BE6D0079EE4A /* InfoPlist.strings */; };
 		7BDB81292CB0893700F4A60F /* LibreLinkUpGlucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B299A162C90B089002A15C8 /* LibreLinkUpGlucose.swift */; };
 		7BDB812C2CB089B100F4A60F /* MeasurementColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */; };
 		7BDB812D2CB089B400F4A60F /* TrendArrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC51F502C7C8413009542D2 /* TrendArrow.swift */; };
@@ -254,7 +256,7 @@
 		7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeDifferencePicker.swift; sourceTree = "<group>"; };
 		7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7B631AAB2CB85F6600CE9EEF /* Reload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reload.swift; sourceTree = "<group>"; };
-		7B69F7C22CDD74DF00E3A50C /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		7B69F7C22CDD74DF00E3A50C /* Localizable.oldwatchstrings */ = {isa = PBXFileReference; lastKnownFileType = text; path = Localizable.oldwatchstrings; sourceTree = "<group>"; };
 		7B8965412DC156DD003A50CE /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
 		7B8965442DC17399003A50CE /* PhoneAppSiriSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSiriSheetView.swift; sourceTree = "<group>"; };
 		7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSettingsView.swift; sourceTree = "<group>"; };
@@ -298,6 +300,8 @@
 		7BC51FBA2C7D04DE009542D2 /* WatchAppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAppSettingsView.swift; sourceTree = "<group>"; };
 		7BC51FBC2C7D31C3009542D2 /* History.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = History.swift; sourceTree = "<group>"; };
 		7BCA58682C8A292600C50F11 /* SensorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorSettings.swift; sourceTree = "<group>"; };
+		7BD2C65C2DC3BE6D0079EE4A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		7BD2C65F2DC3BEC60079EE4A /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7BDB81312CB09AF800F4A60F /* LLUHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLUHeaders.swift; sourceTree = "<group>"; };
 		7BDF0A702DBA40D500852BAD /* ReadGlucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadGlucose.swift; sourceTree = "<group>"; };
 		7BDF0A7B2DBB886400852BAD /* FLwatchShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLwatchShortcuts.swift; sourceTree = "<group>"; };
@@ -490,6 +494,7 @@
 				7B435CD52C6D5C1D006F6E53 /* Info.plist */,
 				7BA0AE302C582F64004226FE /* Assets.xcassets */,
 				7BA0AE322C582F64004226FE /* Preview Content */,
+				7BD2C65B2DC3BE6D0079EE4A /* InfoPlist.strings */,
 			);
 			path = LibreWrist;
 			sourceTree = "<group>";
@@ -534,7 +539,7 @@
 				7BC51F372C7C77B2009542D2 /* LibreWristWatchApp.swift */,
 				7B183E982C84B0AA0018A24F /* WatchToPhoneConnector.swift */,
 				7BC51FBF2C7D3D4B009542D2 /* Views */,
-				7B69F7C22CDD74DF00E3A50C /* Localizable.xcstrings */,
+				7B69F7C22CDD74DF00E3A50C /* Localizable.oldwatchstrings */,
 				7BC51F642C7CA68D009542D2 /* LibreWristWatch-Watch-App-Info.plist */,
 				7BC51F632C7C9E96009542D2 /* LibreWristWatch Watch App.entitlements */,
 				7BC51F3B2C7C77B3009542D2 /* Assets.xcassets */,
@@ -805,6 +810,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7BA0AE342C582F64004226FE /* Preview Assets.xcassets in Resources */,
+				7BD2C65D2DC3BE6D0079EE4A /* InfoPlist.strings in Resources */,
 				7BA0AE312C582F64004226FE /* Assets.xcassets in Resources */,
 				7B5CD22A2C946D330066B92B /* PrivacyInfo.xcprivacy in Resources */,
 			);
@@ -829,6 +835,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7B5CD22B2C946D340066B92B /* PrivacyInfo.xcprivacy in Resources */,
+				7BD2C65E2DC3BE6D0079EE4A /* InfoPlist.strings in Resources */,
 				7BC51F3F2C7C77B3009542D2 /* Preview Assets.xcassets in Resources */,
 				7BC51F3C2C7C77B3009542D2 /* Assets.xcassets in Resources */,
 			);
@@ -1027,6 +1034,18 @@
 			targetProxy = 7BC51F402C7C77B3009542D2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		7BD2C65B2DC3BE6D0079EE4A /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7BD2C65C2DC3BE6D0079EE4A /* en */,
+				7BD2C65F2DC3BEC60079EE4A /* de */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		7B022CAA2CADDBEA00CA64B4 /* Debug */ = {

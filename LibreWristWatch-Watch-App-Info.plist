@@ -6,6 +6,10 @@
 	<array>
 		<dict>
 			<key>INAlternativeAppName</key>
+			<string>APP_NAME_SYNONYM_1</string>
+		</dict>
+		<dict>
+			<key>INAlternativeAppName</key>
 			<string>Efelwotch</string>
 			<key>INAlternativeAppNamePronunciationHint</key>
 			<string>ef el wotsch</string>

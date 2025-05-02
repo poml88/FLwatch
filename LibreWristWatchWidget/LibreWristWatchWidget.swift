@@ -119,7 +119,8 @@ struct LibreWristWidgetEntryView : View {
                 if #available(watchOS 11.0, *) {
                     Button(intent: ReloadWidgetIntent()) {
                         Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 25, weight: .heavy))
+                            .font(.system(size: 22, weight: .heavy))
+//                            .padding(6)
                     }
                     .buttonStyle(PlainButtonStyle())
                     //                    .padding(.trailing,5)

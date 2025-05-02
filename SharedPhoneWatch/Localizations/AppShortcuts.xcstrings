@@ -9,6 +9,7 @@
             "state" : "translated",
             "values" : [
               "Notiere ${insulinUnitsEnum} Insulineinheiten in ${applicationName}",
+              "Insulingabe in ${applicationName}",
               "Protokolliere ${insulinUnitsEnum} Insulineinheiten in ${applicationName}",
               "Protokolliere  Insulingabe in ${applicationName}",
               "Speichere eine Insulingabe in der app ${applicationName}"
@@ -40,8 +41,10 @@
             "state" : "translated",
             "values" : [
               "Wie ist mein ${applicationName} Blutzucker",
-              "Sage mir den aktuellen Wert aus der app ${applicationName}",
-              "Sage mir den aktuellen Wert aus ${applicationName}"
+              "Blutzuckerwert aus ${applicationName}",
+              "Wie ist mein Blutzucker in ${applicationName}",
+              "${applicationName} Blutzuckerwert",
+              "Glukosewert aus ${applicationName}"
             ]
           }
         },
@@ -56,7 +59,10 @@
               "What is my ${applicationName} glucose",
               "What's my ${applicationName} glucose",
               "What is my ${applicationName} glucose level",
-              "What's my ${applicationName} glucose level"
+              "What's my ${applicationName} glucose level",
+              "${applicationName} get current blood glucose",
+              "${applicationName} what's my current blood glucose",
+              "What's my current blood glucose in ${applicationName}"
             ]
           }
         }

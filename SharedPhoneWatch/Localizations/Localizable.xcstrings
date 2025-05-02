@@ -466,6 +466,16 @@
         }
       }
     },
+    "Current glucose: %@. Trend: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Current glucose: %1$@. Trend: %2$@"
+          }
+        }
+      }
+    },
     "Debug Info" : {
       "localizations" : {
         "es" : {
@@ -1101,9 +1111,6 @@
     "Siri integration" : {
 
     },
-    "Siri integration is still higly experimental!\n\nSiri can tell you your blood glucose by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\". In the shortcuts app you can create a shortcut for this action with any custom name, like \"Current glucose level\" and select \"show shortcut on watch\".\n\nSiri (hopefully) will also be able to record insulin injections for the IOB, but it is not fully working yet.\n\nExplore the options in the Shortcuts app." : {
-
-    },
     "Something went wrong..." : {
       "localizations" : {
         "de" : {
@@ -1163,9 +1170,6 @@
       }
     },
     "Support" : {
-
-    },
-    "There could be some more info here..." : {
 
     },
     "Time" : {
@@ -1260,6 +1264,9 @@
           }
         }
       }
+    },
+    "Units recorded: %@." : {
+
     },
     "Update note" : {
 

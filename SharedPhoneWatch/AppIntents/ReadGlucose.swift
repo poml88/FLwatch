@@ -8,7 +8,7 @@
 import AppIntents
 import SwiftUI
 
-struct ReadGlucose: ForegroundContinuableIntent {
+struct ReadGlucose: AppIntent {
     static var title: LocalizedStringResource = "Get Current Blood Glucose"
     static var description: LocalizedStringResource = "Return the current blood glucose."
     
@@ -34,26 +34,29 @@ struct ReadGlucose: ForegroundContinuableIntent {
                 return String(format: "%.1f", gme.glucoseMeasurement.value)
             }
         }
+        let trend = gme.glucoseMeasurement.trendArrow?.descriptionSiri ?? "not determined"
         if glucose == "not available" {
             dialogString = "Your blood glucose value is currently not available."
         } else {
             if Int(Date().timeIntervalSince(gme.date) / 60) <= 3 {
-                dialogString = "Your blood glucose is currently \(glucose) and \(gme.glucoseMeasurement.trendArrow?.descriptionSiri ?? "not determined")."
+                dialogString = "Your blood glucose is currently \(glucose) and \(trend)."
             } else {
                 dialogString = "Sorry, there are no recent blood glucose values."
             }
         }
         return .result(
             dialog: dialogString,
-            view: TestView()
+            view: ReadGlucoseView(glucose: glucose, trend: trend)
         )
     }
 }
         
 
-struct TestView: View {
+struct ReadGlucoseView: View {
+    var glucose: String
+    var trend: LocalizedStringResource
     var body: some View {
-        Text("There could be some more info here...")
+        Text("Current glucose: \(glucose). Trend: \(trend)")
     }
 }
 
