@@ -30,13 +30,13 @@ struct PhoneAppSiriSheetView: View {
                 let longString: LocalizedStringKey = """
                 Siri integration is still work in progress!
                 
-                Siri can tell you your blood glucose by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\".
+                Siri can tell you your blood glucose and trend by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\".
                 
-                Since Siri has sometimes trouble understanding \"FLwatch\" you can also use \"glucose monitor\" as an app name synonym: \"Siri, what is my glucose in glucose monitor\", or \"What is my glucose monitor glucose level\".
+                Since Siri has sometimes trouble understanding \"FLwatch\" (she always understands \"Apple watch\") you can also use \"glucose monitor\" as an app name synonym: \"Siri, what is my glucose in glucose monitor\", or \"What is my glucose monitor glucose level\".
                 
-                In the shortcuts app you can create a shortcut for this action with any custom name, like \"Current glucose level\" and select \"show shortcut on watch\" to make the command work on the watch as well.
+                In the shortcuts app you can create a shortcut for this action with any custom name, like \"Current glucose level\" and select \"Show on Apple Watch\" to make the command work on the watch as well. If you then say: \"Hey Siri, current glucose level\", Siri will read the value and trend to you.
                 
-                Siri (hopefully) will also be able to record insulin injections for the IOB, but it is not fully working yet.
+                Siri is also able to record insulin units for the IOB calculation.
                 
                 Explore the options in the Shortcuts app.
                 

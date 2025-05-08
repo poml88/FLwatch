@@ -88,13 +88,27 @@
 
     },
     "0.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "0,5"
+          }
+        }
+      }
     },
     "1" : {
 
     },
     "1.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1,5"
+          }
+        }
+      }
     },
     "2" : {
 
@@ -113,163 +127,352 @@
 
     },
     "3.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3,5"
+          }
+        }
+      }
     },
     "4" : {
 
     },
     "4.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4,5"
+          }
+        }
+      }
     },
     "5" : {
 
     },
     "5.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5,5"
+          }
+        }
+      }
     },
     "6" : {
 
     },
     "6.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "6,5"
+          }
+        }
+      }
     },
     "7" : {
 
     },
     "7.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7,5"
+          }
+        }
+      }
     },
     "8" : {
 
     },
     "8.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "8,5"
+          }
+        }
+      }
     },
     "9" : {
 
     },
     "9.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9,5"
+          }
+        }
+      }
     },
     "10" : {
 
     },
     "10.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10,5"
+          }
+        }
+      }
     },
     "11" : {
 
     },
     "11.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "11,5"
+          }
+        }
+      }
     },
     "12" : {
 
     },
     "12.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12,5"
+          }
+        }
+      }
     },
     "13" : {
 
     },
     "13.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "13,5"
+          }
+        }
+      }
     },
     "14" : {
 
     },
     "14.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "14,5"
+          }
+        }
+      }
     },
     "15" : {
 
     },
     "15.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15,5"
+          }
+        }
+      }
     },
     "16" : {
 
     },
     "16.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "16,5"
+          }
+        }
+      }
     },
     "17" : {
 
     },
     "17.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "17,5"
+          }
+        }
+      }
     },
     "18" : {
 
     },
     "18.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "18,5"
+          }
+        }
+      }
     },
     "19" : {
 
     },
     "19.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "19,5"
+          }
+        }
+      }
     },
     "20" : {
 
     },
     "20.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "20,5"
+          }
+        }
+      }
     },
     "21" : {
 
     },
     "21.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "21,5"
+          }
+        }
+      }
     },
     "22" : {
 
     },
     "22.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "22,5"
+          }
+        }
+      }
     },
     "23" : {
 
     },
     "23.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "23,5"
+          }
+        }
+      }
     },
     "24" : {
 
     },
     "24.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "24,5"
+          }
+        }
+      }
     },
     "25" : {
 
     },
     "25.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "25,5"
+          }
+        }
+      }
     },
     "26" : {
 
     },
     "26.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "26,5"
+          }
+        }
+      }
     },
     "27" : {
 
     },
     "27.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "27,5"
+          }
+        }
+      }
     },
     "28" : {
 
     },
     "28.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "28,5"
+          }
+        }
+      }
     },
     "29" : {
 
     },
     "29.5" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "29,5"
+          }
+        }
+      }
     },
     "30" : {
 
@@ -317,7 +520,14 @@
       }
     },
     "Ask the system to record insulin units for IOB calculation." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Befehl um Insulineinheiten für die IOB Berechnung zu protokollieren."
+          }
+        }
+      }
     },
     "Blood Glucose" : {
       "localizations" : {
@@ -435,6 +645,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindung fehlgeschlagen."
+          }
+        }
+      }
+    },
+    "Could not determine insulin units value." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ich kann den eingegebenen Wert nicht erkennen."
           }
         }
       }
@@ -601,7 +821,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hole aktuellen Blutzuckerwert"
+            "value" : "Gebe aktuellen Blutzuckerwert wieder"
           }
         }
       }
@@ -611,7 +831,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hole den aktuellen Blutzuckerwert."
+            "value" : "Gebe den aktuellen Blutzuckerwert wieder."
           }
         }
       }
@@ -1080,14 +1300,21 @@
 
     },
     "Siri integration" : {
-
-    },
-    "Siri integration is still work in progress!\n\nSiri can tell you your blood glucose by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\".\n\nSince Siri has sometimes trouble understanding \"FLwatch\" you can also use \"glucose monitor\" as an app name synonym: \"Siri, what is my glucose in glucose monitor\", or \"What is my glucose monitor glucose level\".\n\nIn the shortcuts app you can create a shortcut for this action with any custom name, like \"Current glucose level\" and select \"show shortcut on watch\" to make the command work on the watch as well.\n\nSiri (hopefully) will also be able to record insulin injections for the IOB, but it is not fully working yet.\n\nExplore the options in the Shortcuts app.\n\nHere is the full list of phrases:\n\nWhat is my glucose in FLwatch\nWhat's my glucose in FLwatch\nWhat is my glucose level in FLwatch\nWhat's my glucose level in FLwatch\nWhat is my FLwatch glucose\nWhat's my FLwatch glucose\nWhat is my FLwatch glucose level\nWhat's my FLwatch glucose level\nFLwatch get current blood glucose\nFLwatch what's my current blood glucose\nWhat's my current blood glucose in FLwatch\n\nFLwatch record insulin\nFLwatch note insulin\nFLwatch add insulin\nXX insulin units in FLwatch\nFLwatch XX unit\nFLwatch XX units\nXX unit FLwatch\nXX units FLwatch" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Siri integration is still work in progress!\n\nSiri can tell you your blood glucose by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\".\n\nSince Siri has sometimes trouble understanding \"FLwatch\" you can also use \"glucose monitor\" as an app name synonym: \"Siri, what is my glucose in glucose monitor\", or \"What is my glucose monitor glucose level\".\n\nIn the shortcuts app you can create a shortcut for this action with any custom name, like \"Current glucose level\" and select \"show shortcut on watch\" to make the command work on the watch as well.\n\nSiri (hopefully) will also be able to record insulin injections for the IOB, but it is not fully working yet.\n\nExplore the options in the Shortcuts app.\n\nHere is the full list of phrases:\n\nWie ist mein FLwatch Blutzucker\n\"Blutzuckerwert aus FLwatch\n\"Wie ist mFLwatcheiFLwatchn Blutzucker in FLwatch\nFLwatch Blutzuckerwert\n\"Glukosewert aus FLwatch\n\n\n\"Notiere XX Insulineinheiten in FLwatch\n\"Insulingabe in FLwatch\n\"Protokolliere XX Insulineinheiten in FLwatch\n\"Protokolliere  Insulingabe in FLwatch\n\"Speichere eine Insulingabe in FLwatch\n              "
+            "value" : "Siri Integration"
+          }
+        }
+      }
+    },
+    "Siri integration is still work in progress!\n\nSiri can tell you your blood glucose and trend by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\".\n\nSince Siri has sometimes trouble understanding \"FLwatch\" (she always understands \"Apple watch\") you can also use \"glucose monitor\" as an app name synonym: \"Siri, what is my glucose in glucose monitor\", or \"What is my glucose monitor glucose level\".\n\nIn the shortcuts app you can create a shortcut for this action with any custom name, like \"Current glucose level\" and select \"Show on Apple Watch\" to make the command work on the watch as well. If you then say: \"Hey Siri, current glucose level\", Siri will read the value and trend to you.\n\nSiri is also able to record insulin units for the IOB calculation.\n\nExplore the options in the Shortcuts app.\n\nHere is the full list of phrases:\n\nWhat is my glucose in FLwatch\nWhat's my glucose in FLwatch\nWhat is my glucose level in FLwatch\nWhat's my glucose level in FLwatch\nWhat is my FLwatch glucose\nWhat's my FLwatch glucose\nWhat is my FLwatch glucose level\nWhat's my FLwatch glucose level\nFLwatch get current blood glucose\nFLwatch what's my current blood glucose\nWhat's my current blood glucose in FLwatch\n\nFLwatch record insulin\nFLwatch note insulin\nFLwatch add insulin\nXX insulin units in FLwatch\nFLwatch XX unit\nFLwatch XX units\nXX unit FLwatch\nXX units FLwatch" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Siri-Integration ist noch in Arbeit!\n\nSiri kann Ihnen Ihren Blutzuckerwert und Trend z.B. mit den Kommandos „Siri, Wie ist mein FLwatch Blutzucker?“ oder „Blutzuckerwert aus FLwatch“ vorlesen.\n\nDa Siri manchmal Schwierigkeiten hat, „FLwatch“ zu verstehen (sie versteht immer „Apple Watch“), können Sie auch „Glukose Monitor“ als Synonym für den App-Namen verwenden: „Siri, Wie ist mein Glukose Monitor Blutzucker?“ oder „Blutzuckerwert aus Glukose Monitor“\n\nIn der Kurzbefehle-App können Sie für diese Aktion einen Kurzbefehl mit einem beliebigen Namen erstellen, z. B. „Aktueller Blutzuckerwert“, und „Auf Apple Watch zeigen“ auswählen, damit der Befehl auch auf der Apple Watch funktioniert. Sie können sich dann mit „Hey Siri, aktueller Blutzuckerwert“ den aktuellen Wert vorlesen lassen.\n\nSiri kann auch Insulineinheiten für die Berechnung des IOB erfassen.\n\nErkunden Sie die Optionen der Kurzbefehle-App.\n\nHier ist die vollständige Liste der aktuell verfügbaren Kommandos:\n\nWie ist mein FLwatch Blutzucker\nBlutzuckerwert aus FLwatch\nWie ist mein Blutzucker in FLwatch\nFLwatch Blutzuckerwert\nGlukosewert in FLwatch\n\nNotiere XX Insulineinheiten in FLwatch\nInsulingabe in FLwatch\nProtokolliere XX Insulineinheiten in FLwatch\nProtokolliere  Insulingabe in FLwatch\nSpeichere Insulingabe in FLwatch\nInsulin in FLwatch\nXX Einheiten Insulin in FLwatch"
           }
         }
       }
@@ -1224,7 +1451,14 @@
       }
     },
     "Units recorded: %@." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokollierte Einheiten: %@."
+          }
+        }
+      }
     },
     "Update note" : {
 

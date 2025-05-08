@@ -64,15 +64,28 @@ struct AddInsulin: AppIntent {
     //    func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         
+        let formatter = NumberFormatter()
+        formatter.locale = Locale.current
+        
+        var insulinDeliveryUnits: Double = 0.0
+        
+        if let value = insulinUnitsEnum?.rawValue {
+            insulinDeliveryUnits = Double(value)!
+        } else if let unitsDouble {
+//            let formattedString = formatter.number(from: unitsDouble)
+//            insulinDeliveryUnits = Double(formattedString ?? 0.0)
+            insulinDeliveryUnits = unitsDouble
+        } else {
+            insulinDeliveryUnits = try await $unitsDouble.requestValue("How many insulin units?")
+//            let formattedString = formatter.number(from: string)
+//            insulinDeliveryUnits = Double(formattedString ?? 0.0)
+        }
+        if insulinDeliveryUnits == 0.0 { //throw $unitsDouble.needsValueError("How many insulin units?")
+            throw $unitsDouble.needsValueError("Could not determine insulin units value.")
+        }
+        
         var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
         let insulinDeliveryTimeStamp = Date.now.timeIntervalSince1970
-        let insulinDeliveryUnits: Double = if let value = insulinUnitsEnum?.rawValue {
-            Double(value)!
-        } else if let unitsDouble {
-            unitsDouble
-        } else {
-            try await $unitsDouble.requestValue("How many insulin units?")
-        }
         let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: insulinDeliveryTimeStamp, insulinUnits: insulinDeliveryUnits)
         insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
         UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
@@ -237,37 +250,68 @@ extension InsulinUnitsEnum: AppEnum {
         .value30   : DisplayRepresentation(stringLiteral: "30"),
     ]
     
-//    static var allCases: [InsulinUnitsEnum] = [
-//        .value1,
-//        .value2,
-//        .value3,
-//        .value4,
-//        .value5,
-//        .value6,
-//        .value7,
-//        .value8,
-//        .value9,
-//        .value10,
-//        .value11,
-//        .value12,
-//        .value13,
-//        .value14,
-//        .value15,
-//        .value16,
-//        .value17,
-//        .value18,
-//        .value19,
-//        .value20,
-//        .value21,
-//        .value22,
-//        .value23,
-//        .value24,
-//        .value25,
-//        .value26,
-//        .value27,
-//        .value28,
-//        .value29
-//    ]
+    static var allCases: [InsulinUnitsEnum] = [
+        .value0_5,
+        .value1,
+        .value1_5,
+        .value2,
+        .value2_5,
+        .value3,
+        .value3_5,
+        .value4,
+        .value4_5,
+        .value5,
+        .value5_5,
+        .value6,
+        .value6_5,
+        .value7,
+        .value7_5,
+        .value8,
+        .value8_5,
+        .value9,
+        .value9_5,
+        .value10,
+        .value10_5,
+        .value11,
+        .value11_5,
+        .value12,
+        .value12_5,
+        .value13,
+        .value13_5,
+        .value14,
+        .value14_5,
+        .value15,
+        .value15_5,
+        .value16,
+        .value16_5,
+        .value17,
+        .value17_5,
+        .value18,
+        .value18_5,
+        .value19,
+        .value19_5,
+        .value20,
+        .value20_5,
+        .value21,
+        .value21_5,
+        .value22,
+        .value22_5,
+        .value23,
+        .value23_5,
+        .value24,
+        .value24_5,
+        .value25,
+        .value25_5,
+        .value26,
+        .value26_5,
+        .value27,
+        .value27_5,
+        .value28,
+        .value28_5,
+        .value29,
+        .value29_5,
+        .value30
+    ]
 }
 
 

@@ -12,7 +12,9 @@
               "Insulingabe in ${applicationName}",
               "Protokolliere ${insulinUnitsEnum} Insulineinheiten in ${applicationName}",
               "Protokolliere  Insulingabe in ${applicationName}",
-              "Speichere eine Insulingabe in ${applicationName}"
+              "Speichere Insulingabe in ${applicationName}",
+              "Insulin in ${applicationName}",
+              "${insulinUnitsEnum} Einheiten Insulin in ${applicationName}"
             ]
           }
         },
@@ -41,10 +43,10 @@
             "state" : "translated",
             "values" : [
               "Wie ist mein ${applicationName} Blutzucker",
-              "Blutzuckerwert aus ${applicationName}",
+              "Blutzuckerwert in ${applicationName}",
               "Wie ist mein Blutzucker in ${applicationName}",
               "${applicationName} Blutzuckerwert",
-              "Glukosewert aus ${applicationName}"
+              "Glukosewert in ${applicationName}"
             ]
           }
         },
