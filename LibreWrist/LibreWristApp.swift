@@ -9,7 +9,6 @@ import SwiftUI
 
 
 @main
-
 struct LibreWristApp: App {
         
     init(){
@@ -19,11 +18,15 @@ struct LibreWristApp: App {
             UserDefaults.group.connected = .disconnected
         }
         FLwatchShortcuts.updateAppShortcutParameters()
+        WatchConnectivityManager.shared.startSession()
+        // alternatively the session could be started in AppDelegate see https://developer.apple.com/documentation/swiftui/migrating-to-the-swiftui-life-cycle
+
     }
     
 //    @State private var history = History()
     @State private var libreLinkUpHistory = LibreLinkUpHistory.shared
     @State private var sensorSettingsSingleton = SensorSettingsSingleton.shared
+    @State private var currentIOBSingleton = CurrentIOBSingleton.shared
     
     var body: some Scene {
         WindowGroup {
@@ -31,6 +34,7 @@ struct LibreWristApp: App {
 //                .environment(history)
                 .environment(\.libreLinkUpHistory, libreLinkUpHistory)
                 .environment(\.sensorSettingsSingleton, sensorSettingsSingleton)
+                .environment(\.currentIOBSingleton, currentIOBSingleton)
         }
     }
 }

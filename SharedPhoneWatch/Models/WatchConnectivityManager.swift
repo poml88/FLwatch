@@ -10,9 +10,11 @@ import WatchConnectivity
 import OSLog
 import SecureDefaults
 
-class WatchConnectivityManager: NSObject, WCSessionDelegate, ObservableObject {
+class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObject is the old method, Swiftui now uses @Observable
+    // https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app
+    // https://developer.apple.com/documentation/swiftui/migrating-from-the-observable-object-protocol-to-the-observable-macro
     
-    @Published var receivedMessage: String = ""
+//    @Published var receivedMessage: String = ""
     
     private var messageHandlers: [WatchMessageHandler] = []
     private var requestHandlers: [WatchRequestHandler] = []
@@ -28,14 +30,23 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, ObservableObject {
     
     func sessionDidDeactivate(_ session: WCSession) {
         Logger.connectivity.info("Session did deactivate")
+        session.activate()
     }
+    
+    func sessionWatchStateDidChange(_ session: WCSession) {
+//        print("\(#function): activationState = \(session.activationState.rawValue)")
+        Logger.connectivity.info("Session Watch State did change")
+    }
+
 #endif
+    
+   
     
     private func received(_ message: [String : Any], replyHandler: (([String : Any]) -> Void)? = nil) {
         
-        DispatchQueue.main.async { [self] in
-            receivedMessage = message["message"] as? String ?? "Not found"
-        }
+//        DispatchQueue.main.async { [self] in
+//            receivedMessage = message["message"] as? String ?? "Not found"
+//        }
         Logger.connectivity.info("Message received: \(message)")
         
         if message["content"] as? String == "credentials" {
@@ -89,17 +100,17 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, ObservableObject {
         if session.isReachable {
             //            let message: [String: Any] = ["message": message]
             Logger.connectivity.info("Sending message: \(message)")
-            session.sendMessage(message, replyHandler: replyHandler, errorHandler: { error in // sendMessage on watch only works if app is active in foreground
+            session.sendMessage(message, replyHandler: replyHandler, errorHandler: { error in // Watch App: sendMessage only works if app is active in foreground
                 Logger.connectivity.error("\(error)")
                 Logger.connectivity.warning("Error, trying transferUserInfo")
                 //                try? WCSession.default.updateApplicationContext(message)
-                WCSession.default.transferUserInfo(message)
+                self.session.transferUserInfo(message)
             })
         } else {
             Logger.connectivity.warning("Session not reachable / counterpart app not available for live messaging")
             Logger.connectivity.warning("...trying transferUserInfo with message: \(message)")
             //            try? WCSession.default.updateApplicationContext(message)
-            WCSession.default.transferUserInfo(message) // transferUserInfo does not work in Simulator!!
+            self.session.transferUserInfo(message) // transferUserInfo does not work in Simulator!!
         }
     }
     
@@ -115,15 +126,33 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, ObservableObject {
         received(userInfo)
     }
     
-    var session: WCSession
+    var session: WCSession = .default // not sure what happens if WatchConnectivity is not supported, I guess it does not matter, as all modern iPhones and iOS versions support it. All apple watches support it as well, obviously
     
-    static let shared = WatchConnectivityManager()
+  
+    static let shared: WatchConnectivityManager = {
+        let instance = WatchConnectivityManager()
+        // nothing at the moment so can be used as well: static let shared: WatchConnectivityManager = WatchConnectivityManager()
+        // static implies lazy
+        return instance
+    }()
+
     
-    init(session: WCSession = .default) {
-        self.session = session
+//    init(session: WCSession = .default) {
+//        self.session = session
+//        super.init()
+//        session.delegate = self
+//        session.activate()
+//    }
+    
+    private override init(){
         super.init()
-        session.delegate = self
-        session.activate()
+    }
+    
+    func startSession() {
+        if WCSession.isSupported() {
+            session.delegate = self
+            session.activate()
+        }
     }
 }
 

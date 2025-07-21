@@ -13,13 +13,15 @@ struct PhoneAppInsulinDeliveryView: View {
     
     @Environment(\.dismiss) var dismiss
     
-    @StateObject var watchConnector = WatchConnectivityManager()
+//    @StateObject var watchConnector = WatchConnectivityManager.shared
+//    @EnvironmentObject var watchConnector: WatchConnectivityManager
     
     @State private var pickerTimeStamp: Date = Date.now
     @State private var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
     @State private var isShowingInsulinDeliverySubmitAlert = false
     @State private var isShowingInsulinDeliveryResetAlert = false
     @State private var isShowingDifferenceTimePickerSheet = false
+    private var watchConnector = WatchConnectivityManager.shared
     
     //    @Binding var selectedTab: String
     

@@ -1105,7 +1105,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bitte \"Verbinden\" drücken und die Zugangsdaten an die Watch zu senden."
+            "value" : "Bitte \"Verbinden\" drücken um die Zugangsdaten an die Watch zu senden."
           }
         },
         "es" : {

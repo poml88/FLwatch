@@ -10,11 +10,9 @@ import OSLog
 
 struct ContentView: View {
     
-    @StateObject var watchConnector = WatchConnectivityManager()
+//    @StateObject var watchConnector = WatchConnectivityManager()
     
     @State var selectedTab = "Home"
-    
-    
     
     var body: some View {
         TabView (selection:$selectedTab){
@@ -28,6 +26,7 @@ struct ContentView: View {
             
             
             PhoneAppConnectView()
+//                .environmentObject(watchConnector)
                 .tabItem {
                     Image(systemName: "app.connected.to.app.below.fill")
 //                    Text ("Tab 2")
@@ -59,4 +58,5 @@ struct ContentView: View {
 //        .environment(History.test)
         .environment(LibreLinkUpHistory.shared)
         .environment(SensorSettingsSingleton.shared)
+        .environment(CurrentIOBSingleton.shared)
 }

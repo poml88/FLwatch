@@ -14,16 +14,19 @@ struct LibreWristWatch_Watch_AppApp: App {
         UserDefaults.group.register(defaults: Settings.defaults)
         print("init")
         FLwatchShortcuts.updateAppShortcutParameters()
+        WatchConnectivityManager.shared.startSession()
     }
     
     @State private var libreLinkUpHistory = LibreLinkUpHistory.shared
     @State private var sensorSettingsSingleton = SensorSettingsSingleton.shared
+    @State private var currentIOBSingleton = CurrentIOBSingleton.shared
     
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(\.libreLinkUpHistory, libreLinkUpHistory)
                 .environment(\.sensorSettingsSingleton, sensorSettingsSingleton)
+                .environment(\.currentIOBSingleton, currentIOBSingleton)
         }
     }
 }

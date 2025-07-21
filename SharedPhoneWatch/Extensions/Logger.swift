@@ -23,9 +23,9 @@ extension Logger {
     /// All logs related to tracking and analytics.
     static let statistics = Logger(subsystem: subsystem, category: "statistics")
     
-    static let general = Logger(subsystem: subsystem, category: "statistics")
+    static let general = Logger(subsystem: subsystem, category: "general")
     
-    static let connectivity = Logger(subsystem: subsystem, category: "statistics")
+    static let connectivity = Logger(subsystem: subsystem, category: "connectivity")
     
     static let libreLinkUp = Logger(subsystem: subsystem, category: "LibreLinkUp")
 

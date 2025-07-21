@@ -12,13 +12,15 @@ import SecureDefaults
 
 struct PhoneAppConnectView: View {
     
-    @StateObject var watchConnector = WatchConnectivityManager()
+//    @StateObject var watchConnector = WatchConnectivityManager.shared
+//    @EnvironmentObject var watchConnector: WatchConnectivityManager
     
     @State private var username = UserDefaults.group.username
     @State private var password = SecureDefaults.sgroup.string(forKey: "llu.password") ?? ""
     @State private var connected = UserDefaults.group.connected
     @State private var libreLinkUpResponse: String = "[...]"
     @State private var isShowingConnectionFailed = false
+    private var watchConnector = WatchConnectivityManager.shared
     
 
     private let timer = Timer.publish(every: 1, tolerance: 0.5, on: .main, in: .common).autoconnect()

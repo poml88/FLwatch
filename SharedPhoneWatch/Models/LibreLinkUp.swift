@@ -258,6 +258,25 @@ class LibreLinkUp  {
                                     //                        LibreLinkUp: Terms of Use have been updated and must be accepted by running LibreLink (tip: log out and re-login)
                                     //                        LibreLinkUp: error: not authenticated
                                     
+                                } else if type == "pp" {
+                                    print("pp")
+                                    Logger.libreLinkUp.info("LibreLinkUp: Privacy policy has been updated and must be accepted by running LibreLink (tip: log out and re-login)")
+                                    if                                    let user = data["user"] as? [String: Any],
+                                                                          let country = user["country"] as? String,
+                                                                          let authTicketDict = data["authTicket"] as? [String: Any],
+                                                                          let authTicketData = try? JSONSerialization.data(withJSONObject: authTicketDict),
+                                                                          let authTicket = try? JSONDecoder().decode(AuthTicket.self, from: authTicketData) {
+                                        let authTicketString = "\(authTicket)"
+                                        Logger.libreLinkUp.info("LibreLinkUp: PP: authTicket: \(authTicketString), expires on \(Date(timeIntervalSince1970: Double(authTicket.expires)))")
+                                        //call accepttou
+                                        //loginResponse = try await tou(apiRegion: apiRegion, authToken: authToken)
+                                    }
+                                    throw LibreLinkUpError.ppNotAccepted
+                                    
+                                    
+//                                    LibreLinkUp: response data: {"status":4,"data":{"step":{"type":"pp","componentName":"AcceptDocument","props":{"reaccept":true,"titleKey":"Common.privacyPolicy","type":"pp"}},"user":{"accountType":"pat","country":"DE","uiLanguage":"de-DE"},"authTicket":{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZmNTkyYjQwLTc1OWEtMTFlZS1iZTkzLWIyNmRmNGI2YzU5MyIsImZpcnN0TmFtZSI6IlBoaWxpcHAgIiwibGFzdE5hbWUiOiJQw7ZtbCAiLCJjb3VudHJ5IjoiREUiLCJyZWdpb24iOiJkZSIsInJvbGUiOiJwYXRpZW50IiwiZW1haWwiOiJwaGlsLnBvZW1sQGdteC5kZSIsInMiOiJsbHUuaW9zIiwic2lkIjoiODUxNTFiZDMtMGJkZC00ZThlLTljNjktOThlM2U5NTdiMjJlIiwidGFza1R5cGUiOiJwcCIsImV4cCI6MTc1MjgyMTM2NSwiaWF0IjoxNzUyODE3NzY1LCJqdGkiOiJmMzc1YzI4My01Y2NkLTQ2NGMtOTk5Yy0xODJlNWNhMDc5YTEifQ.lJxNoaRE3w2JxjEWCeFO8DTeC-W2IgNrnpLpZmM9ldU","expires":1752821365,"duration":3600000}}}, status: 200
+
+                                    
                                 } else {
                                     throw LibreLinkUpError.unknownStatus4
                                 }
@@ -378,6 +397,9 @@ class LibreLinkUp  {
         } catch LibreLinkUpError.touNotAccepted {
             Logger.libreLinkUp.info("LibreLinkUp: error: \(LibreLinkUpError.touNotAccepted.localizedDescription)")
             throw LibreLinkUpError.touNotAccepted
+        } catch LibreLinkUpError.ppNotAccepted {
+            Logger.libreLinkUp.info("LibreLinkUp: error: \(LibreLinkUpError.ppNotAccepted.localizedDescription)")
+            throw LibreLinkUpError.ppNotAccepted
         } catch LibreLinkUpError.unknownStatus4 {
             Logger.libreLinkUp.info("LibreLinkUp: error: \(LibreLinkUpError.unknownStatus4.localizedDescription)")
             throw LibreLinkUpError.unknownStatus4
@@ -422,6 +444,8 @@ class LibreLinkUp  {
             responseData = "LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)"
             // TODO: {"status":911}: server maintenance
             // LibreLinkUp: response data: {"status":4,"error":{"message":"followerNotConnectToPatient"}}, status: 200
+            // and now
+            // LibreLinkUp: response data: {"status":4,"error":{"message":"follower not connect to patient"}}, status: 200
             // LibreLinkUp: response data: {"message":"invalid or expired jwt"}, status: 401
             
             if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -438,7 +462,7 @@ class LibreLinkUp  {
                     if let error = json["error"] as? [String: Any],
                        let message = error["message"] as? String {
                         Logger.general.warning("LibreLinkUp: error: \(message)")
-                        if message == "followerNotConnectToPatient" {
+                        if message == "followerNotConnectToPatient" || message == "follower not connect to patient" {
                             settings.libreLinkUpToken = ""
                             throw LibreLinkUpError.followerNotConnectToPatient
                         }
