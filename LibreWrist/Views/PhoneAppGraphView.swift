@@ -8,7 +8,7 @@
 import SwiftUI
 import Charts
 
-struct PhoneGraphView: View {
+struct PhoneAppGraphView: View {
     
     @Environment(\.libreLinkUpHistory) var libreLinkUpHistory
     @Environment(\.sensorSettingsSingleton) var sensorSettingsSingleton
@@ -193,5 +193,5 @@ struct PhoneGraphView: View {
 }
 
 #Preview {
-    PhoneGraphView()
+    PhoneAppGraphView()
 }

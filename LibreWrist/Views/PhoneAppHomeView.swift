@@ -140,7 +140,7 @@ struct PhoneAppHomeView: View {
             
             
             if libreLinkUpHistory.libreLinkUpGlucose.count > 0 {
-                PhoneGraphView()
+                PhoneAppGraphView()
             }
             
         }

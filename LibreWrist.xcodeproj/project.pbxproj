@@ -13,7 +13,7 @@
 		7B022CA22CADDBE800CA64B4 /* LibreWristWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B022CA12CADDBE800CA64B4 /* LibreWristWidget.swift */; };
 		7B022CA42CADDBEA00CA64B4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7B022CA32CADDBEA00CA64B4 /* Assets.xcassets */; };
 		7B022CA82CADDBEA00CA64B4 /* FLwatchWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7B022C992CADDBE800CA64B4 /* FLwatchWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		7B096C9B2E33F2CA00B6744C /* PhoneGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B096C9A2E33F2CA00B6744C /* PhoneGraphView.swift */; };
+		7B096C9B2E33F2CA00B6744C /* PhoneAppGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B096C9A2E33F2CA00B6744C /* PhoneAppGraphView.swift */; };
 		7B096C9D2E33FB0900B6744C /* WatchAppGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B096C9C2E33FB0900B6744C /* WatchAppGraphView.swift */; };
 		7B096C9E2E33FB0900B6744C /* WatchAppGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B096C9C2E33FB0900B6744C /* WatchAppGraphView.swift */; };
 		7B183E972C84B09D0018A24F /* PhoneToWatchConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B183E962C84B09D0018A24F /* PhoneToWatchConnector.swift */; };
@@ -232,7 +232,7 @@
 		7B022CA12CADDBE800CA64B4 /* LibreWristWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreWristWidget.swift; sourceTree = "<group>"; };
 		7B022CA32CADDBEA00CA64B4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7B022CA52CADDBEA00CA64B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		7B096C9A2E33F2CA00B6744C /* PhoneGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneGraphView.swift; sourceTree = "<group>"; };
+		7B096C9A2E33F2CA00B6744C /* PhoneAppGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppGraphView.swift; sourceTree = "<group>"; };
 		7B096C9C2E33FB0900B6744C /* WatchAppGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAppGraphView.swift; sourceTree = "<group>"; };
 		7B183E962C84B09D0018A24F /* PhoneToWatchConnector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhoneToWatchConnector.swift; sourceTree = "<group>"; };
 		7B183E982C84B0AA0018A24F /* WatchToPhoneConnector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WatchToPhoneConnector.swift; sourceTree = "<group>"; };
@@ -594,7 +594,7 @@
 				7BA0AE5C2C5AEB89004226FE /* PhoneAppDonateView.swift */,
 				7B183E9A2C84C9540018A24F /* PhoneAppInsulinDeliveryView.swift */,
 				7B8965442DC17399003A50CE /* PhoneAppSiriSheetView.swift */,
-				7B096C9A2E33F2CA00B6744C /* PhoneGraphView.swift */,
+				7B096C9A2E33F2CA00B6744C /* PhoneAppGraphView.swift */,
 				7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */,
 			);
 			path = Views;
@@ -905,7 +905,7 @@
 				7BFD835B2C84E48800A9B195 /* InsulinModel.swift in Sources */,
 				7BA0AE572C5834F6004226FE /* PhoneAppConnectView.swift in Sources */,
 				7BCA58692C8A292600C50F11 /* SensorSettings.swift in Sources */,
-				7B096C9B2E33F2CA00B6744C /* PhoneGraphView.swift in Sources */,
+				7B096C9B2E33F2CA00B6744C /* PhoneAppGraphView.swift in Sources */,
 				7BADE0122C73E3440074A47F /* SensorType.swift in Sources */,
 				7BFD83572C84DF6200A9B195 /* InsulinObjects.swift in Sources */,
 				7B462BFD2C7FBAC8003FEDC3 /* MeasurementColor.swift in Sources */,

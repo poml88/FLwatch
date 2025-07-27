@@ -20,22 +20,21 @@ enum LibreLinkUpError: LocalizedError {
     case loggingIntoWrongRegionalServer
     case unknownErrorGraph
     case ppNotAccepted
-
-#warning ("How do I localize that?")
+    
     var errorDescription: String? {
         switch self {
-        case .noConnectionLogin:     "No connection. Unknown error during login. Network?"
-        case .noConnectionGraph:     "No connection. Network?"
-        case .notAuthenticated: "Not authenticated. Check credentials."
-        case .jsonDecoding:     "JSON decoding error."
-        case .touNotAccepted:   "LibreLinkUp's Terms of Use were updated. Open LibreLinkUp App, log in, and accept Terms of Use. (tip: try log out and re-login)"
-        case .ppNotAccepted:    "LibreLinkUp's Privacy Policy was updated. Open LibreLinkUp App, log in, and accept Privacy Policy. (tip: try log out and re-login)"
-        case .verifyEmail:      "LLU email address not yet verified. Verify using LLU app."
-        case .unknownStatus4:   "Unknown status 4 error."
-        case .followerNotConnectToPatient: "Follower not connected to patient. Please invite in Libre app and accept in LibreLinkUp app. See setup and usage guide."
-        case .lockedAccount:    "Account temporarily locked. Too many failed login attempts. Try again in 5 minutes."
-        case .loggingIntoWrongRegionalServer: "Trying to log into wrong regional server. Please contact support."
-        case .unknownErrorGraph: "Unknown error during graph request."
+        case .noConnectionLogin:     String(localized: "No connection. Unknown error during login. Network?")
+        case .noConnectionGraph:     String(localized: "No connection. Network?")
+        case .notAuthenticated: String(localized: "Not authenticated. Check credentials.")
+        case .jsonDecoding:     String(localized: "JSON decoding error.")
+        case .touNotAccepted:   String(localized: "LibreLinkUp's Terms of Use were updated. Open LibreLinkUp App, log in, and accept Terms of Use. (tip: try log out and re-login)")
+        case .ppNotAccepted:    String(localized: "LibreLinkUp's Privacy Policy was updated. Open LibreLinkUp App, log in, and accept Privacy Policy. (tip: try log out and re-login)")
+        case .verifyEmail:      String(localized: "LLU email address not yet verified. Verify using LLU app.")
+        case .unknownStatus4:   String(localized: "Unknown status 4 error.")
+        case .followerNotConnectToPatient: String(localized: "Follower not connected to patient. Please invite in Libre app and accept in LibreLinkUp app. See setup and usage guide.")
+        case .lockedAccount:    String(localized: "Account temporarily locked. Too many failed login attempts. Try again in 5 minutes.")
+        case .loggingIntoWrongRegionalServer: String(localized: "Trying to log into wrong regional server. Please contact support.")
+        case .unknownErrorGraph: String(localized: "Unknown error during graph request.")
         }
     }
 }

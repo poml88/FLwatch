@@ -503,6 +503,9 @@
         }
       }
     },
+    "Account temporarily locked. Too many failed login attempts. Try again in 5 minutes." : {
+
+    },
     "Add insulin" : {
       "localizations" : {
         "de" : {
@@ -820,6 +823,9 @@
     "FLwatch" : {
 
     },
+    "Follower not connected to patient. Please invite in Libre app and accept in LibreLinkUp app. See setup and usage guide." : {
+
+    },
     "Get Current Blood Glucose" : {
       "localizations" : {
         "de" : {
@@ -943,6 +949,9 @@
     "IOB: %.2fu" : {
 
     },
+    "JSON decoding error." : {
+
+    },
     "Keep phone screen always on" : {
       "localizations" : {
         "de" : {
@@ -958,6 +967,15 @@
           }
         }
       }
+    },
+    "LibreLinkUp's Privacy Policy was updated. Open LibreLinkUp App, log in, and accept Privacy Policy. (tip: try log out and re-login)" : {
+
+    },
+    "LibreLinkUp's Terms of Use were updated. Open LibreLinkUp App, log in, and accept Terms of Use. (tip: try log out and re-login)" : {
+
+    },
+    "LLU email address not yet verified. Verify using LLU app." : {
+
     },
     "Lower limit" : {
       "localizations" : {
@@ -984,6 +1002,12 @@
           }
         }
       }
+    },
+    "No connection. Network?" : {
+
+    },
+    "No connection. Unknown error during login. Network?" : {
+
     },
     "No credentials (yet) received from phone. Try tapping 'Connect' on phone to resend to watch and wait a minute." : {
       "localizations" : {
@@ -1032,6 +1056,9 @@
           }
         }
       }
+    },
+    "Not authenticated. Check credentials." : {
+
     },
     "not determined" : {
       "localizations" : {
@@ -1444,6 +1471,9 @@
         }
       }
     },
+    "Trying to log into wrong regional server. Please contact support." : {
+
+    },
     "Understood" : {
       "localizations" : {
         "de" : {
@@ -1469,6 +1499,12 @@
           }
         }
       }
+    },
+    "Unknown error during graph request." : {
+
+    },
+    "Unknown status 4 error." : {
+
     },
     "Update note" : {
 
