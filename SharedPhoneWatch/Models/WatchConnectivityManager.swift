@@ -73,6 +73,13 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             UserDefaults.group.insulinDeliveryHistory = []
         }
         
+        if message["content"] as? String == "updateInsulinTypeSelected" {
+            let value = message["insulinTypeSelected"] as? Int ?? 0
+            let value2: InsulinType = InsulinType(rawValue: value) ?? .rapidActing
+            UserDefaults.group.insulinTypeSelected = value2
+        }
+
+        
         
         if let replyHandler = replyHandler {
             

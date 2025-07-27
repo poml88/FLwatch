@@ -545,7 +545,11 @@
         }
       }
     },
+    "Bolus Insulin (%@)" : {
+
+    },
     "Bolus Insulin (Novorapid)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -907,6 +911,9 @@
         }
       }
     },
+    "Insulin selection" : {
+
+    },
     "Insulin units" : {
       "localizations" : {
         "de" : {
@@ -1263,6 +1270,9 @@
           }
         }
       }
+    },
+    "Select the bolus insulin for the IOB calculations. Currently supported are:\n- Rapid acting (Novolog, Novorapid, ... (peak activity 75 mins))\n- Fast rapid acting (Fiasp, Lyumjev, ... (peak activity 55 mins))" : {
+
     },
     "Send Email to Support" : {
       "localizations" : {

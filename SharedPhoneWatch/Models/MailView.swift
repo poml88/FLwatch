@@ -52,7 +52,7 @@ struct MailView: UIViewControllerRepresentable {
         vc.mailComposeDelegate = context.coordinator
         vc.setToRecipients(["flwatch@cmdline.net"])
         vc.setSubject("Support FLwatch")
-        vc.setMessageBody("Hello,\n\n\n\n\n\nKind regards\n\n\n\n Debug info:\nApp Version: \(versionNumber) Build: \(buildNumber)\nDevice Info: \(systemName) \(systemVersion) on \(name)\nSensor: \(sensorType)\nErroe Message: \(libreLinkUpDebug)\n\n", isHTML: false)
+        vc.setMessageBody("Hello,\n\n\n\n\n\nKind regards\n\n\n\n Debug info:\nApp Version: \(versionNumber) Build: \(buildNumber)\nDevice Info: \(systemName) \(systemVersion) on \(name)\nSensor: \(sensorType)\nError Message: \(libreLinkUpDebug)\n\n", isHTML: false)
         return vc
     }
     

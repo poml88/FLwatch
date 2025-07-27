@@ -43,6 +43,7 @@ private enum Keys: String {
     case keyConnection = "connection"
     case keyLockTime = "lockTime"
     case insulinDeliveryHistory = "insulinDeliveryHistoryKey"
+    case insulinTypeSelected = "insulinTypeSelectedKey"
 }
 
 enum Connection: Int {
@@ -114,6 +115,17 @@ extension UserDefaults {
             } else {
                 removeObject(forKey: Keys.insulinDeliveryHistory.rawValue)
             }
+        }
+    }
+    
+    var insulinTypeSelected: InsulinType {
+        set {
+            set(newValue.rawValue, forKey: Keys.insulinTypeSelected.rawValue)
+            }
+        
+        get {
+            let insulinTypeSelectedAsInt = integer(forKey: Keys.insulinTypeSelected.rawValue)
+            return InsulinType(rawValue: insulinTypeSelectedAsInt) ?? .rapidActing
         }
     }
 }

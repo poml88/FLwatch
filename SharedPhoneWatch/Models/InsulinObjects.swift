@@ -7,6 +7,36 @@
 
 import SwiftUI
 
+enum InsulinType: Int, CaseIterable {
+    case rapidActing = 0
+    case fastRapidActing = 1
+    
+    var description: String {
+        switch self {
+        case .rapidActing:
+            return "Rapid acting"
+        case .fastRapidActing:
+            return "Fast rapid acting"
+        }
+    }
+    var fullDescription: String {
+        switch self {
+        case .rapidActing:
+            return "Rapid acting (Novolog, ...)"
+        case .fastRapidActing:
+            return "Fast rapid acting (Fiasp, Lyumjev, ...)"
+        }
+    }
+    var presets: InsulinTypePresets {
+        switch self {
+        case .rapidActing:
+            return .rapidActing
+        case .fastRapidActing:
+            return .fastRapidActing
+        }
+    }
+}
+
 struct InsulinDelivery: Codable, Identifiable {
     let id: UUID
     let timeStamp: Double
@@ -19,7 +49,7 @@ struct InsulinDelivery: Codable, Identifiable {
     }
 }
 
-struct InsulinType: Codable, Identifiable {
+struct InsulinTypePresets: Codable, Identifiable {
     let id: UUID
     let actionDuration: Double
     let peakActivityTime: Double
@@ -31,8 +61,8 @@ struct InsulinType: Codable, Identifiable {
         self.peakActivityTime = peakActivityTime
         self.delay = delay
     }
-    static let novorapid = InsulinType(id: UUID(), actionDuration: 270 * 60, peakActivityTime: 120 * 60, delay: 15 * 60)
-
+    static let rapidActing = InsulinTypePresets(id: UUID(), actionDuration: 360 * 60, peakActivityTime: 75 * 60, delay: 10 * 60)
+    static let fastRapidActing = InsulinTypePresets(id: UUID(), actionDuration: 360 * 60, peakActivityTime: 55 * 60, delay: 10 * 60)
 }
 
 
@@ -65,7 +95,9 @@ struct InsulinType: Codable, Identifiable {
     }
     
     private func updateIOB(timeStamp time: Double) -> Double {
-        let model = ExponentialInsulinModel(actionDuration: InsulinType.novorapid.actionDuration, peakActivityTime: InsulinType.novorapid.peakActivityTime, delay: InsulinType.novorapid.delay)
+        let insulin:InsulinType = UserDefaults.group.insulinTypeSelected
+        let preset: InsulinTypePresets = insulin.presets
+        let model = ExponentialInsulinModel(actionDuration: preset.actionDuration, peakActivityTime: preset.peakActivityTime, delay: preset.delay)
         let result = model.percentEffectRemaining(at: Date().timeIntervalSince1970 - time)
         return result
     }

@@ -21,6 +21,7 @@ struct PhoneAppInsulinDeliveryView: View {
     @State private var isShowingInsulinDeliverySubmitAlert = false
     @State private var isShowingInsulinDeliveryResetAlert = false
     @State private var isShowingDifferenceTimePickerSheet = false
+    @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
     private var watchConnector = WatchConnectivityManager.shared
     
     //    @Binding var selectedTab: String
@@ -79,7 +80,7 @@ struct PhoneAppInsulinDeliveryView: View {
                     }
                     .buttonStyle(.borderedProminent)
                 } header: {
-                    Text("Bolus Insulin (Novorapid)")
+                    Text("Bolus Insulin (\(insulinTypeSelected.description))")
                 }
             }
             //        .navigationBarTitle("Settings")
