@@ -128,6 +128,7 @@ struct PhoneAppConnectView: View {
             if connected == .connecting {
                 ZStack {
                     Color(white: 0, opacity: 0.25)
+                        .cornerRadius(10)
                     ProgressView().tint(.white)
                 }
             }

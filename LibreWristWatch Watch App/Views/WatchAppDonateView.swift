@@ -11,6 +11,8 @@ import StoreKit
 
 struct WatchAppDonateView: View {
     
+    @State private var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
+    
     private let productIDs = [
         "librewrist_4_99_a",
         "librewrist_9_99_a",
@@ -59,6 +61,16 @@ struct WatchAppDonateView: View {
             let model = WKInterfaceDevice.current().model
             let name = WKInterfaceDevice.current().name
             Text("\(systemName) \(systemVersion) on \(name)")
+            Text("\nInsulin history:")
+                ForEach(insulinDeliveryHistory, id: \.id) {item in
+                    let timeInterval = Date(timeIntervalSince1970: item.timeStamp).timeIntervalSinceNow
+                    let timeSinceInjection = Duration(
+                        secondsComponent: Int64(-timeInterval),
+                        attosecondsComponent: 0
+                    ).formatted(.time(pattern: .hourMinute))  // "2:05"
+                    
+                    Text("Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())  (\(timeSinceInjection) h)      Units: \(item.insulinUnits, specifier: "%.1f")")
+                }
         }
     }
 }

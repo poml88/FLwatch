@@ -117,20 +117,20 @@ struct PhoneAppInsulinDeliveryView: View {
             } message: {
                 Text("Do you want to reset insulin history?")
             }
-            List{
+            List {
                 ForEach(insulinDeliveryHistory, id: \.id) {item in
                     let timeInterval = Date(timeIntervalSince1970: item.timeStamp).timeIntervalSinceNow
                     let timeSinceInjection = Duration(
                         secondsComponent: Int64(-timeInterval),
                         attosecondsComponent: 0
                     ).formatted(.time(pattern: .hourMinute))  // "2:05"
-
+                    
                     Text("Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())  (\(timeSinceInjection) h)      Units: \(item.insulinUnits, specifier: "%.1f")")
                 }
                 
             }
             
-                    }
+        }
     }
     
     func sendMessagetoOther(message: [String: Any]) {

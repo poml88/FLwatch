@@ -265,6 +265,10 @@ class Settings {
         didSet { UserDefaults.group.set(self.hasSeenDisclaimer, forKey: "hasSeenDisclaimer") }
     }
     
+    var hasSeenWelcomeMessage: Bool = UserDefaults.group.bool(forKey: "hasSeenWelcomeMessage") {
+        didSet { UserDefaults.group.set(self.hasSeenWelcomeMessage, forKey: "hasSeenWelcomeMessage") }
+    }
+    
     var hasSeenNotification: Bool = UserDefaults.group.bool(forKey: "hasSeenNotification001") {
         didSet { UserDefaults.group.set(self.hasSeenNotification, forKey: "hasSeenNotification001") }
     }

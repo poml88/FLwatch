@@ -4,6 +4,9 @@
     "" : {
 
     },
+    "\nInsulin history:" : {
+
+    },
     "!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional." : {
       "localizations" : {
         "de" : {
@@ -503,7 +506,7 @@
         }
       }
     },
-    "Account temporarily locked. Too many failed login attempts. Try again in 5 minutes." : {
+    "Account temporarily locked. Too many failed login attempts. Try again in 5 minutes. Check credentials." : {
 
     },
     "Add insulin" : {
@@ -823,7 +826,7 @@
     "FLwatch" : {
 
     },
-    "Follower not connected to patient. Please invite in Libre app and accept in LibreLinkUp app. See setup and usage guide." : {
+    "Follower not connected to patient. Please invite in Libre app and accept in LibreLinkUp app. See Setup And Usage guide." : {
 
     },
     "Get Current Blood Glucose" : {
@@ -968,13 +971,13 @@
         }
       }
     },
-    "LibreLinkUp's Privacy Policy was updated. Open LibreLinkUp App, log in, and accept Privacy Policy. (tip: try log out and re-login)" : {
+    "LibreLinkUp's Privacy Policy was updated. Open LibreLinkUp app, log in, and accept Privacy Policy. (tip: try log out and re-login)" : {
 
     },
-    "LibreLinkUp's Terms of Use were updated. Open LibreLinkUp App, log in, and accept Terms of Use. (tip: try log out and re-login)" : {
+    "LibreLinkUp's Terms of Use were updated. Open LibreLinkUp app, log in, and accept Terms of Use. (tip: try log out and re-login)" : {
 
     },
-    "LLU email address not yet verified. Verify using LLU app." : {
+    "LLU email address not yet verified. Verify using LibreLinkUp app." : {
 
     },
     "Lower limit" : {
@@ -1398,6 +1401,9 @@
         }
       }
     },
+    "Start" : {
+
+    },
     "Submit" : {
       "localizations" : {
         "de" : {
@@ -1415,6 +1421,9 @@
       }
     },
     "Support" : {
+
+    },
+    "Thank you for downloading FLwatch. I hope it will prove useful.\n\nTo get startet, please read the SETUP AND USAGE guide. In case of questions, please contact support. More info on the Settings tab." : {
 
     },
     "Time" : {
@@ -1566,6 +1575,9 @@
           }
         }
       }
+    },
+    "Welcome" : {
+
     },
     "Your blood glucose is currently %@ and %@." : {
       "localizations" : {

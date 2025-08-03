@@ -30,6 +30,7 @@ struct PhoneAppHomeView: View {
 //    @State private var libreLinkUpLogbookHistory: [LibreLinkUpGlucose] = []
     @State private var isReloading: Bool = false
     @State private var isShowingDisclaimer = false
+    @State private var isShowingWelcomeMessage = false
     @State private var isShowingNotification = false
     @State private var isShowingInsulinDeliverySheet = false
 //    @State private var currentIOB: Double = 0.0
@@ -151,12 +152,20 @@ struct PhoneAppHomeView: View {
             Text("!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.")
         }
         
+        .alert ("Welcome", isPresented: $isShowingWelcomeMessage) {
+            Button("Start", role: .cancel, action: {settings.hasSeenWelcomeMessage = true})
+        }
+        message: {
+            Text("Thank you for downloading FLwatch. I hope it will prove useful.\n\nTo get startet, please read the SETUP AND USAGE guide. In case of questions, please contact support. More info on the Settings tab.")
+        }
+        
         .alert ("Update note", isPresented: $isShowingNotification) {
             Button("Understood", role: .cancel, action: {settings.hasSeenNotification = true})
         }
         message: {
             Text("Please reboot phone and watch once if widgets do not work!")
         }
+        
         .alert ("Warning", isPresented: $isShowingReloadFailed) {
             //            Button("Accept", role: .cancel, action: {settings.hasSeenDisclaimer = true})
         }
@@ -170,6 +179,7 @@ struct PhoneAppHomeView: View {
             if isReloading == true {
                 ZStack {
                     Color(white: 0, opacity: 0.25)
+                        .cornerRadius(10)
                     ProgressView().tint(.white)
                 }
             }
@@ -200,9 +210,18 @@ struct PhoneAppHomeView: View {
         }
         .onAppear() { // fires when switching the Views, e.g. form settings to home view.
             print("onAppear")
+//            settings.hasSeenDisclaimer = false
+//            settings.hasSeenWelcomeMessage = false
+            
+            if settings.hasSeenWelcomeMessage == false {
+                isShowingWelcomeMessage = true
+            }
+            
             if settings.hasSeenDisclaimer == false {
                 isShowingDisclaimer = true
             }
+            
+            
             
 //            Uncomment to show a notification at app start
 //            Increase counter in Settings (hasSeenNotification000)
@@ -259,7 +278,7 @@ struct PhoneAppHomeView: View {
             if minutesSinceLastReading >= 3 && isReloading == false {
                 ZStack {
                     Color(white: 0, opacity: 0.5)
-                    
+                        .cornerRadius(10)
                     VStack {
                         Image(systemName: "hourglass.circle")
                             .resizable()
@@ -275,7 +294,7 @@ struct PhoneAppHomeView: View {
                     .cornerRadius(10)
                     .opacity(0.5)
                 }
-                .ignoresSafeArea()
+//                .ignoresSafeArea()
                 .allowsHitTesting(false) // passes taps/clicks through to the bottom layer
                 // in this case the IOB button
             }
