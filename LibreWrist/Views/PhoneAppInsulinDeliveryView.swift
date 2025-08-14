@@ -12,12 +12,13 @@ struct PhoneAppInsulinDeliveryView: View {
     @AppStorage(SharedData.Keys.insulinSelected.key, store: SharedData.defaultsGroup) private var insulinSelected: Double = 0.5
     
     @Environment(\.dismiss) var dismiss
+    @Environment(\.insulinDeliveryHistorySingleton) var insulinDeliveryHistorySingleton
     
 //    @StateObject var watchConnector = WatchConnectivityManager.shared
 //    @EnvironmentObject var watchConnector: WatchConnectivityManager
     
     @State private var pickerTimeStamp: Date = Date.now
-    @State private var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
+//    @State private var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
     @State private var isShowingInsulinDeliverySubmitAlert = false
     @State private var isShowingInsulinDeliveryResetAlert = false
     @State private var isShowingDifferenceTimePickerSheet = false
@@ -88,14 +89,18 @@ struct PhoneAppInsulinDeliveryView: View {
                 Button("Submit", action: {
                     let insulinDeliveryTimeStamp = pickerTimeStamp.timeIntervalSince1970
                     let insulinDeliveryUnits = insulinSelected
-                    let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: insulinDeliveryTimeStamp, insulinUnits: insulinDeliveryUnits)
-                    insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
-                    UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
+                    let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: insulinDeliveryTimeStamp, insulinUnits: insulinDeliveryUnits, insulinType: UserDefaults.group.insulinTypeSelected.rawValue)
+                    insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // seems not to be necessary, but just to be sure....
+                    insulinDeliveryHistorySingleton.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
+                    UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
                     
-                    let messageToWatch: [String: Any] = ["content": "insulinDelivery",
+                    let messageToWatch: [String: Any] = ["content": "insulinDelivery", // The insulinTypeSelected is taken from UserDefaults, so does not need to be sent.
                                                          "timeStamp": insulinDeliveryTimeStamp,
                                                          "units": insulinDeliveryUnits]
                     sendMessagetoOther(message: messageToWatch)
+                    
+                    CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
+                    CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
                     dismiss()
                     //                        selectedTab = "Home"
                 })
@@ -108,17 +113,19 @@ struct PhoneAppInsulinDeliveryView: View {
             .alert ("Confirm", isPresented: $isShowingInsulinDeliveryResetAlert) {
                 Button("Reset", action: {
                     pickerTimeStamp = Date.now
-                    insulinDeliveryHistory = []
-                    UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
+                    insulinDeliveryHistorySingleton.insulinDeliveryHistory = []
+                    UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
                     let messageToWatch: [String: Any] = ["content": "clearInsulinHistory"]
                     sendMessagetoOther(message: messageToWatch)
+                    CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
+                    CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
                 })
                 Button("Cancel", role: .cancel, action: {})
             } message: {
                 Text("Do you want to reset insulin history?")
             }
             List {
-                ForEach(insulinDeliveryHistory, id: \.id) {item in
+                ForEach(insulinDeliveryHistorySingleton.insulinDeliveryHistory, id: \.id) {item in
                     let timeInterval = Date(timeIntervalSince1970: item.timeStamp).timeIntervalSinceNow
                     let timeSinceInjection = Duration(
                         secondsComponent: Int64(-timeInterval),

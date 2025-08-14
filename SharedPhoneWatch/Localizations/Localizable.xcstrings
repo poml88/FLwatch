@@ -61,6 +61,9 @@
     "%.1f" : {
 
     },
+    "%.1fu" : {
+
+    },
     "%.2fu" : {
 
     },
@@ -701,6 +704,9 @@
         }
       }
     },
+    "Curve" : {
+
+    },
     "Debug Info" : {
       "localizations" : {
         "es" : {
@@ -919,6 +925,9 @@
           }
         }
       }
+    },
+    "Insulin" : {
+
     },
     "Insulin selection" : {
 
@@ -1337,6 +1346,12 @@
       }
     },
     "Setup and usage guide" : {
+
+    },
+    "Show IOB curve on phone" : {
+
+    },
+    "Show IOB curve on watch" : {
 
     },
     "Siri integration" : {

@@ -480,7 +480,8 @@ class LibreLinkUp  {
                     let unitString = "\(unit)"
                     Logger.libreLinkUp.info("LibreLinkUp: measurement unit: \(unitString)")
                     
-                    let uom = connection["uom"] as? Int ?? 1
+                    
+                    let uom = connection["uom"] as? Int ?? 1 // test mmol units: let uom = 0
                     let targetLow = connection["targetLow"] as? Int ?? 0
                     let targetHigh = connection["targetHigh"] as? Int ?? 0
                     

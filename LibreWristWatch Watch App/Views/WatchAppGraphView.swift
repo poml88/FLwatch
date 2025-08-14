@@ -11,6 +11,8 @@ import Charts
 
 struct WatchAppGraphView: View {
     
+    @AppStorage(SharedData.Keys.showIOBCurveWatch.key, store: SharedData.defaultsGroup) private var showIOBCurveWatch: Bool = false
+    
     @Environment(\.libreLinkUpHistory) var libreLinkUpHistory
     @Environment(\.sensorSettingsSingleton) var sensorSettingsSingleton
     
@@ -24,14 +26,18 @@ struct WatchAppGraphView: View {
         
         let indexOfMaxGlucoseItem = libreLinkUpHistory.libreLinkUpGlucose.indices.max(by:
                                                                                         { libreLinkUpHistory.libreLinkUpGlucose[$0].glucose.value < libreLinkUpHistory.libreLinkUpGlucose[$1].glucose.value }
-        ) ?? 225
-        let maxBG: Int = libreLinkUpHistory.libreLinkUpGlucose[indexOfMaxGlucoseItem].glucose.value
+        ) ?? 0
+        var maxBG: Int { libreLinkUpHistory.libreLinkUpGlucose.count > 0 ? libreLinkUpHistory.libreLinkUpGlucose[indexOfMaxGlucoseItem].glucose.value : 225 }
         
         
         var chartYScaleMax: Double { if maxBG > 300 { sensorSettingsSingleton.sensorSettings.uom == 0 ? 21 : 400}
             else if maxBG > 225 { sensorSettingsSingleton.sensorSettings.uom == 0 ? 18 : 300}
             else { sensorSettingsSingleton.sensorSettings.uom == 0 ? 12.5 : 225}
         }
+        
+        let quarterYAxisIOBCurve: Double = (chartYScaleMax - chartYScaleMin) / 4 + 0.25
+        var chartYScaleMinIOBCurve: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 3 : 50 }
+        
 //                var chartYScaleMax: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 12.5 : 225 }
         var yAxisSteps: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 3 : 50 }
         
@@ -77,7 +83,9 @@ struct WatchAppGraphView: View {
                 
                 var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                 LineMark(x: .value("Time", item.glucose.date),
-                         y: .value("Glucose", itemValue))
+                         y: .value("Glucose", itemValue),
+                         series: .value("Curve", "Glucose")
+                )
                 .interpolationMethod(.linear)
                 .lineStyle(.init(lineWidth: 3))
                 .symbol(){
@@ -113,6 +121,65 @@ struct WatchAppGraphView: View {
                 .foregroundStyle(.yellow)
                 .symbolSize(8)
             }
+            
+            if showIOBCurveWatch == true {
+                let insulinActivityCurve = CurrentIOBSingleton.shared.insulinActivityCurve
+                let indexOfMaxInsulinItem = insulinActivityCurve.indices.max(by:
+                                                                                                { insulinActivityCurve[$0].value < insulinActivityCurve[$1].value }
+                ) ?? 0
+        //        let maxIOB: Double = insulinActivityCurve[indexOfMaxInsulinItem].value
+                var maxIOB: Double { insulinActivityCurve.count > 0 ? insulinActivityCurve[indexOfMaxInsulinItem].value : 1}
+                if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
+                    
+                    
+                    ForEach(insulinActivityCurve) { item in
+                        LineMark(x: .value("Time", item.date),
+                                 y: .value("Insulin", chartYScaleMinIOBCurve + item.value * quarterYAxisIOBCurve / maxIOB),
+                                 series: .value("Curve", "Insulin")
+                        )
+                        .foregroundStyle(.orange)
+                        //                    .interpolationMethod(.linear)
+                        //                    .lineStyle(.init(lineWidth: 5))
+                        //                    .symbol(){
+                        //                        Circle()
+                        //                            .fill(item.color.color)
+                        //                            .frame(width: 6, height: 6)
+                        //                    }
+                    }
+                    
+                    ForEach(InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory) { item in
+                        //                    var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
+                        if item.timeStamp > Date().timeIntervalSince1970 - 3600 * 6 {
+                            var activityCurveDataPointAtTimeStamp: ActivityCurveDataPoint { CurrentIOBSingleton.shared.insulinActivityCurve.first(where: { $0.date > Date(timeIntervalSince1970: item.timeStamp)}) ?? ActivityCurveDataPoint(id: Int(item.timeStamp),date: Date(timeIntervalSince1970: item.timeStamp), value: 1)}
+                            
+                            var alignment: Alignment {
+                                if item.timeStamp > Date().timeIntervalSince1970 - 40 * 60 {
+                                    return .trailing
+                                } else if item.timeStamp < Date().timeIntervalSince1970 - 3600 * 6 + 40 * 60 {
+                                    return .leading
+                                } else {
+                                    return .center
+                                }
+                            }
+                            let shiftInYValue = 10
+                            var shiftInY: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? shiftInYValue.toMmolL() : Double(shiftInYValue) }
+                            PointMark(x: .value("Time", Date(timeIntervalSince1970: item.timeStamp)),
+                                      y: .value("Insulin", chartYScaleMinIOBCurve + shiftInY + activityCurveDataPointAtTimeStamp.value * quarterYAxisIOBCurve / maxIOB) // we need to know the IOB at this time stamp.
+                            )
+                            .symbol {
+                                Image(systemName: "arrowtriangle.down.fill")
+                                    .foregroundColor(.orange)
+                                    .font(.system(size: 15))   // default
+                            }
+                            .annotation(alignment: alignment) {
+                                Text("\(item.insulinUnits, specifier: "%.1f")u")
+                                    .font(.footnote)
+                            }
+                        }
+                    }
+                }
+            }
+            
         }
         
         .chartYScale(domain: [chartYScaleMin, chartYScaleMax])

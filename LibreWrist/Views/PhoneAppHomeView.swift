@@ -8,6 +8,7 @@
 import SwiftUI
 import OSLog
 import Charts
+import WidgetKit
 
 
 struct PhoneAppHomeView: View {
@@ -20,6 +21,7 @@ struct PhoneAppHomeView: View {
     @Environment(\.libreLinkUpHistory) var libreLinkUpHistory
 //    @Environment(\.sensorSettingsSingleton) var sensorSettingsSingleton
     @Environment(\.currentIOBSingleton) var currentIOBSingleton
+//    @Environment(\.insulinDeliveryHistorySingleton) var insulinDeliveryHistorySingleton
     
     
     
@@ -189,6 +191,7 @@ struct PhoneAppHomeView: View {
             
             
             CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
+            CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
             
             connected = UserDefaults.group.connected
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
@@ -230,6 +233,7 @@ struct PhoneAppHomeView: View {
 //            }
             
             CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
+            CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
             
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
             connected = UserDefaults.group.connected
@@ -253,6 +257,8 @@ struct PhoneAppHomeView: View {
                 print("Active")
                 
                 CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
+                CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
+                WidgetCenter.shared.reloadAllTimelines()
                 
                 connected = UserDefaults.group.connected
                 minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)

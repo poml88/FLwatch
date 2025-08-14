@@ -67,6 +67,8 @@ struct AddInsulin: AppIntent {
         let formatter = NumberFormatter()
         formatter.locale = Locale.current
         
+        let insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
+        
         var insulinDeliveryUnits: Double = 0.0
         
         if let value = insulinUnitsEnum?.rawValue {
@@ -84,11 +86,12 @@ struct AddInsulin: AppIntent {
             throw $unitsDouble.needsValueError("Could not determine insulin units value.")
         }
         
-        var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
+//        var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
+        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // seems not to be necessary, but just to be sure....
         let insulinDeliveryTimeStamp = Date.now.timeIntervalSince1970
-        let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: insulinDeliveryTimeStamp, insulinUnits: insulinDeliveryUnits)
-        insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
-        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
+        let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: insulinDeliveryTimeStamp, insulinUnits: insulinDeliveryUnits, insulinType: UserDefaults.group.insulinTypeSelected.rawValue)
+        insulinDeliveryHistorySingleton.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
+        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
         
         let messageToWatch: [String: Any] = ["content": "insulinDelivery",
                                              "timeStamp": insulinDeliveryTimeStamp,

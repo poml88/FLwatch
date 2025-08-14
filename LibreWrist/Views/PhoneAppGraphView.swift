@@ -13,6 +13,8 @@ struct PhoneAppGraphView: View {
     @Environment(\.libreLinkUpHistory) var libreLinkUpHistory
     @Environment(\.sensorSettingsSingleton) var sensorSettingsSingleton
     
+    @AppStorage(SharedData.Keys.showIOBCurvePhone.key, store: SharedData.defaultsGroup) private var showIOBCurvePhone: Bool = false
+    
     @State private var selectedlibreLinkHistoryPoint: LibreLinkUpGlucose?
     
     var body: some View {
@@ -27,14 +29,17 @@ struct PhoneAppGraphView: View {
         
         let indexOfMaxGlucoseItem = libreLinkUpHistory.libreLinkUpGlucose.indices.max(by:
                                                                                         { libreLinkUpHistory.libreLinkUpGlucose[$0].glucose.value < libreLinkUpHistory.libreLinkUpGlucose[$1].glucose.value }
-        ) ?? 250
-        let maxBG: Int = libreLinkUpHistory.libreLinkUpGlucose[indexOfMaxGlucoseItem].glucose.value
+        ) ?? 0
+        var maxBG: Int { libreLinkUpHistory.libreLinkUpGlucose.count > 0 ? libreLinkUpHistory.libreLinkUpGlucose[indexOfMaxGlucoseItem].glucose.value : 250 }
         
         
         var chartYScaleMax: Double { if maxBG > 350 { sensorSettingsSingleton.sensorSettings.uom == 0 ? 27 : 500}
             else if maxBG > 250 { sensorSettingsSingleton.sensorSettings.uom == 0 ? 21 : 350}
             else { sensorSettingsSingleton.sensorSettings.uom == 0 ? 15 : 250}
         }
+        
+        let quarterYAxisIOBCurve: Double = (chartYScaleMax - chartYScaleMin) / 4 + 0.25
+        var chartYScaleMinIOBCurve: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 3 : 50 }
         
         var yAxisSteps: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 3 : 50 }
         
@@ -45,6 +50,8 @@ struct PhoneAppGraphView: View {
 
         // Setting to 6 hours below by deleting half of the values.
         let unitString = sensorSettingsSingleton.sensorSettings.uom == 0 ? "mmol/L" : "mg/dL"
+        
+        
         
         Chart {
             //                    RuleMark(y: .value("Minimum High", 300))
@@ -63,37 +70,39 @@ struct PhoneAppGraphView: View {
                 .foregroundStyle(.red)
                 .lineStyle(.init(lineWidth: 1, dash: [2]))
             
-//                    RuleMark(x: .value("Scroll right", rectXStop))
-//                        .foregroundStyle(.yellow)
-//                        .lineStyle(.init(lineWidth: 2))
+            //                    RuleMark(x: .value("Scroll right", rectXStop))
+            //                        .foregroundStyle(.yellow)
+            //                        .lineStyle(.init(lineWidth: 2))
             
-//                    RuleMark(y: .value("Upper limit", 300))
-//                        .foregroundStyle(.red)
-//                        .lineStyle(.init(lineWidth: 1, dash: [2]))
-
-//                    switch libreLinkUpHistory[0].color {
-//                    case .green:
-//                            .foregroundStyle(.green)
-//                    case .yellow:
-//                            .foregroundStyle(.yellow)
-//                    case .orange:
-//                            .foregroundStyle(.orange)
-//                    case red:
-//                            .foregroundStyle(.red)
-//                    default:
-//                            .foregroundStyle(.white)
-//                    }
-
+            //                    RuleMark(y: .value("Upper limit", 300))
+            //                        .foregroundStyle(.red)
+            //                        .lineStyle(.init(lineWidth: 1, dash: [2]))
+            
+            //                    switch libreLinkUpHistory[0].color {
+            //                    case .green:
+            //                            .foregroundStyle(.green)
+            //                    case .yellow:
+            //                            .foregroundStyle(.yellow)
+            //                    case .orange:
+            //                            .foregroundStyle(.orange)
+            //                    case red:
+            //                            .foregroundStyle(.red)
+            //                    default:
+            //                            .foregroundStyle(.white)
+            //                    }
+            
             ForEach(libreLinkUpHistory.libreLinkUpGlucose) { item in
-                                        
-//                        PointMark(x: .value("Time", item.glucose.date),
-//                                  y: .value("Glucose", item.glucose.value)
-//                        )
-//                        .foregroundStyle(item.color.color)
-//                        .symbolSize(12)
+                
+                //                        PointMark(x: .value("Time", item.glucose.date),
+                //                                  y: .value("Glucose", item.glucose.value)
+                //                        )
+                //                        .foregroundStyle(item.color.color)
+                //                        .symbolSize(12)
                 var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                 LineMark(x: .value("Time", item.glucose.date),
-                         y: .value("Glucose", itemValue))
+                         y: .value("Glucose", itemValue),
+                         series: .value("Curve", "Glucose")
+                )
                 .interpolationMethod(.linear)
                 .lineStyle(.init(lineWidth: 5))
                 .symbol(){
@@ -101,7 +110,7 @@ struct PhoneAppGraphView: View {
                         .fill(item.color.color)
                         .frame(width: 6, height: 6)
                 }
-//                        .symbolSize(100)
+                //                        .symbolSize(100)
                 
                 
                 if let selectedlibreLinkHistoryPoint,selectedlibreLinkHistoryPoint.id == item.id {
@@ -123,7 +132,7 @@ struct PhoneAppGraphView: View {
                 }
             }
             
-            #warning ("breaks preview")
+#warning ("breaks preview")
             ForEach(libreLinkUpHistory.libreLinkUpMinuteGlucose) { item in
                 var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                 PointMark(x: .value("Time", item.glucose.date),
@@ -132,6 +141,64 @@ struct PhoneAppGraphView: View {
                 .foregroundStyle(Color.yellow)
                 .symbolSize(20)
                 
+            }
+            
+            if showIOBCurvePhone == true {
+                let insulinActivityCurve = CurrentIOBSingleton.shared.insulinActivityCurve
+                let indexOfMaxInsulinItem = insulinActivityCurve.indices.max(by:
+                                                                                { insulinActivityCurve[$0].value < insulinActivityCurve[$1].value }
+                ) ?? 0
+                //        let maxIOB: Double = insulinActivityCurve[indexOfMaxInsulinItem].value
+                var maxIOB: Double { insulinActivityCurve.count > 0 ? insulinActivityCurve[indexOfMaxInsulinItem].value : 1}
+                if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
+                    
+                    
+                    ForEach(insulinActivityCurve) { item in
+                        LineMark(x: .value("Time", item.date),
+                                 y: .value("Insulin", chartYScaleMinIOBCurve + item.value * quarterYAxisIOBCurve / maxIOB),
+                                 series: .value("Curve", "Insulin")
+                        )
+                        .foregroundStyle(.orange)
+                        //                    .interpolationMethod(.linear)
+                        //                    .lineStyle(.init(lineWidth: 5))
+                        //                    .symbol(){
+                        //                        Circle()
+                        //                            .fill(item.color.color)
+                        //                            .frame(width: 6, height: 6)
+                        //                    }
+                    }
+                    
+                    ForEach(InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory) { item in
+                        //                    var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
+                        if item.timeStamp > Date().timeIntervalSince1970 - 3600 * 6 {
+                            
+                            var activityCurveDataPointAtTimeStamp: ActivityCurveDataPoint { CurrentIOBSingleton.shared.insulinActivityCurve.first(where: { $0.date > Date(timeIntervalSince1970: item.timeStamp)}) ?? ActivityCurveDataPoint(id: Int(item.timeStamp),date: Date(timeIntervalSince1970: item.timeStamp), value: 1)}
+                            
+                            var alignment: Alignment {
+                                if item.timeStamp > Date().timeIntervalSince1970 - 30 * 60 {
+                                    return .trailing
+                                } else if item.timeStamp < Date().timeIntervalSince1970 - 3600 * 6 + 30 * 60 {
+                                    return .leading
+                                } else {
+                                    return .center
+                                }
+                            }
+                            let shiftInYValue = 5
+                            var shiftInY: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? shiftInYValue.toMmolL() : Double(shiftInYValue) }
+                            PointMark(x: .value("Time", Date(timeIntervalSince1970: item.timeStamp)),
+                                      y: .value("Insulin", chartYScaleMinIOBCurve + shiftInY + activityCurveDataPointAtTimeStamp.value * quarterYAxisIOBCurve / maxIOB) // we need to know the IOB at this time stamp.
+                            )
+                            .symbol {
+                                Image(systemName: "arrowtriangle.down.fill")
+                                    .foregroundColor(.orange)
+                                    .font(.system(size: 20))   // default
+                            }
+                            .annotation(alignment: alignment) {
+                                Text("\(item.insulinUnits, specifier: "%.1f")u")
+                            }
+                        }
+                    }
+                }
             }
         }
         .chartYScale(domain: [chartYScaleMin, chartYScaleMax])

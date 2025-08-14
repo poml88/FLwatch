@@ -72,6 +72,10 @@
 		7B8965422DC156E9003A50CE /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8965412DC156DD003A50CE /* WatchConnectivityManager.swift */; };
 		7B8965432DC156E9003A50CE /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8965412DC156DD003A50CE /* WatchConnectivityManager.swift */; };
 		7B8965452DC17399003A50CE /* PhoneAppSiriSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8965442DC17399003A50CE /* PhoneAppSiriSheetView.swift */; };
+		7B8C80122E48C8B300A9DA79 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8C80112E48C8B300A9DA79 /* ViewModifiers.swift */; };
+		7B8C80132E48C8B300A9DA79 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8C80112E48C8B300A9DA79 /* ViewModifiers.swift */; };
+		7B8C80142E48C8B300A9DA79 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8C80112E48C8B300A9DA79 /* ViewModifiers.swift */; };
+		7B8C80152E48C8B300A9DA79 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8C80112E48C8B300A9DA79 /* ViewModifiers.swift */; };
 		7B9B7A7B2C875453004B30FD /* PhoneAppSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */; };
 		7BA0AE2D2C582F63004226FE /* LibreWristApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA0AE2C2C582F63004226FE /* LibreWristApp.swift */; };
 		7BA0AE2F2C582F63004226FE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA0AE2E2C582F63004226FE /* ContentView.swift */; };
@@ -264,6 +268,7 @@
 		7B69F7C22CDD74DF00E3A50C /* Localizable.oldwatchstrings */ = {isa = PBXFileReference; lastKnownFileType = text; path = Localizable.oldwatchstrings; sourceTree = "<group>"; };
 		7B8965412DC156DD003A50CE /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
 		7B8965442DC17399003A50CE /* PhoneAppSiriSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSiriSheetView.swift; sourceTree = "<group>"; };
+		7B8C80112E48C8B300A9DA79 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
 		7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSettingsView.swift; sourceTree = "<group>"; };
 		7BA0AE292C582F63004226FE /* FLwatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FLwatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7BA0AE2C2C582F63004226FE /* LibreWristApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreWristApp.swift; sourceTree = "<group>"; };
@@ -417,6 +422,7 @@
 				7BADE01A2C73E4B60074A47F /* Data.swift */,
 				7BADE01C2C73E4E70074A47F /* Int.swift */,
 				7BADE0202C73EB060074A47F /* Double.swift */,
+				7B8C80112E48C8B300A9DA79 /* ViewModifiers.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -858,6 +864,7 @@
 				7BDF0A812DBB8B4500852BAD /* Glucose.swift in Sources */,
 				7BA5679C2CBC1079003244EE /* GlucoseIOBTimelineProvider.swift in Sources */,
 				7B022CA22CADDBE800CA64B4 /* LibreWristWidget.swift in Sources */,
+				7B8C80152E48C8B300A9DA79 /* ViewModifiers.swift in Sources */,
 				7BDB812E2CB098D700F4A60F /* Settings.swift in Sources */,
 				7B7D08802CB9C64C00FC1973 /* ExponentialInsulinModel.swift in Sources */,
 				7BDB812C2CB089B100F4A60F /* MeasurementColor.swift in Sources */,
@@ -891,6 +898,7 @@
 				7B2E7EC12CB59FCC00A3473B /* MeasurementColor.swift in Sources */,
 				7BA5679D2CBC1079003244EE /* GlucoseIOBTimelineProvider.swift in Sources */,
 				7B2E7EC32CB59FFA00A3473B /* LLUHeaders.swift in Sources */,
+				7B8C80132E48C8B300A9DA79 /* ViewModifiers.swift in Sources */,
 				7B2E7EC52CB5A04A00A3473B /* Data.swift in Sources */,
 				7B7D08832CB9C6BA00FC1973 /* InsulinModel.swift in Sources */,
 				7B2E7EC02CB59FC500A3473B /* TrendArrow.swift in Sources */,
@@ -939,6 +947,7 @@
 				7BA0AE5D2C5AEB89004226FE /* PhoneAppDonateView.swift in Sources */,
 				7B299A0E2C90AFC8002A15C8 /* LibreLinkUpError.swift in Sources */,
 				7B1A7CA62C79E8E2006D603C /* Settings.swift in Sources */,
+				7B8C80142E48C8B300A9DA79 /* ViewModifiers.swift in Sources */,
 				7B299A1D2C90DC43002A15C8 /* LibreLinkUpHistory.swift in Sources */,
 				7B631AAC2CB85F6600CE9EEF /* Reload.swift in Sources */,
 				7B299A142C90B06C002A15C8 /* GlucoseMeasurement.swift in Sources */,
@@ -986,6 +995,7 @@
 				7BC51F382C7C77B2009542D2 /* LibreWristWatchApp.swift in Sources */,
 				7B19E69F2DBF7A7100F8EA7C /* FLwatchShortcuts.swift in Sources */,
 				7B299A122C90AFFC002A15C8 /* Glucose.swift in Sources */,
+				7B8C80122E48C8B300A9DA79 /* ViewModifiers.swift in Sources */,
 				7BC51F5B2C7C8589009542D2 /* SensorType.swift in Sources */,
 				7B299A0C2C90AF8C002A15C8 /* AuthTicket.swift in Sources */,
 				7B299A182C90B089002A15C8 /* LibreLinkUpGlucose.swift in Sources */,
@@ -1388,9 +1398,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LibreWrist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LibreWrist";
 			};
 			name = Debug;
@@ -1408,9 +1422,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LibreWrist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LibreWrist";
 			};
 			name = Release;
@@ -1426,9 +1444,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)UITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = LibreWrist;
 			};
 			name = Debug;
@@ -1444,9 +1466,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)UITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = LibreWrist;
 			};
 			name = Release;

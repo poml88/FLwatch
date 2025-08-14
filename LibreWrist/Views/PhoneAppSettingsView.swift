@@ -10,6 +10,9 @@ import MessageUI
 
 struct PhoneAppSettingsView: View {
     
+    @AppStorage(SharedData.Keys.showIOBCurvePhone.key, store: SharedData.defaultsGroup) private var showIOBCurvePhone: Bool = false
+    @AppStorage(SharedData.Keys.showIOBCurveWatch.key, store: SharedData.defaultsGroup) private var showIOBCurveWatch: Bool = false
+    
     @State private var isScreenAlwaysOn = false
     @State private var showingMailView = false
     @State private var isShowingSiriSheet = false
@@ -25,6 +28,17 @@ struct PhoneAppSettingsView: View {
                     .onChange(of: isScreenAlwaysOn) { value in
                         print("yes")
                         UIApplication.shared.isIdleTimerDisabled.toggle()
+                    }
+                Toggle("Show IOB curve on phone", isOn: $showIOBCurvePhone)
+                    .onChange(of: showIOBCurvePhone) { value in
+                        print("yes")
+                    }
+                Toggle("Show IOB curve on watch", isOn: $showIOBCurveWatch)
+                    .onChange(of: showIOBCurveWatch) { value in
+                        print("yes")
+                        let messageToWatch: [String: Any] = ["content": "showIOBCurveWatchMessage",
+                                                             "showIOBCurveWatch": value]
+                        sendMessagetoOther(message: messageToWatch)
                     }
             } header: {
                 Text("Settings")

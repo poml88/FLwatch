@@ -76,11 +76,11 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
         }
     }
     
-    static func updateIOB(timeStamp time: Double) -> Double {
-        let model = ExponentialInsulinModel(actionDuration: 270 * 60, peakActivityTime: 120 * 60, delay: 15 * 60)
-        let result = model.percentEffectRemaining(at: Date().timeIntervalSince1970 - time)
-        return result
-    }
+//    static func updateIOB(timeStamp time: Double) -> Double {
+//        let model = ExponentialInsulinModel(actionDuration: 270 * 60, peakActivityTime: 120 * 60, delay: 15 * 60)
+//        let result = model.percentEffectRemaining(at: Date().timeIntervalSince1970 - time)
+//        return result
+//    }
     
 }
 

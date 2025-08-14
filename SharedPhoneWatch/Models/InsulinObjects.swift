@@ -37,15 +37,23 @@ enum InsulinType: Int, CaseIterable {
     }
 }
 
+struct ActivityCurveDataPoint: Codable, Identifiable {
+    let id: Int //timeinterval
+    let date: Date
+    let value: Double
+}
+
 struct InsulinDelivery: Codable, Identifiable {
     let id: UUID
     let timeStamp: Double
     let insulinUnits: Double
+    let insulinType: Int
     
-    init(id: UUID, timestamp: Double, insulinUnits: Double) {
+    init(id: UUID, timestamp: Double, insulinUnits: Double, insulinType: Int) {
         self.id = UUID()
         self.timeStamp = timestamp
         self.insulinUnits = insulinUnits
+        self.insulinType = insulinType
     }
 }
 
@@ -65,10 +73,26 @@ struct InsulinTypePresets: Codable, Identifiable {
     static let fastRapidActing = InsulinTypePresets(id: UUID(), actionDuration: 360 * 60, peakActivityTime: 55 * 60, delay: 10 * 60)
 }
 
+@Observable class InsulinDeliveryHistorySingleton {
+    
+    var insulinDeliveryHistory: [InsulinDelivery] = []
+    
+    static let shared: InsulinDeliveryHistorySingleton = {
+        // nothing at the moment so can be used as well: static let shared: InsulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton()
+        // static implies lazy
+        let instance = InsulinDeliveryHistorySingleton()
+        return instance
+    }()
+    
+    private init() {
+        insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? []
+    }
+}
 
 @Observable class CurrentIOBSingleton {
     
     var currentIOB: Double = 0.0
+    var insulinActivityCurve: [ActivityCurveDataPoint] = []
     
     static let shared: CurrentIOBSingleton = {
         let instance = CurrentIOBSingleton()
@@ -78,30 +102,64 @@ struct InsulinTypePresets: Codable, Identifiable {
     private init() {}
     
     func getCurrentIOB() -> Double {
-        var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
+        let insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
+        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // It is necessary to read in the UserDefaults value because widgets and app are individual programs with individual Singletons...
+//        var insulinDeliveryHistory: [InsulinDelivery] = insulinDeliveryHistorySingleton.insulinDeliveryHistory
         var sumIOB: Double = 0
-        for item in insulinDeliveryHistory {
-            if Date().timeIntervalSince1970 - item.timeStamp > 12 * 60 * 60 {
-                insulinDeliveryHistory.removeAll(where: {$0.id == item.id})
+        for item in insulinDeliveryHistorySingleton.insulinDeliveryHistory {
+            let timeIntervalBetweenDeliveryAndNow = Date().timeIntervalSince1970 - item.timeStamp
+            if timeIntervalBetweenDeliveryAndNow > 12 * 60 * 60 {
+                insulinDeliveryHistorySingleton.insulinDeliveryHistory.removeAll(where: {$0.id == item.id})
             } else {
-                let IOB =   updateIOB(timeStamp: item.timeStamp) * item.insulinUnits
+                let timeIntervalBetweenDeliveryAndNow = Date().timeIntervalSince1970 - item.timeStamp
+                let IOB =   updateIOB(timeStamp: timeIntervalBetweenDeliveryAndNow, insulinType: item.insulinType) * item.insulinUnits
                 sumIOB = sumIOB + IOB
             }
         }
         
-        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
+        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
         let currentIOB: Double = sumIOB
         return currentIOB
     }
     
-    private func updateIOB(timeStamp time: Double) -> Double {
-        let insulin:InsulinType = UserDefaults.group.insulinTypeSelected
+    private func updateIOB(timeStamp timeInterval: Double, insulinType type: InsulinType.RawValue) -> Double {
+        let insulin: InsulinType = InsulinType(rawValue: type) ?? .rapidActing
         let preset: InsulinTypePresets = insulin.presets
         let model = ExponentialInsulinModel(actionDuration: preset.actionDuration, peakActivityTime: preset.peakActivityTime, delay: preset.delay)
-        let result = model.percentEffectRemaining(at: Date().timeIntervalSince1970 - time)
+        let result = model.percentEffectRemaining(at: timeInterval)
         return result
     }
-
+    
+    func calculateInsulinActivityCurve() -> [ActivityCurveDataPoint] {
+        let insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
+        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // It is necessary to read in the UserDefaults value because widgets and app are individual programs with individual Singletons...
+        
+        if insulinDeliveryHistorySingleton.insulinDeliveryHistory.count > 0 {
+            var activityCurve: [ActivityCurveDataPoint] = []
+            let minutes = 5 * 60
+            for timeInterval in stride(from: 6 * 60 * 60, through: 0, by: -minutes) {
+                var sumIOB: Double = 0
+                for item in insulinDeliveryHistorySingleton.insulinDeliveryHistory {
+                    let timeIntervalBetweenDeliveryAndNow = Date().timeIntervalSince1970 - item.timeStamp
+                    if timeIntervalBetweenDeliveryAndNow < 6 * 60 * 60 {
+                        let timeIntervalBetweenDeliveryAndTimeStampToBeCalculated = Date().timeIntervalSince1970 - Double(timeInterval) - item.timeStamp
+                        if timeIntervalBetweenDeliveryAndTimeStampToBeCalculated >= 0 { // timeIntervalBetweenDeliveryAndTimeStampToBeCalculated < timeIntervalBetweenDeliveryAndNow &&
+                            let IOB =   updateIOB(timeStamp: timeIntervalBetweenDeliveryAndTimeStampToBeCalculated, insulinType: item.insulinType) * item.insulinUnits
+                            sumIOB = sumIOB + IOB
+                        }
+                    }
+                }
+                if sumIOB > 0 {
+                    let dataPoint: ActivityCurveDataPoint = ActivityCurveDataPoint(id: timeInterval, date: Date(timeIntervalSinceNow: -Double(timeInterval)), value: sumIOB)
+                    activityCurve.append(dataPoint)
+                }
+            }
+            return activityCurve
+        } else {
+            let activityCurve: [ActivityCurveDataPoint] = []
+            return activityCurve
+        }
+    }
 }
 
 
@@ -109,12 +167,21 @@ struct InsulinTypePresets: Codable, Identifiable {
 
 
 extension EnvironmentValues {
+    var insulinDeliveryHistorySingleton: InsulinDeliveryHistorySingleton {
+        get { self[InsulinDeliveryHistorySingletonKey.self] }
+        set { self[InsulinDeliveryHistorySingletonKey.self] = newValue }
+    }
+    
     var currentIOBSingleton: CurrentIOBSingleton {
         get { self[CurrentIOBSingletonKey.self] }
         set { self[CurrentIOBSingletonKey.self] = newValue }
     }
 }
 
+
+private struct InsulinDeliveryHistorySingletonKey: EnvironmentKey {
+    static var defaultValue: InsulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
+}
 
 private struct CurrentIOBSingletonKey: EnvironmentKey {
     static var defaultValue: CurrentIOBSingleton = CurrentIOBSingleton.shared

@@ -20,6 +20,7 @@ struct LibreWristWatch_Watch_AppApp: App {
     @State private var libreLinkUpHistory = LibreLinkUpHistory.shared
     @State private var sensorSettingsSingleton = SensorSettingsSingleton.shared
     @State private var currentIOBSingleton = CurrentIOBSingleton.shared
+    @State private var insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
     
     var body: some Scene {
         WindowGroup {
@@ -27,6 +28,7 @@ struct LibreWristWatch_Watch_AppApp: App {
                 .environment(\.libreLinkUpHistory, libreLinkUpHistory)
                 .environment(\.sensorSettingsSingleton, sensorSettingsSingleton)
                 .environment(\.currentIOBSingleton, currentIOBSingleton)
+                .environment(\.insulinDeliveryHistorySingleton, insulinDeliveryHistorySingleton)
         }
     }
 }

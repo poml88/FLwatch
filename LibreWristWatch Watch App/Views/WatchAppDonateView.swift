@@ -11,7 +11,10 @@ import StoreKit
 
 struct WatchAppDonateView: View {
     
-    @State private var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
+//    @State private var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
+//    @AppStorage(SharedData.Keys.insulinDeliveryHistoryUpdated.key, store: SharedData.defaultsGroup) private var insulinDeliveryHistoryUpdated: Bool = false
+    @Environment(\.insulinDeliveryHistorySingleton) var insulinDeliveryHistorySingleton
+
     
     private let productIDs = [
         "librewrist_4_99_a",
@@ -61,8 +64,9 @@ struct WatchAppDonateView: View {
             let model = WKInterfaceDevice.current().model
             let name = WKInterfaceDevice.current().name
             Text("\(systemName) \(systemVersion) on \(name)")
-            Text("\nInsulin history:")
-                ForEach(insulinDeliveryHistory, id: \.id) {item in
+            if insulinDeliveryHistorySingleton.insulinDeliveryHistory.count > 0 {
+                Text("\nInsulin history:")
+                ForEach(insulinDeliveryHistorySingleton.insulinDeliveryHistory, id: \.id) {item in
                     let timeInterval = Date(timeIntervalSince1970: item.timeStamp).timeIntervalSinceNow
                     let timeSinceInjection = Duration(
                         secondsComponent: Int64(-timeInterval),
@@ -71,7 +75,12 @@ struct WatchAppDonateView: View {
                     
                     Text("Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())  (\(timeSinceInjection) h)      Units: \(item.insulinUnits, specifier: "%.1f")")
                 }
+            }
+            
         }
+        //        .onAppear() {
+        //            insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? []
+        //        }
     }
 }
 
@@ -95,6 +104,9 @@ struct CustomProductStyle: ProductViewStyle {
         }
     }
 }
+
+
+
     
 #Preview {
     WatchAppDonateView()

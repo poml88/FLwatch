@@ -9,6 +9,8 @@ import Foundation
 
 
 class SharedData {
+    
+    // This is for @AppStorage
     static let defaultsGroup: UserDefaults? = UserDefaults(suiteName: stringValue(forKey: "APP_GROUP_ID"))
     
     static func stringValue(forKey key: String) -> String {
@@ -20,6 +22,9 @@ class SharedData {
     
     enum Keys: String {
         case insulinSelected = "insulinSelectedKey"
+        case showIOBCurvePhone = "showIOBCurvePhoneKey"
+        case showIOBCurveWatch = "showIOBCurveWatchKey"
+        
         
         var key: String {
             switch self {
@@ -33,6 +38,22 @@ class SharedData {
             defaultsGroup?.double(forKey: Keys.insulinSelected.key) ?? 0.0
         } set {
             defaultsGroup?.set(newValue, forKey: Keys.insulinSelected.key)
+        }
+    }
+    
+    static var showIOBCurvePhone: Bool {
+        get {
+            defaultsGroup?.bool(forKey: Keys.showIOBCurvePhone.key) ?? false
+        } set {
+            defaultsGroup?.set(newValue, forKey: Keys.showIOBCurvePhone.key)
+        }
+    }
+    
+    static var showIOBCurveWatch: Bool {
+        get {
+            defaultsGroup?.bool(forKey: Keys.showIOBCurveWatch.key) ?? false
+        } set {
+            defaultsGroup?.set(newValue, forKey: Keys.showIOBCurveWatch.key)
         }
     }
     

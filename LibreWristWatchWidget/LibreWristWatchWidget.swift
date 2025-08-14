@@ -47,28 +47,44 @@ struct LibreWristWidgetEntryView : View {
 ////                    Color(.white)
 ////                }
 //             AccessoryWidgetBackground()
-                
-             VStack(alignment: .center, spacing: -6) {
+            //            ZStack {
+            VStack(alignment: .center, spacing: -6) {
+//                Button(intent: ReloadWidgetIntent()) {
                     Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
-                            .font(.system(size: 20, weight: .heavy, design: .monospaced))
-                            .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
-                            //.colorInvert()
-                            .widgetAccentable()
-                    Text(verbatim: glucose)
-                            .font(.system(size: 20, weight: .heavy))
-                            .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
-                            //.colorInvert()
-                            .widgetAccentable()
-                    Text(Date(), style: .timer)
-                    //Text(verbatim: " ")
-                            .font(.system(size: 10, weight: .heavy))
-                            //.colorInvert()
-                            .multilineTextAlignment(.center)
-                            .monospacedDigit()
-                            .padding(4)
-                            
-                            
-                }
+                        .font(.system(size: 20, weight: .heavy, design: .monospaced))
+                        .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
+                    //.colorInvert()
+                        .widgetAccentable()
+//                }
+//                .buttonStyle(PlainButtonStyle())
+                Text(verbatim: glucose)
+                    .font(.system(size: 20, weight: .heavy))
+                    .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
+                //.colorInvert()
+                    .widgetAccentable()
+                
+                Text(Date(), style: .timer)
+                //Text(verbatim: " ")
+                    .font(.system(size: 10, weight: .heavy))
+                //.colorInvert()
+                    .multilineTextAlignment(.center)
+                    .monospacedDigit()
+                    .padding(4)
+                
+                
+            }
+            //                Button(intent: ReloadWidgetIntent()) {
+//                    Text(" ")
+//                        .font(.system(size: 44, weight: .heavy, design: .monospaced))
+//                    //.colorInvert()
+//                    //.widgetAccentable()
+//                }
+//                .simultaneousGesture(
+//                    TapGesture(count: 2).onEnded {
+//                        print("tap tap")
+//                    }
+//                )
+//            }
 //            }
 //            .containerBackground(for: .widget) {
 //                background()

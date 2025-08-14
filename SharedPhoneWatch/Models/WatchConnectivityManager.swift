@@ -63,23 +63,34 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         }
         
         if message["content"] as? String == "insulinDelivery" {
-            let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: message["timeStamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600, insulinUnits: message["units"] as? Double ?? 0.0)
-            var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
-            insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
-            UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
+            let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: message["timeStamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600, insulinUnits: message["units"] as? Double ?? 0.0, insulinType: UserDefaults.group.insulinTypeSelected.rawValue)
+//            var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
+            let insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
+            insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // seems not to be necessary, but just to be sure....
+            insulinDeliveryHistorySingleton.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
+            UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
+            CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
+            CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
+//            SharedData.insulinDeliveryHistoryUpdated.toggle()
         }
         
         if message["content"] as? String == "clearInsulinHistory" {
+            InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory = []
             UserDefaults.group.insulinDeliveryHistory = []
+            CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
+            CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
         }
         
         if message["content"] as? String == "updateInsulinTypeSelected" {
-            let value = message["insulinTypeSelected"] as? Int ?? 0
-            let value2: InsulinType = InsulinType(rawValue: value) ?? .rapidActing
-            UserDefaults.group.insulinTypeSelected = value2
+            let valueRaw = message["insulinTypeSelected"] as? Int ?? 0
+            let valueType: InsulinType = InsulinType(rawValue: valueRaw) ?? .rapidActing
+            UserDefaults.group.insulinTypeSelected = valueType
         }
 
-        
+        if message["content"] as? String == "showIOBCurveWatchMessage" {
+            let valueBool = message["showIOBCurveWatch"] as? Bool ?? false
+            SharedData.showIOBCurveWatch = valueBool
+        }
         
         if let replyHandler = replyHandler {
             
