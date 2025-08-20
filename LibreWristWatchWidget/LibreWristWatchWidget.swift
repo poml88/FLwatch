@@ -8,11 +8,12 @@
 import WidgetKit
 import SwiftUI
 
-
 struct LibreWristWidgetEntryView : View {
     var entry: Provider.Entry
 
     @Environment(\.widgetFamily) private var family
+    
+    @AppStorage(SharedData.Keys.tapComplicationReloads.key, store: SharedData.defaultsGroup) private var tapComplicationReloads: Bool = false
     
     var glucose: String {
         if entry.glucoseMeasurement.value <= 0 {
@@ -48,15 +49,29 @@ struct LibreWristWidgetEntryView : View {
 ////                }
 //             AccessoryWidgetBackground()
             //            ZStack {
+            
+            
             VStack(alignment: .center, spacing: -6) {
-//                Button(intent: ReloadWidgetIntent()) {
-                    Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
-                        .font(.system(size: 20, weight: .heavy, design: .monospaced))
-                        .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
-                    //.colorInvert()
-                        .widgetAccentable()
-//                }
-//                .buttonStyle(PlainButtonStyle())
+                
+                if tapComplicationReloads {
+                    Button(intent: ReloadWidgetIntent()) {
+                        AccessoryCircularTextView(subEntry: entry)
+//                        Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
+//                            .font(.system(size: 20, weight: .heavy, design: .monospaced))
+//                            .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
+//                        //.colorInvert()
+//                            .widgetAccentable()
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                } else {
+                    AccessoryCircularTextView(subEntry: entry)
+//                    Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
+//                        .font(.system(size: 20, weight: .heavy, design: .monospaced))
+//                        .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
+//                    //.colorInvert()
+//                        .widgetAccentable()
+                }
+                
                 Text(verbatim: glucose)
                     .font(.system(size: 20, weight: .heavy))
                     .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
@@ -203,8 +218,17 @@ struct LibreWristWatchWidget: Widget {
         .description("This widget displays the latest blood glucose value.")
         //        .contentMarginsDisabled()
     }
-    
-    
+}
+
+struct AccessoryCircularTextView : View {
+    var subEntry: GlucoseMeasurementIOBEntry
+    var body: some View {
+        Text(verbatim: subEntry.glucoseMeasurement.trendArrow?.symbol ?? "-")
+            .font(.system(size: 20, weight: .heavy, design: .monospaced))
+            .foregroundColor(subEntry.glucoseMeasurement.measurementColor.color)
+        //.colorInvert()
+            .widgetAccentable()
+    }
 }
 
 #Preview("accessCirc", as: .accessoryCircular) {

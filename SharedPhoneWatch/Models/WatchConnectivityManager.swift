@@ -69,16 +69,13 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // seems not to be necessary, but just to be sure....
             insulinDeliveryHistorySingleton.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
             UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
-            CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-            CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
-//            SharedData.insulinDeliveryHistoryUpdated.toggle()
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
         }
         
         if message["content"] as? String == "clearInsulinHistory" {
             InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory = []
             UserDefaults.group.insulinDeliveryHistory = []
-            CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-            CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
         }
         
         if message["content"] as? String == "updateInsulinTypeSelected" {
@@ -86,11 +83,32 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             let valueType: InsulinType = InsulinType(rawValue: valueRaw) ?? .rapidActing
             UserDefaults.group.insulinTypeSelected = valueType
         }
-
+        
+        if message["content"] as? String == "showInsulinDeliveryMarksWatchMessage" {
+            let valueBool = message["showInsulinDeliveryMarksWatch"] as? Bool ?? false
+            SharedData.showInsulinDeliveryMarksWatch = valueBool
+        }
         if message["content"] as? String == "showIOBCurveWatchMessage" {
             let valueBool = message["showIOBCurveWatch"] as? Bool ?? false
             SharedData.showIOBCurveWatch = valueBool
         }
+        
+        if message["content"] as? String == "showActivityCurveWatchMessage" {
+            let valueBool = message["showActivityCurveWatch"] as? Bool ?? false
+            SharedData.showActivityCurveWatch = valueBool
+        }
+        
+        if message["content"] as? String == "updateWidgetUpdateFrequency" {
+            let valueInt: Int = message["widgetUpdateFrequency"] as? Int ?? 5
+            SharedData.widgetUpdateFrequency = valueInt
+        }
+        
+        if message["content"] as? String == "tapComplicationReloadsMessage" {
+            let valueBool = message["tapComplicationReloads"] as? Bool ?? false
+            SharedData.tapComplicationReloads = valueBool
+        }
+
+
         
         if let replyHandler = replyHandler {
             

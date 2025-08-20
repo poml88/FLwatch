@@ -22,6 +22,7 @@ struct Provider: TimelineProvider {
         
         
         GlucoseMeasurementIOBEntry.getLastGlucoseMeasurement { glucoseMeasurementEntry, error in
+            let interval = SharedData.widgetUpdateFrequency
             if let gme = glucoseMeasurementEntry {
                     guard Int(Date().timeIntervalSince(gme.date) / 60) <= 3 else {
                     var entry = GlucoseMeasurementIOBEntry.invalidEntry
@@ -29,7 +30,7 @@ struct Provider: TimelineProvider {
                     
                     entries.append(entry)
                     
-                    let reloadDate = Calendar.current.date(byAdding: .minute, value: 5, to: Date())!
+                    let reloadDate = Calendar.current.date(byAdding: .minute, value: interval, to: Date())!
                     let timeline = Timeline(entries: entries, policy: .after(reloadDate))
                     return completion(timeline)
                     
@@ -37,7 +38,7 @@ struct Provider: TimelineProvider {
                 let entry = gme
                 entries.append(entry)
                 
-                let reloadDate = Calendar.current.date(byAdding: .minute, value: 5, to: Date())!
+                let reloadDate = Calendar.current.date(byAdding: .minute, value: interval, to: Date())!
                 let timeline = Timeline(entries: entries, policy: .after(reloadDate))
                 completion(timeline)
             } else {
@@ -45,7 +46,7 @@ struct Provider: TimelineProvider {
                 entry.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
                 entries.append(entry)
                 
-                let reloadDate = Calendar.current.date(byAdding: .minute, value: 5, to: Date())!
+                let reloadDate = Calendar.current.date(byAdding: .minute, value: interval, to: Date())!
                 let timeline = Timeline(entries: entries, policy: .after(reloadDate))
                 completion(timeline)
             }

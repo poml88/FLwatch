@@ -7,6 +7,7 @@
 
 import AppIntents
 import SwiftUI
+import WidgetKit
 
 struct ReadGlucose: AppIntent {
     static var title: LocalizedStringResource = "Get Current Blood Glucose"
@@ -44,6 +45,7 @@ struct ReadGlucose: AppIntent {
                 dialogString = "Sorry, there are no recent blood glucose values."
             }
         }
+        WidgetCenter.shared.reloadAllTimelines()
         return .result(
             dialog: dialogString,
             view: ReadGlucoseView(glucose: glucose, trend: trend)

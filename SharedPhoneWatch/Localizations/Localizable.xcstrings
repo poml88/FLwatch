@@ -93,6 +93,9 @@
     "%lld" : {
 
     },
+    "%lld min" : {
+
+    },
     "0.5" : {
       "localizations" : {
         "de" : {
@@ -512,6 +515,9 @@
     "Account temporarily locked. Too many failed login attempts. Try again in 5 minutes. Check credentials." : {
 
     },
+    "Activity" : {
+
+    },
     "Add insulin" : {
       "localizations" : {
         "de" : {
@@ -553,6 +559,9 @@
           }
         }
       }
+    },
+    "Bolus insulin" : {
+
     },
     "Bolus Insulin (%@)" : {
 
@@ -718,6 +727,9 @@
       }
     },
     "Debug info:" : {
+
+    },
+    "Default behaviour: opens FLwatch app." : {
 
     },
     "Disconnected" : {
@@ -929,7 +941,7 @@
     "Insulin" : {
 
     },
-    "Insulin selection" : {
+    "Insulin marks and graphs" : {
 
     },
     "Insulin units" : {
@@ -1069,7 +1081,7 @@
         }
       }
     },
-    "Not authenticated. Check credentials." : {
+    "Not authenticated. Check credentials. Open LibreLinkUp app, log out and log in again to verify all is working. Use same credentials for FLwatch then." : {
 
     },
     "not determined" : {
@@ -1135,6 +1147,15 @@
           }
         }
       }
+    },
+    "Phone: show insulin activity graph" : {
+
+    },
+    "Phone: show insulin delivery marks" : {
+
+    },
+    "Phone: show IOB graph" : {
+
     },
     "Please reboot phone and watch once if widgets do not work!" : {
       "localizations" : {
@@ -1348,12 +1369,6 @@
     "Setup and usage guide" : {
 
     },
-    "Show IOB curve on phone" : {
-
-    },
-    "Show IOB curve on watch" : {
-
-    },
     "Siri integration" : {
       "localizations" : {
         "de" : {
@@ -1438,7 +1453,13 @@
     "Support" : {
 
     },
+    "Tap on circular watch complication: updates glucose value" : {
+
+    },
     "Thank you for downloading FLwatch. I hope it will prove useful.\n\nTo get startet, please read the SETUP AND USAGE guide. In case of questions, please contact support. More info on the Settings tab." : {
+
+    },
+    "The default is 5 mins. Note that the OS allows about 40 to 70 widget (complication) updates max per 24 hours. When this budget is finished, no more updates." : {
 
     },
     "Time" : {
@@ -1591,7 +1612,22 @@
         }
       }
     },
+    "Watch: show insulin activity graph" : {
+
+    },
+    "Watch: show insulin delivery marks" : {
+
+    },
+    "Watch: show IOB graph" : {
+
+    },
     "Welcome" : {
+
+    },
+    "Widget update frequency" : {
+
+    },
+    "Widgets / Complications" : {
 
     },
     "Your blood glucose is currently %@ and %@." : {

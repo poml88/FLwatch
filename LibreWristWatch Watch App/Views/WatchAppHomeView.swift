@@ -105,8 +105,7 @@ struct WatchAppHomeView: View {
         .onReceive(timer) { time in
             print("Timer")
             
-            CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-            CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
             
             connected = UserDefaults.group.connected
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
@@ -126,9 +125,7 @@ struct WatchAppHomeView: View {
             }
             
             
-            CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-            CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
-            
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
             
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
             connected = UserDefaults.group.connected
@@ -147,8 +144,7 @@ struct WatchAppHomeView: View {
                 print("Active")
                 
                 
-                CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-                CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 WidgetCenter.shared.reloadAllTimelines()
                 
                 connected = UserDefaults.group.connected

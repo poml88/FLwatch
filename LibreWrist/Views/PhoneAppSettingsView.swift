@@ -10,8 +10,15 @@ import MessageUI
 
 struct PhoneAppSettingsView: View {
     
+    @AppStorage(SharedData.Keys.showInsulinDeliveryMarksPhone.key, store: SharedData.defaultsGroup) private var showInsulinDeliveryMarksPhone: Bool = false
+    @AppStorage(SharedData.Keys.showInsulinDeliveryMarksWatch.key, store: SharedData.defaultsGroup) private var showInsulinDeliveryMarksWatch: Bool = false
     @AppStorage(SharedData.Keys.showIOBCurvePhone.key, store: SharedData.defaultsGroup) private var showIOBCurvePhone: Bool = false
     @AppStorage(SharedData.Keys.showIOBCurveWatch.key, store: SharedData.defaultsGroup) private var showIOBCurveWatch: Bool = false
+    @AppStorage(SharedData.Keys.showActivityCurvePhone.key, store: SharedData.defaultsGroup) private var showActivityCurvePhone: Bool = false
+    @AppStorage(SharedData.Keys.showActivityCurveWatch.key, store: SharedData.defaultsGroup) private var showActivityCurveWatch: Bool = false
+    @AppStorage(SharedData.Keys.widgetUpdateFrequency.key, store: SharedData.defaultsGroup) private var widgetUpdateFrequency: Int = 5
+    @AppStorage(SharedData.Keys.tapComplicationReloads.key, store: SharedData.defaultsGroup) private var tapComplicationReloads: Bool = false
+    
     
     @State private var isScreenAlwaysOn = false
     @State private var showingMailView = false
@@ -19,102 +26,173 @@ struct PhoneAppSettingsView: View {
     @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
     private var watchConnector = WatchConnectivityManager.shared
+    let updateFrequencyOptions: [Int] = [1, 5, 10, 15, 20]
     
     var body: some View {
         Form {
             Section {
-                
+                LazyVGrid(
+                    columns: [GridItem(spacing: 8), GridItem(spacing: 8)],
+                    spacing: 12
+                ) {
+                    Link(destination: URL(string: "https://github.com/poml88/FLwatch/#usage")!) {
+                        Text("Setup and usage guide")
+                            .padding(5)
+                            .multilineTextAlignment(.center)
+                        //                            .frame(width: 135, height: 65)
+                            .foregroundColor(.accentColor)
+                            .background(Color(.systemGray5))
+                            .cornerRadius(10)
+                    }
+                    
+                    Button {
+                        isShowingSiriSheet.toggle()
+                    } label: {
+                        Text("Siri integration")
+                            .padding(0)
+                        //                            .frame(width: 140, height: 50)
+                    }
+                    .buttonStyle(.bordered)
+                    .sheet(isPresented: $isShowingSiriSheet, content: {
+                        PhoneAppSiriSheetView()
+                    })
+                    
+                    
+                    
+                    Link(destination: URL(string: "https://github.com/poml88/FLwatch/issues")!) {
+                        Text("Open issue on GitHub")
+                            .padding(5)
+                        
+                            .multilineTextAlignment(.center)
+                        //                            .frame(width: 135, height: 65)
+                            .foregroundColor(.accentColor)
+                            .background(Color(.systemGray5))
+                            .cornerRadius(10)
+                    }
+                    
+                    Button {
+                        showingMailView.toggle()
+                    } label: {
+                        Text("Send Email to Support")
+                            .padding(0)
+                        //                            .frame(width: 140, height: 50)
+                    }
+                    .buttonStyle(.bordered)
+                    
+                    .disabled(!MailView.canSendMail())
+                    .sheet(isPresented: $showingMailView) {
+                        MailView(result: $mailResult)
+                    }
+                }
+            } header: {
+                Text("Support")
+            }
+            
+            Section {
                 Toggle("Keep phone screen always on", isOn: $isScreenAlwaysOn)
-                    .onChange(of: isScreenAlwaysOn) { value in
+                    .onChange(of: isScreenAlwaysOn) {
                         print("yes")
                         UIApplication.shared.isIdleTimerDisabled.toggle()
-                    }
-                Toggle("Show IOB curve on phone", isOn: $showIOBCurvePhone)
-                    .onChange(of: showIOBCurvePhone) { value in
-                        print("yes")
-                    }
-                Toggle("Show IOB curve on watch", isOn: $showIOBCurveWatch)
-                    .onChange(of: showIOBCurveWatch) { value in
-                        print("yes")
-                        let messageToWatch: [String: Any] = ["content": "showIOBCurveWatchMessage",
-                                                             "showIOBCurveWatch": value]
-                        sendMessagetoOther(message: messageToWatch)
                     }
             } header: {
                 Text("Settings")
             }
             
             Section {
-                Picker(selection: $insulinTypeSelected) {
-                    ForEach(InsulinType.allCases, id: \.self) {
-                        Text($0.description)
-                        
+                Toggle("Phone: show insulin delivery marks", isOn: $showInsulinDeliveryMarksPhone)
+                    .onChange(of: showInsulinDeliveryMarksPhone) {
+                        print("yes")
+                    }
+                
+                Toggle("Phone: show IOB graph", isOn: $showIOBCurvePhone)
+                    .onChange(of: showIOBCurvePhone) {
+                        print("yes")
+                    }
+                
+                Toggle("Phone: show insulin activity graph", isOn: $showActivityCurvePhone)
+                    .onChange(of: showActivityCurvePhone) {
+                        print("yes")
+                    }
+                
+                Toggle("Watch: show insulin delivery marks", isOn: $showInsulinDeliveryMarksWatch)
+                    .onChange(of: showInsulinDeliveryMarksWatch) { oldValue, newValue in
+                        print("yes")
+                        let messageToWatch: [String: Any] = ["content": "showInsulinDeliveryMarksWatchMessage",
+                                                             "showInsulinDeliveryMarksWatch": newValue]
+                        sendMessagetoOther(message: messageToWatch)
+                    }
+                
+                Toggle("Watch: show IOB graph", isOn: $showIOBCurveWatch)
+                    .onChange(of: showIOBCurveWatch) { oldValue, newValue in
+                        print("yes")
+                        let messageToWatch: [String: Any] = ["content": "showIOBCurveWatchMessage",
+                                                             "showIOBCurveWatch": newValue]
+                        sendMessagetoOther(message: messageToWatch)
+                    }
+                
+                Toggle("Watch: show insulin activity graph", isOn: $showActivityCurveWatch)
+                    .onChange(of: showActivityCurveWatch) { oldValue, newValue in
+                        print("yes")
+                        let messageToWatch: [String: Any] = ["content": "showActivityCurveWatchMessage",
+                                                             "showActivityCurveWatch": newValue]
+                        sendMessagetoOther(message: messageToWatch)
+                    }
+            } header: {
+                Text("Insulin marks and graphs")
+            }
+            
+            Section {
+                Toggle(isOn: $tapComplicationReloads) {
+                    Text("Tap on circular watch complication: updates glucose value")
+                    Text("Default behaviour: opens FLwatch app.")
+                }
+                .onChange(of: tapComplicationReloads) { oldValue, newValue in
+                    print("yes")
+                    let messageToWatch: [String: Any] = ["content": "tapComplicationReloadsMessage",
+                                                         "tapComplicationReloads": newValue]
+                    sendMessagetoOther(message: messageToWatch)
+                }
+                
+                Picker(selection: $widgetUpdateFrequency) {
+                    ForEach(updateFrequencyOptions, id: \.self) {
+                        Text("\($0) min")
                     }
                 } label: {
+                    Text("Widget update frequency")
+                    Text("The default is 5 mins. Note that the OS allows about 40 to 70 widget (complication) updates max per 24 hours. When this budget is finished, no more updates.")
                 }
-                .labelsHidden()
-                //                                    .pickerStyle(.navigationLink)
-                .onChange(of: insulinTypeSelected) {value in
-                    UserDefaults.group.insulinTypeSelected = value
-                    let messageToWatch: [String: Any] = ["content": "updateInsulinTypeSelected",
-                                                         "insulinTypeSelected": value.rawValue]
+                .onChange(of: widgetUpdateFrequency) {  // simplified version when only the new value is needed
+                    //                .onChange(of: widgetUpdateFrequency, initial: false) { oldValue, newValue in // initial defaults to false and can be also left out; initial means weather the action should be run wehen this view initially appears
+                    let messageToWatch: [String: Any] = ["content": "updateWidgetUpdateFrequency",
+                                                         "widgetUpdateFrequency": widgetUpdateFrequency]
                     sendMessagetoOther(message: messageToWatch)
                 }
             } header: {
-                Text("Insulin selection")
+                Text("Widgets / Complications")
+            }
+            
+            Section {
+                Picker(selection: $insulinTypeSelected) {
+                    ForEach(InsulinType.allCases, id: \.self) {
+                        Text($0.description)
+                    }
+                } label: {
+                    Text("Bolus insulin")
+                }
+                //                .labelsHidden()
+                //                                    .pickerStyle(.navigationLink)
+                .onChange(of: insulinTypeSelected) {oldValue, newValue in
+                    UserDefaults.group.insulinTypeSelected = newValue
+                    let messageToWatch: [String: Any] = ["content": "updateInsulinTypeSelected",
+                                                         "insulinTypeSelected": newValue.rawValue]
+                    sendMessagetoOther(message: messageToWatch)
+                }
+            } header: {
+                //                Text("Insulin selection")
             } footer: {
                 Text("Select the bolus insulin for the IOB calculations. Currently supported are:\n- Rapid acting (Novolog, Novorapid, ... (peak activity 75 mins))\n- Fast rapid acting (Fiasp, Lyumjev, ... (peak activity 55 mins))")
             }
             .fixedSize(horizontal: false, vertical: true)
-            
-            
-            Section {
-                Link(destination: URL(string: "https://github.com/poml88/FLwatch/#usage")!) {
-                    Text("Setup and usage guide")
-                        .frame(width: 200, height: 50)
-                        .foregroundColor(.accentColor)
-                        .background(Color(.systemGray5))
-                        .cornerRadius(10)
-                }
-                
-                Button {
-                    isShowingSiriSheet.toggle()
-                } label: {
-                    Text("Siri integration")
-                        .padding(-5)
-                        .frame(width: 177, height: 35)
-                }
-                .buttonStyle(.bordered)
-                .sheet(isPresented: $isShowingSiriSheet, content: {
-                    PhoneAppSiriSheetView()
-                })
-                
-                
-                
-                Link(destination: URL(string: "https://github.com/poml88/FLwatch/issues")!) {
-                    Text("Open issue on GitHub")
-                        .frame(width: 200, height: 50)
-                        .foregroundColor(.accentColor)
-                        .background(Color(.systemGray5))
-                        .cornerRadius(10)
-                }
-                
-                Button {
-                    showingMailView.toggle()
-                } label: {
-                    Text("Send Email to Support")
-                        .padding(-5)
-                        .frame(width: 177, height: 35)
-                }
-                .buttonStyle(.bordered)
-                
-                .disabled(!MailView.canSendMail())
-                .sheet(isPresented: $showingMailView) {
-                    MailView(result: $mailResult)
-                }
-            } header: {
-                Text("Support")
-            }
             
             Section {
                 
@@ -125,18 +203,18 @@ struct PhoneAppSettingsView: View {
                 
                 let systemVersion = UIDevice.current.systemVersion
                 let systemName = UIDevice.current.systemName
-                let model = UIDevice.current.model
+                //                let model = UIDevice.current.model
                 let name = UIDevice.current.name
                 Text("\(systemName) \(systemVersion) on \(name)")
                 
                 Text("Sensor: \(SensorSettingsSingleton.shared.sensorType)")
                 
                 Text("Error message: \(DebugMessageSingleton.shared.libreLinkUpResponseError)")
-                
-            } header: {
-                Text("Debug Info")
             }
-            
+            header: {
+                Text("Debug Info")
+                
+            }
         }
         
     }

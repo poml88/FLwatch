@@ -60,4 +60,5 @@ struct ContentView: View {
         .environment(SensorSettingsSingleton.shared)
         .environment(CurrentIOBSingleton.shared)
         .environment(InsulinDeliveryHistorySingleton.shared)
+        .environment(\.locale, .init(identifier: "en"))
 }

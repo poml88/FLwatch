@@ -92,6 +92,7 @@ struct InsulinTypePresets: Codable, Identifiable {
 @Observable class CurrentIOBSingleton {
     
     var currentIOB: Double = 0.0
+    var insulinOnBoardCurve: [ActivityCurveDataPoint] = []
     var insulinActivityCurve: [ActivityCurveDataPoint] = []
     
     static let shared: CurrentIOBSingleton = {
@@ -130,35 +131,55 @@ struct InsulinTypePresets: Codable, Identifiable {
         return result
     }
     
-    func calculateInsulinActivityCurve() -> [ActivityCurveDataPoint] {
+    func calculateInsulinOnBoardCurve() -> [ActivityCurveDataPoint] {
         let insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
         insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // It is necessary to read in the UserDefaults value because widgets and app are individual programs with individual Singletons...
         
-        if insulinDeliveryHistorySingleton.insulinDeliveryHistory.count > 0 {
-            var activityCurve: [ActivityCurveDataPoint] = []
-            let minutes = 5 * 60
-            for timeInterval in stride(from: 6 * 60 * 60, through: 0, by: -minutes) {
-                var sumIOB: Double = 0
-                for item in insulinDeliveryHistorySingleton.insulinDeliveryHistory {
-                    let timeIntervalBetweenDeliveryAndNow = Date().timeIntervalSince1970 - item.timeStamp
-                    if timeIntervalBetweenDeliveryAndNow < 6 * 60 * 60 {
-                        let timeIntervalBetweenDeliveryAndTimeStampToBeCalculated = Date().timeIntervalSince1970 - Double(timeInterval) - item.timeStamp
-                        if timeIntervalBetweenDeliveryAndTimeStampToBeCalculated >= 0 { // timeIntervalBetweenDeliveryAndTimeStampToBeCalculated < timeIntervalBetweenDeliveryAndNow &&
-                            let IOB =   updateIOB(timeStamp: timeIntervalBetweenDeliveryAndTimeStampToBeCalculated, insulinType: item.insulinType) * item.insulinUnits
-                            sumIOB = sumIOB + IOB
-                        }
+        if insulinDeliveryHistorySingleton.insulinDeliveryHistory.count < 1 { return [] }
+        
+        var activityCurve: [ActivityCurveDataPoint] = []
+        let minutes = 5 * 60
+        for timeInterval in stride(from: 6 * 60 * 60, through: 0, by: -minutes) {
+            var sumIOB: Double = 0
+            for item in insulinDeliveryHistorySingleton.insulinDeliveryHistory {
+                let timeIntervalBetweenDeliveryAndNow = Date().timeIntervalSince1970 - item.timeStamp
+                if timeIntervalBetweenDeliveryAndNow < 6 * 60 * 60 {
+                    let timeIntervalBetweenDeliveryAndTimeStampToBeCalculated = Date().timeIntervalSince1970 - Double(timeInterval) - item.timeStamp
+                    if timeIntervalBetweenDeliveryAndTimeStampToBeCalculated >= 0 { // timeIntervalBetweenDeliveryAndTimeStampToBeCalculated < timeIntervalBetweenDeliveryAndNow &&
+                        let IOB =   updateIOB(timeStamp: timeIntervalBetweenDeliveryAndTimeStampToBeCalculated, insulinType: item.insulinType) * item.insulinUnits
+                        sumIOB = sumIOB + IOB
                     }
                 }
-                if sumIOB > 0 {
-                    let dataPoint: ActivityCurveDataPoint = ActivityCurveDataPoint(id: timeInterval, date: Date(timeIntervalSinceNow: -Double(timeInterval)), value: sumIOB)
-                    activityCurve.append(dataPoint)
-                }
             }
-            return activityCurve
-        } else {
-            let activityCurve: [ActivityCurveDataPoint] = []
-            return activityCurve
+            if sumIOB > 0 {
+                let dataPoint: ActivityCurveDataPoint = ActivityCurveDataPoint(id: timeInterval, date: Date(timeIntervalSinceNow: -Double(timeInterval)), value: sumIOB)
+                activityCurve.append(dataPoint)
+            }
         }
+        return activityCurve
+    }
+    
+    func calculateinsulinActivityCurve() -> [ActivityCurveDataPoint] {
+        let currentIOBSingleton = CurrentIOBSingleton.shared
+        let IOBcurve: [ActivityCurveDataPoint] = currentIOBSingleton.insulinOnBoardCurve
+        
+        if IOBcurve.count < 2 { return []}
+        
+        var activityCurve: [ActivityCurveDataPoint] = []
+        for i in 0..<IOBcurve.count - 1 {
+            let difference = IOBcurve[i].value - IOBcurve[i + 1].value
+            if difference > 0 {
+                let dataPoint = ActivityCurveDataPoint(id: IOBcurve[i + 1].id, date: IOBcurve[i + 1].date, value: difference)
+                activityCurve.append(dataPoint)
+            }
+        }
+        return activityCurve
+    }
+    
+    func updateCurrentIOBAndGraphs() {
+        currentIOB = getCurrentIOB()
+        insulinOnBoardCurve = calculateInsulinOnBoardCurve()
+        insulinActivityCurve = calculateinsulinActivityCurve()
     }
 }
 

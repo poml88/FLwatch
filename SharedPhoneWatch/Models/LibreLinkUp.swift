@@ -121,14 +121,18 @@ class LibreLinkUp  {
                         //                        let a: String = "\(lastMeasurement)"
                         //                        Logger.libreLinkUp.info("LibreLinkUp: lastMeasurement: \(a)")
                         
-                        if trend.isEmpty || lastMeasurement.id > trend[0].id { // FIME: for the first hour of a new sensor values are not inserted into trend or are they filtered out below?
+                        if trend.isEmpty || lastMeasurement.id > trend[0].id { // FIXME: for the first hour of a new sensor values are not inserted into trend or are they filtered out below?
+                            // 62 > -2 = insert // 118 > -2 = insert // -2 > 20000 false
                             trend.insert(lastMeasurement, at: 0)
                         }
                         // keep only the latest 16 minutes considering the 17-minute latency of the historic values update. seems to vary between 21 and 17 minutes.
                         if LibreLinkUpHistory.shared.libreLinkUpGlucose.indices.contains(1) {
-                            let lastGraphItem = LibreLinkUpHistory.shared.libreLinkUpGlucose[1].id
-                            trend = trend.filter { $0.id > lastGraphItem }
-                            trend = trend.filter { $0.id - lastGraphItem < 60 }
+                            var lastGraphItem = LibreLinkUpHistory.shared.libreLinkUpGlucose[1].id // could be -20 after new sensor. // 100
+                            if lastGraphItem < 60 {
+                                lastGraphItem = 60
+                            }
+                            trend = trend.filter { $0.id > lastGraphItem } // would be true: -2 > -20 and 62 > -20 // -2 > 100 false // 118 > 100 true
+                            trend = trend.filter { $0.id - lastGraphItem < 60 } // 20000 - -20 false // 62 - -20 = 82 false and -2 - -20 = 18 true // 118 - 100 < 60 true
                         }
                         LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose = trend
                         Logger.libreLinkUp.info("LibreLinkUp: libreLinkUpHistory.libreLinkUpMinuteGlucose: \(LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose)")
@@ -197,7 +201,7 @@ class LibreLinkUp  {
                         let data = json["data"] as? [String: Any]
                         
                         if status != 0 {
-                            DebugMessageSingleton.shared.libreLinkUpResponseError = responseData
+                            DebugMessageSingleton.shared.libreLinkUpResponseError = "Login" + responseData
                         } else {
                             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
                         }
@@ -409,7 +413,7 @@ class LibreLinkUp  {
         } catch {
             Logger.libreLinkUp.info("LibreLinkUp: server error: \(error.localizedDescription)")
             let errorAsString = "\(error)"
-            DebugMessageSingleton.shared.libreLinkUpResponseError = errorAsString
+            DebugMessageSingleton.shared.libreLinkUpResponseError = "Login" + errorAsString
             throw LibreLinkUpError.noConnectionLogin
         }
     }
@@ -452,7 +456,7 @@ class LibreLinkUp  {
                let status = json["status"] as? Int {
                 
                 if status != 0 {
-                    DebugMessageSingleton.shared.libreLinkUpResponseError = responseData
+                    DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph" + responseData
                 } else {
                     DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
                 }
@@ -734,7 +738,7 @@ class LibreLinkUp  {
             }  catch {
                 Logger.libreLinkUp.info("LibreLinkUp: error while decoding response: \(error.localizedDescription)")
                 let errorAsString = "\(error)"
-                DebugMessageSingleton.shared.libreLinkUpResponseError = errorAsString
+                DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph" + errorAsString
                 throw LibreLinkUpError.jsonDecoding
             }
         } catch LibreLinkUpError.followerNotConnectToPatient {
@@ -743,7 +747,7 @@ class LibreLinkUp  {
         } catch {
             Logger.libreLinkUp.info("LibreLinkUp: server error: \(error.localizedDescription)")
             let errorAsString = "\(error)"
-            DebugMessageSingleton.shared.libreLinkUpResponseError = errorAsString
+            DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph" + errorAsString
             if errorAsString.contains("NSURLErrorDomain") == true {
                 throw LibreLinkUpError.noConnectionGraph
             } else {

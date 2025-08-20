@@ -99,8 +99,7 @@ struct PhoneAppInsulinDeliveryView: View {
                                                          "units": insulinDeliveryUnits]
                     sendMessagetoOther(message: messageToWatch)
                     
-                    CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-                    CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
+                    CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                     dismiss()
                     //                        selectedTab = "Home"
                 })
@@ -117,8 +116,7 @@ struct PhoneAppInsulinDeliveryView: View {
                     UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
                     let messageToWatch: [String: Any] = ["content": "clearInsulinHistory"]
                     sendMessagetoOther(message: messageToWatch)
-                    CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-                    CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
+                    CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 })
                 Button("Cancel", role: .cancel, action: {})
             } message: {

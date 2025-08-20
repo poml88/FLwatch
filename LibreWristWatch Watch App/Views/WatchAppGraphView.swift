@@ -11,7 +11,9 @@ import Charts
 
 struct WatchAppGraphView: View {
     
+    @AppStorage(SharedData.Keys.showInsulinDeliveryMarksWatch.key, store: SharedData.defaultsGroup) private var showInsulinDeliveryMarksWatch: Bool = false
     @AppStorage(SharedData.Keys.showIOBCurveWatch.key, store: SharedData.defaultsGroup) private var showIOBCurveWatch: Bool = false
+    @AppStorage(SharedData.Keys.showActivityCurveWatch.key, store: SharedData.defaultsGroup) private var showActivityCurveWatch: Bool = false
     
     @Environment(\.libreLinkUpHistory) var libreLinkUpHistory
     @Environment(\.sensorSettingsSingleton) var sensorSettingsSingleton
@@ -49,7 +51,8 @@ struct WatchAppGraphView: View {
         
         
         Chart {
-            
+
+//MARK: Range Rectangle and Alarm Rules
             RectangleMark(
                 xStart: .value("Rect Start Width", rectXStart),
                 xEnd: .value("Rect End Width", rectXStop),
@@ -72,7 +75,8 @@ struct WatchAppGraphView: View {
 //                    RuleMark(y: .value("Upper limit", 225))
 //                        .foregroundStyle(.red)
 //                        .lineStyle(.init(lineWidth: 1, dash: [2]))
-            
+       
+//MARK: Glucose Graph
             ForEach(libreLinkUpHistory.libreLinkUpGlucose) { item in
                 
 //                        PointMark(x: .value("Time", item.glucose.date),
@@ -112,7 +116,8 @@ struct WatchAppGraphView: View {
                 //                        }
                 //                }
             }
-            
+
+//MARK: Minute Glucose Trend
             ForEach(libreLinkUpHistory.libreLinkUpMinuteGlucose) { item in
                 var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                 PointMark(x: .value("Time", item.glucose.date),
@@ -121,18 +126,19 @@ struct WatchAppGraphView: View {
                 .foregroundStyle(.yellow)
                 .symbolSize(8)
             }
-            
+
+//MARK: IOB Curve
             if showIOBCurveWatch == true {
-                let insulinActivityCurve = CurrentIOBSingleton.shared.insulinActivityCurve
-                let indexOfMaxInsulinItem = insulinActivityCurve.indices.max(by:
-                                                                                                { insulinActivityCurve[$0].value < insulinActivityCurve[$1].value }
+                let insulinOnBoardCurve = CurrentIOBSingleton.shared.insulinOnBoardCurve
+                let indexOfMaxInsulinItem = insulinOnBoardCurve.indices.max(by:
+                                                                                { insulinOnBoardCurve[$0].value < insulinOnBoardCurve[$1].value }
                 ) ?? 0
-        //        let maxIOB: Double = insulinActivityCurve[indexOfMaxInsulinItem].value
-                var maxIOB: Double { insulinActivityCurve.count > 0 ? insulinActivityCurve[indexOfMaxInsulinItem].value : 1}
+                //        let maxIOB: Double = insulinOnBoardCurve[indexOfMaxInsulinItem].value
+                var maxIOB: Double { insulinOnBoardCurve.count > 0 ? insulinOnBoardCurve[indexOfMaxInsulinItem].value : 1}
                 if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
                     
                     
-                    ForEach(insulinActivityCurve) { item in
+                    ForEach(insulinOnBoardCurve) { item in
                         LineMark(x: .value("Time", item.date),
                                  y: .value("Insulin", chartYScaleMinIOBCurve + item.value * quarterYAxisIOBCurve / maxIOB),
                                  series: .value("Curve", "Insulin")
@@ -146,11 +152,22 @@ struct WatchAppGraphView: View {
                         //                            .frame(width: 6, height: 6)
                         //                    }
                     }
-                    
+                }
+            }
+                
+            if showInsulinDeliveryMarksWatch == true {
+                let insulinOnBoardCurve = CurrentIOBSingleton.shared.insulinOnBoardCurve
+                let indexOfMaxInsulinItem = insulinOnBoardCurve.indices.max(by:
+                                                                                { insulinOnBoardCurve[$0].value < insulinOnBoardCurve[$1].value }
+                ) ?? 0
+                //        let maxIOB: Double = insulinOnBoardCurve[indexOfMaxInsulinItem].value
+                var maxIOB: Double { insulinOnBoardCurve.count > 0 ? insulinOnBoardCurve[indexOfMaxInsulinItem].value : 1}
+                
+                if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
                     ForEach(InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory) { item in
                         //                    var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                         if item.timeStamp > Date().timeIntervalSince1970 - 3600 * 6 {
-                            var activityCurveDataPointAtTimeStamp: ActivityCurveDataPoint { CurrentIOBSingleton.shared.insulinActivityCurve.first(where: { $0.date > Date(timeIntervalSince1970: item.timeStamp)}) ?? ActivityCurveDataPoint(id: Int(item.timeStamp),date: Date(timeIntervalSince1970: item.timeStamp), value: 1)}
+                            var activityCurveDataPointAtTimeStamp: ActivityCurveDataPoint { CurrentIOBSingleton.shared.insulinOnBoardCurve.first(where: { $0.date > Date(timeIntervalSince1970: item.timeStamp)}) ?? ActivityCurveDataPoint(id: Int(item.timeStamp),date: Date(timeIntervalSince1970: item.timeStamp), value: 1)}
                             
                             var alignment: Alignment {
                                 if item.timeStamp > Date().timeIntervalSince1970 - 40 * 60 {
@@ -180,8 +197,35 @@ struct WatchAppGraphView: View {
                 }
             }
             
-        }
         
+//MARK: Insulin activity graph
+        if showActivityCurveWatch == true {
+            
+            let insulinActivityCurve = CurrentIOBSingleton.shared.insulinActivityCurve
+            let indexOfMaxActivityItem = insulinActivityCurve.indices.max(by:
+                                                                            { insulinActivityCurve[$0].value < insulinActivityCurve[$1].value }
+            ) ?? 0
+            //        let maxIOB: Double = insulinOnBoardCurve[indexOfMaxInsulinItem].value
+            var maxActivity: Double { insulinActivityCurve.count > 0 ? insulinActivityCurve[indexOfMaxActivityItem].value : 1}
+            
+            if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
+                ForEach(insulinActivityCurve) { item in
+                    LineMark(x: .value("Time", item.date),
+                             y: .value("Activity", chartYScaleMinIOBCurve + item.value * quarterYAxisIOBCurve / maxActivity),
+                             series: .value("Curve", "Activity")
+                    )
+                    .foregroundStyle(Color.brown)
+                    //                    .interpolationMethod(.linear)
+                    //                    .lineStyle(.init(lineWidth: 5))
+                    //                    .symbol(){
+                    //                        Circle()
+                    //                            .fill(item.color.color)
+                    //                            .frame(width: 6, height: 6)
+                    //                    }
+                }
+            }
+        }
+    }
         .chartYScale(domain: [chartYScaleMin, chartYScaleMax])
         
         .chartXVisibleDomain(length: 3600 * 6)

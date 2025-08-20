@@ -22,8 +22,15 @@ class SharedData {
     
     enum Keys: String {
         case insulinSelected = "insulinSelectedKey"
+        case showInsulinDeliveryMarksPhone = "showInsulinDeliveryMarksPhoneKey"
+        case showInsulinDeliveryMarksWatch = "showInsulinDeliveryMarksWatchKey"
         case showIOBCurvePhone = "showIOBCurvePhoneKey"
         case showIOBCurveWatch = "showIOBCurveWatchKey"
+        case showActivityCurvePhone = "showActivityCurvePhoneKey"
+        case showActivityCurveWatch = "showActivityCurveWatchKey"
+        case widgetUpdateFrequency = "widgetUpdateFrequencyKey"
+        case tapComplicationReloads = "tapComplicationReloadsKey"
+        
         
         
         var key: String {
@@ -41,6 +48,22 @@ class SharedData {
         }
     }
     
+    static var showInsulinDeliveryMarksPhone: Bool {
+        get {
+            defaultsGroup?.bool(forKey: Keys.showInsulinDeliveryMarksPhone.key) ?? false
+        } set {
+            defaultsGroup?.set(newValue, forKey: Keys.showInsulinDeliveryMarksPhone.key)
+        }
+    }
+    
+    static var showInsulinDeliveryMarksWatch: Bool {
+        get {
+            defaultsGroup?.bool(forKey: Keys.showInsulinDeliveryMarksWatch.key) ?? false
+        } set {
+            defaultsGroup?.set(newValue, forKey: Keys.showInsulinDeliveryMarksWatch.key)
+        }
+    }
+    
     static var showIOBCurvePhone: Bool {
         get {
             defaultsGroup?.bool(forKey: Keys.showIOBCurvePhone.key) ?? false
@@ -54,6 +77,38 @@ class SharedData {
             defaultsGroup?.bool(forKey: Keys.showIOBCurveWatch.key) ?? false
         } set {
             defaultsGroup?.set(newValue, forKey: Keys.showIOBCurveWatch.key)
+        }
+    }
+    
+    static var showActivityCurvePhone: Bool {
+        get {
+            defaultsGroup?.bool(forKey: Keys.showActivityCurvePhone.key) ?? false
+        } set {
+            defaultsGroup?.set(newValue, forKey: Keys.showActivityCurvePhone.key)
+        }
+    }
+    
+    static var showActivityCurveWatch: Bool {
+        get {
+            defaultsGroup?.bool(forKey: Keys.showActivityCurveWatch.key) ?? false
+        } set {
+            defaultsGroup?.set(newValue, forKey: Keys.showActivityCurveWatch.key)
+        }
+    }
+    
+    static var widgetUpdateFrequency: Int {
+        get {
+            defaultsGroup?.integer(forKey: Keys.widgetUpdateFrequency.key) ?? 5 // 5 minutes seems to be working well
+        } set {
+            defaultsGroup?.set(newValue, forKey: Keys.widgetUpdateFrequency.key)
+        }
+    }
+    
+    static var tapComplicationReloads: Bool {
+        get {
+            defaultsGroup?.bool(forKey: Keys.tapComplicationReloads.key) ?? false
+        } set {
+            defaultsGroup?.set(newValue, forKey: Keys.tapComplicationReloads.key)
         }
     }
     

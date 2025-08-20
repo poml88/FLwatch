@@ -54,86 +54,9 @@ struct PhoneAppHomeView: View {
     var body: some View {
         VStack {
             if colorScheme == .dark {
-                HStack {
-                    
-                    Text("\(libreLinkUpHistory.currentGlucose.units)")
-                        .font(.system(size: 128)) //, weight: .bold)
-                        .foregroundStyle(libreLinkUpHistory.libreLinkUpGlucose[0].color.color)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.1)
-                        .padding()
-                   
-                    VStack {
-                        Text("\(libreLinkUpHistory.currentTrendArrow)")
-                            .font(.system(size: 50, weight: .bold))
-                            .foregroundStyle(libreLinkUpHistory.libreLinkUpGlucose[0].color.color)
-                      
-//                        Text("IOB: \(currentIOB, specifier: "%.2f")U")
-                        
-                        Button {
-                            isShowingInsulinDeliverySheet.toggle()
-                        } label: {
-                            Text("IOB: \(currentIOBSingleton.currentIOB, specifier: "%.2f")u")
-                                .font(.title2)
-                                .foregroundStyle(Color.primary)
-                        }
-                        .sheet(isPresented: $isShowingInsulinDeliverySheet, content: {
-                            PhoneAppInsulinDeliveryView()
-                        })
-                        
-//                        Text("\(lastReadingDate.toLocalTime())")
-//                            .font(.system(size: 30, weight: .bold))
-//                        
-//                        if minutesSinceLastReading == 999 {
-//                            Text("-- min ago")
-//                        } else {
-//                            Text("\(minutesSinceLastReading) min ago")
-//                                .font(.footnote)
-//                                .monospacedDigit()
-//                        }
-                    }
-                    .padding()
-                }
+                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: libreLinkUpHistory.libreLinkUpGlucose[0].color.color, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton)
             } else {
-                HStack {
-                    Text("\(libreLinkUpHistory.currentGlucose.units)")
-                        .font(.system(size: 128)) //, weight: .bold)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.1)
-                        .padding()
-                    VStack {
-                        Text("\(libreLinkUpHistory.currentTrendArrow)")
-                            .font(.system(size: 50, weight: .bold))
-                        
-//                        Text("IOB: \(currentIOB, specifier: "%.2f")U")
-//                            .font(.title2)
-                        
-                        Button {
-                            isShowingInsulinDeliverySheet.toggle()
-                        } label: {
-                            Text("IOB: \(currentIOBSingleton.currentIOB, specifier: "%.2f")u")
-                                .font(.title2)
-                                .foregroundStyle(Color.primary)
-                        }
-                        .sheet(isPresented: $isShowingInsulinDeliverySheet, content: {
-                            PhoneAppInsulinDeliveryView()
-                        })
-                        
-                        
-                        
-//                        Text("\(lastReadingDate.toLocalTime())")
-//                            .font(.system(size: 30, weight: .bold))
-//
-//                        if minutesSinceLastReading == 999 {
-//                            Text("-- min ago")
-//                        } else {
-//                            Text("\(minutesSinceLastReading) min ago")
-//                                .font(.footnote)
-//                                .monospacedDigit()
-//                        }
-                    }
-                    .padding()
-                }
+                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: Color.primary, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton)
                 .background(Color(libreLinkUpHistory.libreLinkUpGlucose[0].color.color))
 //                .frame(maxWidth: .infinity)
                 .cornerRadius(30)
@@ -190,8 +113,7 @@ struct PhoneAppHomeView: View {
             print("Timer")
             
             
-            CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-            CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
             
             connected = UserDefaults.group.connected
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
@@ -232,8 +154,7 @@ struct PhoneAppHomeView: View {
 //                isShowingNotification = true
 //            }
             
-            CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-            CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
             
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
             connected = UserDefaults.group.connected
@@ -256,8 +177,7 @@ struct PhoneAppHomeView: View {
             if newPhase == .active {
                 print("Active")
                 
-                CurrentIOBSingleton.shared.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-                CurrentIOBSingleton.shared.insulinActivityCurve = CurrentIOBSingleton.shared.calculateInsulinActivityCurve()
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 WidgetCenter.shared.reloadAllTimelines()
                 
                 connected = UserDefaults.group.connected
@@ -304,6 +224,40 @@ struct PhoneAppHomeView: View {
                 .allowsHitTesting(false) // passes taps/clicks through to the bottom layer
                 // in this case the IOB button
             }
+        }
+    }
+}
+
+struct GlucoseValueView: View {
+    var libreLinkUpHistory: LibreLinkUpHistory
+    var foregroundStyleColor: Color
+    @Binding var isShowingInsulinDeliverySheet: Bool
+    var currentIOBSingleton: CurrentIOBSingleton
+    var body: some View {
+        HStack {
+            Text("\(libreLinkUpHistory.currentGlucose.units)")
+                .font(.system(size: 128)) //, weight: .bold)
+                .foregroundStyle(foregroundStyleColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.1)
+                .padding()
+            
+            VStack {
+                Text("\(libreLinkUpHistory.currentTrendArrow)")
+                    .font(.system(size: 50, weight: .bold))
+                    .foregroundStyle(foregroundStyleColor)
+                Button {
+                    isShowingInsulinDeliverySheet.toggle()
+                } label: {
+                    Text("IOB: \(currentIOBSingleton.currentIOB, specifier: "%.2f")u")
+                        .font(.title2)
+                        .foregroundStyle(Color.primary)
+                }
+                .sheet(isPresented: $isShowingInsulinDeliverySheet, content: {
+                    PhoneAppInsulinDeliveryView()
+                })
+            }
+            .padding()
         }
     }
 }

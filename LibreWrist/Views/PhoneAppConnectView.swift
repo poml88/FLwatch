@@ -68,14 +68,14 @@ struct PhoneAppConnectView: View {
                         .submitLabel(.done)
                         .autocorrectionDisabled(true)
                         .textInputAutocapitalization(.never)
-                        .onChange(of: username) { _ in
+                        .onChange(of: username) {
                             UserDefaults.group.connected = .disconnected
                             settings.libreLinkUpToken = ""
                         }
                     SecureField(text: $password, prompt: Text("Password")) {
                         Text("Password")
                     }.submitLabel(.done)
-                    .onChange(of: password) { _ in
+                    .onChange(of: password) { 
                         UserDefaults.group.connected = .disconnected
                         settings.libreLinkUpToken = ""
                     }
