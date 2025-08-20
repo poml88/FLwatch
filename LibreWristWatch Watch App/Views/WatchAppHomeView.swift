@@ -29,6 +29,7 @@ struct WatchAppHomeView: View {
 //    @State private var currentIOB: Double = 0.0
 //    @State private var sensorSettings = SensorSettings()
     @State private var connected = UserDefaults.group.connected
+    @State private var onAppearNotToDoFirstStart: Int = 0
     
 //    @State var lastReadingDate: Date = Date(timeIntervalSinceNow: -999 * 60)
 //    @State var currentGlucose: Int = 0
@@ -105,11 +106,10 @@ struct WatchAppHomeView: View {
         .onReceive(timer) { time in
             print("Timer")
             
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-            
             connected = UserDefaults.group.connected
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
             if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 Task {
                     isReloading = true
                     await libreLinkUp.reloadLibreLinkUp()
@@ -124,8 +124,10 @@ struct WatchAppHomeView: View {
                 isShowingDisclaimer = true
             }
             
-            
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            if onAppearNotToDoFirstStart == 1 {
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            }
+            if onAppearNotToDoFirstStart < 1 { onAppearNotToDoFirstStart += 1 }
             
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
             connected = UserDefaults.group.connected
@@ -141,10 +143,10 @@ struct WatchAppHomeView: View {
             }        }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active {
-                print("Active")
-                
+                print("Scene Phase Active")
                 
                 CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+
                 WidgetCenter.shared.reloadAllTimelines()
                 
                 connected = UserDefaults.group.connected
@@ -159,9 +161,9 @@ struct WatchAppHomeView: View {
                 }
                 
             } else if newPhase == .inactive {
-                print("Inactive")
+                print("Scene Phase Inactive")
             } else if newPhase == .background {
-                print("Background")
+                print("Scene Phase Background")
             }
         }
         .overlay {

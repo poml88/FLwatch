@@ -38,7 +38,7 @@ struct LibreWristWidgetEntryView : View {
         switch family {
         case .systemSmall:
             ZStack {
-                colorScheme == .dark ? .black : entry.glucoseMeasurement.measurementColor.color
+                colorScheme == .dark ? .black : entry.glucoseMeasurement.measurementColor.color // this is the background color, lowest layer in the ZStack
                 VStack(alignment: .center, spacing: -10) {
                     HStack {
                         Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")

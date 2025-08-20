@@ -94,6 +94,8 @@ struct InsulinTypePresets: Codable, Identifiable {
     var currentIOB: Double = 0.0
     var insulinOnBoardCurve: [ActivityCurveDataPoint] = []
     var insulinActivityCurve: [ActivityCurveDataPoint] = []
+    var maxIOB: Double = 1
+    var maxActivity: Double = 1
     
     static let shared: CurrentIOBSingleton = {
         let instance = CurrentIOBSingleton()
@@ -139,7 +141,7 @@ struct InsulinTypePresets: Codable, Identifiable {
         
         var activityCurve: [ActivityCurveDataPoint] = []
         let minutes = 5 * 60
-        for timeInterval in stride(from: 6 * 60 * 60, through: 0, by: -minutes) {
+        for timeInterval in stride(from: 6 * 60 * 60, through: -2 * 60 * 60, by: -minutes) {
             var sumIOB: Double = 0
             for item in insulinDeliveryHistorySingleton.insulinDeliveryHistory {
                 let timeIntervalBetweenDeliveryAndNow = Date().timeIntervalSince1970 - item.timeStamp
@@ -153,6 +155,7 @@ struct InsulinTypePresets: Codable, Identifiable {
             }
             if sumIOB > 0 {
                 let dataPoint: ActivityCurveDataPoint = ActivityCurveDataPoint(id: timeInterval, date: Date(timeIntervalSinceNow: -Double(timeInterval)), value: sumIOB)
+//                print("\(dataPoint)")
                 activityCurve.append(dataPoint)
             }
         }
@@ -170,6 +173,7 @@ struct InsulinTypePresets: Codable, Identifiable {
             let difference = IOBcurve[i].value - IOBcurve[i + 1].value
             if difference > 0 {
                 let dataPoint = ActivityCurveDataPoint(id: IOBcurve[i + 1].id, date: IOBcurve[i + 1].date, value: difference)
+//                print("\(dataPoint)")
                 activityCurve.append(dataPoint)
             }
         }
@@ -177,9 +181,48 @@ struct InsulinTypePresets: Codable, Identifiable {
     }
     
     func updateCurrentIOBAndGraphs() {
+//                print("Updating graphs: \(Date.now)")
+        //MARK: Update IOB
         currentIOB = getCurrentIOB()
+        
+        //MARK: Update IOB graph
+#if os(iOS)
+        if SharedData.showIOBCurvePhone == false && SharedData.showActivityCurvePhone == false { insulinOnBoardCurve = []; insulinActivityCurve = []; maxIOB = 1000; return }
+#endif
+#if os(watchOS)
+        if SharedData.showIOBCurveWatch == false && SharedData.showActivityCurveWatch == false { insulinOnBoardCurve = []; insulinActivityCurve = []; maxIOB = 1000; return }
+#endif
+        
         insulinOnBoardCurve = calculateInsulinOnBoardCurve()
+        let indexOfMaxInsulinItem = insulinOnBoardCurve.indices.max(by:
+                                                                        { insulinOnBoardCurve[$0].value < insulinOnBoardCurve[$1].value }
+        ) ?? 0
+        maxIOB = { insulinOnBoardCurve.count > 0 ? insulinOnBoardCurve[indexOfMaxInsulinItem].value : 1 }()
+        
+        //MARK: Update insulin activity graph
+#if os(iOS)
+        if SharedData.showActivityCurvePhone == false {
+            insulinActivityCurve = []
+            insulinOnBoardCurve = insulinOnBoardCurve.filter { $0.date < Date.now }
+            return
+        }
+#endif
+#if os(watchOS)
+        if SharedData.showActivityCurveWatch == false {
+            insulinActivityCurve = []
+            insulinOnBoardCurve = insulinOnBoardCurve.filter { $0.date < Date.now }
+            return
+        }
+#endif
+        
         insulinActivityCurve = calculateinsulinActivityCurve()
+        let indexOfMaxActivityItem = insulinActivityCurve.indices.max(by:
+                                                                        { insulinActivityCurve[$0].value < insulinActivityCurve[$1].value }
+        ) ?? 0
+        maxActivity = { insulinActivityCurve.count > 0 ? insulinActivityCurve[indexOfMaxActivityItem].value : 1 }()
+        
+        insulinOnBoardCurve = insulinOnBoardCurve.filter { $0.date < Date.now }
+        insulinActivityCurve = insulinActivityCurve.filter { $0.date < Date.now }
     }
 }
 

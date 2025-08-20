@@ -45,6 +45,7 @@ struct PhoneAppHomeView: View {
 //    @State var currentGlucose: Int = 0
 //    @State var trendArrow = "---"
     private var libreLinkUp = LibreLinkUp()
+    @State private var onAppearNotToDoFirstStart: Int = 0
     
      
     private let timer = Timer.publish(every: 60, tolerance: 1, on: .main, in: .common).autoconnect()
@@ -110,14 +111,12 @@ struct PhoneAppHomeView: View {
             }
         }
         .onReceive(timer) { time in
-            print("Timer")
-            
-            
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            print("Timer") // Timer fires as well when on a different tab, for example settings tab
             
             connected = UserDefaults.group.connected
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
             if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 Task {
                     
                     isReloading = true
@@ -154,7 +153,10 @@ struct PhoneAppHomeView: View {
 //                isShowingNotification = true
 //            }
             
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            if onAppearNotToDoFirstStart == 1 {
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            }
+            if onAppearNotToDoFirstStart < 1 { onAppearNotToDoFirstStart += 1 }
             
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
             connected = UserDefaults.group.connected
@@ -175,8 +177,8 @@ struct PhoneAppHomeView: View {
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active {
-                print("Active")
-                
+                print("Scene Phase Active")
+
                 CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 WidgetCenter.shared.reloadAllTimelines()
                 
@@ -192,12 +194,12 @@ struct PhoneAppHomeView: View {
                         }
                         minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
                         isReloading = false
+                        }
                     }
-                }
             } else if newPhase == .inactive {
-                print("Inactive")
+                print("Scene Phase Inactive")
             } else if newPhase == .background {
-                print("Background")
+                print("Scene Phase Background")
             }
         }
         .overlay {

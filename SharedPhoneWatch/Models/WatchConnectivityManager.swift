@@ -87,15 +87,18 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         if message["content"] as? String == "showInsulinDeliveryMarksWatchMessage" {
             let valueBool = message["showInsulinDeliveryMarksWatch"] as? Bool ?? false
             SharedData.showInsulinDeliveryMarksWatch = valueBool
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
         }
         if message["content"] as? String == "showIOBCurveWatchMessage" {
             let valueBool = message["showIOBCurveWatch"] as? Bool ?? false
             SharedData.showIOBCurveWatch = valueBool
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
         }
         
         if message["content"] as? String == "showActivityCurveWatchMessage" {
             let valueBool = message["showActivityCurveWatch"] as? Bool ?? false
             SharedData.showActivityCurveWatch = valueBool
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
         }
         
         if message["content"] as? String == "updateWidgetUpdateFrequency" {
