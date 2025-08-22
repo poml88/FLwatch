@@ -320,8 +320,25 @@
 		7BFD835D2C84E48E00A9B195 /* ExponentialInsulinModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExponentialInsulinModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		7B3931622E58697800E2406E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Localizable.xcstrings,
+			);
+			target = 7B022C982CADDBE800CA64B4 /* FLwatchWidgetExtension */;
+		};
+		7B3931632E58697800E2406E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Localizable.xcstrings,
+			);
+			target = 7B2E7EAB2CB59C9300A3473B /* FlwatchWatchWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		7BDF0A832DBBB3AA00852BAD /* Localizations */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Localizations; sourceTree = "<group>"; };
+		7BDF0A832DBBB3AA00852BAD /* Localizations */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7B3931622E58697800E2406E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7B3931632E58697800E2406E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Localizations; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -782,6 +799,8 @@
 				de,
 				es,
 				fr,
+				"zh-Hans",
+				ja,
 			);
 			mainGroup = 7BA0AE202C582F63004226FE;
 			packageReferences = (

@@ -30,6 +30,8 @@ struct PhoneAppSiriSheetView: View {
                 let longString: LocalizedStringKey = """
                 Siri integration is still work in progress!
                 
+                It is difficult to find correct, useful phrases. Please write to me if you have any ideas.
+                
                 Siri can tell you your blood glucose and trend by saying: \"Siri, what is my glucose in FLwatch\", or \"What is my FLwatch glucose level\".
                 
                 Since Siri has sometimes trouble understanding \"FLwatch\" (she always understands \"Apple watch\") you can also use \"glucose monitor\" as an app name synonym: \"Siri, what is my glucose in glucose monitor\", or \"What is my glucose monitor glucose level\".

@@ -37,5 +37,6 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environment(\.locale, .init(identifier: "zh"))
 //        .environment(LibreLinkUpHistory.mock)
 }

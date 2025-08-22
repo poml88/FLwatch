@@ -56,9 +56,9 @@ struct ContentView: View {
 #Preview {
     ContentView()
 //        .environment(History.test)
-        .environment(LibreLinkUpHistory.shared)
-        .environment(SensorSettingsSingleton.shared)
-        .environment(CurrentIOBSingleton.shared)
-        .environment(InsulinDeliveryHistorySingleton.shared)
-        .environment(\.locale, .init(identifier: "en"))
+//        .environment(LibreLinkUpHistory.shared)
+//        .environment(SensorSettingsSingleton.shared)
+//        .environment(CurrentIOBSingleton.shared)
+//        .environment(InsulinDeliveryHistorySingleton.shared)
+        .environment(\.locale, .init(identifier: "zh"))
 }

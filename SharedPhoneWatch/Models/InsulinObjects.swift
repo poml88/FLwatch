@@ -11,7 +11,7 @@ enum InsulinType: Int, CaseIterable {
     case rapidActing = 0
     case fastRapidActing = 1
     
-    var description: String {
+    var description: LocalizedStringResource {
         switch self {
         case .rapidActing:
             return "Rapid acting"
@@ -19,7 +19,7 @@ enum InsulinType: Int, CaseIterable {
             return "Fast rapid acting"
         }
     }
-    var fullDescription: String {
+    var fullDescription: LocalizedStringResource {
         switch self {
         case .rapidActing:
             return "Rapid acting (Novolog, ...)"

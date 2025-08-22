@@ -32,6 +32,61 @@
               "${insulinUnitsEnum} units ${applicationName}"
             ]
           }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} registrar insulina",
+              "${applicationName} anotar insulina",
+              "${applicationName} añadir insulina",
+              "${insulinUnitsEnum} unidades de insulina en ${applicationName}",
+              "${applicationName} ${insulinUnitsEnum} unidad",
+              "${applicationName} ${insulinUnitsEnum} unidades",
+              "${insulinUnitsEnum} unidad ${applicationName}",
+              "${insulinUnitsEnum} unidades ${applicationName}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} enregistrer l'insuline",
+              "${applicationName} noter l'insuline",
+              "${applicationName} ajouter l'insuline",
+              "${insulinUnitsEnum} unités d'insuline dans ${applicationName}",
+              "${applicationName} ${insulinUnitsEnum} unité",
+              "${applicationName} ${insulinUnitsEnum} unités",
+              "${insulinUnitsEnum} unité ${applicationName}",
+              "${insulinUnitsEnum} unités ${applicationName}"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} インスリンを記録する",
+              "${applicationName} インスリンをメモする",
+              "${applicationName} インスリンを追加する",
+              "${insulinUnitsEnum} ${applicationName} におけるインスリン単位",
+              "${applicationName} ${insulinUnitsEnum} 単位",
+              "${insulinUnitsEnum} 単位 ${applicationName}"
+            ]
+          }
+        },
+        "zh-Hans" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} 记录胰岛素",
+              "${applicationName} 添加胰岛素",
+              "${insulinUnitsEnum} ${applicationName}中的胰岛素单位",
+              "${insulinUnitsEnum} ${applicationName}单位",
+              "${insulinUnitsEnum} 单位 ${applicationName}"
+            ]
+          }
         }
       }
     },
@@ -65,6 +120,55 @@
               "${applicationName} get current blood glucose",
               "${applicationName} what's my current blood glucose",
               "What's my current blood glucose in ${applicationName}"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Cuál es mi nivel de glucosa en ${applicationName}",
+              "Cuál es mi glucosa en ${applicationName}",
+              "Cuál es mi nivel de glucosa en ${applicationName}",
+              "${applicationName} obtener la glucosa en sangre actual",
+              "${applicationName} cuál es mi glucosa en sangre actual",
+              "Cuál es mi glucosa en sangre actual en ${applicationName}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Quel est mon taux de glucose dans ${applicationName}",
+              "Quel est mon glycémie dans ${applicationName}",
+              "${applicationName} obtenir le taux de glycémie actuel",
+              "${applicationName} quel est mon taux de glycémie actuel ?",
+              "${applicationName} quel est mon glycémie actuel ?"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName}での私の血糖値はどれくらいですか",
+              "${applicationName}の血糖値はどれくらいですか",
+              "${applicationName}で現在の血糖値を確認する",
+              "${applicationName}で現在の血糖値はどれくらいですか"
+            ]
+          }
+        },
+        "zh-Hans" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "我的血糖值在 ${applicationName} 中是多少",
+              "我的 ${applicationName} 血糖是多少",
+              "我的血糖水平在 ${applicationName} 中是多少",
+              "我的 ${applicationName} 血糖水平是多少",
+              "${applicationName} 获取当前血糖值",
+              "我的当前血糖值在 ${applicationName} 中是多少"
             ]
           }
         }
