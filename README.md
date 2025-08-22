@@ -3,6 +3,16 @@
 
 ![Exported PNG image6](https://github.com/user-attachments/assets/68ec6106-4866-442d-8e78-bc80ddba2608)![Exported PNG image1 Kopie](https://github.com/user-attachments/assets/68a92ba6-c590-4b3f-87ad-9ab77c36cb8c)
 
+-----------------------------------
+
+**Click here to use Google Translate to translate this page into your language. Thank you.**\
+**[Klicken Sie hier, um diese Seite mit Google Translate in Ihre Sprache zu übersetzen. Vielen Dank.](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=de#usage)**\
+**[Cliquez ici pour utiliser Google Translate afin de traduire cette page dans votre langue. Merci.](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=fr#usage)**\
+**[Haga clic aquí para utilizar Google Translate y traducir esta página a su idioma. Gracias.](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=es#usage)**\
+**[点击此处使用Google翻译将此页面翻译成您的语言。感谢您的使用。](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=zh-CN#usage)**\
+**[ここをクリックして、このページをあなたの言語に翻訳するためにGoogle翻訳をご利用ください。ありがとうございます。](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=ja#usage)**
+
+-----------------------------------
 
 
 
@@ -31,13 +41,16 @@ Same works on the phone.
 * blood glucose graph on phone and watch
 * interactive chart on phone to display individual values on tap
 * phone screen always on mode
+* supports rapid acting and fast rapid acting bolus insulins
 * insulin on board calculation (IOB)
+* insulin on board graph
+* insulin activity graph
 * iOS widgets and lock screen widgets
+* stand by mode widget
 * watchOS widgets / complications
 
 ### ToDo ###
 - Widget with BG graph
-- More insulin types
 
 ### Support and Feedback ###
 For support please open an issue, start a discussion or email **flwatch [ a t ] cmdline [ d o t ] net**. Feedback is very welcome, please use the same methods as for support.
