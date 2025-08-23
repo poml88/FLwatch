@@ -1544,6 +1544,12 @@
     },
     "Fast rapid acting" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sehr schnell wirkend"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1572,6 +1578,12 @@
     },
     "Fast rapid acting (Fiasp, Lyumjev, ...)" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sehr schnell wirkend (Fiasp, Lyumjev, ...)"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2691,6 +2703,12 @@
     },
     "Rapid acting" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schnell wirkend"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2719,6 +2737,12 @@
     },
     "Rapid acting (Novolog, ...)" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schnell wirkend (Novolog, …)"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3242,7 +3266,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¡La integración con Siri aún está en desarrollo!\n\nEs difícil encontrar frases correctas y útiles. Por favor, escríbame si tiene alguna idea.\n\nSiri puede indicarte tu nivel de glucosa en sangre y la tendencia diciendo: «Siri, ¿cuál es mi nivel de glucosa en FLwatch?» o «¿Cuál es mi nivel de glucosa en FLwatch?».\n\nDado que Siri a veces tiene dificultades para entender «FLwatch» (siempre entiende «Apple Watch»), también puedes utilizar «monitor de glucosa» como sinónimo del nombre de la aplicación: «Siri, ¿cuál es mi glucosa en el monitor de glucosa?» o «¿Cuál es mi nivel de glucosa en el monitor de glucosa?».\n\nEn la aplicación Atajos, puedes crear un atajo para esta acción con cualquier nombre personalizado, como «Nivel de glucosa actual», y seleccionar «Mostrar en Apple Watch» para que el comando también funcione en el reloj. Si luego dices: «Oye, Siri, nivel de glucosa actual», Siri te leerá el valor y la tendencia.\n\nSiri también puede registrar las unidades de insulina para el cálculo de la IOB.\n\nExplora las opciones de la aplicación Atajos.\n\nAquí tienes la lista completa de frases:\n\n¿Cuál es mi nivel de glucosa en FLwatch?\n¿Cuál es mi nivel de glucosa en FLwatch?\n¿Cuál es mi nivel de glucosa en FLwatch?\n¿Cuál es mi nivel de glucosa en FLwatch?\n¿Cuál es mi glucosa en FLwatch?\n¿Cuál es mi glucosa en FLwatch?\n¿Cuál es mi nivel de glucosa en FLwatch?\n¿Cuál es mi nivel de glucosa en FLwatch?\nFLwatch, obtén la glucosa en sangre actual.\nFLwatch, ¿cuál es mi glucosa en sangre actual?\n¿Cuál es mi glucosa en sangre actual en FLwatch?\n\nFLwatch, registra la insulina.\nFLwatch, anota la insulina.\nFLwatch, añade insulina.\nXX unidades de insulina en FLwatch.\nFLwatch, XX unidades.\nFLwatch, XX unidades.\nXX unidades FLwatch.\nXX unidades FLwatch."
+            "value" : "¡La integración con Siri aún está en desarrollo!\n\nEs difícil encontrar frases correctas y útiles. Por favor, escríbame si tiene alguna idea.\n\nSiri puede indicarte tu nivel de glucosa en sangre y la tendencia diciendo: «Siri, ¿cuál es mi nivel de glucosa en FLwatch?» o «¿Cuál es mi nivel de glucosa en FLwatch?».\n\nDado que Siri a veces tiene dificultades para entender «FLwatch» (siempre entiende «Apple Watch»), también puedes utilizar «glucómetro» como sinónimo del nombre de la aplicación: «Siri, ¿cuál es mi glucosa en el glucómetro?» o «¿Cuál es mi nivel de glucosa en el glucómetro?».\n\nEn la aplicación Atajos, puedes crear un atajo para esta acción con cualquier nombre personalizado, como «Nivel de glucosa actual», y seleccionar «Mostrar en Apple Watch» para que el comando también funcione en el reloj. Si luego dices: «Oye, Siri, nivel de glucosa actual», Siri te leerá el valor y la tendencia.\n\nSiri también puede registrar las unidades de insulina para el cálculo de la IOB.\n\nExplora las opciones de la aplicación Atajos.\n\nAquí tienes la lista completa de frases:\n\n¿Cuál es mi nivel de glucosa en FLwatch?\n¿Cuál es mi nivel de glucosa en FLwatch?\n¿Cuál es mi nivel de glucosa en FLwatch?\n¿Cuál es mi nivel de glucosa en FLwatch?\n¿Cuál es mi glucosa en FLwatch?\n¿Cuál es mi glucosa en FLwatch?\n¿Cuál es mi nivel de glucosa en FLwatch?\n¿Cuál es mi nivel de glucosa en FLwatch?\nFLwatch, obtén la glucosa en sangre actual.\nFLwatch, ¿cuál es mi glucosa en sangre actual?\n¿Cuál es mi glucosa en sangre actual en FLwatch?\n\nFLwatch, registra la insulina.\nFLwatch, anota la insulina.\nFLwatch, añade insulina.\nXX unidades de insulina en FLwatch.\nFLwatch, XX unidades.\nFLwatch, XX unidades.\nXX unidades FLwatch.\nXX unidades FLwatch."
           }
         },
         "fr" : {
@@ -3254,13 +3278,13 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Siriの統合機能は現在開発中です！  \n\n適切な有用なフレーズを見つけるのは難しいです。アイデアがあれば、ご連絡ください。  \n\nSiriは次のように言って、あなたの血糖値と傾向を教えてくれます：「Siri、FLwatchの血糖値は？」または「FLwatchの血糖値は？」\n\nSiriは「FLwatch」という言葉を理解できないことがあります（ただし「Apple Watch」は常に理解します）。そのため、アプリ名の同義語として「glucose monitor」を使用することもできます：「Siri、glucose monitorの血糖値は？」または「glucose monitorの血糖値は？」と尋ねることができます。\n\nショートカットアプリでは、このアクション用のショートカットを任意のカスタム名（例：「現在の血糖値」）で作成し、「Apple Watchに表示」を選択すると、ウォッチでもコマンドが機能します。その後「Hey Siri、現在の血糖値」と尋ねると、Siriが値と傾向を読み上げてくれます。\n\nSiriはIOB計算のためのインスリン単位の記録も可能です。\n\nショートカットアプリの設定オプションを調べてみてください。  \n\n以下のフレーズのリストです：  \n\nFLwatchでの血糖値はどれくらいですか  \nFLwatchでの血糖値はどれくらいですか  \nFLwatchでの血糖値はどれくらいですか  \nFLwatchでの血糖値はどれくらいですか  \nFLwatchの血糖値はどれくらいですか  \nFLwatchの血糖値はどれくらいですか  \nFLwatchの血糖値はどれくらいですか  \nFLwatchの血糖値はどれくらいですか\nFLwatchで現在の血糖値を取得\nFLwatchで私の現在の血糖値は？\nFLwatchで私の現在の血糖値は？\n\nFLwatchでインスリンを記録\nFLwatchでインスリンをメモ\nFLwatchでインスリンを追加\nFLwatchでXX単位のインスリン\nFLwatchでXX単位\nFLwatchでXX単位\nFLwatchでXX単位\nFLwatchでXX単位"
+            "value" : "Siriの統合機能は現在開発中です！  \n\n適切な有用なフレーズを見つけるのは難しいです。アイデアがあれば、ご連絡ください。  \n\nSiriは次のように言って、あなたの血糖値と傾向を教えてくれます：「Siri、FLwatchの血糖値は？」または「FLwatchの血糖値は？」\n\nSiriは「FLwatch」という言葉を理解できないことがあります（ただし「Apple Watch」は常に理解します）。そのため、アプリ名の同義語として「血糖値計」を使用することもできます：「Siri、血糖値計の血糖値は？」または「血糖値計の血糖値は？」と尋ねることができます。\n\nショートカットアプリでは、このアクション用のショートカットを任意のカスタム名（例：「現在の血糖値」）で作成し、「Apple Watchに表示」を選択すると、ウォッチでもコマンドが機能します。その後「Hey Siri、現在の血糖値」と尋ねると、Siriが値と傾向を読み上げてくれます。\n\nSiriはIOB計算のためのインスリン単位の記録も可能です。\n\nショートカットアプリの設定オプションを調べてみてください。  \n\n以下のフレーズのリストです：  \n\nFLwatchでの血糖値はどれくらいですか  \nFLwatchでの血糖値はどれくらいですか  \nFLwatchでの血糖値はどれくらいですか  \nFLwatchでの血糖値はどれくらいですか  \nFLwatchの血糖値はどれくらいですか  \nFLwatchの血糖値はどれくらいですか  \nFLwatchの血糖値はどれくらいですか  \nFLwatchの血糖値はどれくらいですか\nFLwatchで現在の血糖値を取得\nFLwatchで私の現在の血糖値は？\nFLwatchで私の現在の血糖値は？\n\nFLwatchでインスリンを記録\nFLwatchでインスリンをメモ\nFLwatchでインスリンを追加\nFLwatchでXX単位のインスリン\nFLwatchでXX単位\nFLwatchでXX単位\nFLwatchでXX単位\nFLwatchでXX単位"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Siri 集成仍在开发中！\n\n目前很难找到准确且有用的短语。如果您有任何想法，请随时与我联系。\n\n您可以通过以下方式让 Siri 告知您的血糖值和趋势：说“Siri，我的 FLwatch 血糖值是多少”，或“我的 FLwatch 血糖水平是多少”。\n\n由于 Siri 有时难以识别“FLwatch”（她总是能识别“Apple Watch”），您也可以使用“血糖监测器”作为应用名称的同义词：例如“Siri，我的血糖监测器血糖值是多少”，或“我的血糖监测器血糖水平是多少”。\n\n在快捷指令应用中，你可以为该操作创建一个快捷指令，并自定义名称（如“当前血糖水平”），同时选择“在Apple Watch上显示”，以便该指令也能在手表上生效。如果你说：“嘿Siri，当前血糖水平”，Siri会为你朗读数值和趋势。\n\nSiri还能够记录胰岛素单位以进行IOB计算。\n\n探索快捷指令应用中的选项。\n\n以下是完整短语列表：\n\n我的FLwatch血糖值是多少\n我的FLwatch血糖值是多少\n我的FLwatch血糖水平是多少\n我的FLwatch血糖水平是多少\n我的FLwatch血糖值是多少\n我的FLwatch血糖值是多少\n我的FLwatch血糖水平是多少\n我的FLwatch血糖水平是多少\nFLwatch 获取当前血糖值\nFLwatch 我的当前血糖值是多少\nFLwatch 我的当前血糖值是多少\n\nFLwatch 记录胰岛素\nFLwatch 记录胰岛素剂量\nFLwatch 添加胰岛素\nFLwatch XX 单位胰岛素\nFLwatch XX 单位\nFLwatch XX 单位\nFLwatch XX 单位\nFLwatch XX 单位"
+            "value" : "Siri 集成仍在开发中！\n\n目前很难找到准确且有用的短语。如果您有任何想法，请随时与我联系。\n\n您可以通过以下方式让 Siri 告知您的血糖值和趋势：说“Siri，我的 FLwatch 血糖值是多少”，或“我的 FLwatch 血糖水平是多少”。\n\n由于 Siri 有时难以识别“FLwatch”（她总是能识别“Apple Watch”），您也可以使用“血糖仪”作为应用名称的同义词：例如“Siri，我的血糖仪血糖值是多少”，或“我的血糖仪血糖水平是多少”。\n\n在快捷指令应用中，你可以为该操作创建一个快捷指令，并自定义名称（如“当前血糖水平”），同时选择“在Apple Watch上显示”，以便该指令也能在手表上生效。如果你说：“嘿Siri，当前血糖水平”，Siri会为你朗读数值和趋势。\n\nSiri还能够记录胰岛素单位以进行IOB计算。\n\n探索快捷指令应用中的选项。\n\n以下是完整短语列表：\n\n我的FLwatch血糖值是多少\n我的FLwatch血糖值是多少\n我的FLwatch血糖水平是多少\n我的FLwatch血糖水平是多少\n我的FLwatch血糖值是多少\n我的FLwatch血糖值是多少\n我的FLwatch血糖水平是多少\n我的FLwatch血糖水平是多少\nFLwatch 获取当前血糖值\nFLwatch 我的当前血糖值是多少\nFLwatch 我的当前血糖值是多少\n\nFLwatch 记录胰岛素\nFLwatch 记录胰岛素剂量\nFLwatch 添加胰岛素\nFLwatch XX 单位胰岛素\nFLwatch XX 单位\nFLwatch XX 单位\nFLwatch XX 单位\nFLwatch XX 单位"
           }
         }
       }
