@@ -17,6 +17,8 @@
     {% endfor %}
     <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ site.baseurl }}/" />
 
+    <link rel="alternate" type="application/atom+xml" title="{{ site.title }} Feed" href="{{ "/feed.xml" | relative_url }}">
+
     <style>
       body {margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f9fafb;color:#222;}
       .hero{display:flex;flex-direction:column;align-items:center;padding:4rem 1rem 2rem;text-align:center;background:linear-gradient(180deg,#fff 0%,#f9fafb 100%);position:relative;}
