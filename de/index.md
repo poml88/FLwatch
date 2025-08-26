@@ -7,4 +7,4 @@ permalink: /de/
 tagline: iOS & watchOS‑App für Libre 2/3 — mit IOB und Aktivität.
 ---
 
-{% include_absolute ../content/de.md %}
+{% include_relative de.md %}
