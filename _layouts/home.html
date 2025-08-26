@@ -38,11 +38,11 @@
       pre{padding:1rem;overflow-x:auto;}
       @media (max-width:600px){.hero h1{font-size:1.75rem;}.hero p{font-size:1rem;}}
 
-      /* Fixed menu button & side menu */
+      /* Fixed menu button & side menu (transform-based) */
       .menu-btn{position:fixed;top:1rem;left:1rem;background:#000;color:#fff;border:none;padding:0.6rem 0.9rem;border-radius:0.4rem;font-size:1.1rem;cursor:pointer;z-index:1100;}
       .menu-btn:hover{background:#333;}
-      .side-menu{position:fixed;top:0;left:-280px;width:260px;height:100%;background:#fff;box-shadow:2px 0 8px rgba(0,0,0,0.2);padding:1rem;transition:left 0.3s ease;overflow-y:auto;z-index:1101;}
-      .side-menu.open{left:0;}
+      .side-menu{position:fixed;top:0;left:0;width:260px;height:100%;background:#fff;box-shadow:2px 0 8px rgba(0,0,0,0.2);padding:1rem;transition:transform 0.3s ease;transform:translateX(-100%);overflow-y:auto;z-index:1101;}
+      .side-menu.open{transform:translateX(0);}
       .side-menu h2{margin-top:0;font-size:1.2rem;border-bottom:1px solid #eee;padding-bottom:0.5rem;}
       .side-menu nav ul{list-style:none;padding:0;margin:0;}
       .side-menu nav li{margin:0.4rem 0;}
