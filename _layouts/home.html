@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="{{ page.lang | default: site.lang }}">
   <head>
@@ -9,107 +10,51 @@
     <link rel="icon" href="{{ site.baseurl }}/assets/icon.png" type="image/png">
     {% seo %}
 
-    <style>
-      body {
-        margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background: #f9fafb;
-        color: #222;
-      }
-      .hero {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 4rem 1rem 2rem;
-        text-align: center;
-        background: linear-gradient(180deg, #fff 0%, #f9fafb 100%);
-      }
-      .hero img {
-        width: 120px;
-        height: 120px;
-        border-radius: 22%;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        margin-bottom: 1rem;
-      }
-      .hero h1 {
-        font-size: 2.2rem;
-        margin: 0.5rem 0;
-      }
-      .hero p {
-        max-width: 600px;
-        margin: 0.5rem auto 1.5rem;
-        font-size: 1.1rem;
-        color: #555;
-      }
-      .buttons {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        justify-content: center;
-      }
-      .btn {
-        display: inline-block;
-        padding: 0.9rem 1.5rem;
-        border-radius: 0.6rem;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.2s ease;
-      }
-      .btn.store {
-        background: #000;
-        color: #fff;
-      }
-      .btn.store:hover { background: #333; }
-      .btn.repo {
-        border: 2px solid #000;
-        color: #000;
-        background: #fff;
-      }
-      .btn.repo:hover {
-        background: #000;
-        color: #fff;
-      }
-      .lang-switcher {
-        text-align: center;
-        margin: 1.5rem 0;
-        font-size: 0.95rem;
-        color: #555;
-      }
-      .content {
-        max-width: 850px;
-        margin: 0 auto;
-        padding: 2rem 1rem;
-        background: #fff;
-        border-radius: 0.75rem;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      }
-      article h1, article h2, article h3 {
-        margin-top: 1.8rem;
-        margin-bottom: 0.8rem;
-      }
-      article img {
-        max-width: 100%;
-        height: auto;
-      }
-      code, pre {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        background: #f3f4f6;
-        padding: 0.2rem 0.4rem;
-        border-radius: 0.25rem;
-      }
-      pre {
-        padding: 1rem;
-        overflow-x: auto;
-      }
+    {%- comment -%} Multilingual SEO hreflang tags {%- endcomment -%}
+    {% assign langs = site.languages %}
+    {% for l in langs %}
+      <link rel="alternate" hreflang="{{ l.code }}" href="{{ site.url }}{{ site.baseurl }}{{ l.path }}/" />
+    {% endfor %}
+    <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ site.baseurl }}/" />
 
-      /* Responsive */
-      @media (max-width: 600px) {
-        .hero h1 { font-size: 1.75rem; }
-        .hero p { font-size: 1rem; }
-      }
+    <style>
+      body {margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f9fafb;color:#222;}
+      .hero{display:flex;flex-direction:column;align-items:center;padding:4rem 1rem 2rem;text-align:center;background:linear-gradient(180deg,#fff 0%,#f9fafb 100%);position:relative;}
+      .hero img{width:120px;height:120px;border-radius:22%;box-shadow:0 4px 20px rgba(0,0,0,0.15);margin-bottom:1rem;}
+      .hero h1{font-size:2.2rem;margin:0.5rem 0;}
+      .hero p{max-width:600px;margin:0.5rem auto 1.5rem;font-size:1.1rem;color:#555;}
+      .buttons{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;}
+      .btn{display:inline-block;padding:0.9rem 1.5rem;border-radius:0.6rem;font-weight:600;text-decoration:none;transition:all 0.2s ease;}
+      .btn.store{background:#000;color:#fff;}
+      .btn.store:hover{background:#333;}
+      .btn.repo{border:2px solid #000;color:#000;background:#fff;}
+      .btn.repo:hover{background:#000;color:#fff;}
+      .lang-switcher{text-align:center;margin:1.5rem 0;font-size:0.95rem;color:#555;display:flex;flex-wrap:wrap;justify-content:center;gap:0.6rem 1rem;}
+      .lang-switcher a,.lang-switcher strong{display:inline-flex;align-items:center;gap:0.35rem;text-decoration:none;color:inherit;white-space:nowrap;}
+      .content{max-width:850px;margin:0 auto;padding:2rem 1rem;background:#fff;border-radius:0.75rem;box-shadow:0 2px 10px rgba(0,0,0,0.05);}
+      article h1,article h2,article h3{margin-top:1.8rem;margin-bottom:0.8rem;}
+      article img{max-width:100%;height:auto;}
+      code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f3f4f6;padding:0.2rem 0.4rem;border-radius:0.25rem;}
+      pre{padding:1rem;overflow-x:auto;}
+      @media (max-width:600px){.hero h1{font-size:1.75rem;}.hero p{font-size:1rem;}}
+
+      /* Fixed menu button & side menu */
+      .menu-btn{position:fixed;top:1rem;left:1rem;background:#000;color:#fff;border:none;padding:0.6rem 0.9rem;border-radius:0.4rem;font-size:1.1rem;cursor:pointer;z-index:1100;}
+      .menu-btn:hover{background:#333;}
+      .side-menu{position:fixed;top:0;left:-280px;width:260px;height:100%;background:#fff;box-shadow:2px 0 8px rgba(0,0,0,0.2);padding:1rem;transition:left 0.3s ease;overflow-y:auto;z-index:1101;}
+      .side-menu.open{left:0;}
+      .side-menu h2{margin-top:0;font-size:1.2rem;border-bottom:1px solid #eee;padding-bottom:0.5rem;}
+      .side-menu nav ul{list-style:none;padding:0;margin:0;}
+      .side-menu nav li{margin:0.4rem 0;}
+      .side-menu nav a{text-decoration:none;color:#333;font-size:0.95rem;}
+      .side-menu nav a:hover{text-decoration:underline;}
+      .close-btn{background:none;border:none;font-size:1.2rem;cursor:pointer;float:right;}
+      .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);display:none;z-index:1100;}
+      .overlay.show{display:block;}
     </style>
   </head>
   <body>
+    <button class="menu-btn" onclick="toggleMenu()">☰ Menu</button>
     <header class="hero">
       <img src="{{ site.baseurl }}/assets/icon.png" alt="{{ site.app_name }} icon">
       <h1>{{ site.app_name }}</h1>
@@ -119,22 +64,65 @@
         <a href="{{ site.repo_url }}" class="btn repo" rel="noopener">GitHub</a>
       </div>
     </header>
-
     <div class="lang-switcher">
       {% for l in site.languages %}
+        {% capture flag %}
+          {% case l.code %}
+            {% when "en" %}🇬🇧
+            {% when "de" %}🇩🇪
+            {% when "fr" %}🇫🇷
+            {% when "es" %}🇪🇸
+            {% when "ja" %}🇯🇵
+            {% when "zh-Hans" %}🇨🇳
+            {% else %}🌐
+          {% endcase %}
+        {% endcapture %}
         {% if page.lang == l.code %}
-          <strong>{{ l.name }}</strong>
+          <strong>{{ flag }} {{ l.name }}</strong>
         {% else %}
-          <a href="{{ site.baseurl }}{{ l.path }}/">{{ l.name }}</a>
+          <a href="{{ site.baseurl }}{{ l.path }}/">{{ flag }} {{ l.name }}</a>
         {% endif %}
-        {% unless forloop.last %} · {% endunless %}
       {% endfor %}
     </div>
-
     <main class="content">
       <article class="post-content">
         {{ content }}
       </article>
     </main>
+
+    <div id="sideMenu" class="side-menu">
+      <button class="close-btn" onclick="toggleMenu()">✕</button>
+      <h2>Table of Contents</h2>
+      <nav id="toc"></nav>
+    </div>
+    <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
+
+    <script>
+      function toggleMenu(){
+        document.getElementById("sideMenu").classList.toggle("open");
+        document.getElementById("overlay").classList.toggle("show");
+      }
+      document.addEventListener("DOMContentLoaded",function(){
+        const content=document.querySelector(".post-content");
+        const toc=document.getElementById("toc");
+        if(content && toc){
+          const headings=content.querySelectorAll("h1,h2,h3");
+          if(headings.length>0){
+            const ul=document.createElement("ul");
+            headings.forEach(h=>{
+              const li=document.createElement("li");
+              const a=document.createElement("a");
+              const id=h.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g,"-");
+              h.id=id;
+              a.href="#"+id;
+              a.textContent=h.textContent;
+              li.appendChild(a);
+              ul.appendChild(li);
+            });
+            toc.appendChild(ul);
+          }
+        }
+      });
+    </script>
   </body>
 </html>
