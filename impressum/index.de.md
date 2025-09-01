@@ -6,7 +6,7 @@ permalink: /impressum/
 ---
 # 📌 Impressum
 
-**Angaben gemäß § 5 DDG:**
+**Angaben gemäß § 5 TMG:**
 
 Philipp Pöml  
 Limoursstr. 7  
