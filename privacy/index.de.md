@@ -16,7 +16,7 @@ Philipp Pöml
 Limoursstr. 7  
 76872 Minfeld  
 Deutschland  
-E-Mail: [poml@poeml.de](mailto:poml@poeml.de)
+E-Mail: flwatch@cmdline.net
 
 Ein Datenschutzbeauftragter ist nicht benannt, da die gesetzlichen Voraussetzungen (§ 38 BDSG) hierfür nicht erfüllt sind.
 
