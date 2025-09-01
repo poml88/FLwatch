@@ -1,47 +1,30 @@
-title: FLwatch — iOS & watchOS glucose graph
-description: FLwatch is a free, open‑source iOS and watchOS app that displays Libre 2/3 glucose readings with insulin‑on‑board and activity graphs.
+title: "FLwatch - Glucose Sensor Graph"
+description: "FLwatch displays your blood glucose graph and more on iPhone and Apple Watch. Open-source app with insulin on board calculation and widgets."
 url: "https://poml88.github.io"
 baseurl: "/FLwatch"
-lang: en
 permalink: pretty
-theme: minima
+markdown: kramdown
+highlighter: rouge
 plugins:
   - jekyll-seo-tag
   - jekyll-sitemap
-  - jekyll-feed
+theme: null
+lang: en
+github:
+  is_project_page: true
+  repository_url: https://github.com/poml88/FLwatch
 
-# For jekyll-seo-tag
-logo: /assets/icon.png
-author:
-  name: Philipp Poeml
-  url: https://github.com/poml88
+# SEO & App
+appstore_id: "6670172928"  # Apple App Store ID
+appstore_url: "https://apps.apple.com/app/id6670172928"
+github_repo: "https://github.com/poml88/FLwatch"
 
-# i18n settings
-languages:
-  - code: en
-    name: English
-    path: ""
-  - code: de
-    name: Deutsch
-    path: /de
-  - code: fr
-    name: Français
-    path: /fr
-  - code: es
-    name: Español
-    path: /es
-  - code: ja
-    name: 日本語
-    path: /ja
-  - code: zh-Hans
-    name: 简体中文
-    path: /zh-Hans
-
-# App metadata
-app_store_url: "https://apps.apple.com/app/id6670172928"
-repo_url: "https://github.com/poml88/FLwatch"
-app_name: "FLwatch"
-app_price: "Free"
-app_category: "Medical"
-operating_systems: "iOS, watchOS"
-
+# Build settings
+exclude:
+  - "README.md"
+  - "node_modules"
+  - "Gemfile"
+  - "Gemfile.lock"
+  
+# Remove Jekyll version exposure
+keep_files: []

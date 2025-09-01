@@ -1,0 +1,29 @@
+- code: en
+  name: English
+  flag: "🇺🇸"
+  path: "/en/"
+
+- code: de
+  name: Deutsch
+  flag: "🇩🇪"
+  path: "/de/"
+
+- code: fr
+  name: Français
+  flag: "🇫🇷"
+  path: "/fr/"
+
+- code: es
+  name: Español
+  flag: "🇪🇸"
+  path: "/es/"
+
+- code: ja
+  name: 日本語
+  flag: "🇯🇵"
+  path: "/ja/"
+
+- code: zh-Hans
+  name: 简体中文
+  flag: "🇨🇳"
+  path: "/zh-Hans/"

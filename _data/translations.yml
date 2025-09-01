@@ -1,0 +1,150 @@
+# UI translations for FLwatch website
+# 
+# How to use:
+#   {% assign t = site.data.translations %}
+#   {% assign lang = page.lang | default: 'en' %}
+#   {{ t[lang].labels.privacy | default: t.en.labels.privacy }}
+#
+# Structure:
+#   - headings: section headings (e.g., Contents, Language, Legal)
+#   - labels: short labels and link text (Privacy Policy, Impressum, etc.)
+#   - buttons: button labels and aria text (Open/Close menu, theme toggle, CTAs)
+#   - strings: longer phrases (subtitles, footer text, meta descriptions)
+#   - brand: non-translated brand strings (kept for clarity, but same across locales)
+#
+# Notes:
+#   - Keep German texts authoritative for legal pages; other locales should link to German originals as already implemented.
+#   - English is the fallback for any missing key via Liquid's `default` filter.
+#
+en:
+  brand:
+    name: "FLwatch"
+  headings:
+    contents: "Contents"
+    language: "Language"
+    legal: "Legal"
+  labels:
+    privacy: "Privacy Policy"
+    impressum: "Legal Notice"
+  buttons:
+    menu_open: "Open menu"
+    menu_close: "Close menu"
+    theme_toggle: "Toggle theme"
+    appstore_cta: "Download on the App Store"
+    github_cta: "View source on GitHub"
+    home_aria: "Home"
+  strings:
+    title: "FLwatch – iOS & watchOS App"
+    app_subtitle: "iOS & watchOS companion to view your blood glucose & insulin data."
+    built_with: "Built with Jekyll."
+    meta_description: "FLwatch for iOS & watchOS shows your LibreLinkUp glucose readings on iPhone and Apple Watch."
+de:
+  brand:
+    name: "FLwatch"
+  headings:
+    contents: "Inhalt"
+    language: "Sprache"
+    legal: "Rechtliches"
+  labels:
+    privacy: "Datenschutzerklärung"
+    impressum: "Impressum"
+  buttons:
+    menu_open: "Menü öffnen"
+    menu_close: "Menü schließen"
+    theme_toggle: "Darstellung umschalten"
+    appstore_cta: "Im App Store laden"
+    github_cta: "Quellcode auf GitHub"
+    home_aria: "Startseite"
+  strings:
+    title: "FLwatch - Glukose Sensor Graph"
+    app_subtitle: "iOS‑ & watchOS‑Begleiter zur Anzeige Ihrer Glukose‑ und Insulindaten."
+    built_with: "Erstellt mit Jekyll."
+    meta_description: "FLwatch zeigt Ihre Blutzuckerwerte und weitere Informationen auf Ihrem iPhone und Ihrer Apple Watch an. Open-Source-App mit Insulin-On-Board-Berechnung und Widgets."
+es:
+  brand:
+    name: "FLwatch"
+  headings:
+    contents: "Contenido"
+    language: "Idioma"
+    legal: "Legal"
+  labels:
+    privacy: "Política de privacidad"
+    impressum: "Aviso legal"
+  buttons:
+    menu_open: "Abrir menú"
+    menu_close: "Cerrar menú"
+    theme_toggle: "Cambiar tema"
+    appstore_cta: "Descargar en el App Store"
+    github_cta: "Ver código en GitHub"
+    home_aria: "Inicio"
+  strings:
+    title: "FLwatch – App para iOS y watchOS"
+    app_subtitle: "Compañero para iOS y watchOS para ver tus datos de glucosa e insulina."
+    built_with: "Creado con Jekyll."
+    meta_description: "FLwatch para iOS y watchOS muestra lecturas de glucosa de LibreLinkUp en iPhone y Apple Watch."
+fr:
+  brand:
+    name: "FLwatch"
+  headings:
+    contents: "Sommaire"
+    language: "Langue"
+    legal: "Mentions légales"
+  labels:
+    privacy: "Politique de confidentialité"
+    impressum: "Mentions légales"
+  buttons:
+    menu_open: "Ouvrir le menu"
+    menu_close: "Fermer le menu"
+    theme_toggle: "Basculer le thème"
+    appstore_cta: "Télécharger sur l’App Store"
+    github_cta: "Voir le code sur GitHub"
+    home_aria: "Accueil"
+  strings:
+    title: "FLwatch – Application iOS & watchOS"
+    app_subtitle: "Compagnon iOS & watchOS pour afficher vos données de glucose et d’insuline."
+    built_with: "Propulsé par Jekyll."
+    meta_description: "FLwatch pour iOS & watchOS affiche vos relevés LibreLinkUp sur iPhone et Apple Watch."
+ja:
+  brand:
+    name: "FLwatch"
+  headings:
+    contents: "目次"
+    language: "言語"
+    legal: "法的情報"
+  labels:
+    privacy: "プライバシーポリシー"
+    impressum: "法律上の通知"
+  buttons:
+    menu_open: "メニューを開く"
+    menu_close: "メニューを閉じる"
+    theme_toggle: "テーマを切り替え"
+    appstore_cta: "App Store でダウンロード"
+    github_cta: "GitHub でソースを表示"
+    home_aria: "ホーム"
+  strings:
+    title: "FLwatch – iOS & watchOS アプリ"
+    app_subtitle: "iOS と watchOS で血糖値とインスリンのデータを表示するコンパニオン。"
+    built_with: "Jekyll で構築。"
+    meta_description: "FLwatch は iOS と watchOS で LibreLinkUp の血糖値を iPhone と Apple Watch に表示します。"
+"zh-Hans":
+  brand:
+    name: "FLwatch"
+  headings:
+    contents: "目录"
+    language: "语言"
+    legal: "法律信息"
+  labels:
+    privacy: "隐私政策"
+    impressum: "法律声明"
+  buttons:
+    menu_open: "打开菜单"
+    menu_close: "关闭菜单"
+    theme_toggle: "切换主题"
+    appstore_cta: "在 App Store 下载"
+    github_cta: "在 GitHub 查看源码"
+    home_aria: "首页"
+  strings:
+    title: "FLwatch – iOS 和 watchOS 应用"
+    app_subtitle: "在 iOS 和 watchOS 上查看血糖与胰岛素数据的助手。"
+    built_with: "由 Jekyll 构建。"
+    meta_description: "FLwatch 为 iOS 和 watchOS 将 LibreLinkUp 的血糖读数显示在 iPhone 与 Apple Watch 上。"

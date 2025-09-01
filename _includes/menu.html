@@ -1,0 +1,17 @@
+{% assign base = site.baseurl %}
+{% assign t = site.data.translations %}{% assign lang = page.lang | default: 'en' %}
+{% if page.lang == "de" or page.lang == nil %}
+  {% assign privacy_path = "/privacy/" %}
+  {% assign impressum_path = "/impressum/" %}
+{% else %}
+  {% assign privacy_path = "/" | append: page.lang | append: "/privacy/" %}
+  {% assign impressum_path = "/" | append: page.lang | append: "/impressum/" %}
+{% endif %}
+
+<nav class="menu-section">
+  <h3>{{ t[lang].headings.legal | default: t.en.headings.legal }}</h3>
+  <ul class="legal-list">
+    <li><a href="{{ base }}{{ privacy_path }}">{{ t[lang].labels.privacy | default: t.en.labels.privacy }}</a></li>
+    <li><a href="{{ base }}{{ impressum_path }}">{{ t[lang].labels.impressum | default: t.en.labels.impressum }}</a></li>
+  </ul>
+</nav>

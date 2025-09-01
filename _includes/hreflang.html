@@ -1,0 +1,39 @@
+{%- comment -%}
+Generates alternate hreflang links using site.data.languages.
+Assumes:
+  - site.url and site.baseurl are set in _config.yml (e.g. "https://poml88.github.io/curly-happiness")
+  - each language in site.data.languages has `code` and `path` (like "/de/")
+  - each page sets `lang: de` (or corresponding code) in front matter
+If you have pages with non-parallel structure, add explicit URLs in front matter (page.lang_urls).
+{%- endcomment -%}
+
+{%- assign current_url = page.url -%}
+{%- assign suffix = current_url | remove_first: '/' -%}
+
+{%- for lang in site.data.languages -%}
+  {%- assign base = site.url | append: site.baseurl | append: lang.path -%}
+
+  {%- if suffix == "" -%}
+    {%- assign href = base -%}
+  {%- else -%}
+    {%- assign current_lang_code = page.lang | default: '' -%}
+    {%- if current_lang_code != '' -%}
+      {%- assign clean_suffix = suffix | replace_first: current_lang_code | replace_first: '/' -%}
+      {%- if clean_suffix == '' -%}
+        {%- assign href = base -%}
+      {%- else -%}
+        {%- assign href = base | append: clean_suffix -%}
+      {%- endif -%}
+    {%- else -%}
+      {%- assign href = base | append: suffix -%}
+    {%- endif -%}
+  {%- endif -%}
+
+  <link rel="alternate" hreflang="{{ lang.code }}" href="{{ href }}" /> 
+  
+
+{%- endfor -%}
+
+{%- comment -%} x-default -> point to English base (customize if you prefer other default) {%- endcomment -%}
+{%- assign en = site.data.languages | where: "code","en" | first -%}
+<link rel="alternate" hreflang="x-default" href="{{ en.path | absolute_url }}" />

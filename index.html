@@ -1,0 +1,50 @@
+---
+layout: null
+title: "Redirect"
+permalink: /index.html
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FLwatch</title>
+  {% raw %}
+  <script>
+    (function(){
+      var supported = ['en','de','fr','es','ja','zh-Hans'];
+      function baseFromPath(){
+        var parts = location.pathname.split('/').filter(Boolean);
+        // GitHub Project Pages -> "/<repo-name>/"
+        return parts.length ? '/' + parts[0] : '';
+      }
+      var base = "{{ site.baseurl }}"; // Jekyll will expand this
+      // Fallback in case baseurl isn't expanded (extra safety)
+      if (base.indexOf('{{') === 0) { base = baseFromPath(); }
+      function pick(lang){
+        lang = (lang || 'en').toLowerCase();
+        if(lang.startsWith('de')) return 'de';
+        if(lang.startsWith('fr')) return 'fr';
+        if(lang.startsWith('es')) return 'es';
+        if(lang.startsWith('ja')) return 'ja';
+        if(lang==='zh-cn' || lang==='zh-hans' || lang.startsWith('zh')) return 'zh-Hans';
+        return 'en';
+      }
+      var guess = pick((navigator.languages && navigator.languages[0]) || navigator.language);
+      var target = base + '/' + guess + '/';
+      if (location.pathname !== target) { location.replace(target); }
+    })();
+  </script>
+  {% endraw %}
+</head>
+<body>
+  <p>Redirecting… Choose your language: 
+    <a href="{{ site.baseurl }}/en/">English</a> ·
+    <a href="{{ site.baseurl }}/de/">Deutsch</a> ·
+    <a href="{{ site.baseurl }}/fr/">Français</a> ·
+    <a href="{{ site.baseurl }}/es/">Español</a> ·
+    <a href="{{ site.baseurl }}/ja/">日本語</a> ·
+    <a href="{{ site.baseurl }}/zh-Hans/">简体中文</a>
+  </p>
+</body>
+</html>

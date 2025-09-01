@@ -1,0 +1,169 @@
+:root{
+  --bg:#0b1423;
+  --panel:#0f1b2e;
+  --text:#e6edf3;
+  --muted:#a5b3c4;
+  --brand:#4ea1ff;
+  --accent:#0ea5e9;
+  --btn-bg:#1f2a44;
+  --btn-text:#e6edf3;
+}
+
+@media (prefers-color-scheme: light) {
+:root{
+  --bg:#ffffff;
+  --panel:#f5f7fb;
+  --text:#121417;
+  --muted:#3b3f45;
+  --brand:#2667ff;
+  --accent:#0ea5e9;
+  --btn-bg:#e7eefc;
+  --btn-text:#121417;
+  }
+  
+  /* Make code blocks light when system prefers light */
+  .markdown-body pre,
+  .markdown-body code {
+    background:#f1f3f8;
+  }
+}
+
+html{ color-scheme: light dark; }
+
+body.theme-dark{
+  --bg:#0b1423;
+  --panel:#0f1b2e;
+  --text:#e6edf3;
+  --muted:#a5b3c4;
+  --brand:#4ea1ff;
+  --accent:#0ea5e9;
+  --btn-bg:#1f2a44;
+  --btn-text:#e6edf3;
+}
+
+  /* Light mode details */
+body.theme-dark  .markdown-body pre,
+body.theme-dark  .markdown-body code {
+    background:#0a1220;
+  }
+
+
+body.theme-light{
+  --bg:#ffffff;
+  --panel:#f5f7fb;
+  --text:#121417;
+  --muted:#3b3f45;
+  --brand:#2667ff;
+  --accent:#0ea5e9;
+  --btn-bg:#e7eefc;
+  --btn-text:#121417;
+  }
+  
+  /* Light mode details */
+body.theme-light  .markdown-body pre,
+body.theme-light  .markdown-body code {
+    background:#f1f3f8;
+  }
+
+
+/* Base */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Hero */
+.hero{
+  text-align:center;
+  padding:4rem 1rem 2rem;
+  background:linear-gradient(180deg, rgba(11,20,35,0.9) 0%, rgba(11,20,35,0) 100%);
+}
+.app-icon{width:120px;height:120px;border-radius:24px;display:block;margin:0 auto 1rem;box-shadow:0 6px 30px rgba(78,161,255,.3)}
+.app-title{font-size:2.2rem;margin:.5rem 0}
+.app-subtitle{color:var(--muted);max-width:700px;margin:0 auto 1rem}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:1rem}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:var(--btn-bg);color:var(--btn-text);font-weight:600;border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 2px 12px rgba(0,0,0,.25);
+  line-height:1; overflow:visible; /* keep svg crops crisp */
+  transition:transform .08s ease-out;
+}
+.btn:hover{transform:translateY(-1px);text-decoration:none}
+.btn svg{display:block;width:20px;height:22px;flex:0 0 auto}
+.btn.appstore{align-items:center}
+.btn.appstore span{white-space:nowrap;line-height:1}
+
+/* Layout */
+.main{max-width:900px;margin:0 auto;padding:1rem}
+.content{max-width:960px;margin:0 auto;padding:1rem 1.2rem 3rem}
+.content img{max-width:100%}
+.footer{border-top:1px solid rgba(255,255,255,.08);padding:1rem;text-align:center;color:var(--muted)}
+
+/* Side menu */
+.menu-toggle{
+  position:fixed;top:16px;left:16px;z-index:1001;border:none;background:var(--btn-bg);color:var(--btn-text);padding:11px 12px;border-radius:10px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.3)
+}
+.theme-toggle{
+  position:fixed;top:16px;right:16px;z-index:1001;border:none;background:var(--btn-bg);color:var(--btn-text);padding:11px 12px;border-radius:10px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.3)
+}
+.side-menu{
+  position:fixed;top:0;left:-320px;width:320px;height:100vh;background:var(--panel);color:var(--text);padding:16px 12px;box-shadow:10px 0 30px rgba(0,0,0,.35);transition:left .25s ease;z-index:1002;overflow:auto
+}
+.side-menu.open{left:0}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000}
+.menu-header{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 12px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:8px}
+.menu-header .brand{display:flex;align-items:center;gap:10px;font-weight:700}
+.menu-header img{width:32px;height:32px;border-radius:8px}
+.menu-close{border:none;background:transparent;color:var(--text);font-size:22px;cursor:pointer}
+.menu-section{padding:10px 4px}
+.menu-section h3{margin:.5rem 0;color:var(--muted);font-size:.9rem;text-transform:uppercase;letter-spacing:.08em}
+#toc{list-style:none;padding-left:0;margin:0}
+#toc li{margin:.25rem 0}
+#toc a{color:var(--text);opacity:.9}
+#toc a:hover{opacity:1}
+.lang-list{list-style:none;padding-left:0;margin:0}
+.lang-list li{margin:.35rem 0}
+.lang-list li.active a{font-weight:700}
+.flag{margin-right:.4rem}
+
+/* Markdown */
+.markdown-body h1,.markdown-body h2,.markdown-body h3{scroll-margin-top:80px}
+.markdown-body pre{background:#0a1220;border-radius:8px;padding:12px;overflow:auto}
+.markdown-body code{background:#0a1220;padding:2px 6px;border-radius:6px}
+
+
+/* Home button (sticky, compact) */
+.home-button{
+  position:fixed;
+  top:16px;
+  left:64px; /* to the right of .menu-toggle */
+  z-index:1001;
+  background:var(--btn-bg);
+  color:var(--btn-text);
+  border:none;
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  line-height:1;
+  box-shadow:0 2px 10px rgba(0,0,0,.3);
+  transition:transform .08s ease-out;
+}
+.home-button:hover{transform:translateY(-1px)}
+.home-button:active{transform:translateY(0)}
+.home-button:focus{outline:2px solid var(--brand);outline-offset:2px}
+.home-button svg{width:17px;height:17px;display:block}
+
+/* Icon size bump (~10%) for sticky controls */
+.menu-toggle,.theme-toggle{font-size:110%;line-height:1}
