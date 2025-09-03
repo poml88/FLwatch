@@ -5,16 +5,19 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#0b1423" />
+  
 
-  <!-- Jekyll SEO plugin (single source of truth for title/desc/og/twitter/json-ld/canonical) -->
+  <!-- SEO -->
   {% seo %}
 
   <!-- Hreflang alternate links -->
   {% include hreflang.html %}
 
   <!-- App-specific meta (kept outside seo tag) -->
+  <meta name="robots" content="max-image-preview:large">
   <meta name="apple-itunes-app" content="app-id=6670172928">
-  <link rel="apple-touch-icon" href="{{ '/assets/img/flwatch-icon.png' | relative_url }}">
+  <link rel="icon" href="{{ '/assets/img/favicon.ico' | relative_url }}">
+  <link rel="apple-touch-icon" href="{{ '/assets/img/apple-touch-icon' | relative_url }}">
 
   <!-- Styles & scripts -->
   <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
