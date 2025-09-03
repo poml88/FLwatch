@@ -8,10 +8,7 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch"
 ---
 
-{% include screenshots.html %}
-
-# FLwatch App #
-
+# FLwatch App 
 
 ![Screenshot watch](https://github.com/user-attachments/assets/68ec6106-4866-442d-8e78-bc80ddba2608)![Screenshot phone](https://github.com/user-attachments/assets/68a92ba6-c590-4b3f-87ad-9ab77c36cb8c)
 
@@ -20,7 +17,7 @@ hero_title: "FLwatch"
 
 This software is free and open source. It is being developed out of personal needs, but everyone should be able to benefit from it.
 
-### Usage ###
+### Usage 
 ***Installation:*** Make sure that the watchOS app is installed, ideally before starting the iOS app. Depending on your configuration, the watchOS app is either installed automatically, or has to be installed via the “Watch” app on the phone.
 - The app needs iOS 17.5 and watchOS 10.5
 - TestFlight: https://testflight.apple.com/join/HwgkwcGz
@@ -37,7 +34,7 @@ This software is free and open source. It is being developed out of personal nee
 - To use Siri to open the app handsfree you can create a shortcut on the phone called for example „glucose graph“ or “blood sugar”. This shortcut just opens FLwatch. Select the shortcut option „show on watch“. Now, if you activate Siri, you just say „glucose graph“ and, voila, it shows the app FLwatch and its graph.
 Same works on the phone.
 
-### Features ###
+### Features 
 * blood glucose graph on phone and watch
 * interactive chart on phone to display individual values on tap
 * phone screen always on mode
@@ -49,18 +46,18 @@ Same works on the phone.
 * stand by mode widget
 * watchOS widgets / complications
 
-### ToDo ###
+### ToDo 
 - Widget with BG graph
 
-### Support and Feedback ###
+### Support and Feedback 
 For support please open an issue, start a discussion or email **flwatch [ a t ] cmdline [ d o t ] net**. Feedback is very welcome, please use the same methods as for support.
 
-### Donations... ###
+### Donations... 
 ...are always very welcome! [paypal.me/lovemyhusky](paypal.me/lovemyhusky)
 
 Please have a look at these projects as well:
 
-### Credits: ###
+### Credits: 
 [DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard]( https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
 All product and company names, trademarks, service marks, registered trademarks, and registered service marks are the property of their respective holders. Their use is for information purposes and does not imply any affiliation with or endorsement by them. Please note: this app has no connection with and is not endorsed by Abbott Diabetes Care Inc.
