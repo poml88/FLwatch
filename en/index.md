@@ -8,6 +8,8 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch"
 ---
 
+{% include screenshots.html %}
+
 # FLwatch App #
 
 
