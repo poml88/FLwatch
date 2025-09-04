@@ -73,36 +73,58 @@ comment: SEO copied from English page - check from time to time
 </script>
 
 
+var hash = location.hash || "";
+var target = base + '/' + guess + '/' + hash; // append #usage if present
+if(location.pathname + location.hash !== target){
+  location.replace(target);
+}
 
 
 
   
   {% raw %}
+  
+  
+  
   <script>
-    (function(){
-      var supported = ['en','de','fr','es','ja','zh-Hans'];
-      function baseFromPath(){
-        var parts = location.pathname.split('/').filter(Boolean);
-        // GitHub Project Pages -> "/<repo-name>/"
-        return parts.length ? '/' + parts[0] : '';
-      }
-      var base = "{{ site.baseurl }}"; // Jekyll will expand this
-      // Fallback in case baseurl isn't expanded (extra safety)
-      if (base.indexOf('{{') === 0) { base = baseFromPath(); }
-      function pick(lang){
-        lang = (lang || 'en').toLowerCase();
-        if(lang.startsWith('de')) return 'de';
-        if(lang.startsWith('fr')) return 'fr';
-        if(lang.startsWith('es')) return 'es';
-        if(lang.startsWith('ja')) return 'ja';
-        if(lang==='zh-cn' || lang==='zh-hans' || lang.startsWith('zh')) return 'zh-Hans';
-        return 'en';
-      }
-      var guess = pick((navigator.languages && navigator.languages[0]) || navigator.language);
-      var target = base + '/' + guess + '/';
-      if (location.pathname !== target) { location.replace(target); }
-    })();
-  </script>
+(function(){
+  var supported = ['en','de','fr','es','ja','zh-Hans'];
+
+  function baseFromPath(){
+    var parts = location.pathname.split('/').filter(Boolean);
+    // GitHub Project Pages -> "/<repo-name>/"
+    return parts.length ? '/' + parts[0] : '';
+  }
+
+  var base = "{{ site.baseurl }}"; // Jekyll will expand this
+  // Fallback in case baseurl isn't expanded (extra safety)
+  if (base.indexOf('{{') === 0) { base = baseFromPath(); }
+
+  function pick(lang){
+    lang = (lang || 'en').toLowerCase();
+    if(lang.startsWith('de')) return 'de';
+    if(lang.startsWith('fr')) return 'fr';
+    if(lang.startsWith('es')) return 'es';
+    if(lang.startsWith('ja')) return 'ja';
+    if(lang==='zh-cn' || lang==='zh-hans' || lang.startsWith('zh')) return 'zh-Hans';
+    return 'en';
+  }
+
+  var guess = pick((navigator.languages && navigator.languages[0]) || navigator.language);
+
+  // preserve fragment/hash
+  var hash = location.hash || "";
+
+  var target = base + '/' + guess + '/' + hash;
+
+  // Only redirect if URL differs
+  if ((location.pathname + location.hash) !== target) {
+    location.replace(target);
+  }
+})();
+</script>
+
+
   {% endraw %}
 </head>
 <body>
