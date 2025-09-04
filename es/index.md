@@ -1,24 +1,21 @@
 ---
 layout: landing
-title: "FLwatch — Glucosa en iPhone y Apple Watch"
+title: "FLwatch Gráfico glucosa sensor"
 description: "FLwatch muestra tus lecturas de glucosa LibreLinkUp en iPhone y Apple Watch. App open-source con cálculo de insulina activa y widgets."
 lang: es
 permalink: /es/
 image: /assets/images/app-preview-optimized.png
-hero_title: "FLwatch"
+hero_title: "FLwatch Gráfico glucosa sensor"
 ---
 
-# Aplicación FLwatch #
-
-![Screenshot watch](https://github.com/user-attachments/assets/68ec6106-4866-442d-8e78-bc80ddba2608)![Screenshot phone](https://github.com/user-attachments/assets/68a92ba6-c590-4b3f-87ad-9ab77c36cb8c)
 
 
 ***Advertencia: ¡Este proyecto es altamente experimental! Utilice esta aplicación con precaución y extremo cuidado. No tome decisiones imprudentes basándose en el software. No utilice este software si no está seguro. No utilice esta aplicación para tomar decisiones médicas. No ofrece absolutamente ninguna garantía. ¡Úsela bajo su propia responsabilidad!***
 
 Este software es gratuito y de código abierto. Se ha desarrollado para satisfacer necesidades personales, pero todo el mundo debería poder beneficiarse de él.
 
-### Uso ###
-*** Instalación:*** Asegúrese de que la aplicación watchOS está instalada, idealmente antes de iniciar la aplicación iOS. Dependiendo de su configuración, la aplicación watchOS se instala automáticamente o debe instalarse a través de la aplicación «Watch» del teléfono.
+### Uso 
+***Instalación:*** Asegúrese de que la aplicación watchOS está instalada, idealmente antes de iniciar la aplicación iOS. Dependiendo de su configuración, la aplicación watchOS se instala automáticamente o debe instalarse a través de la aplicación «Watch» del teléfono.
 - La aplicación necesita iOS 17.5 y watchOS 10.5
 - TestFlight: https://testflight.apple.com/join/HwgkwcGz
 - AppStore: https://apps.apple.com/app/flwatch/id6670172928
@@ -34,7 +31,7 @@ Este software es gratuito y de código abierto. Se ha desarrollado para satisfac
 - Para utilizar Siri y abrir la aplicación sin usar las manos, puedes crear un acceso directo en el teléfono llamado, por ejemplo, «gráfico de glucosa» o «azúcar en sangre». Este acceso directo solo abre FLwatch. Selecciona la opción de acceso directo «mostrar en el reloj». Ahora, si activas Siri, solo tienes que decir «gráfico de glucosa» y, voilà, aparecerá la aplicación FLwatch y su gráfico.
 Lo mismo funciona en el teléfono.
 
-### Características ###
+### Características 
 * Gráfico de glucosa en sangre en el teléfono y el reloj
 * Gráfico interactivo en el teléfono para mostrar valores individuales con solo tocar la pantalla
 * Modo de pantalla siempre encendida en el teléfono
@@ -46,18 +43,18 @@ Lo mismo funciona en el teléfono.
 * Widget de modo de espera
 * Widgets/complicaciones de watchOS
 
-### Tareas pendientes ###
+### Tareas pendientes 
 - Widget con gráfico de glucosa en sangre
 
-### Asistencia y comentarios ###
+### Asistencia y comentarios 
 Para obtener asistencia, abra un ticket, inicie un debate o envíe un correo electrónico a **flwatch [ a t ] cmdline [ d o t ] net**. Agradecemos cualquier comentario. Utilice los mismos métodos que para la asistencia.
 
-### Donaciones... ###...
+### Donaciones... 
  ¡siempre son bienvenidas! [paypal.me/lovemyhusky](paypal.me/lovemyhusky)
 
 Echa un vistazo también a estos proyectos:
 
-### Créditos: ###
+### Créditos: 
 [DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard]( https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
 Todos los nombres de productos y empresas, marcas comerciales, marcas de servicio, marcas registradas y marcas de servicio registradas son propiedad de sus respectivos titulares. Su uso tiene fines informativos y no implica ninguna afiliación ni respaldo por parte de estos. Nota: esta aplicación no tiene ninguna relación con Abbott Diabetes Care Inc. ni cuenta con su respaldo.

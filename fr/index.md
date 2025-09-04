@@ -17,7 +17,7 @@ hero_title: "FLwatch: Graphique glycémie"
 Ce logiciel est gratuit et open source. Il est développé pour répondre à des besoins personnels, mais tout le monde devrait pouvoir en bénéficier.
 
 ### Utilisation 
-*** Installation :*** Assurez-vous que l'application watchOS est installée, idéalement avant de lancer l'application iOS. Selon votre configuration, l'application watchOS est soit installée automatiquement, soit doit être installée via l'application « Watch » sur le téléphone.
+***Installation :*** Assurez-vous que l'application watchOS est installée, idéalement avant de lancer l'application iOS. Selon votre configuration, l'application watchOS est soit installée automatiquement, soit doit être installée via l'application « Watch » sur le téléphone.
 - L'application nécessite iOS 17.5 et watchOS 10.5
 - TestFlight : https://testflight.apple.com/join/HwgkwcGz
 - AppStore : https://apps.apple.com/app/flwatch/id6670172928

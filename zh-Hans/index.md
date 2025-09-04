@@ -1,24 +1,20 @@
 ---
 layout: landing
-title: "FLwatch — iPhone 与 Apple Watch 的血糖"
+title: "FLwatch：血糖传感器图表"
 description: "FLwatch 在 iPhone 与 Apple Watch 上显示 LibreLinkUp 血糖读数。开源应用，带有在体胰岛素 (IOB) 计算和小组件。"
 lang: zh-Hans
 permalink: /zh-Hans/
 image: /assets/images/app-preview-optimized.png
-hero_title: "FLwatch"
+hero_title: "FLwatch：血糖传感器图表"
 ---
-
-# FLwatch 应用 #
-
-![Screenshot watch](https://github.com/user-attachments/assets/68ec6106-4866-442d-8e78-bc80ddba2608)![Screenshot phone](https://github.com/user-attachments/assets/68a92ba6-c590-4b3f-87ad-9ab77c36cb8c)
 
 
 ***警告：本项目具有高度实验性！使用本应用时请务必谨慎小心。切勿基于软件做出草率决定。如有疑虑请勿使用。本应用不可用于医疗决策。完全不提供任何形式的担保。使用风险自负！***
 
 本软件为免费开源项目。虽源于个人需求开发，但旨在惠及所有用户。
 
-### 使用指南 ###
-*** 安装说明：***请确保已安装watchOS应用程序，建议在启动iOS应用前完成安装。根据设备配置，watchOS应用可能自动安装，或需通过手机端“Watch”应用手动安装。
+### 使用指南
+***安装说明：***请确保已安装watchOS应用程序，建议在启动iOS应用前完成安装。根据设备配置，watchOS应用可能自动安装，或需通过手机端“Watch”应用手动安装。
 - 需iOS 17.5及watchOS 10.5系统
 - TestFlight测试版：https://testflight.apple.com/join/HwgkwcGz
 - AppStore：https://apps.apple.com/app/flwatch/id6670172928
@@ -34,7 +30,7 @@ hero_title: "FLwatch"
 - 通过Siri免提开启应用时，可在手机创建名为“血糖曲线”或“血糖值”的快捷指令。该指令仅需开启FLwatch应用。选择快捷指令选项中的“在手表上显示”。现在激活Siri时，只需说出“血糖曲线”，FLwatch应用及其图表便会立即显示。
 此方法同样适用于手机端。
 
-### 功能特色 ###
+### 功能特色 
 * 手机与手表端血糖曲线图
 * 手机端交互式图表，轻点即可查看单次数值
 * 手机屏幕常亮模式
@@ -46,18 +42,18 @@ hero_title: "FLwatch"
 * 待机模式小组件
 * watchOS 小组件/并发功能
 
-### 待办事项 ###
+### 待办事项 
 - 带血糖曲线图的组件
 
-### 支持与反馈 ###
+### 支持与反馈 
 如需技术支持，请提交问题、发起讨论或发送邮件至 **flwatch [ a t ] cmdline [ d o t ] net**。我们非常欢迎反馈，请通过上述支持渠道提交。
 
-### 捐赠... ###
+### 捐赠... 
 ...永远欢迎！[paypal.me/lovemyhusky](paypal.me/lovemyhusky)
 
 同时欢迎关注以下项目：
 
-### 鸣谢： ###
+### 鸣谢： 
 [DiaBLE](https://github.com/gui-dos/DiaBLE)、[LoopKit](https://github.com/LoopKit)、[GlucoseDirect](https://github.com/creepymonster/GlucoseDirect)、[Nightguard]( https://github.com/nightscout/nightguard)、 [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
 所有产品及公司名称、商标、服务标记、注册商标及注册服务标记均为其各自所有者的财产。此处使用仅为信息目的，不暗示与之存在任何关联或获得其认可。请注意：本应用与雅培糖尿病护理公司无关，亦未获得其认可。

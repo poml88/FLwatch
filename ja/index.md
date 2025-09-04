@@ -1,24 +1,21 @@
 ---
 layout: landing
-title: "FLwatch — iPhone と Apple Watch のグルコース"
+title: "FLwatch：血糖値センサーグラフ"
 description: "FLwatch は LibreLinkUp の血糖値を iPhone と Apple Watch に表示します。オープンソースで、IOB 計算とウィジェットを搭載。"
 lang: ja
 permalink: /ja/
 image: /assets/images/app-preview-optimized.png
-hero_title: "FLwatch"
+hero_title: "FLwatch：血糖値センサーグラフ"
 ---
 
-# FLwatch アプリ #
-
-![Screenshot watch](https://github.com/user-attachments/assets/68ec6106-4866-442d-8e78-bc80ddba2608)![Screenshot phone](https://github.com/user-attachments/assets/68a92ba6-c590-4b3f-87ad-9ab77c36cb8c)
 
 
 ***警告：本プロジェクトは高度に実験的なものです！本アプリは細心の注意を払ってご利用ください。ソフトウェアに基づいて軽率な判断を下さないでください。確信が持てない場合は本ソフトウェアを使用しないでください。医療判断のために本アプリを使用しないでください。一切の保証はありません。ご自身の責任においてご利用ください！***
 
 本ソフトウェアは無料かつオープンソースです。個人的な必要性から開発されていますが、誰もがその恩恵を受けられるべきです。
 
-### 使用方法 ###
-*** インストール方法:*** watchOSアプリがインストールされていることを確認してください（iOSアプリ起動前に実施が望ましい）。環境設定により、watchOSアプリは自動インストールされるか、スマートフォン上の「Watch」アプリ経由で手動インストールが必要です。
+### 使用方法 
+***インストール方法:*** watchOSアプリがインストールされていることを確認してください（iOSアプリ起動前に実施が望ましい）。環境設定により、watchOSアプリは自動インストールされるか、スマートフォン上の「Watch」アプリ経由で手動インストールが必要です。
 - 動作環境: iOS 17.5 以上、watchOS 10.5 以上
 - TestFlight: https://testflight.apple.com/join/HwgkwcGz
 - AppStore: https://apps.apple.com/app/flwatch/id6670172928
@@ -34,7 +31,7 @@ hero_title: "FLwatch"
 - Siriでハンズフリー操作する場合、スマートフォンに「血糖値グラフ」や「血糖値」といったショートカットを作成します。このショートカットはFLwatchを起動するだけです。「ウォッチに表示」オプションを選択してください。Siriを起動し「血糖値グラフ」と発声すると、FLwatchアプリとそのグラフが表示されます。
 スマートフォンでも同様の操作が可能です。
 
-### 機能 ###
+### 機能 
 * スマートフォンとウォッチでの血糖値グラフ表示
 * スマートフォン上のインタラクティブチャート（タップで個別値を表示）
 * スマートフォン画面常時表示モード
@@ -46,18 +43,18 @@ hero_title: "FLwatch"
 * スタンバイモードウィジェット
 * watchOSウィジェット / コンプリケーション
 
-### 開発予定 ###
+### 開発予定 
 - 血糖値グラフ付きウィジェット
 
-### サポートとフィードバック ###
+### サポートとフィードバック 
 サポートが必要な場合は、イシューを開く、ディスカッションを開始する、または **flwatch [ a t ] cmdline [ d o t ] net** までメールをお送りください。フィードバックは大歓迎です。サポートと同様の方法でお寄せください。
 
-### 寄付について... ###
+### 寄付について... 
 ...いつでも大歓迎です！[paypal.me/lovemyhusky](paypal.me/lovemyhusky)
 
 以下のプロジェクトもぜひご覧ください：
 
-### クレジット: ###
+### クレジット: 
 [DiaBLE](https://github.com/gui-dos/DiaBLE)、[LoopKit](https://github.com/LoopKit)、[GlucoseDirect](https://github.com/creepymonster/GlucoseDirect)、[Nightguard]( https://github.com/nightscout/nightguard)、 [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
 すべての製品名、会社名、商標、サービスマーク、登録商標、登録サービスマークは、それぞれの所有者に帰属します。それらの使用は情報提供を目的としたものであり、いかなる提携や推奨を意味するものではありません。ご注意：本アプリはアボット・ダイアベティス・ケア社とは一切関係がなく、同社の推奨を受けていません。
