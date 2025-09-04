@@ -13,7 +13,7 @@ hero_title: "FLwatch：血糖传感器图表"
 
 本软件为免费开源项目。虽源于个人需求开发，但旨在惠及所有用户。
 
-### 使用指南
+### 使用指南 {#usage}
 ***安装说明：***请确保已安装watchOS应用程序，建议在启动iOS应用前完成安装。根据设备配置，watchOS应用可能自动安装，或需通过手机端“Watch”应用手动安装。
 - 需iOS 17.5及watchOS 10.5系统
 - TestFlight测试版：https://testflight.apple.com/join/HwgkwcGz
@@ -45,7 +45,7 @@ hero_title: "FLwatch：血糖传感器图表"
 ### 待办事项 
 - 带血糖曲线图的组件
 
-### 支持与反馈 
+### 支持与反馈 {#support}
 如需技术支持，请提交问题、发起讨论或发送邮件至 **flwatch [ a t ] cmdline [ d o t ] net**。我们非常欢迎反馈，请通过上述支持渠道提交。
 
 ### 捐赠... 

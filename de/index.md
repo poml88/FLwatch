@@ -14,7 +14,7 @@ hero_title: "FLwatch: Glukose Sensor Graph"
 
 Diese Software ist kostenlos und Open Source. Sie wurde aus persönlichen Bedürfnissen heraus entwickelt, aber jeder sollte davon profitieren können.
 
-### Verwendung 
+### Verwendung {#usage}
 ***Installation:*** Stellen Sie sicher, dass die watchOS-App installiert ist, idealerweise bevor Sie die iOS-App starten. Je nach Ihrer Konfiguration wird die watchOS-App entweder automatisch installiert oder muss über die „Watch”-App auf dem Telefon installiert werden.
 - Die App benötigt iOS 17.5 und watchOS 10.5
 - TestFlight: https://testflight.apple.com/join/HwgkwcGz
@@ -47,7 +47,7 @@ Das Gleiche funktioniert auch auf dem Telefon.
 ### ToDo 
 - Widget mit Blutzuckerdiagramm
 
-### Support und Feedback 
+### Support und Feedback {#support}
 Für Support öffnen Sie bitte ein Ticket, starten Sie eine Diskussion oder senden Sie eine E-Mail an **flwatch [ a t ] cmdline [ d o t ] net**. Feedback ist sehr willkommen, bitte nutzen Sie die gleichen Kontaktmöglichkeiten wie für den Support.
 
 ### Spenden... 

@@ -14,7 +14,7 @@ hero_title: "FLwatch Gráfico glucosa sensor"
 
 Este software es gratuito y de código abierto. Se ha desarrollado para satisfacer necesidades personales, pero todo el mundo debería poder beneficiarse de él.
 
-### Uso 
+### Uso {#usage}
 ***Instalación:*** Asegúrese de que la aplicación watchOS está instalada, idealmente antes de iniciar la aplicación iOS. Dependiendo de su configuración, la aplicación watchOS se instala automáticamente o debe instalarse a través de la aplicación «Watch» del teléfono.
 - La aplicación necesita iOS 17.5 y watchOS 10.5
 - TestFlight: https://testflight.apple.com/join/HwgkwcGz
@@ -46,7 +46,7 @@ Lo mismo funciona en el teléfono.
 ### Tareas pendientes 
 - Widget con gráfico de glucosa en sangre
 
-### Asistencia y comentarios 
+### Asistencia y comentarios {#support}
 Para obtener asistencia, abra un ticket, inicie un debate o envíe un correo electrónico a **flwatch [ a t ] cmdline [ d o t ] net**. Agradecemos cualquier comentario. Utilice los mismos métodos que para la asistencia.
 
 ### Donaciones... 
