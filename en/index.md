@@ -8,7 +8,7 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch - Glucose Sensor Graph"
 ---
  
-{% include screenshots.html %}
+
 
 
 ***Warning, This project is highly experimental! Please use this app with caution and extreme care. Do not make careless decisions based on software. Do not use this software if you are unsure. Don’t use this App for medical decisions. It comes without absolutely no warranty. Use it at your own risk!***
@@ -51,6 +51,8 @@ For support please open an issue, start a discussion or email **flwatch [ a t ] 
 
 ### Donations... 
 ...are always very welcome! [paypal.me/lovemyhusky](paypal.me/lovemyhusky)
+
+{% include screenshots.html %}
 
 Please have a look at these projects as well:
 

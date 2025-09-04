@@ -8,7 +8,7 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch：血糖値センサーグラフ"
 ---
 
-{% include screenshots.html %}
+
 
 ***警告：本プロジェクトは高度に実験的なものです！本アプリは細心の注意を払ってご利用ください。ソフトウェアに基づいて軽率な判断を下さないでください。確信が持てない場合は本ソフトウェアを使用しないでください。医療判断のために本アプリを使用しないでください。一切の保証はありません。ご自身の責任においてご利用ください！***
 
@@ -50,6 +50,8 @@ hero_title: "FLwatch：血糖値センサーグラフ"
 
 ### 寄付について... 
 ...いつでも大歓迎です！[paypal.me/lovemyhusky](paypal.me/lovemyhusky)
+
+{% include screenshots.html %}
 
 以下のプロジェクトもぜひご覧ください：
 

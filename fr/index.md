@@ -9,9 +9,6 @@ hero_title: "FLwatch: Graphique glycémie"
 ---
 
 
-{% include screenshots.html %}
-
-
 ***Attention, ce projet est hautement expérimental ! Veuillez utiliser cette application avec prudence et extrême précaution. Ne prenez pas de décisions irréfléchies sur la base du logiciel. N'utilisez pas ce logiciel si vous n'êtes pas sûr. N'utilisez pas cette application pour prendre des décisions médicales. Elle est fournie sans aucune garantie. Utilisez-la à vos propres risques !***
 
 Ce logiciel est gratuit et open source. Il est développé pour répondre à des besoins personnels, mais tout le monde devrait pouvoir en bénéficier.
@@ -52,6 +49,8 @@ Pour obtenir de l'aide, veuillez ouvrir un ticket, lancer une discussion ou envo
 
 ### Dons... 
 ...sont toujours les bienvenus ! [paypal.me/lovemyhusky](paypal.me/lovemyhusky)
+
+{% include screenshots.html %}
 
 N'hésitez pas à consulter également ces projets :
 

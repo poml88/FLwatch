@@ -7,7 +7,7 @@ permalink: /zh-Hans/
 image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch：血糖传感器图表"
 ---
-{% include screenshots.html %}
+
 
 ***警告：本项目具有高度实验性！使用本应用时请务必谨慎小心。切勿基于软件做出草率决定。如有疑虑请勿使用。本应用不可用于医疗决策。完全不提供任何形式的担保。使用风险自负！***
 
@@ -49,6 +49,8 @@ hero_title: "FLwatch：血糖传感器图表"
 
 ### 捐赠... 
 ...永远欢迎！[paypal.me/lovemyhusky](paypal.me/lovemyhusky)
+
+{% include screenshots.html %}
 
 同时欢迎关注以下项目：
 
