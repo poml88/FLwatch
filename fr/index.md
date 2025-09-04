@@ -1,23 +1,22 @@
 ---
 layout: landing
-title: "FLwatch — Glucose sur iPhone & Apple Watch"
+title: "FLwatch: Graphique glycémie"
 description: "FLwatch affiche vos valeurs de glucose LibreLinkUp sur iPhone et Apple Watch. Application open-source avec calcul d'insuline active et widgets."
 lang: fr
 permalink: /fr/
 image: /assets/images/app-preview-optimized.png
-hero_title: "FLwatch"
+hero_title: "FLwatch: Graphique glycémie"
 ---
 
-# FLwatch
 
-![Screenshot watch](https://github.com/user-attachments/assets/68ec6106-4866-442d-8e78-bc80ddba2608)![Screenshot phone](https://github.com/user-attachments/assets/68a92ba6-c590-4b3f-87ad-9ab77c36cb8c)
+
 
 
 ***Attention, ce projet est hautement expérimental ! Veuillez utiliser cette application avec prudence et extrême précaution. Ne prenez pas de décisions irréfléchies sur la base du logiciel. N'utilisez pas ce logiciel si vous n'êtes pas sûr. N'utilisez pas cette application pour prendre des décisions médicales. Elle est fournie sans aucune garantie. Utilisez-la à vos propres risques !***
 
 Ce logiciel est gratuit et open source. Il est développé pour répondre à des besoins personnels, mais tout le monde devrait pouvoir en bénéficier.
 
-### Utilisation ###
+### Utilisation 
 *** Installation :*** Assurez-vous que l'application watchOS est installée, idéalement avant de lancer l'application iOS. Selon votre configuration, l'application watchOS est soit installée automatiquement, soit doit être installée via l'application « Watch » sur le téléphone.
 - L'application nécessite iOS 17.5 et watchOS 10.5
 - TestFlight : https://testflight.apple.com/join/HwgkwcGz
@@ -34,7 +33,7 @@ Ce logiciel est gratuit et open source. Il est développé pour répondre à des
 - Pour utiliser Siri afin d'ouvrir l'application en mode mains libres, vous pouvez créer un raccourci sur le téléphone appelé, par exemple, « graphique de glucose » ou « glycémie ». Ce raccourci ouvre simplement FLwatch. Sélectionnez l'option de raccourci « afficher sur la montre ». Désormais, si vous activez Siri, il vous suffit de dire « graphique de glucose » et, voilà, l'application FLwatch et son graphique s'affichent.
 Cela fonctionne de la même manière sur le téléphone.
 
-### Fonctionnalités ###
+### Fonctionnalités 
 * Graphique de glycémie sur le téléphone et la montre
 * Graphique interactif sur le téléphone pour afficher les valeurs individuelles d'un simple toucher
 * Mode écran toujours allumé sur le téléphone
@@ -46,18 +45,18 @@ Cela fonctionne de la même manière sur le téléphone.
 * Widget en mode veille
 * Widgets watchOS / complications
 
-### À faire ###
+### À faire 
 - Widget avec graphique de glycémie
 
-### Assistance et commentaires ###
+### Assistance et commentaires
 Pour obtenir de l'aide, veuillez ouvrir un ticket, lancer une discussion ou envoyer un e-mail à **flwatch [ a t ] cmdline [ d o t ] net**. Vos commentaires sont les bienvenus, veuillez utiliser les mêmes méthodes que pour l'assistance.
 
-### Dons... ###
+### Dons... 
 ...sont toujours les bienvenus ! [paypal.me/lovemyhusky](paypal.me/lovemyhusky)
 
 N'hésitez pas à consulter également ces projets :
 
-### Crédits : ###
+### Crédits : 
 [DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard]( https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
 Tous les noms de produits et de sociétés, marques commerciales, marques de service, marques déposées et marques de service déposées sont la propriété de leurs détenteurs respectifs. Leur utilisation est à titre informatif et n'implique aucune affiliation ou recommandation de leur part. Remarque : cette application n'a aucun lien avec Abbott Diabetes Care Inc. et n'est pas recommandée par cette société.
