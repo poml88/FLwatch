@@ -113,14 +113,25 @@
 
   <!-- Main content -->
   <main class="content markdown-body">
-   <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+  <style>
+  @media (max-width: 480px) {
+  .hero-screenshot {
+      gap:1rem; 
+    }
+    .hero-screenshot-box {
+      flex: 0 0 75px;
+      height: 150px;
+    }
+  }
+</style>
+   <div class="hero-screenshot" style="display:flex; justify-content:center; gap:2rem; flex-wrap:wrap;">
     <!-- Screenshot 1 -->
-    <div style="flex:0 0 75px; height:150px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+    <div class="hero-screenshot-box" style="flex:0 0 75px; height:150px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
       <img src="{{ '/assets/img/hero-iphone.png' | relative_url }}" alt="FLwatch iPhone screenshot" style="width:100%; display:block;">
     </div>
 
     <!-- Screenshot 2 -->
-    <div style="flex:0 0 75px; height:150px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+    <div class="hreo-screenshot-box" style="flex:0 0 75px; height:150px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
       <img src="{{ '/assets/img/hero-watch.png' | relative_url }}" alt="FLwatch Apple Watch screenshot" style="width:100%; display:block;">
     </div>
   </div>
