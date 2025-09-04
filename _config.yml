@@ -1,5 +1,6 @@
 title: "FLwatch - Glucose Sensor Graph"
 description: "FLwatch displays your blood glucose graph and more on iPhone and Apple Watch. Open-source app with insulin on board calculation and widgets."
+screenshots_string: Screenshots
 url: "https://poml88.github.io"
 baseurl: "/FLwatch"
 permalink: pretty
