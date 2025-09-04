@@ -14,8 +14,8 @@ hero_title: "FLwatch: Glukose Sensor Graph"
 
 Diese Software ist kostenlos und Open Source. Sie wurde aus persönlichen Bedürfnissen heraus entwickelt, aber jeder sollte davon profitieren können.
 
-### Verwendung ###
-*** Installation:*** Stellen Sie sicher, dass die watchOS-App installiert ist, idealerweise bevor Sie die iOS-App starten. Je nach Ihrer Konfiguration wird die watchOS-App entweder automatisch installiert oder muss über die „Watch”-App auf dem Telefon installiert werden.
+### Verwendung 
+***Installation:*** Stellen Sie sicher, dass die watchOS-App installiert ist, idealerweise bevor Sie die iOS-App starten. Je nach Ihrer Konfiguration wird die watchOS-App entweder automatisch installiert oder muss über die „Watch”-App auf dem Telefon installiert werden.
 - Die App benötigt iOS 17.5 und watchOS 10.5
 - TestFlight: https://testflight.apple.com/join/HwgkwcGz
 - AppStore: https://apps.apple.com/app/flwatch/id6670172928
@@ -32,7 +32,7 @@ Diese Software ist kostenlos und Open Source. Sie wurde aus persönlichen Bedür
 Das Gleiche funktioniert auch auf dem Telefon.
 
 
-### Funktionen ###
+### Funktionen 
 * Blutzucker-Diagramm auf Smartphone und Uhr
 * Interaktives Diagramm auf dem Smartphone zur Anzeige einzelner Werte per Fingertipp
 * Smartphone-Bildschirm im Always-On-Modus
@@ -44,18 +44,18 @@ Das Gleiche funktioniert auch auf dem Telefon.
 * Widget für den Standby-Modus
 * watchOS-Widgets / Komplikationen
 
-### ToDo ###
+### ToDo 
 - Widget mit Blutzuckerdiagramm
 
-### Support und Feedback ###
+### Support und Feedback 
 Für Support öffnen Sie bitte ein Ticket, starten Sie eine Diskussion oder senden Sie eine E-Mail an **flwatch [ a t ] cmdline [ d o t ] net**. Feedback ist sehr willkommen, bitte nutzen Sie die gleichen Kontaktmöglichkeiten wie für den Support.
 
-### Spenden... ###
+### Spenden... 
 ...sind immer sehr willkommen! [paypal.me/lovemyhusky](paypal.me/lovemyhusky)
 
 Bitte schauen Sie sich auch diese Projekte an:
 
-### Danksagungen: ###
+### Danksagungen: 
 [DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard]( https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
 Alle Produkt- und Firmennamen, Marken, Dienstleistungsmarken, eingetragenen Marken und eingetragenen Dienstleistungsmarken sind Eigentum ihrer jeweiligen Inhaber. Ihre Verwendung dient ausschließlich Informationszwecken und bedeutet keine Zugehörigkeit zu oder Billigung durch diese. Bitte beachten Sie: Diese App steht in keiner Verbindung zu Abbott Diabetes Care Inc. und wird von diesem Unternehmen nicht unterstützt.
