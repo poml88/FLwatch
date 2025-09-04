@@ -18,8 +18,7 @@ This software is free and open source. It is being developed out of personal nee
 ### Usage {#usage}
 ***Installation:*** Make sure that the watchOS app is installed, ideally before starting the iOS app. Depending on your configuration, the watchOS app is either installed automatically, or has to be installed via the “Watch” app on the phone.
 - The app needs iOS 17.5 and watchOS 10.5
-- TestFlight: https://testflight.apple.com/join/HwgkwcGz
-- AppStore: https://apps.apple.com/app/flwatch/id6670172928
+- TestFlight: (https://testflight.apple.com/join/HwgkwcGz)
 - Settings are made in the iOS app and are then transferred to the watchOS app. This only works if the watchOS app is installed on the watch.
 - ***Establishing the connection between the apps:*** To make things work, you have to first invite yourself to become your own follower. *LibreView credentials do not work.* To do this, in the LibreLink / Libre 3 app under Share / Connected Apps, there is a Connect / Manage LibreLinkUp item. Tap “Add Connection” and enter the email address you would like to use for the follower account, and an invitation is sent to that address (the email address can be the same as for LibreView). Then, to set up the LibreLinkUp follower account, install the [LibreLinkUp App](https://apps.apple.com/us/app/librelinkup/id1234323923) on the phone and follow the instructions using the email address you just invited. There is a [Step by Step Guide](https://www.librelinkup.com/articles/getting-started) you might find useful. Make sure you can see your own blood glucose graph in the LibreLinkUp app. Lastly, open FLwatch and enter the credentials of the follower account, see below. Only one followed patient per follower account is currently supported by FLwatch.
 - The LibreLinkUp app can then be closed or uninstalled, but maybe needed later to accept new Terms of Use, Privacy Policies, or just to check that the account / connection works.
