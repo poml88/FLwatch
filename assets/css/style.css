@@ -144,7 +144,7 @@ a:hover{text-decoration:underline}
 .home-button{
   position:fixed;
   top:16px;
-  left:64px; /* to the right of .menu-toggle */
+  left:96px; /* to the right of .menu-toggle */
   z-index:1001;
   background:var(--btn-bg);
   color:var(--btn-text);
