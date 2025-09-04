@@ -8,7 +8,7 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch: Glukose Sensor Graph"
 ---
 
-
+{% include screenshots.html %}
 
 ***Warnung: Dieses Projekt ist sehr experimentell! Bitte verwenden Sie diese App mit Vorsicht und äußerster Sorgfalt. Treffen Sie keine unüberlegten Entscheidungen auf Grundlage der Software. Verwenden Sie diese Software nicht, wenn Sie sich unsicher sind. Verwenden Sie diese App nicht für medizinische Entscheidungen. Es wird keinerlei Garantie übernommen. Die Verwendung erfolgt auf eigene Gefahr!***
 

@@ -9,7 +9,7 @@ hero_title: "FLwatch: Graphique glycémie"
 ---
 
 
-
+{% include screenshots.html %}
 
 
 ***Attention, ce projet est hautement expérimental ! Veuillez utiliser cette application avec prudence et extrême précaution. Ne prenez pas de décisions irréfléchies sur la base du logiciel. N'utilisez pas ce logiciel si vous n'êtes pas sûr. N'utilisez pas cette application pour prendre des décisions médicales. Elle est fournie sans aucune garantie. Utilisez-la à vos propres risques !***
