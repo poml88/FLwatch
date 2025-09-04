@@ -16,8 +16,7 @@ hero_title: "FLwatch：血糖传感器图表"
 ### 使用指南 {#usage}
 ***安装说明：***请确保已安装watchOS应用程序，建议在启动iOS应用前完成安装。根据设备配置，watchOS应用可能自动安装，或需通过手机端“Watch”应用手动安装。
 - 需iOS 17.5及watchOS 10.5系统
-- TestFlight测试版：https://testflight.apple.com/join/HwgkwcGz
-- AppStore：https://apps.apple.com/app/flwatch/id6670172928
+- TestFlight测试版：[https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
 - 设置在iOS应用中完成后会同步至watchOS应用。此功能仅在手表已安装watchOS应用时生效。
 - ***建立应用间连接：*** 需先邀请自己成为自己的关注者。*LibreView凭证无法使用*。操作步骤：在LibreLink/Libre 3应用的“共享/关联应用”菜单中，选择“连接/管理LibreLinkUp”项。点击“添加连接”，输入用于追踪者账户的邮箱地址，系统将向该地址发送邀请（邮箱可与LibreView账户相同）。随后需在手机上安装[LibreLinkUp应用](https://apps.apple.com/us/app/librelinkup/id1234323923)，使用刚邀请的邮箱地址按指引设置LibreLinkUp追踪者账户。您可参考[分步指南](https://www.librelinkup.com/articles/getting-started)。请确保在LibreLinkUp应用中能正常查看自身血糖曲线图。最后，打开FLwatch并输入追踪账户凭证（详见下文）。当前FLwatch仅支持每个追踪账户关联一名被追踪患者。
 - LibreLinkUp应用可关闭或卸载，但后续可能需要重新安装以接受新版《使用条款》和《隐私政策》，或验证账户/连接功能。
