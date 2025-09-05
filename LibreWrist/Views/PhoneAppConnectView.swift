@@ -59,7 +59,7 @@ struct PhoneAppConnectView: View {
             
             
             Form {
-                Section(header: Text("Credentials"), footer: Text("Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)")) {
+                Section(header: Text("Credentials"), footer: Text("Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://poml88.github.io/FLwatch/)")) {
                     TextField(text: $username, prompt: Text("Username (email adress)")) {
                         Text("Username")
                     }

@@ -1407,6 +1407,7 @@
       }
     },
     "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1436,6 +1437,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "输入您的 [LLU 追踪账户](https://www.librelinkup.com/) 凭据并点击“连接”按钮。若已安装手表应用，凭据将自动发送至该应用。\n[遇到问题？点击打开帮助](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)"
+          }
+        }
+      }
+    },
+    "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://poml88.github.io/FLwatch/)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geben Sie die Zugangsdaten für Ihr [LLU Follower Konto](https://www.librelinkup.com/) ein und drücken Sie \"Verbinden\". Zugangsdaten werden automatisch an die Watch App gesendet, falls diese installiert ist.\n[PROBLEME? TIPPEN UM HILFE ZU ÖFFNEN](https://poml88.github.io/FLwatch/)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduzca las credenciales de su [cuenta de seguidor de LLU](https://www.librelinkup.com/) y pulse el botón Conectar. Las credenciales se enviarán automáticamente a la aplicación del reloj si está instalada.\n[¿PROBLEMAS? PULSE PARA ABRIR LA AYUDA](https://poml88.github.io/FLwatch/)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez les identifiants de votre [compte LLU follower](https://www.librelinkup.com/) et appuyez sur le bouton Connecter. Les identifiants seront automatiquement envoyés à l'application Watch si elle est installée.\n[PROBLÈME ? APPUYEZ POUR OUVRIR L'AIDE](https://poml88.github.io/FLwatch/)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[LLUフォロワーアカウント](https://www.librelinkup.com/)の認証情報を入力し、接続ボタンを押してください。アプリがインストールされている場合、認証情報は自動的にウォッチアプリに送信されます。\n[トラブル？タップしてヘルプを開く](https://poml88.github.io/FLwatch/)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入您的 [LLU 追踪账户](https://www.librelinkup.com/) 凭据并点击“连接”按钮。若已安装手表应用，凭据将自动发送至该应用。\n[遇到问题？点击打开帮助](https://poml88.github.io/FLwatch/)"
           }
         }
       }
@@ -1773,6 +1808,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "葡萄糖小工具"
+          }
+        }
+      }
+    },
+    "Hello,\n\n*** write your message here ***\n\n\n\nKind regards\n\n\n\nDebug info:\nApp Version: %@ Build: %@\nDevice Info: %@ %@ on %@\nSensor: %@\nError Message: %@\n\n" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hello,\n\n*** write your message here ***\n\n\n\nKind regards\n\n\n\nDebug info:\nApp Version: %1$@ Build: %2$@\nDevice Info: %3$@ %4$@ on %5$@\nSensor: %6$@\nError Message: %7$@\n\n"
           }
         }
       }

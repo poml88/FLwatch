@@ -37,6 +37,12 @@ struct LibreWristApp: App {
                 .environment(\.sensorSettingsSingleton, sensorSettingsSingleton)
                 .environment(\.currentIOBSingleton, currentIOBSingleton)
                 .environment(\.insulinDeliveryHistorySingleton, insulinDeliveryHistorySingleton)
+//                .environment(\.openURL, OpenURLAction { url in
+//                    print("openURL asked to open:", url)
+//                    // print a stack trace so you can see who triggered this call
+//                    print("stack trace:\n" + Thread.callStackSymbols.joined(separator: "\n"))
+//                    return .systemAction
+//                })
         }
     }
 }

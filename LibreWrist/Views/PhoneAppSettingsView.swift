@@ -10,6 +10,8 @@ import MessageUI
 
 struct PhoneAppSettingsView: View {
     
+    @Environment(\.openURL) private var openURL
+    
     @AppStorage(SharedData.Keys.showInsulinDeliveryMarksPhone.key, store: SharedData.defaultsGroup) private var showInsulinDeliveryMarksPhone: Bool = false
     @AppStorage(SharedData.Keys.showInsulinDeliveryMarksWatch.key, store: SharedData.defaultsGroup) private var showInsulinDeliveryMarksWatch: Bool = false
     @AppStorage(SharedData.Keys.showIOBCurvePhone.key, store: SharedData.defaultsGroup) private var showIOBCurvePhone: Bool = false
@@ -35,15 +37,15 @@ struct PhoneAppSettingsView: View {
                     columns: [GridItem(spacing: 8), GridItem(spacing: 8)],
                     spacing: 12
                 ) {
-                    Link(destination: URL(string: "https://github.com/poml88/FLwatch/#usage")!) {
+                    Button {
+                        if let url = URL(string: "https://poml88.github.io/FLwatch/") {
+                            openURL(url)
+                        }
+                    } label: {
                         Text("Setup and usage guide")
-                            .padding(5)
-                            .multilineTextAlignment(.center)
-                        //                            .frame(width: 135, height: 65)
-                            .foregroundColor(.accentColor)
-                            .background(Color(.systemGray5))
-                            .cornerRadius(10)
+                        
                     }
+                    .buttonStyle(.bordered)
                     
                     Button {
                         isShowingSiriSheet.toggle()
@@ -57,19 +59,16 @@ struct PhoneAppSettingsView: View {
                         PhoneAppSiriSheetView()
                     })
                     
-                    
-                    
-                    Link(destination: URL(string: "https://github.com/poml88/FLwatch/issues")!) {
+                    Button {
+                        if let url = URL(string: "https://github.com/poml88/FLwatch/issues") {
+                            openURL(url)
+                        }
+                    } label: {
                         Text("Open issue on GitHub")
-                            .padding(5)
                         
-                            .multilineTextAlignment(.center)
-                        //                            .frame(width: 135, height: 65)
-                            .foregroundColor(.accentColor)
-                            .background(Color(.systemGray5))
-                            .cornerRadius(10)
                     }
-                    
+                    .buttonStyle(.bordered)
+
                     Button {
                         showingMailView.toggle()
                     } label: {
