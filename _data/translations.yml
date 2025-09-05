@@ -36,7 +36,7 @@ en:
   strings:
     title: "FLwatch – iOS & watchOS App"
     app_subtitle: "iOS & watchOS companion to view your blood glucose & insulin data."
-    built_with: "Built with Jekyll."
+    built_with: "This site is open source. Help to improve it."
     meta_description: "FLwatch for iOS & watchOS shows your LibreLinkUp glucose readings on iPhone and Apple Watch."
 de:
   brand:
@@ -58,7 +58,7 @@ de:
   strings:
     title: "FLwatch - Glukose Sensor Graph"
     app_subtitle: "iOS‑ & watchOS‑Begleiter zur Anzeige Ihrer Glukose‑ und Insulindaten."
-    built_with: "Erstellt mit Jekyll."
+    built_with: "This site is open source. Help to improve it."
     meta_description: "FLwatch zeigt Ihre Blutzuckerwerte und weitere Informationen auf Ihrem iPhone und Ihrer Apple Watch an. Open-Source-App mit Insulin-On-Board-Berechnung und Widgets."
 es:
   brand:
@@ -80,7 +80,7 @@ es:
   strings:
     title: "FLwatch – App para iOS y watchOS"
     app_subtitle: "Compañero para iOS y watchOS para ver tus datos de glucosa e insulina."
-    built_with: "Creado con Jekyll."
+    built_with: "This site is open source. Help to improve it."
     meta_description: "FLwatch para iOS y watchOS muestra lecturas de glucosa de LibreLinkUp en iPhone y Apple Watch."
 fr:
   brand:
@@ -102,7 +102,7 @@ fr:
   strings:
     title: "FLwatch – Application iOS & watchOS"
     app_subtitle: "Compagnon iOS & watchOS pour afficher vos données de glucose et d’insuline."
-    built_with: "Propulsé par Jekyll."
+    built_with: "This site is open source. Help to improve it."
     meta_description: "FLwatch pour iOS & watchOS affiche vos relevés LibreLinkUp sur iPhone et Apple Watch."
 ja:
   brand:
@@ -124,7 +124,7 @@ ja:
   strings:
     title: "FLwatch – iOS & watchOS アプリ"
     app_subtitle: "iOS と watchOS で血糖値とインスリンのデータを表示するコンパニオン。"
-    built_with: "Jekyll で構築。"
+    built_with: "This site is open source. Help to improve it."
     meta_description: "FLwatch は iOS と watchOS で LibreLinkUp の血糖値を iPhone と Apple Watch に表示します。"
 "zh-Hans":
   brand:
@@ -146,5 +146,5 @@ ja:
   strings:
     title: "FLwatch – iOS 和 watchOS 应用"
     app_subtitle: "在 iOS 和 watchOS 上查看血糖与胰岛素数据的助手。"
-    built_with: "由 Jekyll 构建。"
+    built_with: "This site is open source. Help to improve it."
     meta_description: "FLwatch 为 iOS 和 watchOS 将 LibreLinkUp 的血糖读数显示在 iPhone 与 Apple Watch 上。"
