@@ -6,11 +6,11 @@
 -----------------------------------
 
 **Click here to use Google Translate to translate this page into your language. Thank you.**\
-**[Klicken Sie hier, um diese Seite mit Google Translate in Ihre Sprache zu übersetzen. Vielen Dank.](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=de#usage)**\
-**[Cliquez ici pour utiliser Google Translate afin de traduire cette page dans votre langue. Merci.](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=fr#usage)**\
-**[Haga clic aquí para utilizar Google Translate y traducir esta página a su idioma. Gracias.](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=es#usage)**\
-**[点击此处使用Google翻译将此页面翻译成您的语言。感谢您的使用。](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=zh-CN#usage)**\
-**[ここをクリックして、このページをあなたの言語に翻訳するためにGoogle翻訳をご利用ください。ありがとうございます。](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=ja#usage)**
+**:cn: [点击此处使用Google翻译将此页面翻译成您的语言。感谢您的使用。](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=zh-CN#usage)**\
+**:fr: [Cliquez ici pour utiliser Google Translate afin de traduire cette page dans votre langue. Merci.](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=fr#usage)**\
+**:de: [Klicken Sie hier, um diese Seite mit Google Translate in Ihre Sprache zu übersetzen. Vielen Dank.](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=de#usage)**\
+**:jp: [ここをクリックして、このページをあなたの言語に翻訳するためにGoogle翻訳をご利用ください。ありがとうございます。](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=ja#usage)**\
+**:es: [Haga clic aquí para utilizar Google Translate y traducir esta página a su idioma. Gracias.](https://github-com.translate.goog/poml88/FLwatch?_x_tr_sl=en&_x_tr_tl=es#usage)**
 
 -----------------------------------
 
@@ -30,8 +30,8 @@ This software is free and open source. It is being developed out of personal nee
 - The LibreLinkUp app can then be closed or uninstalled, but maybe needed later to accept new Terms of Use, Privacy Policies, or just to check that the account / connection works.
 - To connect to your LibreLinkUp follower account, enter your credentials in FLwatch on the connect tab. If the watchOS app is installed, the credentials are transferred to the watch app. It is possible to re-transfer the credentials by pressing the "connect" button again.
 - It can take up to a minute for the data to be fetched and displayed.
-- To use the insulin calculation, tap on the IOB label on the home screen. I have added only Novorapid for the moment, but more insulins can be added on request. *Please let me know.*
-  - The app is using the exponetial model from LoopKit. The model takes three paramters: actionDuration, peakActivityTime, and delay. For Novorapid I have set 270, 120, and 15 minutes.
+- To use the insulin calculation, tap on the IOB label on the home screen. Supported insulin types are currently: rapid acting (Novolog, Novorapid, ...) and fast rapid acting (Fiasp, Lyumjev, ...). More insulins can be added on request. *Please let me know.*
+  - The app is using the exponetial model from LoopKit. The model takes three paramters: actionDuration, peakActivityTime, and delay. For rapid acting insulin the parameters are 360, 75, and 10 minutes, for fast rapid acting insulin the parameters are 360, 55, and 10 minutes.
 - There is a setting to keep the glucose graph for one hour displayed on the watch: Either on the watch, or in the phone "Watch" app, go to Settings -- General -- Return to Clock scroll down and tap on FLwatch and choose "After 1 hour". Like this, FLwatch stays for 1 hour in the foreground and gets a reasonable number of updates (like every minute).
 - The easiest way to start the phone or watch app is by placing a widget / complication on your homescreen, lockscreen, watchface, or whereever and tap it.
 - To use Siri to open the app handsfree you can create a shortcut on the phone called for example „glucose graph“ or "blood sugar". This shortcut just opens FLwatch. Select the shortcut option „show on watch“. Now, if you activate Siri, you just say „glucose graph“ and, voila, it shows the app FLwatch and its graph.
