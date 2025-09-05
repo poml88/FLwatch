@@ -3,6 +3,7 @@ layout: landing
 title: プライバシーポリシー
 lang: ja
 permalink: /ja/privacy/
+sitemap: false
 ---
 # プライバシーポリシー
 

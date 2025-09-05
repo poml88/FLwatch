@@ -3,6 +3,7 @@ layout: landing
 title: 隐私政策
 lang: zh-Hans
 permalink: /zh-Hans/privacy/
+sitemap: false
 ---
 # 隐私政策
 

@@ -3,6 +3,7 @@ layout: landing
 title: Privacy Policy
 lang: en
 permalink: /en/privacy/
+sitemap: false
 ---
 # Privacy Policy
 

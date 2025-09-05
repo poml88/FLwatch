@@ -3,6 +3,7 @@ layout: landing
 title: Impressum
 lang: de
 permalink: /impressum/
+sitemap: false
 ---
 # 📌 Impressum
 

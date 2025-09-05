@@ -3,6 +3,7 @@ layout: landing
 title: 法律声明
 lang: zh-Hans
 permalink: /zh-Hans/impressum/
+sitemap: false
 ---
 # 法律声明
 

@@ -3,6 +3,7 @@ layout: landing
 title: Mentions Légales
 lang: fr
 permalink: /fr/impressum/
+sitemap: false
 ---
 # Mentions Légales
 

@@ -3,6 +3,7 @@ layout: landing
 title: Politique de Confidentialité
 lang: fr
 permalink: /fr/privacy/
+sitemap: false
 ---
 # Politique de Confidentialité
 

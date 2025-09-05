@@ -3,6 +3,7 @@ layout: landing
 title: 法律上の通知
 lang: ja
 permalink: /ja/impressum/
+sitemap: false
 ---
 # 法律上の通知
 

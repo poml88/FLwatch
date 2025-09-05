@@ -3,6 +3,7 @@ layout: landing
 title: Aviso Legal
 lang: es
 permalink: /es/impressum/
+sitemap: false
 ---
 # Aviso Legal
 
