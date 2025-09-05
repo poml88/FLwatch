@@ -27,5 +27,5 @@ exclude:
   - "Gemfile"
   - "Gemfile.lock"
   
-# Remove Jekyll version exposure
-keep_files: []
+webmaster_verifications:
+  google: 4d32f1291e936fea
