@@ -1,4 +1,9 @@
+---
+layout: none
+permalink: /robots.txt
+---
+
 User-agent: *
 Allow: /
 
-Sitemap: https://poml88.github.io/FLwatch/sitemap.xml
+Sitemap: {{ 'sitemap.xml' | absolute_url }}
