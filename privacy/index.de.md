@@ -1,4 +1,10 @@
-
+---
+layout: landing
+title: Datenschutzerklärung
+lang: de
+permalink: /privacy/
+sitemap: false
+---
 
 # Datenschutzerklärung – FLwatch 
 
