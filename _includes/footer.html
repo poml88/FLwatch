@@ -3,15 +3,18 @@
 {% if page.lang == "de" or page.lang == nil %}
   {% assign privacy_path = "/privacy/" %}
   {% assign impressum_path = "/impressum/" %}
+  {% assign terms_path = "/terms/" %}
 {% else %}
   {% assign privacy_path = "/" | append: page.lang | append: "/privacy/" %}
   {% assign impressum_path = "/" | append: page.lang | append: "/impressum/" %}
+  {% assign terms_path = "/" | append: page.lang | append: "/terms/" %}
 {% endif %}
 
 <footer class="footer">
   <p>
     <a href="{{ base }}{{ privacy_path }}">{{ t[lang].labels.privacy | default: t.en.labels.privacy }}</a> |
-    <a href="{{ base }}{{ impressum_path }}">{{ t[lang].labels.impressum | default: t.en.labels.impressum }}</a>
+    <a href="{{ base }}{{ impressum_path }}">{{ t[lang].labels.impressum | default: t.en.labels.impressum }}</a> |
+    <a href="{{ base }}{{ agb_path }}">{{ t[lang].labels.agb | default: t.en.labels.agb }}</a>
   </p>
   <p>&copy; <span id="year"></span> {{ t[lang].brand.name | default: t.en.brand.name }}. {{ t[lang].strings.built_with | default: t.en.strings.built_with }} <a href="https://github.com/poml88/FLwatch/tree/gh-pages">GitHub</a></p>
 </footer>

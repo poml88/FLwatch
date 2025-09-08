@@ -26,7 +26,7 @@ en:
   labels:
     privacy: "Privacy Policy"
     impressum: "Legal Notice"
-    agb: "Terms of Use"
+    terms: "Terms of Use"
   buttons:
     menu_open: "Open menu"
     menu_close: "Close menu"
@@ -49,7 +49,7 @@ de:
   labels:
     privacy: "Datenschutzerklärung"
     impressum: "Impressum"
-    agb: "Nutzungsbedingungen"
+    terms: "Nutzungsbedingungen"
   buttons:
     menu_open: "Menü öffnen"
     menu_close: "Menü schließen"
@@ -72,7 +72,7 @@ es:
   labels:
     privacy: "Política de privacidad"
     impressum: "Aviso legal"
-    agb: "Condiciones de Uso"
+    terms: "Condiciones de Uso"
   buttons:
     menu_open: "Abrir menú"
     menu_close: "Cerrar menú"
@@ -95,7 +95,7 @@ fr:
   labels:
     privacy: "Politique de confidentialité"
     impressum: "Mentions légales"
-    agb: "Conditions d’Utilisation"
+    terms: "Conditions d’Utilisation"
   buttons:
     menu_open: "Ouvrir le menu"
     menu_close: "Fermer le menu"
@@ -118,7 +118,7 @@ ja:
   labels:
     privacy: "プライバシーポリシー"
     impressum: "法律上の通知"
-    agb: "利用規約"
+    terms: "利用規約"
   buttons:
     menu_open: "メニューを開く"
     menu_close: "メニューを閉じる"
@@ -141,7 +141,7 @@ ja:
   labels:
     privacy: "隐私政策"
     impressum: "法律声明"
-    agb: "使用条款"
+    terms: "使用条款"
   buttons:
     menu_open: "打开菜单"
     menu_close: "关闭菜单"
