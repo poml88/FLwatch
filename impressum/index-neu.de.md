@@ -1,46 +1,32 @@
+# Impressum (Angaben nach § 5 DDG)
 
-
-# Impressum
-
-**Angaben gemäß § 5 TMG / § 55 RStV**
-
-**Anbieter / Verantwortlicher (Einzelunternehmer):**
-Max Mustermann
-Musterstraße 1
-12345 Berlin
+**Anbieter / Verantwortlicher**
+Philipp Pöml  
+Limoursstr. 7  
+76872 Minfeld  
 Deutschland
 
-**Kontakt:**
-E-Mail: [mail@mail.de](mailto:mail@mail.de)
+E-Mail: flwatch@cmdline.net
 
-**Inhaltlich Verantwortlicher gemäß § 55 Abs. 2 RStV:**
-Max Mustermann, Musterstraße 1, 12345 Berlin
+**Rechtsform:** Einzelunternehmer
 
-**Umsatzsteuer-Identifikationsnummer (USt-ID):**
-nicht vorhanden
+**Zweck der Website/App:** Informationsseite und Bereitstellung der iOS-App „FLwatch“ (Open Source; freiwillige Spenden).
 
-**Handelsregister:**
-keine Eintragung (Einzelunternehmer)
+**Hinweis zu Drittanbietern / Keine Verbundenheit**
+FLwatch steht in keiner Verbindung zu Abbott/LibreLinkUp; keine Autorisierung oder Unterstützung durch Abbott.
 
-**Hosting / technischer Betrieb der Website:**
-GitHub Pages (GitHub, Inc.)
+**Hosting / Technische Umsetzung**
+GitHub Pages – GitHub, Inc., 88 Colin P. Kelly Jr. St., San Francisco, CA 94107, USA.
 
----
+**Umsatzsteuer-ID**
+Keine USt-ID vorhanden.
 
-## Haftung für Inhalte
+**Online-Streitbeilegung & Verbraucherstreitbeilegung**
+Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: https://ec.europa.eu/consumers/odr  
+Wir sind nicht verpflichtet und nicht bereit, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
 
-Als Diensteanbieter sind wir gemäß § 7 Abs. 1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben unberührt. Eine Haftung in diesem Zusammenhang ist jedoch erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden von entsprechenden Rechtsverletzungen werden wir diese Inhalte umgehend entfernen.
+**Journalistisch-redaktionelle Inhalte**
+Diese Website stellt **keine** journalistisch-redaktionellen Inhalte bereit; daher ist kein Verantwortlicher nach § 18 Abs. 2 MStV zu benennen.
 
-## Haftung für Links
-
-Diese Website enthält Links zu externen Webseiten Dritter, auf deren Inhalte wir keinen Einfluss haben. Für die Inhalte verlinkter Seiten ist stets der jeweilige Anbieter oder Betreiber verantwortlich. Bei Kenntnis von Rechtsverletzungen werden derartige Links entfernt.
-
-## Urheberrecht
-
-Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Beiträge Dritter sind als solche gekennzeichnet. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts bedarf der schriftlichen Zustimmung des jeweiligen Autors bzw. Urhebers.
-
-## Online-Streitbeilegung
-
-Die EU-Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: [https://ec.europa.eu/consumers/odr/](https://ec.europa.eu/consumers/odr/)
-Wir sind grundsätzlich bereit, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen, sofern eine solche zuständig ist und Sie Verbraucher im Sinne des § 13 BGB sind.
-
+**Urheberrecht**
+Sofern nicht anders angegeben, stehen Quelltexte unter MIT-Lizenz (siehe Projektseite). Marken und Logos verbleiben bei den jeweiligen Rechteinhabern.
