@@ -8,6 +8,7 @@ sitemap: false
 # Impressum (Angaben nach § 5 DDG)
 
 **Verantwortlicher**
+
 Philipp Pöml  
 Limoursstr. 7  
 76872 Minfeld  
