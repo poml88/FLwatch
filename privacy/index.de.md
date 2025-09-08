@@ -1,86 +1,138 @@
----
-layout: landing
-title: Datenschutzerklärung
-lang: de
-permalink: /privacy/
-sitemap: false
----
-# 📌 Datenschutzerklärung für die App FLwatch
 
-*Stand: 28.8.2025*  
-*Version: 1.0*
 
-⸻
+# Datenschutzerklärung – FLwatch 
+
+**Stand:** 8. September 2025
 
 ## 1. Verantwortlicher
-Philipp Pöml  
-Limoursstr. 7  
-76872 Minfeld  
-Deutschland  
-E-Mail: flwatch@cmdline.net
 
-Ein Datenschutzbeauftragter ist nicht benannt, da die gesetzlichen Voraussetzungen (§ 38 BDSG) hierfür nicht erfüllt sind.
+Philipp Pöml
+Limoursstr. 7, 76872 Minfeld, Deutschland
+E-Mail: **flwatch@cmdline.net**
 
-⸻
+Kein Datenschutzbeauftragter bestellt (nicht erforderlich).
 
-## 2. Datenerhebung und -verarbeitung
-- Die App FLwatch erhebt, speichert oder übermittelt keine personenbezogenen Daten an den Entwickler oder Dritte.
-- Die App greift auf Glukosewerte zu, die der Nutzer über den Dienst LibreLinkUp von Abbott bereitstellt, und zeigt diese lokal auf dem Gerät bzw. der Apple Watch an.
-- Eine Weitergabe dieser Daten durch die App erfolgt nicht.
+## 2. Geltungsbereich
 
-⸻
+Diese Datenschutzerklärung gilt für die iOS-App **FLwatch** sowie die Informations-Website unter **[https://poml88.github.io/FLwatch/](https://poml88.github.io/FLwatch/)**.
 
-## 3. Rechtsgrundlage der Verarbeitung
-Da durch FLwatch selbst keine personenbezogene Datenverarbeitung stattfindet, ist keine Rechtsgrundlage gemäß Art. 6 DSGVO erforderlich.  
-Die Verarbeitung im Rahmen von LibreLinkUp richtet sich ausschließlich nach den Nutzungsbedingungen und Datenschutzbestimmungen von Abbott.
+## 3. Grundsätze
 
-⸻
+* Verarbeitung personenbezogener Daten nur, soweit für die bereitgestellten Zwecke erforderlich.
+* Keine Übermittlung an eigene Server des Anbieters.
+* Gesundheitsdaten werden **ausschließlich** auf Grundlage **ausdrücklicher Einwilligung** verarbeitet.
+* Zielgruppe: **Erwachsene**.
 
-## 4. Zugriff auf Gerätedaten / Tracking
-- FLwatch verwendet keine Werbe-IDs, Cookies oder Tracking-Technologien.
-- Es erfolgt kein App-übergreifendes Tracking und keine Weitergabe an Dritte.
+## 4. Datenverarbeitungen in der App
 
-⸻
+### 4.1 Abruf & Anzeige von Glukosedaten (LibreLinkUp)
 
-## 5. Empfänger und Datenübermittlungen
-- Es gibt keine Empfänger oder Auftragsverarbeiter.
-- Es finden keine Datenübermittlungen in Drittländer durch FLwatch statt.
+* **Datenkategorien:** Glukosemesswerte (Gesundheitsdaten), Zeitstempel; ggf. gerätebezogene technische Daten der App.
+* **Quelle der Daten:** Ihr LibreLinkUp-Konto (Abbott).
+* **Datenfluss:** Die App kommuniziert **direkt** von Ihrem Gerät mit Abbott/LibreLinkUp-Servern über HTTPS. **Es werden keine Daten an Server des Anbieters übermittelt.**
+* **Zweck:** Anzeige/Visualisierung der Messwerte auf Ihrem Gerät.
+* **Rechtsgrundlagen:** **Art. 6 Abs. 1 lit. a DSGVO** (Einwilligung) i. V. m. **Art. 9 Abs. 2 lit. a DSGVO** (Einwilligung für Gesundheitsdaten).
+* **Speicherdauer:** **Keine** Speicherung der Messwerte durch den Anbieter; die Werte liegen nur **lokal** auf Ihrem Gerät vor (temporär gemäß App-Funktion, siehe 4.2).
+* **Hinweis zu Abbott:** FLwatch steht **in keiner Verbindung** zu Abbott/LibreLinkUp und wird nicht von Abbott unterstützt oder autorisiert.
 
-⸻
+### 4.2 Lokale App-Daten
 
-## 6. Speicherdauer
-Da die App keine Daten speichert, bestehen keine Aufbewahrungsfristen.
+* **Datenkategorien & Dauer:**
 
-⸻
+  * **Insulininjektionen (freiwillige Eingabe):** lokale Speicherung **bis zu 12 Stunden**.
+  * **Einstellungen/Konfigurationen:** lokale Speicherung **bis zur Löschung** durch Nutzer.
+  * **Anmeldedaten LibreLinkUp:** Speicherung **verschlüsselt** lokal auf dem Gerät.
+* **Zweck:** Funktionsbereitstellung der App.
+* **Rechtsgrundlagen:**
 
-## 7. Rechte der Nutzer
-Als Nutzer haben Sie nach der Datenschutz-Grundverordnung grundsätzlich folgende Rechte:
-- Recht auf Auskunft (Art. 15 DSGVO)
-- Recht auf Berichtigung (Art. 16 DSGVO)
-- Recht auf Löschung (Art. 17 DSGVO)
-- Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)
-- Recht auf Datenübertragbarkeit (Art. 20 DSGVO)
-- Recht auf Widerspruch (Art. 21 DSGVO)
+  * Für Einstellungen/Anmeldung: **Art. 6 Abs. 1 lit. b DSGVO** (Vertrag/„Nutzungsverhältnis“).
+  * Für Gesundheitsdaten (z. B. Injektionen, Messwerteanzeige): zusätzlich **Art. 9 Abs. 2 lit. a DSGVO** (Einwilligung).
+* **Empfänger:** keine (lokal). **Keine Übermittlung an den Anbieter.**
 
-Da FLwatch keine personenbezogenen Daten verarbeitet, können diese Rechte in der Praxis nicht ausgeübt werden. Bei Fragen können Sie sich dennoch jederzeit an den oben genannten Verantwortlichen wenden.
+### 4.3 Apple-Crashreports / Diagnosedaten (optional)
 
-Sie haben zudem das Recht, sich bei einer Aufsichtsbehörde für den Datenschutz zu beschweren, wenn Sie der Ansicht sind, dass eine Verarbeitung gegen die DSGVO verstößt.
+* **Datenkategorien:** geräte-/appbezogene Diagnosedaten, Crash-Logs (iOS-Opt-in).
+* **Zweck:** Stabilität/Fehleranalyse.
+* **Rechtsgrundlage:** **Art. 6 Abs. 1 lit. a DSGVO** (Einwilligung via iOS-Systemeinstellung).
+* **Empfänger/Verantwortlichkeit:** Erhebung durch **Apple**; je nach Einstellung stellt Apple ausgewählte Daten Entwicklern bereit.
+* **Speicherdauer:** in der App keine; bei Apple gemäß Apple-Vorgaben.
 
-⸻
+### 4.4 Spenden/Zahlungen
 
-## 8. Datenschutz bei Kindern
-- FLwatch richtet sich nicht an Kinder.
-- Die Nutzung von LibreLinkUp-Konten durch Minderjährige unterliegt den Regelungen von Abbott sowie ggf. der Zustimmung der Erziehungsberechtigten.
+* **Apple In-App-Käufe (IAP):** Abwicklung über Apple als eigener Verantwortlicher. Der Anbieter erhält in der Regel **keine** personenbezogenen Zahlungsdaten (nur aggregierte Abrechnungsinformationen).
+* **PayPal-Link (Website):** Bei Nutzung werden personenbezogene Daten **bei PayPal** verarbeitet (z. B. Name, E-Mail, Transaktions-ID, Betrag). **Der Anbieter kann transaktionsbezogene Angaben erhalten**.
 
-⸻
+  * **Zweck:** Abwicklung der Zuwendung, Buchhaltung.
+  * **Rechtsgrundlagen:** **Art. 6 Abs. 1 lit. b DSGVO** (Durchführung der Transaktion) und **Art. 6 Abs. 1 lit. c DSGVO** (gesetzliche Aufbewahrungspflichten, z. B. Steuer-/Handelsrecht).
+  * **Speicherdauer beim Anbieter:** Buchführungsbelege i. d. R. **bis zu 10 Jahre**.
+  * **Hinweis:** Spenden sind freiwillig und ohne Quittung.
 
-## 9. Medizinischer Hinweis
-- FLwatch ist kein Medizinprodukt im Sinne der EU-Medizinprodukteverordnung (MDR).
-- Die App dient ausschließlich der Darstellung von Sensordaten.
-- Sie darf nicht für Diagnose- oder Therapieentscheidungen verwendet werden.
-- Für medizinische Entscheidungen sind stets zugelassene Geräte und ärztlicher Rat erforderlich.
+## 5. Datenverarbeitungen auf der Website (GitHub Pages)
 
-⸻
+* **Hosting:** **GitHub, Inc., 88 Colin P. Kelly Jr. St., San Francisco, CA 94107, USA**.
+* **Verantwortlichkeit:** Für Server-Logs, notwendige Cookies/Techniken und Sicherheitsmaßnahmen ist **GitHub** (mit-)verantwortlich.
+* **Datenkategorien bei Aufruf:** IP-Adresse, User-Agent, Zeitpunkt, angeforderte Ressourcen (Server-Logs).
+* **Zweck/Rechtsgrundlagen (GitHub):** Betrieb/Sicherheit der Website (**Art. 6 Abs. 1 lit. f DSGVO** – berechtigtes Interesse von GitHub/uns an stabiler, sicherer Bereitstellung).
+* **Drittlandtransfer:** Verarbeitung in den **USA** ist möglich. GitHub setzt nach eigener Darstellung **Standardvertragsklauseln (SCC)** und weitere Schutzmaßnahmen ein (Details in der GitHub-Datenschutzerklärung).
+* **Cookies/Tracking:** Wir setzen **keine** eigenen Cookies/Tracker ein. GitHub kann **technisch notwendige** Cookies einsetzen (TTDSG § 25 Abs. 2).
+* **Weitere Infos:** Hinweise in der **GitHub-Datenschutzerklärung**.
 
-## 10. Änderungen der Datenschutzerklärung
-Diese Datenschutzerklärung kann bei Bedarf angepasst werden. Die jeweils aktuelle Fassung ist in der App sowie im App Store abrufbar.
+## 6. Keine Weitergabe an Dritte durch den Anbieter
+
+Es erfolgt **keine Weitergabe** Ihrer personenbezogenen Daten durch den Anbieter an Dritte, **außer** im Rahmen der oben beschriebenen Konstellationen (Apple/PayPal/GitHub als eigenständige Dienste bzw. wenn gesetzlich verpflichtet).
+
+## 7. Drittlandübermittlungen
+
+Der Anbieter betreibt **keine** eigenen Server und übermittelt selbst **keine** App-Daten an Drittländer.
+Drittländer können betroffen sein durch:
+
+* **GitHub Pages (USA)** beim Website-Aufruf,
+* **Apple** (je nach Dienst),
+* **Abbott/LibreLinkUp** (Serverstandorte gemäß Abbott).
+  Bitte beachten Sie die jeweiligen Datenschutzhinweise der Drittanbieter.
+
+## 8. Sicherheit
+
+* Transportverschlüsselung (HTTPS).
+* Lokale Verschlüsselung sensibler Anmeldedaten auf dem Gerät.
+* Prinzip der Datenminimierung (nur lokale Verarbeitung, keine eigenen Server).
+
+## 9. Rechte der betroffenen Personen
+
+Sie haben – unter den gesetzlichen Voraussetzungen – Rechte auf **Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit** sowie **Widerruf erteilter Einwilligungen** mit Wirkung für die Zukunft.
+**Widerruf** und sonstige Anfragen: per E-Mail an **flwatch@cmdline.net**.
+Sie haben außerdem das Recht, **Beschwerde** bei einer Datenschutzaufsichtsbehörde einzulegen, z. B.:
+Berliner Beauftragte für Datenschutz und Informationsfreiheit, Alt-Moabit 59–61, 10555 Berlin.
+
+## 10. Automatisierte Entscheidungen / Profiling
+
+Finden **nicht** statt.
+
+## 11. Speicherdauern (Übersicht)
+
+* **Messdaten:** keine Speicherung durch den Anbieter (nur lokal/temporär).
+* **Insulininjektionen:** lokal bis **12 Stunden**.
+* **Einstellungen:** lokal bis **Löschung**.
+* **Anmeldedaten (LibreLinkUp):** lokal, **verschlüsselt**, bis Löschung.
+* **PayPal-Transaktionsdaten (falls genutzt):** bis zu **10 Jahre** (gesetzliche Aufbewahrung).
+* **Crash-Reports (Apple):** gemäß Apple; beim Anbieter keine eigenständige Speicherung.
+
+## 12. Freiwilligkeit / Einwilligungen & Widerruf
+
+Soweit wir Ihre Daten auf Grundlage einer **Einwilligung** verarbeiten (insb. Gesundheitsdaten, Crash-Reports), erfolgt dies freiwillig. **Sie können die Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen**, z. B. durch Deinstallation der App, Entfernen der Zugangsdaten, Änderung der iOS-Diagnose-Einstellungen oder Mitteilung per E-Mail.
+
+## 13. HealthKit (zukünftig – noch **nicht** aktiv)
+
+Sobald eine HealthKit-Integration bereitsteht, werden **vorab** gesonderte Einwilligungen in der App eingeholt. HealthKit-Daten werden **nie** zu Werbe-, Tracking- oder Profiling-Zwecken genutzt, **nicht** an Dritte verkauft oder für Marktforschung verwendet; Verarbeitung ausschließlich zur Bereitstellung der angefragten Funktionen auf dem Gerät bzw. nach ausdrücklicher Zustimmung.
+
+## 14. Änderungen dieser Datenschutzerklärung
+
+Wir können diese Erklärung anpassen, z. B. bei Funktionsänderungen oder rechtlichen Anforderungen. Es gilt die jeweils **aktuelle** Fassung; wesentliche Änderungen werden auf der Website in zumutbarer Weise kenntlich gemacht.
+
+---
+
+## 15. Kontakt
+
+Fragen oder Anliegen zum Datenschutz: **flwatch@cmdline.net**
+
+
