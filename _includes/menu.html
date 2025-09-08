@@ -3,9 +3,11 @@
 {% if page.lang == "de" or page.lang == nil %}
   {% assign privacy_path = "/privacy/" %}
   {% assign impressum_path = "/impressum/" %}
+  {% assign terms_path = "/terms/" %}
 {% else %}
   {% assign privacy_path = "/" | append: page.lang | append: "/privacy/" %}
   {% assign impressum_path = "/" | append: page.lang | append: "/impressum/" %}
+  {% assign terms_path = "/" | append: page.lang | append: "/terms/" %}
 {% endif %}
 
 <nav class="menu-section">
@@ -13,5 +15,6 @@
   <ul class="legal-list">
     <li><a href="{{ base }}{{ privacy_path }}">{{ t[lang].labels.privacy | default: t.en.labels.privacy }}</a></li>
     <li><a href="{{ base }}{{ impressum_path }}">{{ t[lang].labels.impressum | default: t.en.labels.impressum }}</a></li>
+    <li><a href="{{ base }}{{ terms_path }}">{{ t[lang].labels.terms | default: t.en.labels.terms }}</a></li>
   </ul>
 </nav>
