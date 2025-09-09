@@ -7,7 +7,6 @@
 
 import SwiftUI
 import OSLog
-import SecureDefaults
  
 
 struct PhoneAppConnectView: View {
@@ -16,7 +15,7 @@ struct PhoneAppConnectView: View {
 //    @EnvironmentObject var watchConnector: WatchConnectivityManager
     
     @State private var username = UserDefaults.group.username
-    @State private var password = SecureDefaults.sgroup.string(forKey: "llu.password") ?? ""
+    @State private var password: String 
     @State private var connected = UserDefaults.group.connected
     @State private var libreLinkUpResponse: String = "[...]"
     @State private var isShowingConnectionFailed = false
@@ -24,6 +23,11 @@ struct PhoneAppConnectView: View {
     
 
     private let timer = Timer.publish(every: 1, tolerance: 0.5, on: .main, in: .common).autoconnect()
+    
+    init() {
+        _password = State(initialValue: (try? PasswordKeychain.read()) ?? "")
+    }
+
     
     
     func statusMessage() -> LocalizedStringResource {
@@ -143,17 +147,18 @@ struct PhoneAppConnectView: View {
             connected = UserDefaults.group.connected
             //    UserDefaults.group.connected.connected = .disconnected
         }
+        .task {
+            if let existing = try? PasswordKeychain.read(){
+                password = existing
+            }
+        }
     }
+        
     
     private func tryToConnect() {
         settings.libreLinkUpToken = ""
         UserDefaults.group.username = username
-        let sdefaults = SecureDefaults.sgroup
-        if !(sdefaults.isKeyCreated) {
-            sdefaults.password = UUID().uuidString
-        }
-        sdefaults.set(password, forKey: "llu.password")
-        sdefaults.synchronize()
+        try? PasswordKeychain.save(password)
         UserDefaults.group.connected = .connecting
         Task {
             do {

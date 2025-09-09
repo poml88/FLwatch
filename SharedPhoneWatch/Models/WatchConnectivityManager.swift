@@ -8,7 +8,6 @@
 //import Foundation
 import WatchConnectivity
 import OSLog
-import SecureDefaults
 
 class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObject is the old method, Swiftui now uses @Observable
     // https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app
@@ -51,13 +50,8 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         
         if message["content"] as? String == "credentials" {
             UserDefaults.group.username = message["username"] as? String ?? ""
-            let sdefaults = SecureDefaults.sgroup
-            if !sdefaults.isKeyCreated {
-                sdefaults.password = UUID().uuidString
-            }
             let password = message["password"] as? String ?? ""
-            sdefaults.set(password, forKey: "llu.password")
-            sdefaults.synchronize()
+            try? PasswordKeychain.save(password)
             settings.libreLinkUpToken = ""
             UserDefaults.group.connected = .newlyConnected
         }

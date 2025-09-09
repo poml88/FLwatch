@@ -8,7 +8,6 @@
 import Foundation
 import OSLog
 import SwiftUI
-import SecureDefaults
 
 // https://github.com/timoschlueter/nightscout-librelink-up
 // https://gist.github.com/khskekec/6c13ba01b10d3018d816706a32ae8ab2
@@ -174,10 +173,8 @@ class LibreLinkUp  {
         
         //        let appGroupID = UserDefaults.stringValue(forKey: "APP_GROUP_ID")
         let credentials = [
-            //            "email": settings.libreLinkUpEmail,
-            //            "password": settings.libreLinkUpPassword
             "email": UserDefaults.group.username,
-            "password": SecureDefaults.sgroup.string(forKey: "llu.password")
+            "password": (try? PasswordKeychain.read()) ?? ""
             // with password there was a tricky error: since this library is used by watch and phone I got an error "Type 'SecureDefaults' has no member 'sgroup'"
             // I had to add the SecureDefaults extension to the watch app as well. the watch app called it and it did not know about sgroup. It did work for the phone app though.
         ]
