@@ -33,11 +33,24 @@ import WidgetKit
 //    var insulinUnits: Double
 //}
 
+struct RecommendedInsulinDoses: DynamicOptionsProvider {
+  func results() async throws -> [Double] {
+    // Could come from settings, last-used values, or clinical presets
+//      let d: [Double] = InsulinUnitsEnum.allCases.compactMap { Double($0.rawValue) }
+//      return d
+      return stride(from: 0.5, through: 30.0, by: 0.5).map { $0 }
+//    [0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10]
+  }
+}
+
+
 struct AddInsulin: AppIntent {
     
     
+    
+    
     static var title: LocalizedStringResource = "Record Insulin Injection"
-    static var description: LocalizedStringResource = "Ask the system to record insulin units for IOB calculation."
+    static var description: IntentDescription = "Ask the system to record insulin units for IOB calculation."
     
     
     // We provide two parameters, one used only for AppShortcuts with a limited value of options,
@@ -46,7 +59,11 @@ struct AddInsulin: AppIntent {
     @Parameter(title: "Insulin Units", description: "How many insulin units?", requestValueDialog: "How much insulin?")
     var insulinUnitsEnum: InsulinUnitsEnum?
     
-    @Parameter(title: "Insulin Units", description: "How many insulin units?")
+    @Parameter(title: "Insulin Units",
+               description: "How many insulin units?",
+               inclusiveRange: (lowerBound: 0.5, upperBound: 30.0),
+               optionsProvider: RecommendedInsulinDoses()
+               )
     var unitsDouble: Double?
     
     
@@ -63,28 +80,38 @@ struct AddInsulin: AppIntent {
     @MainActor
     //    func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
-        
-        let formatter = NumberFormatter()
-        formatter.locale = Locale.current
-        
+                
         let insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
         
         var insulinDeliveryUnits: Double = 0.0
         
-        if let value = insulinUnitsEnum?.rawValue {
-            insulinDeliveryUnits = Double(value)!
+        if let value = insulinUnitsEnum?.rawValue, let d = Double(value) {
+            
+            insulinDeliveryUnits = d
+            
         } else if let unitsDouble {
-//            let formattedString = formatter.number(from: unitsDouble)
-//            insulinDeliveryUnits = Double(formattedString ?? 0.0)
+            
+            //            let formattedString = formatter.number(from: unitsDouble)
+            //            insulinDeliveryUnits = Double(formattedString ?? 0.0)
             insulinDeliveryUnits = unitsDouble
-        } else {
-            insulinDeliveryUnits = try await $unitsDouble.requestValue("How many insulin units?")
-//            let formattedString = formatter.number(from: string)
-//            insulinDeliveryUnits = Double(formattedString ?? 0.0)
+            
         }
-        if insulinDeliveryUnits == 0.0 { //throw $unitsDouble.needsValueError("How many insulin units?")
-            throw $unitsDouble.needsValueError("Could not determine insulin units value.")
+        
+        if insulinDeliveryUnits == 0.0 {
+            do {
+                insulinDeliveryUnits = try await $unitsDouble.requestValue("How many insulin units?")
+            } catch {
+                
+                throw $unitsDouble.needsValueError("Could not determine insulin units value.")
+                
+            }
         }
+            //            let formattedString = formatter.number(from: string)
+            //            insulinDeliveryUnits = Double(formattedString ?? 0.0)
+            
+            
+            
+       
         
 //        var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
         insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // seems not to be necessary, but just to be sure....
@@ -121,6 +148,7 @@ struct AddInsulinSnippetView: View {
     var units: String
     var body: some View {
         Text("Units recorded: \(units).")
+            .accessibilityLabel("Insulin units recorded: \(units)")
     }
 }
 

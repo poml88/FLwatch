@@ -188,7 +188,13 @@
     "%lld" : {
 
     },
+    "%lld g" : {
+
+    },
     "%lld min" : {
+
+    },
+    "0" : {
 
     },
     "0.5" : {
@@ -925,6 +931,15 @@
         }
       }
     },
+    "Carb Calculator" : {
+
+    },
+    "Carbs per 100 g" : {
+
+    },
+    "Clear" : {
+
+    },
     "Confirm" : {
       "localizations" : {
         "de" : {
@@ -1095,6 +1110,12 @@
         }
       }
     },
+    "Convenience calculator only. Follow your care plan." : {
+
+    },
+    "Copy calculated → picker" : {
+
+    },
     "Could not determine insulin units value." : {
       "localizations" : {
         "de" : {
@@ -1237,6 +1258,7 @@
 
     },
     "Default behaviour: opens FLwatch app." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1266,6 +1288,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "默认行为：打开FLwatch应用程序。"
+          }
+        }
+      }
+    },
+    "Default behaviour: opens FLwatch app. Only watchOS 11 and later." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardverhalten: FLwatch-App wird geöffnet. watchOS 11+"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comportamiento predeterminado: abre la aplicación FLwatch. watchOS 11+"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comportement par défaut : ouvre l'application FLwatch. watchOS 11+"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デフォルト動作: FLwatch アプリを開きます。watchOS 11+"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认行为：打开FLwatch应用程序。watchOS 11+"
           }
         }
       }
@@ -1405,6 +1461,9 @@
           }
         }
       }
+    },
+    "Enter grams per 1U (e.g., 10 ≙ 1U/10g)." : {
+
     },
     "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)" : {
       "extractionState" : "stale",
@@ -1682,6 +1741,12 @@
         }
       }
     },
+    "g" : {
+
+    },
+    "g / 1U" : {
+
+    },
     "Get Current Blood Glucose" : {
       "localizations" : {
         "de" : {
@@ -1927,6 +1992,9 @@
         }
       }
     },
+    "ICR" : {
+
+    },
     "If you like this app, buy the developer quality coffee beans!\n🤝☕️" : {
       "localizations" : {
         "de" : {
@@ -1989,6 +2057,12 @@
         }
       }
     },
+    "Insulin (rounded)" : {
+
+    },
+    "Insulin Delivery History" : {
+
+    },
     "Insulin marks and graphs" : {
       "localizations" : {
         "de" : {
@@ -2022,6 +2096,9 @@
           }
         }
       }
+    },
+    "Insulin type" : {
+
     },
     "Insulin units" : {
       "localizations" : {
@@ -2712,6 +2789,9 @@
         }
       }
     },
+    "Portion size" : {
+
+    },
     "Press \"Connect\" again to resend credentials to watch." : {
       "localizations" : {
         "de" : {
@@ -2813,6 +2893,9 @@
           }
         }
       }
+    },
+    "Raw" : {
+
     },
     "Record ${unitsDouble} units of insulin" : {
       "localizations" : {
@@ -3129,6 +3212,9 @@
           }
         }
       }
+    },
+    "Rounding" : {
+
     },
     "Select the bolus insulin for the IOB calculations. Currently supported are:\n- Rapid acting (Novolog, Novorapid, ... (peak activity 75 mins))\n- Fast rapid acting (Fiasp, Lyumjev, ... (peak activity 55 mins))" : {
       "localizations" : {
@@ -3752,6 +3838,9 @@
         }
       }
     },
+    "Total carbs" : {
+
+    },
     "Trying to log into wrong regional server. Please contact support." : {
       "localizations" : {
         "de" : {
@@ -3773,6 +3862,9 @@
           }
         }
       }
+    },
+    "U" : {
+
     },
     "Understood" : {
       "localizations" : {

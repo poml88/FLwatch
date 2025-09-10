@@ -143,7 +143,7 @@ struct PhoneAppSettingsView: View {
             Section {
                 Toggle(isOn: $tapComplicationReloads) {
                     Text("Tap on circular watch complication: updates glucose value")
-                    Text("Default behaviour: opens FLwatch app.")
+                    Text("Default behaviour: opens FLwatch app. Only watchOS 11 and later.")
                 }
                 .onChange(of: tapComplicationReloads) { oldValue, newValue in
                     print("yes")
@@ -187,7 +187,7 @@ struct PhoneAppSettingsView: View {
                     sendMessagetoOther(message: messageToWatch)
                 }
             } header: {
-                //                Text("Insulin selection")
+                                Text("Insulin type")
             } footer: {
                 Text("Select the bolus insulin for the IOB calculations. Currently supported are:\n- Rapid acting (Novolog, Novorapid, ... (peak activity 75 mins))\n- Fast rapid acting (Fiasp, Lyumjev, ... (peak activity 55 mins))")
             }

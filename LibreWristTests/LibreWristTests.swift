@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import LibreWrist
+@testable import FLwatch
 
 final class LibreWristTests: XCTestCase {
 

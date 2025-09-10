@@ -20,36 +20,30 @@ struct Provider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         var entries: [GlucoseMeasurementIOBEntry] = []
         
+        let interval = SharedData.widgetUpdateFrequency
         
         GlucoseMeasurementIOBEntry.getLastGlucoseMeasurement { glucoseMeasurementEntry, error in
-            let interval = SharedData.widgetUpdateFrequency
+            
             if let gme = glucoseMeasurementEntry {
-                    guard Int(Date().timeIntervalSince(gme.date) / 60) <= 3 else {
+                // Ensure recent enough
+                if Int(Date().timeIntervalSince(gme.date) / 60) <= 3 {
+                    entries.append(gme)
+                } else {
                     var entry = GlucoseMeasurementIOBEntry.invalidEntry
                     entry.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-                    
                     entries.append(entry)
-                    
-                    let reloadDate = Calendar.current.date(byAdding: .minute, value: interval, to: Date())!
-                    let timeline = Timeline(entries: entries, policy: .after(reloadDate))
-                    return completion(timeline)
-                    
                 }
-                let entry = gme
-                entries.append(entry)
-                
-                let reloadDate = Calendar.current.date(byAdding: .minute, value: interval, to: Date())!
-                let timeline = Timeline(entries: entries, policy: .after(reloadDate))
-                completion(timeline)
             } else {
+                // On timeout / error return an invalid (fallback) entry quickly
                 var entry = GlucoseMeasurementIOBEntry.invalidEntry
                 entry.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
                 entries.append(entry)
-                
-                let reloadDate = Calendar.current.date(byAdding: .minute, value: interval, to: Date())!
-                let timeline = Timeline(entries: entries, policy: .after(reloadDate))
-                completion(timeline)
             }
+            
+            let reloadDate = Calendar.current.date(byAdding: .minute, value: interval, to: Date())!
+            let timeline = Timeline(entries: entries, policy: .after(reloadDate))
+            completion(timeline)
+            
         }
     }
 }

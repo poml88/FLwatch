@@ -40,43 +40,33 @@ struct LibreWristWidgetEntryView : View {
         switch family {
 
         case .accessoryCircular:
-//            ZStack {
-////            ZStack(alignment: .center) {
-////                if #available(iOSApplicationExtension 17.0, *) {
-////                    // TODO
-////                } else {
-////                    Color(.white)
-////                }
-//             AccessoryWidgetBackground()
-            //            ZStack {
-            
             
             VStack(alignment: .center, spacing: -6) {
                 
-                if tapComplicationReloads {
-                    Button(intent: ReloadWidgetIntent()) {
-                        AccessoryCircularTextView(subEntry: entry)
-//                        Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
-//                            .font(.system(size: 20, weight: .heavy, design: .monospaced))
-//                            .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
-//                        //.colorInvert()
-//                            .widgetAccentable()
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                } else {
-                    AccessoryCircularTextView(subEntry: entry)
-//                    Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
-//                        .font(.system(size: 20, weight: .heavy, design: .monospaced))
-//                        .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
-//                    //.colorInvert()
-//                        .widgetAccentable()
-                }
-                
-                Text(verbatim: glucose)
-                    .font(.system(size: 20, weight: .heavy))
+                let trend = entry.glucoseMeasurement.trendArrow?.symbol ?? "-"
+                Text(verbatim: trend)
+                    .font(.system(size: 20, weight: .heavy, design: .monospaced))
                     .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
                 //.colorInvert()
                     .widgetAccentable()
+                
+                
+                if tapComplicationReloads, #available(watchOS 11.0, *) {
+                    Button(intent: ReloadWidgetIntent()) {
+                        Text(verbatim: glucose)
+                            .font(.system(size: 20, weight: .heavy))
+                            .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
+                        //.colorInvert()
+                            .widgetAccentable()
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                } else {
+                    Text(verbatim: glucose)
+                        .font(.system(size: 20, weight: .heavy))
+                        .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
+                    //.colorInvert()
+                        .widgetAccentable()
+                }
                 
                 Text(Date(), style: .timer)
                 //Text(verbatim: " ")
@@ -85,26 +75,9 @@ struct LibreWristWidgetEntryView : View {
                     .multilineTextAlignment(.center)
                     .monospacedDigit()
                     .padding(4)
-                
-                
+
             }
-            //                Button(intent: ReloadWidgetIntent()) {
-//                    Text(" ")
-//                        .font(.system(size: 44, weight: .heavy, design: .monospaced))
-//                    //.colorInvert()
-//                    //.widgetAccentable()
-//                }
-//                .simultaneousGesture(
-//                    TapGesture(count: 2).onEnded {
-//                        print("tap tap")
-//                    }
-//                )
-//            }
-//            }
-//            .containerBackground(for: .widget) {
-//                background()
-//            }
-             .containerBackground(.background, for: .widget)
+            .containerBackground(.background, for: .widget)
             
         case .accessoryRectangular:
 //            ZStack {
@@ -220,16 +193,7 @@ struct LibreWristWatchWidget: Widget {
     }
 }
 
-struct AccessoryCircularTextView : View {
-    var subEntry: GlucoseMeasurementIOBEntry
-    var body: some View {
-        Text(verbatim: subEntry.glucoseMeasurement.trendArrow?.symbol ?? "-")
-            .font(.system(size: 20, weight: .heavy, design: .monospaced))
-            .foregroundColor(subEntry.glucoseMeasurement.measurementColor.color)
-        //.colorInvert()
-            .widgetAccentable()
-    }
-}
+
 
 #Preview("accessCirc", as: .accessoryCircular) {
     LibreWristWatchWidget()

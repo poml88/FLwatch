@@ -1,5 +1,5 @@
 //
-//  PhoneAppSettingsView.swift
+//  PhoneAppInsulinDeliveryView.swift
 //  LibreWrist
 //
 //  Created by Peter Müller on 01.09.24.
@@ -9,39 +9,66 @@ import SwiftUI
 
 struct PhoneAppInsulinDeliveryView: View {
     
-    @AppStorage(SharedData.Keys.insulinSelected.key, store: SharedData.defaultsGroup) private var insulinSelected: Double = 0.5
+    // Existing persisted manual picker
+    @AppStorage(SharedData.Keys.insulinSelected.key, store: SharedData.defaultsGroup)
+    private var insulinSelected: Double = 0.5
+    
+    // NEW: persisted calculator settings
+    @AppStorage("carbCalc.icrGramsPerUnit", store: SharedData.defaultsGroup)
+    private var icrGramsPerUnit: Double = 10
+    
+    @AppStorage("carbCalc.roundingStep", store: SharedData.defaultsGroup)
+    private var roundingStep: Double = 0.5
     
     @Environment(\.dismiss) var dismiss
     @Environment(\.insulinDeliveryHistorySingleton) var insulinDeliveryHistorySingleton
     
-//    @StateObject var watchConnector = WatchConnectivityManager.shared
-//    @EnvironmentObject var watchConnector: WatchConnectivityManager
-    
     @State private var pickerTimeStamp: Date = Date.now
-//    @State private var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
     @State private var isShowingInsulinDeliverySubmitAlert = false
     @State private var isShowingInsulinDeliveryResetAlert = false
     @State private var isShowingDifferenceTimePickerSheet = false
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
+    
     private var watchConnector = WatchConnectivityManager.shared
     
-    //    @Binding var selectedTab: String
-    
+    // Manual doses
     let insulinDoses: [Double] = Array(stride(from: 0.5, to: 60, by: 0.5))
     
+    // NEW: carb calculator transient inputs
+    @State private var carbsPer100g: Double = 0
+    @State private var portionGrams: Double = 0
+    let portionChoices: [Int] = [50, 75, 100, 150, 200, 250, 300, 400]
+    
+    
+    // MARK: - Calculator computed values
+    private var totalCarbs: Double {
+        max(0, carbsPer100g) * max(0, portionGrams) / 100.0
+    }
+    private var insulinUnitsRaw: Double {
+        guard icrGramsPerUnit > 0 else { return 0 }
+        return totalCarbs / icrGramsPerUnit
+    }
+    private var insulinUnitsRounded: Double {
+        guard roundingStep > 0 else { return insulinUnitsRaw }
+        return (insulinUnitsRaw / roundingStep).rounded() * roundingStep
+    }
+    private var hasValidCalculatedDose: Bool {
+        insulinUnitsRaw > 0 // raw > 0 implies rounded ≥ 0 unless rounding is 0
+    }
+    private let roundingChoices: [(label: String, step: Double)] = [
+        ("No rounding", 0),
+        ("0.5 U", 0.5),
+        ("1 U", 1.0)
+    ]
+    
     var body: some View {
-        VStack{
-            
-            
-            Button {
-                dismiss()
-            } label: {
-                Text("Dismiss")
-            }
-            .buttonStyle(.borderedProminent)
-            .padding()
+        VStack {
+            Button { dismiss() } label: { Text("Dismiss") }
+                .buttonStyle(.borderedProminent)
+                .padding()
             
             Form {
+                // MARK: Manual entry (existing)
                 Section {
                     Picker("Insulin units", selection: $insulinSelected) {
                         ForEach(insulinDoses, id: \.self) {
@@ -50,10 +77,7 @@ struct PhoneAppInsulinDeliveryView: View {
                     }
                     .pickerStyle(.menu)
                     
-                    DatePicker(selection: $pickerTimeStamp) {
-                        Text("Time: ")
-                    }
-//                        .labelsHidden()
+                    DatePicker(selection: $pickerTimeStamp) { Text("Time: ") }
                     
                     Button {
                         isShowingDifferenceTimePickerSheet = true
@@ -62,29 +86,172 @@ struct PhoneAppInsulinDeliveryView: View {
                     }
                     .buttonStyle(.bordered)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                    .sheet(isPresented: $isShowingDifferenceTimePickerSheet, content: {
+                    .sheet(isPresented: $isShowingDifferenceTimePickerSheet) {
                         TimeDifferencePicker(pickerTimeStamp: $pickerTimeStamp)
-                    })
-                    
+                    }
+                } header: {
+                    Text("Bolus Insulin (\(insulinTypeSelected.description))")
+                }
+                
+                // MARK: Actions
+                Section {
                     Button {
                         isShowingInsulinDeliverySubmitAlert = true
                     } label: {
                         Text("Add insulin")
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(insulinSelected == 0.0)
+                    // Enable if EITHER manual OR calculated dose is > 0
+                    .disabled(insulinSelected == 0.0 && !hasValidCalculatedDose)
                     
-                    Button {
-                        isShowingInsulinDeliveryResetAlert.toggle()
-                    } label:                    {
-                        Text("Reset IOB")
+                    
+                }
+                
+                // MARK: Carb calculator (NEW)
+                Section {
+                    HStack {
+                        Text("Carbs per 100 g")
+                        Spacer()
+                        TextField("0", value: $carbsPer100g,
+                                  format: .number.precision(.fractionLength(0...2)))
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(minWidth: 90)
+                            .onChange(of: carbsPer100g) { carbsPer100g = max(0, carbsPer100g) }
+                        Text("g")
+                            .foregroundStyle(.secondary)
                     }
-                    .buttonStyle(.borderedProminent)
+                    
+                    HStack {
+                        Text("Portion size")
+                        Spacer()
+                        TextField("0", value: $portionGrams,
+                                  format: .number.precision(.fractionLength(0...1)))
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(minWidth: 90)
+                            .onChange(of: portionGrams) { portionGrams = max(0, portionGrams) }
+                        Text("g")
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    // Quick portion chips
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(portionChoices, id: \.self) { g in
+                                Button("\(g) g") { portionGrams = Double(g) }
+                                    .buttonStyle(.bordered)
+                            }
+                            Button {
+                                portionGrams = 0
+                            } label: {
+                                Label("Clear", systemImage: "xmark.circle")
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.gray)
+                        }
+                        .padding(.top, 2)
+                    }
+                    
+                    // ICR & rounding
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("ICR")
+                            Spacer()
+                            TextField("10", value: $icrGramsPerUnit,
+                                      format: .number.precision(.fractionLength(0...1)))
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(minWidth: 90)
+                                .onChange(of: icrGramsPerUnit) { icrGramsPerUnit = max(0, icrGramsPerUnit) }
+                            Text("g / 1U").foregroundStyle(.secondary)
+                        }
+                        Text("Enter grams per 1U (e.g., 10 ≙ 1U/10g).")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    Picker("Rounding", selection: $roundingStep) {
+                        ForEach(roundingChoices, id: \.step) { c in
+                            Text(c.label).tag(c.step)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    
+                    // Results
+                    HStack {
+                        Text("Total carbs")
+                        Spacer()
+                        Text(totalCarbs, format: .number.precision(.fractionLength(0...1)))
+                        Text("g").foregroundStyle(.secondary)
+                    }
+                    HStack {
+                        Text(roundingStep > 0 ? "Insulin (rounded)" : "Insulin")
+                        Spacer()
+                        Text(
+                            (roundingStep > 0 ? insulinUnitsRounded : insulinUnitsRaw),
+                            format: .number.precision(.fractionLength(0...2))
+                        )
+                        Text("U").foregroundStyle(.secondary)
+                    }
+                    if roundingStep > 0 && abs(insulinUnitsRounded - insulinUnitsRaw) >= 0.01 {
+                        HStack {
+                            Text("Raw")
+                            Spacer()
+                            Text(insulinUnitsRaw, format: .number.precision(.fractionLength(0...2)))
+                            Text("U").foregroundStyle(.secondary)
+                        }
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    }
+                    
+                    // Convenience: copy calc → manual picker
+                    if hasValidCalculatedDose {
+                        Button {
+                            if roundingStep > 0 {
+                                insulinSelected = insulinUnitsRounded
+                            } else {
+                                roundingStep = 0.5 ; insulinSelected = insulinUnitsRounded ; roundingStep = 0
+                            }
+                                                    } label: {
+                            Label("Copy calculated → picker", systemImage: "arrow.down.doc")
+                        }
+                        .buttonStyle(.bordered)
+                    }
                 } header: {
-                    Text("Bolus Insulin (\(insulinTypeSelected.description))")
+                    Text("Carb Calculator")
+                } footer: {
+                    Text("Convenience calculator only. Follow your care plan.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                
+                // MARK: Existing history list
+                if !insulinDeliveryHistorySingleton.insulinDeliveryHistory.isEmpty {
+                    
+                    Section(header: Text("Insulin Delivery History")) {
+                        Button {
+                            isShowingInsulinDeliveryResetAlert.toggle()
+                        } label: {
+                            Text("Reset IOB")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        ForEach(insulinDeliveryHistorySingleton.insulinDeliveryHistory, id: \.id) { item in
+                            let timeInterval = Date(timeIntervalSince1970: item.timeStamp).timeIntervalSinceNow
+                            let timeSinceInjection = Duration(
+                                secondsComponent: Int64(-timeInterval),
+                                attosecondsComponent: 0
+                            ).formatted(.time(pattern: .hourMinute))
+                            
+                            Text("Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())  (\(timeSinceInjection) h)      Units: \(item.insulinUnits, specifier: "%.1f")")
+                        }
+                        .onDelete(perform: deleteHistory)
+                    }
                 }
             }
-            //        .navigationBarTitle("Settings")
+            .scrollDismissesKeyboard(.interactively)
+            
+            // MARK: - Alerts
             .alert ("Confirm", isPresented: $isShowingInsulinDeliverySubmitAlert) {
                 Button("Submit", action: {
                     let insulinDeliveryTimeStamp = pickerTimeStamp.timeIntervalSince1970
@@ -108,8 +275,7 @@ struct PhoneAppInsulinDeliveryView: View {
                 
                 Text("Do you want to add \(insulinSelected, specifier: "%.1f") units?")
             }
-            
-            .alert ("Confirm", isPresented: $isShowingInsulinDeliveryResetAlert) {
+            .alert("Confirm", isPresented: $isShowingInsulinDeliveryResetAlert) {
                 Button("Reset", action: {
                     pickerTimeStamp = Date.now
                     insulinDeliveryHistorySingleton.insulinDeliveryHistory = []
@@ -122,24 +288,75 @@ struct PhoneAppInsulinDeliveryView: View {
             } message: {
                 Text("Do you want to reset insulin history?")
             }
-            List {
-                ForEach(insulinDeliveryHistorySingleton.insulinDeliveryHistory, id: \.id) {item in
-                    let timeInterval = Date(timeIntervalSince1970: item.timeStamp).timeIntervalSinceNow
-                    let timeSinceInjection = Duration(
-                        secondsComponent: Int64(-timeInterval),
-                        attosecondsComponent: 0
-                    ).formatted(.time(pattern: .hourMinute))  // "2:05"
-                    
-                    Text("Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())  (\(timeSinceInjection) h)      Units: \(item.insulinUnits, specifier: "%.1f")")
-                }
-                
-            }
             
+           
         }
+//        .toolbar {
+//            // Keyboard toolbar to dismiss number pads
+//            ToolbarItemGroup(placement: .keyboard) {
+//                Spacer()
+//                Button("Done") {
+//                    // Dismiss keyboard
+//                 }
+//            }
+//        }
+        .onAppear {
+            if icrGramsPerUnit <= 0 { icrGramsPerUnit = 10 }
+            if roundingStep < 0 { roundingStep = 0.5 }
+        }
+        
     }
     
-    func sendMessagetoOther(message: [String: Any]) {
+    // MARK: - Submit helper (shared path, unchanged logic)
+    private func submitInsulin(units: Double, timestamp: Date, source: String) {
+        let insulinDeliveryTimeStamp = timestamp.timeIntervalSince1970
+        let insulinDeliveryUnits = units
+        
+        let insulinDeliveryHistoryItem = InsulinDelivery(
+            id: UUID(),
+            timestamp: insulinDeliveryTimeStamp,
+            insulinUnits: insulinDeliveryUnits,
+            insulinType: UserDefaults.group.insulinTypeSelected.rawValue
+        )
+        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? []
+        insulinDeliveryHistorySingleton.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
+        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
+        
+        var messageToWatch: [String: Any] = [
+            "content": "insulinDelivery",
+            "timeStamp": insulinDeliveryTimeStamp,
+            "units": insulinDeliveryUnits
+        ]
+        // Optional: tag the origin (manual/calculated); safe if ignored by receiver
+        messageToWatch["source"] = source
+        sendMessagetoOther(message: messageToWatch)
+        
+        CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+        dismiss()
+    }
+    
+    private func sendMessagetoOther(message: [String: Any]) {
         watchConnector.sendMessageToPairedDevice(message)
+    }
+    
+    private func deleteHistory(at offsets: IndexSet) {
+        var history = insulinDeliveryHistorySingleton.insulinDeliveryHistory
+        let removedItems = offsets.map { history[$0] }
+        history.remove(atOffsets: offsets)
+
+        // Update model & persist
+        insulinDeliveryHistorySingleton.insulinDeliveryHistory = history
+        UserDefaults.group.insulinDeliveryHistory = history
+        CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+
+        // Notify paired watch about deletions (optional)
+        for item in removedItems {
+            let messageToWatch: [String: Any] = [
+                "content": "deleteInsulin",
+                "id": item.id.uuidString
+            ]
+            sendMessagetoOther(message: messageToWatch)
+        }
     }
 }
 

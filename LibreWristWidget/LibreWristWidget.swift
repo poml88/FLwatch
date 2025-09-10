@@ -85,7 +85,7 @@ struct LibreWristWidgetEntryView : View {
                 //                }
                 AccessoryWidgetBackground()
                 VStack(alignment: .center, spacing: -6) {
-                    Button(intent: ReloadWidgetIntent()) {
+                    Button(intent: ReloadWidgetIntent()) { // Upper half will reload, lower half will open app
                         Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
                             .font(.system(size: 20, weight: .heavy, design: .monospaced))
                         //.colorInvert()
