@@ -4,7 +4,7 @@
 //
 //  Created by Peter Müller on 24.08.24.
 //
-
+#if false
 import Foundation
 
 
@@ -367,4 +367,5 @@ class Settings {
 //    }
 }
 
-var settings = Settings()
+//var settings = Settings()
+#endif

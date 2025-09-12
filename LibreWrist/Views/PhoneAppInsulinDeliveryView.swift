@@ -10,15 +10,21 @@ import SwiftUI
 struct PhoneAppInsulinDeliveryView: View {
     
     // Existing persisted manual picker
-    @AppStorage(SharedData.Keys.insulinSelected.key, store: SharedData.defaultsGroup)
+    @AppStorage(DefaultsKey.insulinSelected.rawValue, store: UserDefaults.group)
     private var insulinSelected: Double = 0.5
     
     // NEW: persisted calculator settings
-    @AppStorage("carbCalc.icrGramsPerUnit", store: SharedData.defaultsGroup)
+    @AppStorage(DefaultsKey.icrGramsPerUnit.rawValue, store: UserDefaults.group)
     private var icrGramsPerUnit: Double = 10
     
-    @AppStorage("carbCalc.roundingStep", store: SharedData.defaultsGroup)
+    @AppStorage(DefaultsKey.roundingStep.rawValue, store: UserDefaults.group)
     private var roundingStep: Double = 0.5
+    
+    @AppStorage(DefaultsKey.carbsPer100g.rawValue, store: UserDefaults.group)
+    private var carbsPer100g: Double = 0
+    
+    @AppStorage(DefaultsKey.portionGrams.rawValue, store: UserDefaults.group)
+    private var portionGrams: Double = 0
     
     @Environment(\.dismiss) var dismiss
     @Environment(\.insulinDeliveryHistorySingleton) var insulinDeliveryHistorySingleton
@@ -35,8 +41,8 @@ struct PhoneAppInsulinDeliveryView: View {
     let insulinDoses: [Double] = Array(stride(from: 0.5, to: 60, by: 0.5))
     
     // NEW: carb calculator transient inputs
-    @State private var carbsPer100g: Double = 0
-    @State private var portionGrams: Double = 0
+//    @State private var carbsPer100g: Double = 0
+//    @State private var portionGrams: Double = 0
     let portionChoices: [Int] = [50, 75, 100, 150, 200, 250, 300, 400]
     
     
@@ -308,7 +314,7 @@ struct PhoneAppInsulinDeliveryView: View {
     }
     
     // MARK: - Submit helper (shared path, unchanged logic)
-    private func submitInsulin(units: Double, timestamp: Date, source: String) {
+    private func submitInsulinXXX(units: Double, timestamp: Date, source: String) {
         let insulinDeliveryTimeStamp = timestamp.timeIntervalSince1970
         let insulinDeliveryUnits = units
         
@@ -353,7 +359,7 @@ struct PhoneAppInsulinDeliveryView: View {
         for item in removedItems {
             let messageToWatch: [String: Any] = [
                 "content": "deleteInsulin",
-                "id": item.id.uuidString
+                "timestamp": item.timeStamp
             ]
             sendMessagetoOther(message: messageToWatch)
         }

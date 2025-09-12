@@ -46,30 +46,36 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
 //        DispatchQueue.main.async { [self] in
 //            receivedMessage = message["message"] as? String ?? "Not found"
 //        }
+
+        let idhs = InsulinDeliveryHistorySingleton.shared
+        
         Logger.connectivity.info("Message received: \(message)")
         
         if message["content"] as? String == "credentials" {
             UserDefaults.group.username = message["username"] as? String ?? ""
             let password = message["password"] as? String ?? ""
             try? PasswordKeychain.save(password)
-            settings.libreLinkUpToken = ""
+            SharedData.libreLinkUpToken = ""
             UserDefaults.group.connected = .newlyConnected
         }
         
         if message["content"] as? String == "insulinDelivery" {
             let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: message["timeStamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600, insulinUnits: message["units"] as? Double ?? 0.0, insulinType: UserDefaults.group.insulinTypeSelected.rawValue)
-//            var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
-            let insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
-            insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // seems not to be necessary, but just to be sure....
-            insulinDeliveryHistorySingleton.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
-            UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            idhs.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
+            idhs.saveAndUpdateIOB()
         }
         
         if message["content"] as? String == "clearInsulinHistory" {
-            InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory = []
-            UserDefaults.group.insulinDeliveryHistory = []
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            idhs.insulinDeliveryHistory = []
+            idhs.saveAndUpdateIOB()
+        }
+        
+        if message["content"] as? String == "deleteInsulin" {
+            let timeStamp = message["timestamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600
+            if let idx = idhs.insulinDeliveryHistory.firstIndex(where: { $0.timeStamp == timeStamp }) {
+                idhs.insulinDeliveryHistory.remove(at: idx)
+            }
+            idhs.saveAndUpdateIOB()
         }
         
         if message["content"] as? String == "updateInsulinTypeSelected" {
@@ -80,7 +86,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         
         if message["content"] as? String == "showInsulinDeliveryMarksWatchMessage" {
             let valueBool = message["showInsulinDeliveryMarksWatch"] as? Bool ?? false
-            SharedData.showInsulinDeliveryMarksWatch = valueBool
+            SharedData.showInsulinDeliveryMarksPhone = valueBool
             CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
         }
         if message["content"] as? String == "showIOBCurveWatchMessage" {

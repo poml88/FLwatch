@@ -44,9 +44,8 @@ struct PhoneAppHomeView: View {
 //    @State var lastReadingDate: Date = Date(timeIntervalSinceNow: -999 * 60)
 //    @State var currentGlucose: Int = 0
 //    @State var trendArrow = "---"
-    private var libreLinkUp = LibreLinkUp()
+    let libreLinkUp = LibreLinkUp()
     @State private var onAppearNotToDoFirstStart: Int = 0
-    
      
     private let timer = Timer.publish(every: 60, tolerance: 1, on: .main, in: .common).autoconnect()
     
@@ -72,21 +71,21 @@ struct PhoneAppHomeView: View {
             
         }
         .alert ("Warning", isPresented: $isShowingDisclaimer) {
-            Button("Accept", role: .cancel, action: {settings.hasSeenDisclaimer = true})
+            Button("Accept", role: .cancel, action: {SharedData.hasSeenDisclaimer = true})
         }
         message: {
             Text("!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.")
         }
         
         .alert ("Welcome", isPresented: $isShowingWelcomeMessage) {
-            Button("Start", role: .cancel, action: {settings.hasSeenWelcomeMessage = true})
+            Button("Start", role: .cancel, action: {SharedData.hasSeenWelcomeMessage = true})
         }
         message: {
             Text("Thank you for downloading FLwatch. I hope it will prove useful.\n\nTo get startet, please read the SETUP AND USAGE guide. In case of questions, please contact support. More info on the Settings tab.")
         }
         
         .alert ("Update note", isPresented: $isShowingNotification) {
-            Button("Understood", role: .cancel, action: {settings.hasSeenNotification = true})
+            Button("Understood", role: .cancel, action: {SharedData.hasSeenNotification = true})
         }
         message: {
             Text("Please reboot phone and watch once if widgets do not work!")
@@ -137,11 +136,11 @@ struct PhoneAppHomeView: View {
 //            settings.hasSeenDisclaimer = false
 //            settings.hasSeenWelcomeMessage = false
             
-            if settings.hasSeenWelcomeMessage == false {
+            if SharedData.hasSeenWelcomeMessage == false {
                 isShowingWelcomeMessage = true
             }
             
-            if settings.hasSeenDisclaimer == false {
+            if SharedData.hasSeenDisclaimer == false {
                 isShowingDisclaimer = true
             }
             

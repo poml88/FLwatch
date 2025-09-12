@@ -46,6 +46,13 @@ class FLwatchShortcuts: AppShortcutsProvider {
             shortTitle: "Add insulin",
             systemImageName: "syringe"
         )
+        
+        AppShortcut(
+            intent: AddInsulinSiri(),
+            phrases: ["\(.applicationName) write down insulin"],
+            shortTitle: "Add insulin (written)",
+            systemImageName: "syringe.fill"
+        )
     }
 }
 

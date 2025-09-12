@@ -12,14 +12,14 @@ struct PhoneAppSettingsView: View {
     
     @Environment(\.openURL) private var openURL
     
-    @AppStorage(SharedData.Keys.showInsulinDeliveryMarksPhone.key, store: SharedData.defaultsGroup) private var showInsulinDeliveryMarksPhone: Bool = false
-    @AppStorage(SharedData.Keys.showInsulinDeliveryMarksWatch.key, store: SharedData.defaultsGroup) private var showInsulinDeliveryMarksWatch: Bool = false
-    @AppStorage(SharedData.Keys.showIOBCurvePhone.key, store: SharedData.defaultsGroup) private var showIOBCurvePhone: Bool = false
-    @AppStorage(SharedData.Keys.showIOBCurveWatch.key, store: SharedData.defaultsGroup) private var showIOBCurveWatch: Bool = false
-    @AppStorage(SharedData.Keys.showActivityCurvePhone.key, store: SharedData.defaultsGroup) private var showActivityCurvePhone: Bool = false
-    @AppStorage(SharedData.Keys.showActivityCurveWatch.key, store: SharedData.defaultsGroup) private var showActivityCurveWatch: Bool = false
-    @AppStorage(SharedData.Keys.widgetUpdateFrequency.key, store: SharedData.defaultsGroup) private var widgetUpdateFrequency: Int = 5
-    @AppStorage(SharedData.Keys.tapComplicationReloads.key, store: SharedData.defaultsGroup) private var tapComplicationReloads: Bool = false
+    @AppStorage(DefaultsKey.showInsulinDeliveryMarksPhone.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksPhone: Bool = false
+    @AppStorage(DefaultsKey.showInsulinDeliveryMarksWatch.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksWatch: Bool = false
+    @AppStorage(DefaultsKey.showIOBCurvePhone.rawValue, store: UserDefaults.group) private var showIOBCurvePhone: Bool = false
+    @AppStorage(DefaultsKey.showIOBCurveWatch.rawValue, store: UserDefaults.group) private var showIOBCurveWatch: Bool = false
+    @AppStorage(DefaultsKey.showActivityCurvePhone.rawValue, store: UserDefaults.group) private var showActivityCurvePhone: Bool = false
+    @AppStorage(DefaultsKey.showActivityCurveWatch.rawValue, store: UserDefaults.group) private var showActivityCurveWatch: Bool = false
+    @AppStorage(DefaultsKey.widgetUpdateFrequency.rawValue, store: UserDefaults.group) private var widgetUpdateFrequency: Int = 5
+    @AppStorage(DefaultsKey.tapComplicationReloads.rawValue, store: UserDefaults.group) private var tapComplicationReloads: Bool = false
     
     
     @State private var isScreenAlwaysOn = false

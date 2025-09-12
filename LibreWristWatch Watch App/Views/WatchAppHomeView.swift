@@ -34,7 +34,7 @@ struct WatchAppHomeView: View {
 //    @State var lastReadingDate: Date = Date(timeIntervalSinceNow: -999 * 60)
 //    @State var currentGlucose: Int = 0
 //    @State var trendArrow = "---"
-    private var libreLinkUp = LibreLinkUp()
+    let libreLinkUp = LibreLinkUp()
     
     private let timer = Timer.publish(every: 60, tolerance: 1, on: .main, in: .common).autoconnect()
     
@@ -88,7 +88,7 @@ struct WatchAppHomeView: View {
         .padding(.top, -40)
         .padding(.bottom, -15)
         .alert ("Warning", isPresented: $isShowingDisclaimer) {
-            Button("Accept", role: .cancel, action: {settings.hasSeenDisclaimer = true})
+            Button("Accept", role: .cancel, action: {SharedData.hasSeenDisclaimer = true})
         }
     message: {
             Text("!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.")
@@ -120,7 +120,7 @@ struct WatchAppHomeView: View {
         }
         .onAppear() { // fires when switching the Views, e.g. form settings to home view.
             print("onAppear")
-            if settings.hasSeenDisclaimer == false {
+            if SharedData.hasSeenDisclaimer == false {
                 isShowingDisclaimer = true
             }
             

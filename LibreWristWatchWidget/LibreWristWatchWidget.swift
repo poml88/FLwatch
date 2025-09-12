@@ -13,7 +13,7 @@ struct LibreWristWidgetEntryView : View {
 
     @Environment(\.widgetFamily) private var family
     
-    @AppStorage(SharedData.Keys.tapComplicationReloads.key, store: SharedData.defaultsGroup) private var tapComplicationReloads: Bool = false
+    @AppStorage(DefaultsKey.tapComplicationReloads.rawValue, store: UserDefaults.group) private var tapComplicationReloads: Bool = false
     
     var glucose: String {
         if entry.glucoseMeasurement.value <= 0 {

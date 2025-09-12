@@ -739,6 +739,9 @@
         }
       }
     },
+    "Add insulin (written)" : {
+
+    },
     "Ask the system to record insulin units for IOB calculation." : {
       "localizations" : {
         "de" : {
@@ -2168,6 +2171,12 @@
         }
       }
     },
+    "Insulin Units (written)" : {
+
+    },
+    "Insulin units recorded: %@" : {
+
+    },
     "IOB: %.2fu" : {
 
     },
@@ -2897,7 +2906,11 @@
     "Raw" : {
 
     },
+    "Record ${insulinUnitsRaw} units of insulin" : {
+
+    },
     "Record ${unitsDouble} units of insulin" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2930,6 +2943,9 @@
           }
         }
       }
+    },
+    "Record ${unitsDoubleWritten} units of insulin (written)" : {
+
     },
     "Record Insulin Injection" : {
       "localizations" : {
@@ -2964,6 +2980,9 @@
           }
         }
       }
+    },
+    "Record Insulin Injection (written)" : {
+
     },
     "Recorded %@ units of insulin." : {
       "localizations" : {

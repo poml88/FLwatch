@@ -34,7 +34,7 @@ class LibreLinkUp  {
     
     let regionalSiteURLRU: String = "https://api.libreview.ru"
     let regionalSiteURLCN: String = "https://api-cn.myfreestyle.cn"
-    var regionalSiteURL: String { settings.libreLinkUpRegion == "ru" ? regionalSiteURLRU : settings.libreLinkUpRegion == "cn" ? regionalSiteURLCN : "https://api-\(settings.libreLinkUpRegion).libreview.io" }
+    var regionalSiteURL: String { SharedData.libreLinkUpRegion == "ru" ? regionalSiteURLRU : SharedData.libreLinkUpRegion == "cn" ? regionalSiteURLCN : "https://api-\(SharedData.libreLinkUpRegion).libreview.io" }
         
     var unit: GlucoseUnit = .mgdl
     
@@ -67,10 +67,10 @@ class LibreLinkUp  {
     loop: repeat {
         do {
             libreLinkUpErrorBool = false
-            let token = settings.libreLinkUpToken
-            if settings.libreLinkUpUserId.isEmpty ||
-                settings.libreLinkUpToken.isEmpty ||
-                settings.libreLinkUpTokenExpirationDate < Date() ||
+//            let token = settings.libreLinkUpToken
+            if SharedData.libreLinkUpUserId.isEmpty ||
+                SharedData.libreLinkUpToken.isEmpty ||
+                SharedData.libreLinkUpTokenExpirationDate < Date() ||
                 retries == 1 {
                 do {
                     libreLinkUpErrorBool = false
@@ -80,8 +80,8 @@ class LibreLinkUp  {
                     libreLinkUpResponse = error.localizedDescription
                 }
             }
-            if !(settings.libreLinkUpUserId.isEmpty ||
-                 settings.libreLinkUpToken.isEmpty) {
+            if !(SharedData.libreLinkUpUserId.isEmpty ||
+                 SharedData.libreLinkUpToken.isEmpty) {
                 let (data, _, graphHistory, logbookData, logbookHistory, _, sensorSettingsRead, sensorType) = try await getPatientGraph()
                 dataString = (data as! Data).string
                 libreLinkUpResponse = dataString + (logbookData as! Data).string
@@ -97,7 +97,7 @@ class LibreLinkUp  {
                 
                 if graphHistory.count > 0 {
                     DispatchQueue.main.async { [self] in
-                        settings.lastOnlineDate = Date()
+                        SharedData.lastOnlineDate = Date()
                         SensorSettingsSingleton.shared.sensorSettings = sensorSettingsRead
                         SensorSettingsSingleton.shared.sensorType = sensorType
                         // TODO: just merge with newer values
@@ -170,6 +170,7 @@ class LibreLinkUp  {
     @discardableResult
     func login() async throws -> (Any, URLResponse) {
         var request = URLRequest(url: URL(string: "\(siteURL)/\(loginEndpoint)")!)
+        request.timeoutInterval = 20
         
         //        let appGroupID = UserDefaults.stringValue(forKey: "APP_GROUP_ID")
         let credentials = [
@@ -207,7 +208,7 @@ class LibreLinkUp  {
                         let data = json["data"] as? [String: Any]
                         
                         if status != 0 {
-                            DebugMessageSingleton.shared.libreLinkUpResponseError = "Login" + responseData
+                            DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: " + responseData
                         } else {
                             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
                         }
@@ -298,7 +299,7 @@ class LibreLinkUp  {
                            let region = data?["region"] as? String {
                             redirected = redirect
                             //                        DispatchQueue.main.async { [self] in
-                            settings.libreLinkUpRegion = region
+                            SharedData.libreLinkUpRegion = region
                             //                        }
                             Logger.libreLinkUp.debug("LibreLinkUp: redirecting to \(self.regionalSiteURL)/\(self.loginEndpoint) ") // The very first time this will be "eu" instead of the "region" because UserDefaults has not been set.
                             request.url = URL(string: "\(regionalSiteURL)/\(loginEndpoint)")!
@@ -314,17 +315,17 @@ class LibreLinkUp  {
                            let authTicket = try? JSONDecoder().decode(AuthTicket.self, from: authTicketData) {
                             let authTicketString = "\(authTicket)"
                             Logger.libreLinkUp.debug("LibreLinkUp: user id: \(id), country: \(country), authTicket: \(authTicketString), expires on \(Date(timeIntervalSince1970: Double(authTicket.expires)))")
-                            DispatchQueue.main.async { [self] in
-                                settings.libreLinkUpUserId = id
-                                settings.libreLinkUpPatientId = id  // avoid scraping patientId when following ourselves
-                                settings.libreLinkUpCountry = country
-                                settings.libreLinkUpToken = authTicket.token
-                                settings.libreLinkUpTokenExpirationDate = Date(timeIntervalSince1970: Double(authTicket.expires))
-                            }
+                            
+                            SharedData.libreLinkUpUserId = id
+                            SharedData.libreLinkUpPatientId = id  // avoid scraping patientId when following ourselves
+                            SharedData.libreLinkUpCountry = country
+                            SharedData.libreLinkUpToken = authTicket.token
+                            SharedData.libreLinkUpTokenExpirationDate = Date(timeIntervalSince1970: Double(authTicket.expires))
+                            
                             
                             if !country.isEmpty {
                                 // default "de" and "fr" regional servers
-                                let defaultRegion = regions.contains(country.lowercased()) ? country.lowercased() : settings.libreLinkUpRegion
+                                let defaultRegion = regions.contains(country.lowercased()) ? country.lowercased() : SharedData.libreLinkUpRegion
                                 var request = URLRequest(url: URL(string: "\(siteURL)/\(configEndpoint)/country?country=\(country)")!)
                                 for (header, value) in headers {
                                     request.setValue(value, forHTTPHeaderField: header)
@@ -340,7 +341,7 @@ class LibreLinkUp  {
                                         let region = regionIndex == nil ? defaultRegion : String(server[server.index(regionIndex!, offsetBy: 1) ..< server.firstIndex(of: ".")!])
                                         Logger.libreLinkUp.debug("LibreLinkUp: regional server: \(server), saved default region: \(region)")
                                         //                                    DispatchQueue.main.async { [self] in
-                                        settings.libreLinkUpRegion = region
+                                        SharedData.libreLinkUpRegion = region
                                         //                                    }
                                         //                                        if settings.userLevel >= .test {
                                         var countryCodes = [String]()
@@ -359,12 +360,12 @@ class LibreLinkUp  {
                                 }
                             }
                             
-                            if settings.libreLinkUpFollowing {
+                            if SharedData.libreLinkUpFollowing {
                                 Logger.libreLinkUp.debug("LibreLinkUp: getting connections for follower user id: \(id)")
                                 var request = URLRequest(url: URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)")!)
                                 var authenticatedHeaders = headers
-                                authenticatedHeaders["Authorization"] = "Bearer \(settings.libreLinkUpToken)"
-                                authenticatedHeaders["Account-Id"] = settings.libreLinkUpUserId.SHA256
+                                authenticatedHeaders["Authorization"] = "Bearer \(SharedData.libreLinkUpToken)"
+                                authenticatedHeaders["Account-Id"] = SharedData.libreLinkUpUserId.SHA256
                                 for (header, value) in authenticatedHeaders {
                                     request.setValue(value, forHTTPHeaderField: header)
                                 }
@@ -378,7 +379,7 @@ class LibreLinkUp  {
                                         let patientId = connection["patientId"] as! String
                                         Logger.libreLinkUp.debug("LibreLinkUp: first patient Id: \(patientId)")
                                         DispatchQueue.main.async { [self] in
-                                            settings.libreLinkUpPatientId = patientId
+                                            SharedData.libreLinkUpPatientId = patientId
                                         }
                                     }
                                 }
@@ -427,10 +428,11 @@ class LibreLinkUp  {
     
     /// - Returns: (data, response, history, logbookData, logbookHistory, logbookAlarms)
     func getPatientGraph() async throws -> (Any, URLResponse, [LibreLinkUpGlucose], Any, [LibreLinkUpGlucose], [LibreLinkUpAlarm], SensorSettings, SensorType) {
-        var request = URLRequest(url: URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)/\(settings.libreLinkUpPatientId)/graph")!)
+        var request = URLRequest(url: URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)/\(SharedData.libreLinkUpPatientId)/graph")!)
+        request.timeoutInterval = 20
         var authenticatedHeaders = headers
-        authenticatedHeaders["Authorization"] = "Bearer \(settings.libreLinkUpToken)"
-        authenticatedHeaders["Account-Id"] = settings.libreLinkUpUserId.SHA256
+        authenticatedHeaders["Authorization"] = "Bearer \(SharedData.libreLinkUpToken)"
+        authenticatedHeaders["Account-Id"] = SharedData.libreLinkUpUserId.SHA256
         for (header, value) in authenticatedHeaders {
             request.setValue(value, forHTTPHeaderField: header)
         }
@@ -462,7 +464,7 @@ class LibreLinkUp  {
                let status = json["status"] as? Int {
                 
                 if status != 0 {
-                    DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph" + responseData
+                    DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph: " + responseData
                 } else {
                     DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
                 }
@@ -473,7 +475,7 @@ class LibreLinkUp  {
                        let message = error["message"] as? String {
                         Logger.general.error("LibreLinkUp: error: \(message)")
                         if message == "followerNotConnectToPatient" || message == "follower not connect to patient" {
-                            settings.libreLinkUpToken = ""
+                            SharedData.libreLinkUpToken = ""
                             throw LibreLinkUpError.followerNotConnectToPatient
                         }
                     }
@@ -696,13 +698,13 @@ class LibreLinkUp  {
                             //                                }
                             //                            }
                             
-                            if settings.libreLinkUpScrapingLogbook, // currently this block is not used
+                            if SharedData.libreLinkUpScrapingLogbook, // currently this block is not used
                                let ticketDict = json["ticket"] as? [String: Any],
                                let token = ticketDict["token"] as? String {
                                 Logger.libreLinkUp.debug("LibreLinkUp: new token for logbook: \(token)")
                                 request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                                request.setValue(settings.libreLinkUpUserId.SHA256, forHTTPHeaderField: "Account-Id")
-                                request.url = URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)/\(settings.libreLinkUpPatientId)/logbook")!
+                                request.setValue(SharedData.libreLinkUpUserId.SHA256, forHTTPHeaderField: "Account-Id")
+                                request.url = URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)/\(SharedData.libreLinkUpPatientId)/logbook")!
                                 Logger.libreLinkUp.debug("LibreLinkUp: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
                                 let (data, response) = try await URLSession.shared.data(for: request)
                                 Logger.libreLinkUp.debug("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
@@ -762,15 +764,15 @@ class LibreLinkUp  {
         }
     }
     
-    func getLastGlucoseDataUnused() async throws {
+    func getLastGlucoseDataZZZ() async throws {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
         Logger.libreLinkUp.info("LibreLinkUp: getting last glucose data")
         var request = URLRequest(url: URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)")!)
         var authenticatedHeaders = headers
-        authenticatedHeaders["Authorization"] = "Bearer \(settings.libreLinkUpToken)"
-        authenticatedHeaders["Account-Id"] = settings.libreLinkUpUserId.SHA256
+        authenticatedHeaders["Authorization"] = "Bearer \(SharedData.libreLinkUpToken)"
+        authenticatedHeaders["Account-Id"] = SharedData.libreLinkUpUserId.SHA256
         for (header, value) in authenticatedHeaders {
             request.setValue(value, forHTTPHeaderField: header)
         }
@@ -799,8 +801,8 @@ class LibreLinkUp  {
     }
     
     func getLastGlucoseDataXXX(completion: @escaping (GlucoseMeasurementIOBEntry?, Any?) -> ()) {
-        if !(settings.libreLinkUpUserId.isEmpty ||
-             settings.libreLinkUpToken.isEmpty) {
+        if !(SharedData.libreLinkUpUserId.isEmpty ||
+             SharedData.libreLinkUpToken.isEmpty) {
             let dateFormatter = DateFormatter()
             dateFormatter.locale = Locale(identifier: "en_US_POSIX")
             dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
@@ -810,8 +812,8 @@ class LibreLinkUp  {
             print("\(request)")
             let headers = LLUHeaders().headers
             var authenticatedHeaders = headers
-            authenticatedHeaders["Authorization"] = "Bearer \(settings.libreLinkUpToken)"
-            authenticatedHeaders["Account-Id"] = settings.libreLinkUpUserId.SHA256
+            authenticatedHeaders["Authorization"] = "Bearer \(SharedData.libreLinkUpToken)"
+            authenticatedHeaders["Account-Id"] = SharedData.libreLinkUpUserId.SHA256
             for (header, value) in authenticatedHeaders {
                 request.setValue(value, forHTTPHeaderField: header)
             }
@@ -850,9 +852,9 @@ class LibreLinkUp  {
         }
     }
     
-    func getLastGlucoseData() async throws -> GlucoseMeasurementIOBEntry {
-        if !(settings.libreLinkUpUserId.isEmpty ||
-             settings.libreLinkUpToken.isEmpty) {
+    func getLastGlucoseData() async throws -> GlucoseMeasurementIOBEntry { // for AppIntent
+        if !(SharedData.libreLinkUpUserId.isEmpty ||
+             SharedData.libreLinkUpToken.isEmpty) {
             let dateFormatter = DateFormatter()
             dateFormatter.locale = Locale(identifier: "en_US_POSIX")
             dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
@@ -862,8 +864,8 @@ class LibreLinkUp  {
             print("\(request)")
             let headers = LLUHeaders().headers
             var authenticatedHeaders = headers
-            authenticatedHeaders["Authorization"] = "Bearer \(settings.libreLinkUpToken)"
-            authenticatedHeaders["Account-Id"] = settings.libreLinkUpUserId.SHA256
+            authenticatedHeaders["Authorization"] = "Bearer \(SharedData.libreLinkUpToken)"
+            authenticatedHeaders["Account-Id"] = SharedData.libreLinkUpUserId.SHA256
             for (header, value) in authenticatedHeaders {
                 request.setValue(value, forHTTPHeaderField: header)
             }

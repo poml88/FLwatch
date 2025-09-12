@@ -79,6 +79,12 @@
 		7B8C80142E48C8B300A9DA79 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8C80112E48C8B300A9DA79 /* ViewModifiers.swift */; };
 		7B8C80152E48C8B300A9DA79 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8C80112E48C8B300A9DA79 /* ViewModifiers.swift */; };
 		7B9B7A7B2C875453004B30FD /* PhoneAppSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */; };
+		7B9F09A32E73075B0037B091 /* AddInsulinSiri.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F09A22E7307510037B091 /* AddInsulinSiri.swift */; };
+		7B9F09A42E73075B0037B091 /* AddInsulinSiri.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F09A22E7307510037B091 /* AddInsulinSiri.swift */; };
+		7B9F09A62E731F210037B091 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F09A52E731F1A0037B091 /* SharedDefaults.swift */; };
+		7B9F09A72E731F210037B091 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F09A52E731F1A0037B091 /* SharedDefaults.swift */; };
+		7B9F09A82E731F210037B091 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F09A52E731F1A0037B091 /* SharedDefaults.swift */; };
+		7B9F09A92E731F210037B091 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F09A52E731F1A0037B091 /* SharedDefaults.swift */; };
 		7BA0AE2D2C582F63004226FE /* LibreWristApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA0AE2C2C582F63004226FE /* LibreWristApp.swift */; };
 		7BA0AE2F2C582F63004226FE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA0AE2E2C582F63004226FE /* ContentView.swift */; };
 		7BA0AE312C582F64004226FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7BA0AE302C582F64004226FE /* Assets.xcassets */; };
@@ -273,6 +279,8 @@
 		7B8965442DC17399003A50CE /* PhoneAppSiriSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSiriSheetView.swift; sourceTree = "<group>"; };
 		7B8C80112E48C8B300A9DA79 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
 		7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSettingsView.swift; sourceTree = "<group>"; };
+		7B9F09A22E7307510037B091 /* AddInsulinSiri.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddInsulinSiri.swift; sourceTree = "<group>"; };
+		7B9F09A52E731F1A0037B091 /* SharedDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDefaults.swift; sourceTree = "<group>"; };
 		7BA0AE292C582F63004226FE /* FLwatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FLwatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7BA0AE2C2C582F63004226FE /* LibreWristApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreWristApp.swift; sourceTree = "<group>"; };
 		7BA0AE2E2C582F63004226FE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -431,6 +439,7 @@
 		7B3EA4F72C6C08CC0061F239 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				7B9F09A52E731F1A0037B091 /* SharedDefaults.swift */,
 				7B435CCB2C6D46DF006F6E53 /* Logger.swift */,
 				7B435CCF2C6D5103006F6E53 /* Date.swift */,
 				7B435CD32C6D57F5006F6E53 /* String.swift */,
@@ -473,6 +482,7 @@
 		7B631AAA2CB85F3300CE9EEF /* AppIntents */ = {
 			isa = PBXGroup;
 			children = (
+				7B9F09A22E7307510037B091 /* AddInsulinSiri.swift */,
 				7B19E69B2DBD66DE00F8EA7C /* AddInsulin.swift */,
 				7BDF0A7B2DBB886400852BAD /* FLwatchShortcuts.swift */,
 				7BDF0A702DBA40D500852BAD /* ReadGlucose.swift */,
@@ -887,6 +897,7 @@
 				7BDB81352CB09BCF00F4A60F /* String.swift in Sources */,
 				7BDB81292CB0893700F4A60F /* LibreLinkUpGlucose.swift in Sources */,
 				7B631AAE2CB85FBB00CE9EEF /* Reload.swift in Sources */,
+				7B9F09A82E731F210037B091 /* SharedDefaults.swift in Sources */,
 				7BDB81342CB09AF800F4A60F /* LLUHeaders.swift in Sources */,
 				7BB98DFB2CB14AB8000A354D /* Data.swift in Sources */,
 				7B2E7EBD2CB59DEB00A3473B /* GlucoseMeasurementIOBEntry.swift in Sources */,
@@ -915,6 +926,7 @@
 				7BA5679D2CBC1079003244EE /* GlucoseIOBTimelineProvider.swift in Sources */,
 				7B2E7EC32CB59FFA00A3473B /* LLUHeaders.swift in Sources */,
 				7B8C80132E48C8B300A9DA79 /* ViewModifiers.swift in Sources */,
+				7B9F09A62E731F210037B091 /* SharedDefaults.swift in Sources */,
 				7B2E7EC52CB5A04A00A3473B /* Data.swift in Sources */,
 				7B7D08832CB9C6BA00FC1973 /* InsulinModel.swift in Sources */,
 				7B2E7EC02CB59FC500A3473B /* TrendArrow.swift in Sources */,
@@ -940,6 +952,7 @@
 				7B183E9B2C84C9540018A24F /* PhoneAppInsulinDeliveryView.swift in Sources */,
 				7B4855DF2DB58DC90089409E /* TimeDifferencePicker.swift in Sources */,
 				7B435CCC2C6D46DF006F6E53 /* Logger.swift in Sources */,
+				7B9F09A72E731F210037B091 /* SharedDefaults.swift in Sources */,
 				7BFD835E2C84E48E00A9B195 /* ExponentialInsulinModel.swift in Sources */,
 				7BB617F42DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */,
 				7BDF0A7D2DBB887400852BAD /* FLwatchShortcuts.swift in Sources */,
@@ -949,6 +962,7 @@
 				7B299A112C90AFFC002A15C8 /* Glucose.swift in Sources */,
 				7BADE01B2C73E4B60074A47F /* Data.swift in Sources */,
 				7B299A0B2C90AF8C002A15C8 /* AuthTicket.swift in Sources */,
+				7B9F09A32E73075B0037B091 /* AddInsulinSiri.swift in Sources */,
 				7B299A172C90B089002A15C8 /* LibreLinkUpGlucose.swift in Sources */,
 				7B435CD42C6D57F5006F6E53 /* String.swift in Sources */,
 				7B1A7CA42C79E413006D603C /* LibreLinkUp.swift in Sources */,
@@ -1000,6 +1014,7 @@
 				7BC51F482C7C7FA3009542D2 /* WatchAppHomeView.swift in Sources */,
 				7BC51F4B2C7C822C009542D2 /* LibreLinkUp.swift in Sources */,
 				7BDF0A722DBA40E200852BAD /* ReadGlucose.swift in Sources */,
+				7B9F09A42E73075B0037B091 /* AddInsulinSiri.swift in Sources */,
 				7BFD83582C84DF6200A9B195 /* InsulinObjects.swift in Sources */,
 				7BC51FBB2C7D04DE009542D2 /* WatchAppSettingsView.swift in Sources */,
 				7BB763002C82642900C43600 /* WatchAppDonateView.swift in Sources */,
@@ -1009,6 +1024,7 @@
 				7BC51F552C7C851A009542D2 /* Settings.swift in Sources */,
 				7BC51F382C7C77B2009542D2 /* LibreWristWatchApp.swift in Sources */,
 				7B19E69F2DBF7A7100F8EA7C /* FLwatchShortcuts.swift in Sources */,
+				7B9F09A92E731F210037B091 /* SharedDefaults.swift in Sources */,
 				7B299A122C90AFFC002A15C8 /* Glucose.swift in Sources */,
 				7B8C80122E48C8B300A9DA79 /* ViewModifiers.swift in Sources */,
 				7BC51F5B2C7C8589009542D2 /* SensorType.swift in Sources */,

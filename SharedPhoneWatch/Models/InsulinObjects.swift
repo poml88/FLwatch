@@ -87,6 +87,19 @@ struct InsulinTypePresets: Codable, Identifiable {
     private init() {
         insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? []
     }
+    
+    func save() {
+        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
+    }
+    
+    func read() {
+        insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? []
+    }
+    
+    func saveAndUpdateIOB() {
+        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
+        CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+    }
 }
 
 @Observable class CurrentIOBSingleton {
@@ -105,14 +118,15 @@ struct InsulinTypePresets: Codable, Identifiable {
     private init() {}
     
     func getCurrentIOB() -> Double {
-        let insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
-        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // It is necessary to read in the UserDefaults value because widgets and app are individual programs with individual Singletons...
+        let idhs = InsulinDeliveryHistorySingleton.shared
+//        idhs.read() // It is necessary to read in the UserDefaults value because widgets and app are individual programs with individual Singletons...
+        // read is now done from widget directly
 //        var insulinDeliveryHistory: [InsulinDelivery] = insulinDeliveryHistorySingleton.insulinDeliveryHistory
         var sumIOB: Double = 0
-        for item in insulinDeliveryHistorySingleton.insulinDeliveryHistory {
+        for item in idhs.insulinDeliveryHistory {
             let timeIntervalBetweenDeliveryAndNow = Date().timeIntervalSince1970 - item.timeStamp
             if timeIntervalBetweenDeliveryAndNow > 12 * 60 * 60 {
-                insulinDeliveryHistorySingleton.insulinDeliveryHistory.removeAll(where: {$0.id == item.id})
+                idhs.insulinDeliveryHistory.removeAll(where: {$0.id == item.id})
             } else {
                 let timeIntervalBetweenDeliveryAndNow = Date().timeIntervalSince1970 - item.timeStamp
                 let IOB =   updateIOB(timeStamp: timeIntervalBetweenDeliveryAndNow, insulinType: item.insulinType) * item.insulinUnits
@@ -120,7 +134,7 @@ struct InsulinTypePresets: Codable, Identifiable {
             }
         }
         
-        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
+        idhs.save()
         let currentIOB: Double = sumIOB
         return currentIOB
     }
@@ -134,16 +148,16 @@ struct InsulinTypePresets: Codable, Identifiable {
     }
     
     func calculateInsulinOnBoardCurve() -> [ActivityCurveDataPoint] {
-        let insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
-        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // It is necessary to read in the UserDefaults value because widgets and app are individual programs with individual Singletons...
+        let idhs = InsulinDeliveryHistorySingleton.shared
+//        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // It is necessary to read in the UserDefaults value because widgets and app are individual programs with individual Singletons...
         
-        if insulinDeliveryHistorySingleton.insulinDeliveryHistory.count < 1 { return [] }
+        if idhs.insulinDeliveryHistory.count < 1 { return [] }
         
         var activityCurve: [ActivityCurveDataPoint] = []
         let minutes = 5 * 60
         for timeInterval in stride(from: 6 * 60 * 60, through: -2 * 60 * 60, by: -minutes) {
             var sumIOB: Double = 0
-            for item in insulinDeliveryHistorySingleton.insulinDeliveryHistory {
+            for item in idhs.insulinDeliveryHistory {
                 let timeIntervalBetweenDeliveryAndNow = Date().timeIntervalSince1970 - item.timeStamp
                 if timeIntervalBetweenDeliveryAndNow < 6 * 60 * 60 {
                     let timeIntervalBetweenDeliveryAndTimeStampToBeCalculated = Date().timeIntervalSince1970 - Double(timeInterval) - item.timeStamp

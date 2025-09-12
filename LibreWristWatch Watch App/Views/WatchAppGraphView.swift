@@ -11,9 +11,9 @@ import Charts
 
 struct WatchAppGraphView: View {
     
-    @AppStorage(SharedData.Keys.showInsulinDeliveryMarksWatch.key, store: SharedData.defaultsGroup) private var showInsulinDeliveryMarksWatch: Bool = false
-    @AppStorage(SharedData.Keys.showIOBCurveWatch.key, store: SharedData.defaultsGroup) private var showIOBCurveWatch: Bool = false
-    @AppStorage(SharedData.Keys.showActivityCurveWatch.key, store: SharedData.defaultsGroup) private var showActivityCurveWatch: Bool = false
+    @AppStorage(DefaultsKey.showInsulinDeliveryMarksWatch.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksWatch: Bool = false
+    @AppStorage(DefaultsKey.showIOBCurveWatch.rawValue, store: UserDefaults.group) private var showIOBCurveWatch: Bool = false
+    @AppStorage(DefaultsKey.showActivityCurveWatch.rawValue, store: UserDefaults.group) private var showActivityCurveWatch: Bool = false
     
     @Environment(\.libreLinkUpHistory) var libreLinkUpHistory
     @Environment(\.sensorSettingsSingleton) var sensorSettingsSingleton

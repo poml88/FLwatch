@@ -11,7 +11,7 @@ import SwiftUI
 struct LibreWristWatch_Watch_AppApp: App {
     
     init(){
-        UserDefaults.group.register(defaults: Settings.defaults)
+//        UserDefaults.group.register(defaults: Settings.defaults)
         print("init")
         FLwatchShortcuts.updateAppShortcutParameters()
         WatchConnectivityManager.shared.startSession()

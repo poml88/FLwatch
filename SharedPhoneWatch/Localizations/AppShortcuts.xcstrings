@@ -90,6 +90,27 @@
         }
       }
     },
+    "${applicationName} write down insulin" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} notiere Insulin"
+            ]
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "${applicationName} write down insulin"
+            ]
+          }
+        }
+      }
+    },
     "What is my glucose in ${applicationName}" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

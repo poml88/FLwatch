@@ -13,9 +13,9 @@ struct PhoneAppGraphView: View {
     @Environment(\.libreLinkUpHistory) var libreLinkUpHistory
     @Environment(\.sensorSettingsSingleton) var sensorSettingsSingleton
     
-    @AppStorage(SharedData.Keys.showInsulinDeliveryMarksPhone.key, store: SharedData.defaultsGroup) private var showInsulinDeliveryMarksPhone: Bool = false
-    @AppStorage(SharedData.Keys.showIOBCurvePhone.key, store: SharedData.defaultsGroup) private var showIOBCurvePhone: Bool = false
-    @AppStorage(SharedData.Keys.showActivityCurvePhone.key, store: SharedData.defaultsGroup) private var showActivityCurvePhone: Bool = false
+    @AppStorage(DefaultsKey.showInsulinDeliveryMarksPhone.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksPhone: Bool = false
+    @AppStorage(DefaultsKey.showIOBCurvePhone.rawValue, store: UserDefaults.group) private var showIOBCurvePhone: Bool = false
+    @AppStorage(DefaultsKey.showActivityCurvePhone.rawValue, store: UserDefaults.group) private var showActivityCurvePhone: Bool = false
     
     @State private var selectedlibreLinkHistoryPoint: LibreLinkUpGlucose?
     

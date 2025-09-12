@@ -56,23 +56,30 @@ struct AddInsulin: AppIntent {
     // We provide two parameters, one used only for AppShortcuts with a limited value of options,
     // and an open value that can be used programatically with Shortcuts and also on the times that
     // Siri fails to understand a value, to ask the user for something more precise.
-    @Parameter(title: "Insulin Units", description: "How many insulin units?", requestValueDialog: "How much insulin?")
-    var insulinUnitsEnum: InsulinUnitsEnum?
-    
     @Parameter(title: "Insulin Units",
                description: "How many insulin units?",
-               inclusiveRange: (lowerBound: 0.5, upperBound: 30.0),
-               optionsProvider: RecommendedInsulinDoses()
-               )
-    var unitsDouble: Double?
+               requestValueDialog: "How much insulin?")
+    
+    var insulinUnitsEnum: InsulinUnitsEnum?
+    
+    //    @Parameter(title: "Insulin Units",
+    //               description: "How many insulin units?",
+    ////               inclusiveRange: (lowerBound: 0.5, upperBound: 30.0),
+    ////               optionsProvider: RecommendedInsulinDoses()
+    //               )
+    //    var unitsDouble: Double?
+    
+    @Parameter(title: "Insulin Units",
+               description: "How many insulin units?")
+    
+    var insulinUnitsRaw: String?
     
     
-
-//    @Parameter(title: "Units", description: "How many insulin units?")
-//    var unitsInt: Int?
-
+    //    @Parameter(title: "Units", description: "How many insulin units?")
+    //    var unitsInt: Int?
+    
     static var parameterSummary: some ParameterSummary {
-        Summary("Record \(\.$unitsDouble) units of insulin") {
+        Summary("Record \(\.$insulinUnitsRaw) units of insulin") {
         }
     }
     
@@ -80,45 +87,62 @@ struct AddInsulin: AppIntent {
     @MainActor
     //    func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
-                
-        let insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
+        
+        let formatter = NumberFormatter()
+        formatter.locale = Locale.current
+        formatter.numberStyle = .decimal
         
         var insulinDeliveryUnits: Double = 0.0
         
         if let value = insulinUnitsEnum?.rawValue, let d = Double(value) {
-            
             insulinDeliveryUnits = d
-            
-        } else if let unitsDouble {
-            
-            //            let formattedString = formatter.number(from: unitsDouble)
-            //            insulinDeliveryUnits = Double(formattedString ?? 0.0)
-            insulinDeliveryUnits = unitsDouble
-            
+        }
+        
+        //        if insulinDeliveryUnits == 0.0, let val = unitsDouble {
+        //            insulinDeliveryUnits = val
+        //        }
+        
+        if let raw = insulinUnitsRaw {
+            // First try localized parsing (handles 8.5 vs 8,5)
+            if let number = formatter.number(from: raw) {
+                insulinDeliveryUnits = number.doubleValue
+            } else {
+                // Try spelling out numbers ("eight", "drei", "八")
+                formatter.numberStyle = .spellOut
+                if let number = formatter.number(from: raw.lowercased()) {
+                    insulinDeliveryUnits = number.doubleValue
+                }
+            }
         }
         
         if insulinDeliveryUnits == 0.0 {
-            do {
-                insulinDeliveryUnits = try await $unitsDouble.requestValue("How many insulin units?")
-            } catch {
-                
-                throw $unitsDouble.needsValueError("Could not determine insulin units value.")
-                
+            let request = try await $insulinUnitsRaw.requestValue("How many insulin units?")
+            let raw = request
+            // First try localized parsing (handles 8.5 vs 8,5)
+            if let number = formatter.number(from: raw) {
+                insulinDeliveryUnits = number.doubleValue
+            } else {
+                // Try spelling out numbers ("eight", "drei", "八")
+                formatter.numberStyle = .spellOut
+                if let number = formatter.number(from: raw.lowercased()) {
+                    insulinDeliveryUnits = number.doubleValue
+                }
             }
         }
-            //            let formattedString = formatter.number(from: string)
-            //            insulinDeliveryUnits = Double(formattedString ?? 0.0)
-            
-            
-            
-       
         
-//        var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
-        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // seems not to be necessary, but just to be sure....
+        if (insulinDeliveryUnits == 0.0 || insulinDeliveryUnits < 0.5 || insulinDeliveryUnits > 30.0  ) {
+            throw $insulinUnitsRaw.needsValueError("Could not determine insulin units value.")
+        }
+        
+        //            let formattedString = formatter.number(from: string)
+        //            insulinDeliveryUnits = Double(formattedString ?? 0.0)
+        
+        //        var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
+        let idhs = InsulinDeliveryHistorySingleton.shared
         let insulinDeliveryTimeStamp = Date.now.timeIntervalSince1970
         let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: insulinDeliveryTimeStamp, insulinUnits: insulinDeliveryUnits, insulinType: UserDefaults.group.insulinTypeSelected.rawValue)
-        insulinDeliveryHistorySingleton.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
-        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
+        idhs.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
+        idhs.saveAndUpdateIOB()
         
         let messageToWatch: [String: Any] = ["content": "insulinDelivery",
                                              "timeStamp": insulinDeliveryTimeStamp,

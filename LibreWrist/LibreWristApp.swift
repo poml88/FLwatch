@@ -12,7 +12,7 @@ import SwiftUI
 struct LibreWristApp: App {
         
     init(){
-        UserDefaults.group.register(defaults: Settings.defaults)
+//        UserDefaults.group.register(defaults: Settings.defaults)
         print("init")
         if UserDefaults.group.connected == .connecting {
             UserDefaults.group.connected = .disconnected

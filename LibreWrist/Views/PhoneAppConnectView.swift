@@ -7,6 +7,7 @@
 
 import SwiftUI
 import OSLog
+import WidgetKit
  
 
 struct PhoneAppConnectView: View {
@@ -21,7 +22,8 @@ struct PhoneAppConnectView: View {
     @State private var isShowingConnectionFailed = false
     private var watchConnector = WatchConnectivityManager.shared
     
-
+    let libreLinkUp = LibreLinkUp()
+ 
     private let timer = Timer.publish(every: 1, tolerance: 0.5, on: .main, in: .common).autoconnect()
     
     init() {
@@ -74,14 +76,14 @@ struct PhoneAppConnectView: View {
                         .textInputAutocapitalization(.never)
                         .onChange(of: username) {
                             UserDefaults.group.connected = .disconnected
-                            settings.libreLinkUpToken = ""
+                            SharedData.libreLinkUpToken = ""
                         }
                     SecureField(text: $password, prompt: Text("Password")) {
                         Text("Password")
                     }.submitLabel(.done)
                     .onChange(of: password) { 
                         UserDefaults.group.connected = .disconnected
-                        settings.libreLinkUpToken = ""
+                        SharedData.libreLinkUpToken = ""
                     }
                 }
                 Section {
@@ -156,19 +158,20 @@ struct PhoneAppConnectView: View {
         
     
     private func tryToConnect() {
-        settings.libreLinkUpToken = ""
+        SharedData.libreLinkUpToken = ""
         UserDefaults.group.username = username
         try? PasswordKeychain.save(password)
         UserDefaults.group.connected = .connecting
         Task {
             do {
                 print("do tryToConnect")
-                try await LibreLinkUp().login()
+                try await libreLinkUp.login()
                 UserDefaults.group.connected = .newlyConnected
                 let messageToWatch: [String: Any] = ["content": "credentials",
                                                      "username": username,
                                                      "password": password]
                 sendMessagetoOther(message: messageToWatch)
+                WidgetCenter.shared.reloadAllTimelines()
             } catch {
                 print("catch tryToConnect")
                 isShowingConnectionFailed = true
