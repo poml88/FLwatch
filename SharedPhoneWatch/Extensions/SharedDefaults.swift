@@ -206,6 +206,11 @@ enum SharedData {
         set { store.setBool(newValue, forKey: .showInsulinDeliveryMarksPhone) }
     }
     
+    static var showInsulinDeliveryMarksWatch: Bool {
+        get { store.getBool(.showInsulinDeliveryMarksWatch, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .showInsulinDeliveryMarksWatch) }
+    }
+    
     static var showIOBCurveWatch: Bool {
         get { store.getBool(.showIOBCurveWatch, defaultValue: false) }
         set { store.setBool(newValue, forKey: .showIOBCurveWatch) }

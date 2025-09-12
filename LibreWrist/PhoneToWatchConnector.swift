@@ -4,6 +4,9 @@
 //
 //  Created by Peter Müller on 01.09.24.
 //
+
+/*
+ 
 #if false
 import Foundation
 import WatchConnectivity
@@ -132,3 +135,5 @@ private protocol WatchRequestHandler {
 //        WatchMessageService.singleton.send(request: self, responseHandler: responseHandler)
 //    }
 //}
+ 
+*/

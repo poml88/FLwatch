@@ -4,6 +4,10 @@
 //
 //  Created by Peter Müller on 01.09.24.
 //
+
+/*
+ 
+ 
 #if false
 import Foundation
 import WatchConnectivity
@@ -131,3 +135,5 @@ private protocol WatchRequestHandler {
     func handle(dictionary: [String : Any], responseHandler: @escaping (WatchMessage) -> Void) -> Bool
 }
 #endif
+
+*/
