@@ -85,6 +85,29 @@ es:
     app_subtitle: "Compañero para iOS y watchOS para ver tus datos de glucosa e insulina."
     built_with: "This site is open source. Help to improve it."
     meta_description: "FLwatch para iOS y watchOS muestra lecturas de glucosa de LibreLinkUp en iPhone y Apple Watch."
+it:
+  brand:
+    name: "FLwatch"
+  headings:
+    contents: "Contenuti"
+    language: "Lingua"
+    legal: "Note legali"
+  labels:
+    privacy: "Informativa sulla privacy"
+    impressum: "Note legali"
+    terms: "Condizioni d'uso"
+  buttons:
+    menu_open: "Apri menu"
+    menu_close: "Chiudi menu"
+    theme_toggle: "Attiva/disattiva tema"
+    appstore_cta: "Scarica dall'App Store"
+    github_cta: "Visualizza sorgente su GitHub"
+    home_aria: "Iniziale"
+  strings:
+    title: "FLwatch – App iOS e watchOS"
+    app_subtitle: "Compagno iOS e watchOS per visualizzare i dati relativi al glucosio nel sangue e all'insulina."
+    built_with: "Questo sito è open source. Aiutaci a migliorarlo."
+    meta_description: "FLwatch per iOS e watchOS mostra i valori glicemici di LibreLinkUp su iPhone e Apple Watch."
 fr:
   brand:
     name: "FLwatch"
