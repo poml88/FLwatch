@@ -1,62 +1,61 @@
 ---
 layout: landing
-title: "FLwatch - Glucose Sensor Graph"
-description: "FLwatch displays your LibreLinkUp glucose readings on iPhone and Apple Watch. Open-source app with insulin-on-board calculation and widgets."
-lang: en
-permalink: /en/
+title: "FLwatch - Grafico del sensore di glucosio"
+description: "FLwatch visualizza i valori di glucosio di LibreLinkUp su iPhone e Apple Watch. App open source con calcolo dell'insulina a bordo e widget."
+lang: it
+permalink: /it/
 image: /assets/images/app-preview-optimized.png
-hero_title: "FLwatch - Glucose Sensor Graph"
+hero_title: "FLwatch - Grafico del sensore di glucosio"
 ---
  
 
+***Attenzione, questo progetto è altamente sperimentale! Si prega di utilizzare questa app con cautela ed estrema attenzione. Non prendere decisioni avventate basandoti sul software. Non utilizzare questo software se non sei sicuro. Non utilizzare questa app per decisioni mediche. Non è fornita alcuna garanzia. Utilizzala a tuo rischio e pericolo!***
 
+Questo software è gratuito e open source. È stato sviluppato per esigenze personali, ma tutti dovrebbero poterne beneficiare.
 
-***Warning, This project is highly experimental! Please use this app with caution and extreme care. Do not make careless decisions based on software. Do not use this software if you are unsure. Don’t use this App for medical decisions. It comes without absolutely no warranty. Use it at your own risk!***
-
-This software is free and open source. It is being developed out of personal needs, but everyone should be able to benefit from it.
-
-### Usage {#usage}
-***Installation:*** Make sure that the watchOS app is installed, ideally before starting the iOS app. Depending on your configuration, the watchOS app is either installed automatically, or has to be installed via the “Watch” app on the phone.
-- The app needs iOS 17.5 and watchOS 10.5
+### Utilizzo {#usage}
+***Installazione:*** Assicurarsi che l'app watchOS sia installata, idealmente prima di avviare l'app iOS. A seconda della configurazione, l'app watchOS viene installata automaticamente o deve essere installata tramite l'app “Watch” sul telefono.
+- L'app richiede iOS 17.5 e watchOS 10.5
 - TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
-- Settings are made in the iOS app and are then transferred to the watchOS app. This only works if the watchOS app is installed on the watch.
-- ***Establishing the connection between the apps:*** To make things work, you have to first invite yourself to become your own follower. *LibreView credentials do not work.* To do this, in the LibreLink / Libre 3 app under Share / Connected Apps, there is a Connect / Manage LibreLinkUp item. Tap “Add Connection” and enter the email address you would like to use for the follower account, and an invitation is sent to that address (the email address can be the same as for LibreView). Then, to set up the LibreLinkUp follower account, install the [LibreLinkUp App](https://apps.apple.com/us/app/librelinkup/id1234323923) on the phone and follow the instructions using the email address you just invited. There is a [Step by Step Guide](https://www.librelinkup.com/articles/getting-started) you might find useful. Make sure you can see your own blood glucose graph in the LibreLinkUp app. Lastly, open FLwatch and enter the credentials of the follower account, see below. Only one followed patient per follower account is currently supported by FLwatch.
-- The LibreLinkUp app can then be closed or uninstalled, but maybe needed later to accept new Terms of Use, Privacy Policies, or just to check that the account / connection works.
-- To connect to your LibreLinkUp follower account, enter your credentials in FLwatch on the connect tab. If the watchOS app is installed, the credentials are transferred to the watch app. It is possible to re-transfer the credentials by pressing the “connect” button again.
-- It can take up to a minute for the data to be fetched and displayed.
-- To use the insulin calculation, tap on the IOB label on the home screen. Supported insulin types are currently: rapid acting (Novolog, Novorapid, ...) and fast rapid acting (Fiasp, Lyumjev, ...). More insulins can be added on request. *Please let me know.*
-  - The app is using the exponetial model from LoopKit. The model takes three paramters: actionDuration, peakActivityTime, and delay. For rapid acting insulin the parameters are 360, 75, and 10 minutes, for fast rapid acting insulin the parameters are 360, 55, and 10 minutes.
-- There is a setting to keep the glucose graph for one hour displayed on the watch: Either on the watch, or in the phone “Watch” app, go to Settings — General — Return to Clock scroll down and tap on FLwatch and choose “After 1 hour”. Like this, FLwatch stays for 1 hour in the foreground and gets a reasonable number of updates (like every minute).
-- The easiest way to start the phone or watch app is by placing a widget / complication on your homescreen, lockscreen, watchface, or whereever and tap it.
-- To use Siri to open the app handsfree you can create a shortcut on the phone called for example „glucose graph“ or “blood sugar”. This shortcut just opens FLwatch. Select the shortcut option „show on watch“. Now, if you activate Siri, you just say „glucose graph“ and, voila, it shows the app FLwatch and its graph.
-Same works on the phone.
+- Le impostazioni vengono effettuate nell'app iOS e poi trasferite all'app watchOS. Questo funziona solo se l'app watchOS è installata sull'orologio.
+- ***Stabilire la connessione tra le app:*** Per far funzionare il tutto, devi prima invitarti a diventare tuo follower. *Le credenziali LibreView non funzionano.* Per farlo, nell'app LibreLink / Libre 3, in Condividi / App connesse, è presente la voce Connetti / Gestisci LibreLinkUp. Tocca “Aggiungi connessione” e inserisci l'indirizzo e-mail che desideri utilizzare per l'account follower; un invito verrà inviato a quell'indirizzo (l'indirizzo e-mail può essere lo stesso di LibreView). Quindi, per configurare l'account follower LibreLinkUp, installa l'[app LibreLinkUp](https://apps.apple.com/us/app/librelinkup/id1234323923) sul telefono e segui le istruzioni utilizzando l'indirizzo e-mail che hai appena invitato. È disponibile una [guida passo passo](https://www.librelinkup.com/articles/getting-started) che potrebbe esserti utile. Assicurati di poter visualizzare il tuo grafico della glicemia nell'app LibreLinkUp. Infine, apri FLwatch e inserisci le credenziali dell'account follower, come indicato di seguito. Attualmente FLwatch supporta un solo paziente seguito per ogni account follower.
+- L'app LibreLinkUp può quindi essere chiusa o disinstallata, ma potrebbe essere necessaria in seguito per accettare i nuovi Termini di utilizzo, le Informative sulla privacy o semplicemente per verificare che l'account/la connessione funzioni.
+- Per connetterti al tuo account follower LibreLinkUp, inserisci le tue credenziali in FLwatch nella scheda “Connetti”. Se l'app watchOS è installata, le credenziali vengono trasferite all'app dell'orologio. È possibile ritrasferire le credenziali premendo nuovamente il pulsante “Connetti”.
+- Il recupero e la visualizzazione dei dati possono richiedere fino a un minuto.
+- Per utilizzare il calcolo dell'insulina, toccare l'etichetta IOB nella schermata iniziale. I tipi di insulina attualmente supportati sono: ad azione rapida (Novolog, Novorapid, ...) e ad azione ultra rapida (Fiasp, Lyumjev, ...). Su richiesta è possibile aggiungere altri tipi di insulina. *Fammi sapere.*
+  - L'app utilizza il modello esponenziale di LoopKit. Il modello prevede tre parametri: actionDuration, peakActivityTime e delay. Per l'insulina ad azione rapida i parametri sono 360, 75 e 10 minuti, per l'insulina ad azione ultra rapida i parametri sono 360, 55 e 10 minuti.
+- È possibile impostare la visualizzazione del grafico del glucosio per un'ora sull'orologio: sull'orologio o nell'app “Watch” del telefono, andare su Impostazioni — Generali — Torna all'orologio, scorrere verso il basso e toccare FLwatch, quindi selezionare “Dopo 1 ora”. In questo modo, FLwatch rimane in primo piano per 1 ora e riceve un numero ragionevole di aggiornamenti (ad esempio ogni minuto).
+- Il modo più semplice per avviare l'app sul telefono o sull'orologio è posizionare un widget/complicazione sulla schermata iniziale, sulla schermata di blocco, sul quadrante dell'orologio o in qualsiasi altro punto e toccarlo.
+- Per utilizzare Siri per aprire l'app in modalità vivavoce, puoi creare un collegamento sul telefono chiamato, ad esempio, “grafico del glucosio” o ‘glicemia’. Questo collegamento apre semplicemente FLwatch. Seleziona l'opzione di collegamento “mostra sull'orologio”. Ora, se attivi Siri, basta dire “grafico del glucosio” e, voilà, viene visualizzata l'app FLwatch e il suo grafico.
+Lo stesso funziona sul telefono.
 
-### Features {#features}
-* blood glucose graph on phone and watch
-* interactive chart on phone to display individual values on tap
-* phone screen always on mode
-* supports rapid acting and fast rapid acting bolus insulins
-* insulin on board calculation (IOB)
-* insulin on board graph
-* insulin activity graph
-* iOS widgets and lock screen widgets
-* stand by mode widget
-* watchOS widgets / complications
+### Caratteristiche {#features}
+* grafico della glicemia sul telefono e sull'orologio
+* grafico interattivo sul telefono per visualizzare i valori individuali con un tocco
+* modalità schermo del telefono sempre acceso
+* supporta insuline ad azione rapida e ad azione rapida veloce
+* calcolo dell'insulina a bordo (IOB)
+* grafico dell'insulina a bordo
+* grafico dell'attività dell'insulina
+* widget iOS e widget della schermata di blocco
+* widget in modalità standby
+* widget watchOS / complicazioni
 
-### ToDo 
-- Widget with BG graph
+### Da fare 
+- Widget con grafico della glicemia
 
-### Support and Feedback {#support}
-For support please open an issue, start a discussion or email **flwatch [ a t ] cmdline [ d o t ] net**. Feedback is very welcome, please use the same methods as for support.
+### Assistenza e feedback {#support}
+Per assistenza, apri una segnalazione, avvia una discussione o invia un'e-mail a **flwatch [ a t ] cmdline [ d o t ] net**. I feedback sono molto graditi, utilizza gli stessi metodi utilizzati per l'assistenza.
 
-### Donations... 
-...are always very welcome! [paypal.me/lovemyhusky](paypal.me/lovemyhusky)
+### Donazioni... 
+...sono sempre molto gradite! [paypal.me/lovemyhusky](paypal.me/lovemyhusky)
 
 {% include screenshots.html %}
 
-Please have a look at these projects as well:
+Dai un'occhiata anche a questi progetti:
 
-### Credits: 
+### Crediti: 
 [DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard]( https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
-All product and company names, trademarks, service marks, registered trademarks, and registered service marks are the property of their respective holders. Their use is for information purposes and does not imply any affiliation with or endorsement by them. Please note: this app has no connection with and is not endorsed by Abbott Diabetes Care Inc.
+Tutti i nomi di prodotti e aziende, marchi commerciali, marchi di servizio, marchi registrati e marchi di servizio registrati sono di proprietà dei rispettivi titolari. Il loro utilizzo ha scopo puramente informativo e non implica alcuna affiliazione o approvazione da parte loro. Nota: questa app non ha alcun legame con Abbott Diabetes Care Inc. e non è da essa approvata.
+

@@ -1,10 +1,10 @@
 ---
 layout: landing
-title: Terms of Use
-lang: en
-permalink: /en/terms/
+title: Condizioni d'uso
+lang: it
+permalink: /it/terms/
 sitemap: false
 ---
-# Terms of Use
+# Condizioni d'uso
 
-This is an unofficial translation. Only the German version is legally binding. See the [German Terms of Use]({{ site.baseurl }}/terms/).
+Questa è una traduzione non ufficiale. Solo la versione tedesca è legalmente vincolante. Vedi le [Condizioni d'uso in tedesco]({{ site.baseurl }}/terms/).

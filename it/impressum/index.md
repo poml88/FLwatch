@@ -1,10 +1,10 @@
 ---
 layout: landing
-title: Legal Notice
-lang: en
-permalink: /en/impressum/
+title: Note legali
+lang: it
+permalink: /it/impressum/
 sitemap: false
 ---
-# Legal Notice
+# Note legali
 
-This is an unofficial translation. Only the German version is legally binding. See the [German Privacy Policy]({{ site.baseurl }}/privacy/) and [German Impressum]({{ site.baseurl }}/impressum/)).
+Questa è una traduzione non ufficiale. Solo la versione tedesca è legalmente vincolante. Si vedano l'[Informativa sulla privacy in tedesco]({{ site.baseurl }}/privacy/) e l'[Impressum in tedesco]({{ site.baseurl }}/impressum/)).

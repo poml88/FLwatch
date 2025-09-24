@@ -1,10 +1,10 @@
 ---
 layout: landing
-title: Privacy Policy
-lang: en
-permalink: /en/privacy/
+title: Informativa sulla privacy
+lang: it
+permalink: /it/privacy/
 sitemap: false
 ---
-# Privacy Policy
+# Informativa sulla privacy
 
-This is an unofficial translation. Only the German version is legally binding. See the [German Privacy Policy]({{ site.baseurl }}/privacy/) and [German Impressum]({{ site.baseurl }}/impressum/)).
+Questa è una traduzione non ufficiale. Solo la versione tedesca è legalmente vincolante. Si veda l'[Informativa sulla privacy in tedesco]({{ site.baseurl }}/privacy/) e l'[Impressum in tedesco]({{ site.baseurl }}/impressum/)).
