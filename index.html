@@ -61,7 +61,7 @@ sitemap: false
   
   <script>
 (function(){
-  var supported = ['en','de','fr','es','ja','zh-Hans'];
+  var supported = ['en','de','fr','es','it','ja','zh-Hans'];
 
   function baseFromPath(){
     var parts = location.pathname.split('/').filter(Boolean);
@@ -78,6 +78,7 @@ sitemap: false
     if(lang.startsWith('de')) return 'de';
     if(lang.startsWith('fr')) return 'fr';
     if(lang.startsWith('es')) return 'es';
+    if(lang.startsWith('it')) return 'it';
     if(lang.startsWith('ja')) return 'ja';
     if(lang==='zh-cn' || lang==='zh-hans' || lang.startsWith('zh')) return 'zh-Hans';
     return 'en';
@@ -106,6 +107,7 @@ sitemap: false
     <a href="{{ site.baseurl }}/de/">Deutsch</a> ·
     <a href="{{ site.baseurl }}/fr/">Français</a> ·
     <a href="{{ site.baseurl }}/es/">Español</a> ·
+    <a href="{{ site.baseurl }}/es/">Italiano</a> ·
     <a href="{{ site.baseurl }}/ja/">日本語</a> ·
     <a href="{{ site.baseurl }}/zh-Hans/">简体中文</a>
   </p>
