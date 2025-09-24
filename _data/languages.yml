@@ -17,6 +17,11 @@
   name: Español
   flag: "🇪🇸"
   path: "/es/"
+  
+- code: it
+  name: Italiano
+  flag: "🇮🇹"
+  path: "/it/"
 
 - code: ja
   name: 日本語
