@@ -495,7 +495,6 @@
 		7BA0AE202C582F63004226FE = {
 			isa = PBXGroup;
 			children = (
-				7B2E7EC92CB5A5C600A3473B /* LibreWristWatchWidgetExtension.entitlements */,
 				7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */,
 				7BC51F612C7C9CD1009542D2 /* LibreWristConfig.xcconfig */,
 				7B183E952C84AE540018A24F /* SharedPhoneWatch */,
@@ -578,6 +577,7 @@
 				7BC51F372C7C77B2009542D2 /* LibreWristWatchApp.swift */,
 				7B183E982C84B0AA0018A24F /* WatchToPhoneConnector.swift */,
 				7BC51FBF2C7D3D4B009542D2 /* Views */,
+				7B2E7EC92CB5A5C600A3473B /* LibreWristWatchWidgetExtension.entitlements */,
 				7B69F7C22CDD74DF00E3A50C /* Localizable.oldwatchstrings */,
 				7BC51F642C7CA68D009542D2 /* LibreWristWatch-Watch-App-Info.plist */,
 				7BC51F632C7C9E96009542D2 /* LibreWristWatch Watch App.entitlements */,
