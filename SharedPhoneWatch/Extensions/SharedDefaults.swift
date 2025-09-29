@@ -40,6 +40,14 @@ enum DefaultsKey: String {
     case roundingStep = "roundingStepKey"
     case carbsPer100g = "carbsPer100gKey"
     case portionGrams = "portionGramsKey"
+    case carbsStore = "carbsStoreKey"
+    
+    // Request reviews SharedData
+    case hasDeclinedReview = "hasDeclinedReviewKey"
+    case lastReviewPromptDate = "lastReviewPromptDateKey"
+    case usedDays = "usedDaysKey"
+    case hasPromptedOnce = "hasPromptedOnceKey"
+    case hasAgreedToReview = "hasAgreedToReviewKey"
 
     // Former Settings / other keys
     case libreLinkUpEmail = "libreLinkUpEmail"
@@ -57,6 +65,9 @@ enum DefaultsKey: String {
     case hasSeenDisclaimer = "hasSeenDisclaimer"
     case hasSeenWelcomeMessage = "hasSeenWelcomeMessage"
     case hasSeenNotification001 = "hasSeenNotification001"
+    
+    
+    
 
     // Private user/session keys (from original private Keys)
     case username = "username"
@@ -94,6 +105,11 @@ extension UserDefaults {
         string(forKey: key.rawValue) ?? defaultValue
     }
     func setString(_ value: String, forKey key: DefaultsKey) { set(value, forKey: key.rawValue) }
+    
+    func getStringArray(_ key: DefaultsKey, defaultValue: [String] = []) -> [String] {
+        array(forKey: key.rawValue) as? [String] ?? defaultValue
+    }
+    func setStringArray(_ value: [String], forKey key: DefaultsKey) {set(value, forKey: key.rawValue) }
 
     func getDate(_ key: DefaultsKey, defaultValue: Date = Date(timeIntervalSince1970: 0)) -> Date {
         if let stored = object(forKey: key.rawValue) as? Date { return stored }
@@ -289,6 +305,11 @@ enum SharedData {
     static var lastOnlineDate: Date {
         get { store.getDate(.lastOnlineDate, defaultValue: Date(timeIntervalSinceNow: -1 * 60 * 60 * 24)) }
         set { store.setDate(newValue, forKey: .lastOnlineDate) }
+    }
+    
+    static var usedDays: [String] {
+        get { store.getStringArray(.usedDays, defaultValue: []) }
+        set { store.setStringArray(newValue, forKey: .usedDays) }
     }
 
     // Add other static properties as needed — or prefer using @AppStorage directly (below).

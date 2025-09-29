@@ -26,6 +26,9 @@ struct PhoneAppInsulinDeliveryView: View {
     @AppStorage(DefaultsKey.portionGrams.rawValue, store: UserDefaults.group)
     private var portionGrams: Double = 0
     
+    @AppStorage(DefaultsKey.carbsStore.rawValue, store: UserDefaults.group)
+    private var carbsStore: Double = 0
+    
     @Environment(\.dismiss) var dismiss
     @Environment(\.insulinDeliveryHistorySingleton) var insulinDeliveryHistorySingleton
     
@@ -52,7 +55,7 @@ struct PhoneAppInsulinDeliveryView: View {
     }
     private var insulinUnitsRaw: Double {
         guard icrGramsPerUnit > 0 else { return 0 }
-        return totalCarbs / icrGramsPerUnit
+        return carbsStore / icrGramsPerUnit
     }
     private var insulinUnitsRounded: Double {
         guard roundingStep > 0 else { return insulinUnitsRaw }
@@ -67,250 +70,306 @@ struct PhoneAppInsulinDeliveryView: View {
         ("1 U", 1.0)
     ]
     
+    enum Field: Hashable { case carbsPer100g, portionGrams, icrGramsPerUnit }
+    
+    @FocusState private var focused: Field?
+
+    
     var body: some View {
-        VStack {
-            Button { dismiss() } label: { Text("Dismiss") }
-                .buttonStyle(.borderedProminent)
-                .padding()
-            
-            Form {
-                // MARK: Manual entry (existing)
-                Section {
-                    Picker("Insulin units", selection: $insulinSelected) {
-                        ForEach(insulinDoses, id: \.self) {
-                            Text("\($0, specifier: "%.1f")")
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    
-                    DatePicker(selection: $pickerTimeStamp) { Text("Time: ") }
-                    
-                    Button {
-                        isShowingDifferenceTimePickerSheet = true
-                    } label: {
-                        Text("or: Time since injection")
-                    }
-                    .buttonStyle(.bordered)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .sheet(isPresented: $isShowingDifferenceTimePickerSheet) {
-                        TimeDifferencePicker(pickerTimeStamp: $pickerTimeStamp)
-                    }
-                } header: {
-                    Text("Bolus Insulin (\(insulinTypeSelected.description))")
-                }
-                
-                // MARK: Actions
-                Section {
-                    Button {
-                        isShowingInsulinDeliverySubmitAlert = true
-                    } label: {
-                        Text("Add insulin")
-                    }
+        NavigationStack { // necessary for the toolbar of the numeric keyboard
+            VStack {
+                Button { dismiss() } label: { Text("Dismiss") }
                     .buttonStyle(.borderedProminent)
-                    // Enable if EITHER manual OR calculated dose is > 0
-                    .disabled(insulinSelected == 0.0 && !hasValidCalculatedDose)
-                    
-                    
-                }
+                    .padding()
                 
-                // MARK: Carb calculator (NEW)
-                Section {
-                    HStack {
-                        Text("Carbs per 100 g")
-                        Spacer()
-                        TextField("0", value: $carbsPer100g,
-                                  format: .number.precision(.fractionLength(0...2)))
+                Form {
+                    // MARK: Manual entry (existing)
+                    Section {
+                        Picker("Insulin units", selection: $insulinSelected) {
+                            ForEach(insulinDoses, id: \.self) {
+                                Text("\($0, specifier: "%.1f")")
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        
+                        DatePicker(selection: $pickerTimeStamp) { Text("Time: ") }
+                        
+                        Button {
+                            isShowingDifferenceTimePickerSheet = true
+                        } label: {
+                            Text("or: Time since injection")
+                        }
+                        .buttonStyle(.bordered)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .sheet(isPresented: $isShowingDifferenceTimePickerSheet) {
+                            TimeDifferencePicker(pickerTimeStamp: $pickerTimeStamp)
+                        }
+                        
+                        Button {
+                            isShowingInsulinDeliverySubmitAlert = true
+                        } label: {
+                            Text("Add insulin")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        // Enable if EITHER manual OR calculated dose is > 0
+                        .disabled(insulinSelected == 0.0 && !hasValidCalculatedDose)
+                        
+                    } header: {
+                        Text("Bolus Insulin (\(insulinTypeSelected.description))")
+                    }
+                    
+                    
+                    
+                    // MARK: Carb calculator (NEW)
+                    Section {
+                        HStack {
+                            Text("Carbs per 100 g")
+                            Spacer()
+                            TextField("0", value: $carbsPer100g,
+                                      format: .number.precision(.fractionLength(0...2)))
                             .keyboardType(.decimalPad)
+                            .focused($focused, equals: .carbsPer100g)
                             .multilineTextAlignment(.trailing)
                             .frame(minWidth: 90)
                             .onChange(of: carbsPer100g) { carbsPer100g = max(0, carbsPer100g) }
-                        Text("g")
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("Portion size")
-                        Spacer()
-                        TextField("0", value: $portionGrams,
-                                  format: .number.precision(.fractionLength(0...1)))
+                            Text("g")
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        HStack {
+                            Text("Portion size")
+                            Spacer()
+                            TextField("0", value: $portionGrams,
+                                      format: .number.precision(.fractionLength(0...1)))
                             .keyboardType(.decimalPad)
+                            .focused($focused, equals: .portionGrams)
                             .multilineTextAlignment(.trailing)
                             .frame(minWidth: 90)
                             .onChange(of: portionGrams) { portionGrams = max(0, portionGrams) }
-                        Text("g")
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    // Quick portion chips
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(portionChoices, id: \.self) { g in
-                                Button("\(g) g") { portionGrams = Double(g) }
-                                    .buttonStyle(.bordered)
+                            Text("g")
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        // Quick portion chips
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(portionChoices, id: \.self) { g in
+                                    Button("\(g) g") { portionGrams = Double(g) }
+                                        .buttonStyle(.bordered)
+                                }
+                                Button {
+                                    portionGrams = 0
+                                } label: {
+                                    Label("Clear", systemImage: "xmark.circle")
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(.gray)
                             }
+                            .padding(.top, 2)
+                        }
+                        
+                        HStack {
+                            Text("Resulting carbs")
+                            Spacer()
+                            Text(totalCarbs, format: .number.precision(.fractionLength(0...1))).foregroundStyle(.secondary)
+                            Text("g").foregroundStyle(.secondary)
+                        }
+                        
+                        HStack {
                             Button {
-                                portionGrams = 0
+                                carbsStore += totalCarbs
                             } label: {
-                                Label("Clear", systemImage: "xmark.circle")
+                                Label("Carbs → store", systemImage: "arrow.down.doc")
                             }
                             .buttonStyle(.bordered)
-                            .tint(.gray)
-                        }
-                        .padding(.top, 2)
-                    }
-                    
-                    // ICR & rounding
-                    VStack(alignment: .leading, spacing: 8) {
+                            
+                            Button {
+                                carbsStore = 0
+                            } label: {
+                                Label("Clear store", systemImage: "xmark.circle")
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.gray)                    }
+                        
                         HStack {
-                            Text("ICR")
+                            Text("Carbs store")
                             Spacer()
-                            TextField("10", value: $icrGramsPerUnit,
-                                      format: .number.precision(.fractionLength(0...1)))
+                            Text(carbsStore, format: .number.precision(.fractionLength(0...1))).foregroundStyle(.secondary)
+                            Text("g").foregroundStyle(.secondary)
+                        }
+                        
+                        // ICR & rounding
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("ICR")
+                                Spacer()
+                                TextField("10", value: $icrGramsPerUnit,
+                                          format: .number.precision(.fractionLength(0...1)))
                                 .keyboardType(.decimalPad)
+                                .focused($focused, equals: .icrGramsPerUnit)
                                 .multilineTextAlignment(.trailing)
                                 .frame(minWidth: 90)
                                 .onChange(of: icrGramsPerUnit) { icrGramsPerUnit = max(0, icrGramsPerUnit) }
-                            Text("g / 1U").foregroundStyle(.secondary)
+                                Text("g / 1U").foregroundStyle(.secondary)
+                            }
+                            Text("Enter grams per 1U (e.g., 10 ≙ 1U/10g).")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
                         }
-                        Text("Enter grams per 1U (e.g., 10 ≙ 1U/10g).")
+                        
+                        Picker("Rounding", selection: $roundingStep) {
+                            ForEach(roundingChoices, id: \.step) { c in
+                                Text(c.label).tag(c.step)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        
+                        // Results
+                        
+                        HStack {
+                            Text(roundingStep > 0 ? "Insulin (rounded)" : "Insulin")
+                            Spacer()
+                            Text(
+                                (roundingStep > 0 ? insulinUnitsRounded : insulinUnitsRaw),
+                                format: .number.precision(.fractionLength(0...2))
+                            ).foregroundStyle(.secondary)
+                            Text("U").foregroundStyle(.secondary)
+                        }
+                        if roundingStep > 0 && abs(insulinUnitsRounded - insulinUnitsRaw) >= 0.01 {
+                            HStack {
+                                Text("Raw")
+                                Spacer()
+                                Text(insulinUnitsRaw, format: .number.precision(.fractionLength(0...2)))
+                                Text("U").foregroundStyle(.secondary)
+                            }
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        }
+                        
+                        // Convenience: copy calc → manual picker
+                        if hasValidCalculatedDose {
+                            
+                            Button {
+                                if roundingStep > 0 {
+                                    insulinSelected = insulinUnitsRounded
+                                } else {
+                                    roundingStep = 0.5 ; insulinSelected = insulinUnitsRounded ; roundingStep = 0
+                                }
+                            } label: {
+                                Label("Copy calculated → insulin picker", systemImage: "arrow.down.doc")
+                            }
+                            .buttonStyle(.bordered)
+                            
+                        }
+                        
+                        
+                        
+                    } header: {
+                        Text("Carb Calculator")
+                    } footer: {
+                        Text("Convenience calculator only. Follow your care plan.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
                     
-                    Picker("Rounding", selection: $roundingStep) {
-                        ForEach(roundingChoices, id: \.step) { c in
-                            Text(c.label).tag(c.step)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    
-                    // Results
-                    HStack {
-                        Text("Total carbs")
-                        Spacer()
-                        Text(totalCarbs, format: .number.precision(.fractionLength(0...1)))
-                        Text("g").foregroundStyle(.secondary)
-                    }
-                    HStack {
-                        Text(roundingStep > 0 ? "Insulin (rounded)" : "Insulin")
-                        Spacer()
-                        Text(
-                            (roundingStep > 0 ? insulinUnitsRounded : insulinUnitsRaw),
-                            format: .number.precision(.fractionLength(0...2))
-                        )
-                        Text("U").foregroundStyle(.secondary)
-                    }
-                    if roundingStep > 0 && abs(insulinUnitsRounded - insulinUnitsRaw) >= 0.01 {
-                        HStack {
-                            Text("Raw")
-                            Spacer()
-                            Text(insulinUnitsRaw, format: .number.precision(.fractionLength(0...2)))
-                            Text("U").foregroundStyle(.secondary)
-                        }
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                    }
-                    
-                    // Convenience: copy calc → manual picker
-                    if hasValidCalculatedDose {
-                        Button {
-                            if roundingStep > 0 {
-                                insulinSelected = insulinUnitsRounded
-                            } else {
-                                roundingStep = 0.5 ; insulinSelected = insulinUnitsRounded ; roundingStep = 0
+                    // MARK: Existing history list
+                    if !insulinDeliveryHistorySingleton.insulinDeliveryHistory.isEmpty {
+                        
+                        Section(header: Text("Insulin Delivery History")) {
+                            Button {
+                                isShowingInsulinDeliveryResetAlert.toggle()
+                            } label: {
+                                Text("Reset IOB")
                             }
-                                                    } label: {
-                            Label("Copy calculated → picker", systemImage: "arrow.down.doc")
+                            .buttonStyle(.borderedProminent)
+                            ForEach(insulinDeliveryHistorySingleton.insulinDeliveryHistory, id: \.id) { item in
+                                let timeInterval = Date(timeIntervalSince1970: item.timeStamp).timeIntervalSinceNow
+                                let timeSinceInjection = Duration(
+                                    secondsComponent: Int64(-timeInterval),
+                                    attosecondsComponent: 0
+                                ).formatted(.time(pattern: .hourMinute))
+                                
+                                Text("Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())  (\(timeSinceInjection) h)      Units: \(item.insulinUnits, specifier: "%.1f")")
+                            }
+                            .onDelete(perform: deleteHistory)
                         }
-                        .buttonStyle(.bordered)
                     }
-                } header: {
-                    Text("Carb Calculator")
-                } footer: {
-                    Text("Convenience calculator only. Follow your care plan.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
                 }
-                
-                // MARK: Existing history list
-                if !insulinDeliveryHistorySingleton.insulinDeliveryHistory.isEmpty {
-                    
-                    Section(header: Text("Insulin Delivery History")) {
-                        Button {
-                            isShowingInsulinDeliveryResetAlert.toggle()
-                        } label: {
-                            Text("Reset IOB")
-                        }
-                        .buttonStyle(.borderedProminent)
-                        ForEach(insulinDeliveryHistorySingleton.insulinDeliveryHistory, id: \.id) { item in
-                            let timeInterval = Date(timeIntervalSince1970: item.timeStamp).timeIntervalSinceNow
-                            let timeSinceInjection = Duration(
-                                secondsComponent: Int64(-timeInterval),
-                                attosecondsComponent: 0
-                            ).formatted(.time(pattern: .hourMinute))
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        
+                        
+                        Button("Clear") { clearFocused() }
+                        Spacer()
+                        Button("Done") {
+                            // Preferred: dismiss via FocusState
+                            focused = nil
                             
-                            Text("Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())  (\(timeSinceInjection) h)      Units: \(item.insulinUnits, specifier: "%.1f")")
+                            // Fallback: resign first responder via UIKit
+                            UIApplication.shared.sendAction(
+                                #selector(UIResponder.resignFirstResponder),
+                                to: nil, from: nil, for: nil
+                            )
                         }
-                        .onDelete(perform: deleteHistory)
+                        
                     }
                 }
-            }
-            .scrollDismissesKeyboard(.interactively)
-            
-            // MARK: - Alerts
-            .alert ("Confirm", isPresented: $isShowingInsulinDeliverySubmitAlert) {
-                Button("Submit", action: {
-                    let insulinDeliveryTimeStamp = pickerTimeStamp.timeIntervalSince1970
-                    let insulinDeliveryUnits = insulinSelected
-                    let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: insulinDeliveryTimeStamp, insulinUnits: insulinDeliveryUnits, insulinType: UserDefaults.group.insulinTypeSelected.rawValue)
-                    insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // seems not to be necessary, but just to be sure....
-                    insulinDeliveryHistorySingleton.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
-                    UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
-                    
-                    let messageToWatch: [String: Any] = ["content": "insulinDelivery", // The insulinTypeSelected is taken from UserDefaults, so does not need to be sent.
-                                                         "timeStamp": insulinDeliveryTimeStamp,
-                                                         "units": insulinDeliveryUnits]
-                    sendMessagetoOther(message: messageToWatch)
-                    
-                    CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-                    dismiss()
-                    //                        selectedTab = "Home"
-                })
-                Button("Cancel", role: .cancel, action: {})
-            } message: {
+                .scrollDismissesKeyboard(.interactively)
                 
-                Text("Do you want to add \(insulinSelected, specifier: "%.1f") units?")
+                // MARK: - Alerts
+                .alert ("Confirm", isPresented: $isShowingInsulinDeliverySubmitAlert) {
+                    Button("Submit", action: {
+                        let insulinDeliveryTimeStamp = pickerTimeStamp.timeIntervalSince1970
+                        let insulinDeliveryUnits = insulinSelected
+                        let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: insulinDeliveryTimeStamp, insulinUnits: insulinDeliveryUnits, insulinType: UserDefaults.group.insulinTypeSelected.rawValue)
+                        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // seems not to be necessary, but just to be sure....
+                        insulinDeliveryHistorySingleton.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
+                        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
+                        
+                        let messageToWatch: [String: Any] = ["content": "insulinDelivery", // The insulinTypeSelected is taken from UserDefaults, so does not need to be sent.
+                                                             "timeStamp": insulinDeliveryTimeStamp,
+                                                             "units": insulinDeliveryUnits]
+                        sendMessagetoOther(message: messageToWatch)
+                        
+                        CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                        dismiss()
+                        //                        selectedTab = "Home"
+                    })
+                    Button("Cancel", role: .cancel, action: {})
+                } message: {
+                    
+                    Text("Do you want to add \(insulinSelected, specifier: "%.1f") units?")
+                }
+                .alert("Confirm", isPresented: $isShowingInsulinDeliveryResetAlert) {
+                    Button("Reset", action: {
+                        pickerTimeStamp = Date.now
+                        insulinDeliveryHistorySingleton.insulinDeliveryHistory = []
+                        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
+                        let messageToWatch: [String: Any] = ["content": "clearInsulinHistory"]
+                        sendMessagetoOther(message: messageToWatch)
+                        CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                    })
+                    Button("Cancel", role: .cancel, action: {})
+                } message: {
+                    Text("Do you want to reset insulin history?")
+                }
+                
+                
             }
-            .alert("Confirm", isPresented: $isShowingInsulinDeliveryResetAlert) {
-                Button("Reset", action: {
-                    pickerTimeStamp = Date.now
-                    insulinDeliveryHistorySingleton.insulinDeliveryHistory = []
-                    UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
-                    let messageToWatch: [String: Any] = ["content": "clearInsulinHistory"]
-                    sendMessagetoOther(message: messageToWatch)
-                    CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-                })
-                Button("Cancel", role: .cancel, action: {})
-            } message: {
-                Text("Do you want to reset insulin history?")
+            //        .toolbar {
+            //            // Keyboard toolbar to dismiss number pads
+            //            ToolbarItemGroup(placement: .keyboard) {
+            //                Spacer()
+            //                Button("Done") {
+            //                    // Dismiss keyboard
+            //                 }
+            //            }
+            //        }
+            .onAppear {
+                if icrGramsPerUnit <= 0 { icrGramsPerUnit = 10 }
+                if roundingStep < 0 { roundingStep = 0.5 }
             }
-            
-           
         }
-//        .toolbar {
-//            // Keyboard toolbar to dismiss number pads
-//            ToolbarItemGroup(placement: .keyboard) {
-//                Spacer()
-//                Button("Done") {
-//                    // Dismiss keyboard
-//                 }
-//            }
-//        }
-        .onAppear {
-            if icrGramsPerUnit <= 0 { icrGramsPerUnit = 10 }
-            if roundingStep < 0 { roundingStep = 0.5 }
-        }
-        
     }
     
     // MARK: - Submit helper (shared path, unchanged logic)
@@ -364,6 +423,15 @@ struct PhoneAppInsulinDeliveryView: View {
             sendMessagetoOther(message: messageToWatch)
         }
     }
+    
+    private func clearFocused() {
+            switch focused {
+            case .carbsPer100g:     carbsPer100g = 0
+            case .portionGrams:     portionGrams = 0
+            case .icrGramsPerUnit:  icrGramsPerUnit = 0
+            case nil:               break
+            }
+        }
 }
 
 #Preview {

@@ -63,6 +63,19 @@
             ]
           }
         },
+        "it" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} registra l'insulina",
+              "${applicationName} nota l'insulina",
+              "${applicationName} aggiungi insulina",
+              "${insulinUnitsEnum} unità di insulina in ${applicationName}",
+              "${applicationName} ${insulinUnitsEnum} unità",
+              "${insulinUnitsEnum} unità ${applicationName}"
+            ]
+          }
+        },
         "ja" : {
           "stringSet" : {
             "state" : "translated",
@@ -106,6 +119,46 @@
             "state" : "new",
             "values" : [
               "${applicationName} write down insulin"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} anotar la insulina"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} noter l'insuline"
+            ]
+          }
+        },
+        "it" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} nota l'insulina"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} インスリンを書き留める"
+            ]
+          }
+        },
+        "zh-Hans" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} 记录胰岛素"
             ]
           }
         }
@@ -166,6 +219,18 @@
               "${applicationName} obtenir le taux de glycémie actuel",
               "${applicationName} quel est mon taux de glycémie actuel ?",
               "${applicationName} quel est mon glycémie actuel ?"
+            ]
+          }
+        },
+        "it" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Qual è il mio livello di glucosio in ${applicationName}?",
+              "Qual è il mio glucosio in ${applicationName}?",
+              "${applicationName} ottieni il glucosio nel sangue attuale",
+              "${applicationName} qual è il mio glucosio nel sangue attuale",
+              "Qual è il mio glucosio nel sangue attuale in ${applicationName}"
             ]
           }
         },

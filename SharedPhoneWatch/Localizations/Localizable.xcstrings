@@ -24,6 +24,12 @@
             "value" : "\nHistorique de l'insuline :"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\nStoria dell'insulina:"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -56,6 +62,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "!! Ne pas utiliser pour prendre des décisions thérapeutiques !!\n\nUtilisez cette application à vos propres risques !\n\nLes informations présentées dans cette application et ses extensions ne doivent pas être utilisées pour prendre des décisions thérapeutiques ou de dosage. Consultez le système de surveillance de la glycémie et/ou un professionnel de santé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "!! Non utilizzare per decisioni terapeutiche !!\n\nUtilizzare a proprio rischio!\n\nLe informazioni presentate in questa app e nelle sue estensioni non devono essere utilizzate per decisioni terapeutiche o relative al dosaggio. Consultare il sistema di monitoraggio del glucosio e/o un operatore sanitario."
           }
         },
         "ja" : {
@@ -95,6 +107,12 @@
             "value" : "**Ne pas utiliser pour prendre des décisions thérapeutiques.**\n\nLes informations présentées dans cette application et ses extensions ne doivent pas être utilisées pour prendre des décisions thérapeutiques ou posologiques. Consultez le système de surveillance de la glycémie et/ou un professionnel de santé."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Non per decisioni terapeutiche.**\n\nLe informazioni presentate in questa app e nelle sue estensioni non devono essere utilizzate per decisioni terapeutiche o relative al dosaggio. Consultare il sistema di monitoraggio del glucosio e/o un operatore sanitario."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -127,6 +145,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Application pour montre non installée / non détectée**\nLes informations d'identification ne seront pas transférées à la montre. Installez l'application pour montre et appuyez à nouveau sur « Connecter » pour renvoyer les informations d'identification à la montre."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**App per orologio non installata/rilevata**\nLe credenziali non saranno trasferite all'orologio. Installa l'app per orologio e premi nuovamente \"Connetti\" per inviare nuovamente le credenziali all'orologio."
           }
         },
         "ja" : {
@@ -601,6 +625,18 @@
             "value" : "Aceptar"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accepter"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accetta"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -634,6 +670,12 @@
             "state" : "translated",
             "value" : "Accès temporairement verrouillé."
           }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accesso temporaneamente bloccato."
+          }
         }
       }
     },
@@ -655,6 +697,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Compte temporairement verrouillé. Trop de tentatives de connexion infructueuses. Réessayez dans 5 minutes. Vérifiez vos identifiants."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account temporaneamente bloccato. Troppi tentativi di accesso non riusciti. Riprova tra 5 minuti. Controlla le credenziali."
           }
         },
         "ja" : {
@@ -691,6 +739,12 @@
             "value" : "Activité"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attività"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -725,6 +779,12 @@
             "value" : "Ajouter de l'insuline"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi insulina"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -740,7 +800,44 @@
       }
     },
     "Add insulin (written)" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulin hinzufügen (schriftlich)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir insulina (escrito)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter de l'insuline (écrit)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungere insulina (scritto)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インスリンを追加する（記載）"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加胰岛素（书面）"
+          }
+        }
+      }
     },
     "Ask the system to record insulin units for IOB calculation." : {
       "localizations" : {
@@ -760,6 +857,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Demandez au système d'enregistrer les unités d'insuline pour le calcul de l'IOB."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiedere al sistema di registrare le unità di insulina per il calcolo dell'IOB."
           }
         },
         "ja" : {
@@ -796,6 +899,12 @@
             "value" : "Glycémie"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glicemia"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -812,6 +921,12 @@
     },
     "Bolus insulin" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bolus Insulin"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -822,6 +937,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bolus d'insuline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulina in bolo"
           }
         },
         "ja" : {
@@ -850,6 +971,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bolus d'insuline (%@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulina in bolo (%@)"
           }
         },
         "ja" : {
@@ -886,6 +1013,12 @@
             "value" : "Achetez des grains de café de qualité pour le développeur !\n🤝☕️"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acquista chicchi di caffè di qualità da sviluppatore!\n🤝☕️"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -920,6 +1053,12 @@
             "value" : "Annuler"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annulla"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -935,13 +1074,244 @@
       }
     },
     "Carb Calculator" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kohlenhydratrechner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calculadora de carbohidratos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calculateur de glucides"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calcolatore di carboidrati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "炭水化物計算機"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "碳水化合物计算器"
+          }
+        }
+      }
+    },
+    "Carbs → store" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kohlenhydrate → speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carbohidratos → almacenar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucides → stocker"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carboidrati → immagazzinare"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "炭水化物 → 貯蔵"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "碳水化合物 → 储存"
+          }
+        }
+      }
     },
     "Carbs per 100 g" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kohlenhydrate pro 100 g"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carbohidratos por cada 100 g"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucides pour 100 g"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carboidrati per 100 g"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "100gあたりの炭水化物"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每100克碳水化合物含量"
+          }
+        }
+      }
+    },
+    "Carbs store" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kohlenhydratspeicher"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Almacén de carbohidratos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magasin de glucides"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magazzino carboidrati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "炭水化物貯蔵庫"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "碳水化合物储存"
+          }
+        }
+      }
     },
     "Clear" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effacer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiaro"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クリア"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除"
+          }
+        }
+      }
+    },
+    "Clear store" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speicher löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar tienda"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effacer le magasin"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancella negozio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クリアストア"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除商店"
+          }
+        }
+      }
     },
     "Confirm" : {
       "localizations" : {
@@ -961,6 +1331,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Confirmer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conferma"
           }
         },
         "ja" : {
@@ -997,6 +1373,12 @@
             "value" : "Se connecter"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connetti"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1029,6 +1411,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Connecté."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connesso."
           }
         },
         "ja" : {
@@ -1065,6 +1453,12 @@
             "value" : "Connexion en cours..."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connessione in corso..."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1099,6 +1493,12 @@
             "value" : "Échec de la connexion."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connessione non riuscita."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1114,10 +1514,95 @@
       }
     },
     "Convenience calculator only. Follow your care plan." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur als praktischer Rechner. Befolgen Sie Ihren Behandlungsplan."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calculadora de conveniencia únicamente. Siga su plan de cuidados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calculateur pratique uniquement. Suivez votre plan de soins."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calcolatore di convenienza solo. Segui il tuo piano di cura."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "便利計算機のみ。ケアプランに従ってください。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅供便利计算。请遵循您的护理计划。"
+          }
+        }
+      }
+    },
+    "Copy calculated → insulin picker" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieren berechnet → Insulin-Picker"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar calculado → selector de insulina"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier calculé → sélecteur d'insuline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia calcolata → selettore di insulina"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "計算済みコピー → インスリンピッカー"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制计算值 → 胰岛素选择器"
+          }
+        }
+      }
     },
     "Copy calculated → picker" : {
-
+      "extractionState" : "stale",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia calcolata → selettore"
+          }
+        }
+      }
     },
     "Could not determine insulin units value." : {
       "localizations" : {
@@ -1137,6 +1622,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Impossible de déterminer la valeur des unités d'insuline."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile determinare il valore delle unità di insulina."
           }
         },
         "ja" : {
@@ -1173,6 +1664,12 @@
             "value" : "Identifiants"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credenziali"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1207,6 +1704,18 @@
             "value" : "Glucosa actual: %1$@. Tendencia: %2$@"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glycémie actuelle : %1$@. Tendance : %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucosio attuale: %1$@. Tendenza: %2$@"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1234,6 +1743,12 @@
             "state" : "translated",
             "value" : "Graphique"
           }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Curva"
+          }
         }
       }
     },
@@ -1243,6 +1758,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Debug Info"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informazioni di debug"
           }
         }
       }
@@ -1254,11 +1775,24 @@
             "state" : "translated",
             "value" : "Debug info:"
           }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informazioni di debug:"
+          }
         }
       }
     },
     "default" : {
-
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "predefinito"
+          }
+        }
+      }
     },
     "Default behaviour: opens FLwatch app." : {
       "extractionState" : "stale",
@@ -1315,6 +1849,12 @@
             "value" : "Comportement par défaut : ouvre l'application FLwatch. watchOS 11+"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comportamento predefinito: apre l'app FLwatch. Solo watchOS 11 e versioni successive."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1347,6 +1887,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Déconnecté"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnesso"
           }
         },
         "ja" : {
@@ -1383,6 +1929,12 @@
             "value" : "Ignorer"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignora"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1415,6 +1967,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voulez-vous ajouter %.1f unités ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoi aggiungere %.1f unità?"
           }
         },
         "ja" : {
@@ -1451,6 +2009,12 @@
             "value" : "Voulez-vous réinitialiser l'historique de l'insuline ?"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoi azzerare la cronologia dell'insulina?"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1465,8 +2029,125 @@
         }
       }
     },
+    "Done" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fertig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fatto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完了"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        }
+      }
+    },
+    "Enjoying FLwatch?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gefällt Ihnen FLwatch?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Te gusta FLwatch?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous appréciez FLwatch ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ti piace FLwatch?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchを楽しんでいますか？"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "喜欢FLwatch吗？"
+          }
+        }
+      }
+    },
     "Enter grams per 1U (e.g., 10 ≙ 1U/10g)." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geben Sie Gramm pro 1U ein (z. B. 10 ≙ 1U/10g)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduzca los gramos por 1U (por ejemplo, 10 ≙ 1U/10g)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrez les grammes par 1U (par exemple, 10 ≙ 1U/10g)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserisci i grammi per 1U (ad esempio, 10 ≙ 1U/10g)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1Uあたりのグラム数を入力してください（例：10 ≙ 1U/10g）。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入每1U的克数（例如：10 ≙ 1U/10克）。"
+          }
+        }
+      }
     },
     "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://github.com/poml88/FLwatch?tab=readme-ov-file#usage)" : {
       "extractionState" : "stale",
@@ -1523,6 +2204,12 @@
             "value" : "Saisissez les identifiants de votre [compte LLU follower](https://www.librelinkup.com/) et appuyez sur le bouton Connecter. Les identifiants seront automatiquement envoyés à l'application Watch si elle est installée.\n[PROBLÈME ? APPUYEZ POUR OUVRIR L'AIDE](https://poml88.github.io/FLwatch/)"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserisci le credenziali del tuo [account LLU follower](https://www.librelinkup.com/) e premi il pulsante Connetti. Le credenziali saranno inviate automaticamente all'app dell'orologio, se installata.\n[PROBLEMI? TOCCA PER APRIRE LA GUIDA](https://poml88.github.io/FLwatch/)"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1555,6 +2242,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Message d'erreur : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messaggio di errore: %@"
           }
         },
         "ja" : {
@@ -1591,6 +2284,12 @@
             "value" : "baisse"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cadere"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1623,6 +2322,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "baisse rapidement"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cadere rapidamente"
           }
         },
         "ja" : {
@@ -1659,6 +2364,12 @@
             "value" : "À action ultra-rapide"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Azione rapida e veloce"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1691,6 +2402,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "À action ultra-rapide (Fiasp, Lyumjev, ...)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Azione rapida (Fiasp, Lyumjev, ...)"
           }
         },
         "ja" : {
@@ -1728,6 +2445,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abonné non connecté au patient. Veuillez l'inviter dans l'application Libre et accepter dans l'application LibreLinkUp. Consultez le guide de configuration et d'utilisation."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il follower non è connesso al paziente. Invita l'utente nell'app Libre e accetta nell'app LibreLinkUp. Consulta la guida alla configurazione e all'uso."
           }
         },
         "ja" : {
@@ -1770,6 +2493,12 @@
             "value" : "Obtenir la glycémie actuelle"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Misura il livello attuale di glucosio nel sangue"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1804,6 +2533,12 @@
             "value" : "Obtenir la glycémie actuelle."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Misura il livello attuale di glucosio nel sangue."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1830,6 +2565,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Glucosa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucose"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucosio"
           }
         },
         "ja" : {
@@ -1866,6 +2613,12 @@
             "value" : "Widget Glycémie"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widget Glucosio"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1880,12 +2633,65 @@
         }
       }
     },
+    "Hello,\n\n*** write your message here ***\n\n\n\nKind regards\n\n\n\n--\nDebug info:\nApp Version: %@ Build: %@\nDevice Info: %@ %@ on %@\nSensor: %@\nError Message: %@\n\n" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hallo,\n\n*** Schreiben Sie hier Ihre Nachricht ***\n\n\n\nMit freundlichen Grüßen\n\n\n\n--\nDebug-Informationen:\nApp-Version: %1$@ Build: %2$@\nGeräteinformationen: %3$@ %4$@ auf %5$@\nSensor: %6$@\nFehlermeldung: %7$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hello,\n\n*** write your message here ***\n\n\n\nKind regards\n\n\n\n--\nDebug info:\nApp Version: %1$@ Build: %2$@\nDevice Info: %3$@ %4$@ on %5$@\nSensor: %6$@\nError Message: %7$@\n\n"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hola,\n\n*** Escriba aquí su mensaje ***\n\n\n\nAtentamente,\n\n\n\n--\nInformación de depuración:\nVersión de la aplicación: %1$@ Compilación: %2$@\nInformación del dispositivo: %3$@ %4$@ en %5$@\nSensor: %6$@\nMensaje de error: %7$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bonjour,\n\n*** écrivez votre message ici ***\n\n\n\nCordialement,\n\n\n\n--\nInformations de débogage :\nVersion de l'application : %1$@ Build : %2$@\nInformations sur l'appareil : %3$@ %4$@ sur %5$@\nCapteur : %6$@\nMessage d'erreur : %7$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciao,\n\n*** scrivi qui il tuo messaggio ***\n\n\n\nCordiali saluti\n\n\n\n—\nInformazioni di debug:\nVersione app: %1$@ Build: %2$@\nInformazioni dispositivo: %3$@ %4$@ su %5$@\nSensore: %6$@\nMessaggio di errore: %7$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "こんにちは、\n\n*** ここにメッセージを入力してください ***\n\n\n\n敬具\n\n\n\n--\nデバッグ情報:\nアプリバージョン: %1$@ ビルド: %2$@\nデバイス情報: %3$@ %4$@ on %5$@\nセンサー: %6$@\nエラーメッセージ: %7$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你好，\n\n*** 在此处输入您的消息 ***\n\n\n\n此致\n\n\n\n--\n调试信息：\n应用版本：%1$@ 构建版本：%2$@\n设备信息：%3$@ %4$@ 运行于 %5$@\n传感器：%6$@\n错误信息：%7$@"
+          }
+        }
+      }
+    },
     "Hello,\n\n*** write your message here ***\n\n\n\nKind regards\n\n\n\nDebug info:\nApp Version: %@ Build: %@\nDevice Info: %@ %@ on %@\nSensor: %@\nError Message: %@\n\n" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Hello,\n\n*** write your message here ***\n\n\n\nKind regards\n\n\n\nDebug info:\nApp Version: %1$@ Build: %2$@\nDevice Info: %3$@ %4$@ on %5$@\nSensor: %6$@\nError Message: %7$@\n\n"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciao,\n\n*** scrivi qui il tuo messaggio ***\n\n\n\nCordiali saluti\n\n\n\nInformazioni di debug:\nVersione app: %1$@ Build: %2$@\nInformazioni dispositivo: %3$@ %4$@ su %5$@\nSensore: %6$@\nMessaggio di errore: %7$@"
           }
         }
       }
@@ -1911,6 +2717,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Heure"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ora"
           }
         },
         "ja" : {
@@ -1947,6 +2759,12 @@
             "value" : "Combien d'unités d'insuline ?"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quante unità di insulina?"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1979,6 +2797,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quelle quantité d'insuline ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quanta insulina?"
           }
         },
         "ja" : {
@@ -2018,6 +2842,12 @@
             "value" : "Si vous aimez cette application, achetez des grains de café de qualité pour le développeur !\n🤝☕️"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se ti piace questa app, compra allo sviluppatore dei chicchi di caffè di qualità!\n🤝☕️"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2046,6 +2876,12 @@
             "value" : "Insuline"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulina"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2061,10 +2897,84 @@
       }
     },
     "Insulin (rounded)" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulin (gerundet)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulina (redondeada)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insuline (arrondi)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulina (arrotondata)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インスリン（丸め）"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "胰岛素（四舍五入）"
+          }
+        }
+      }
     },
     "Insulin Delivery History" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulinabgabeverlauf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial de administración de insulina"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historique des administrations d'insuline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cronologia della somministrazione di insulina"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インスリン投与履歴"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "胰岛素输送历史"
+          }
+        }
+      }
     },
     "Insulin marks and graphs" : {
       "localizations" : {
@@ -2086,6 +2996,12 @@
             "value" : "Marques et graphiques d'insuline"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segni e grafici dell'insulina"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2101,7 +3017,44 @@
       }
     },
     "Insulin type" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulintyp"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo de insulina"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type d'insuline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo di insulina"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インスリンの種類"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "胰岛素类型"
+          }
+        }
+      }
     },
     "Insulin units" : {
       "localizations" : {
@@ -2121,6 +3074,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unités d'insuline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unità di insulina"
           }
         },
         "ja" : {
@@ -2157,6 +3116,12 @@
             "value" : "Unités d'insuline"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unità di insulina"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2172,9 +3137,86 @@
       }
     },
     "Insulin Units (written)" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulineinheiten (schriftlich)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unidades de insulina (escrito)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unités d'insuline (écrites)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unità di insulina (scritte)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インスリン単位（記載）"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "胰岛素单位（书面）"
+          }
+        }
+      }
     },
     "Insulin units recorded: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgezeichnete Insulineinheiten: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unidades de insulina registradas: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unités d'insuline enregistrées : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unità di insulina registrate: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "記録されたインスリン単位：%@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录的胰岛素单位：%@"
+          }
+        }
+      }
+    },
+    "IOB" : {
 
     },
     "IOB: %.2fu" : {
@@ -2186,6 +3228,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Error de decodificación JSON."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Errore di decodifica JSON."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON解码错误。"
           }
         }
       }
@@ -2208,6 +3262,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gardez l'écran de votre téléphone toujours allumé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni lo schermo del telefono sempre acceso"
           }
         },
         "ja" : {
@@ -2243,6 +3303,24 @@
             "state" : "translated",
             "value" : "La politique de confidentialité de LibreLinkUp a été mise à jour. Ouvrez l'application LibreLinkUp, connectez-vous et acceptez la politique de confidentialité. (astuce : essayez de vous déconnecter et de vous reconnecter)"
           }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'Informativa sulla privacy di LibreLinkUp è stata aggiornata. Apri l'app LibreLinkUp, accedi e accetta l'Informativa sulla privacy. (suggerimento: prova a disconnetterti e ricollegarti)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreLinkUpのプライバシーポリシーが更新されました。LibreLinkUpアプリを開き、ログインしてプライバシーポリシーに同意してください。（ヒント：ログアウトして再ログインしてみてください）"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreLinkUp隐私政策已更新。请打开LibreLinkUp应用，登录后接受隐私政策。（提示：可尝试退出后重新登录）"
+          }
         }
       }
     },
@@ -2265,6 +3343,24 @@
             "state" : "translated",
             "value" : "Les conditions d'utilisation de LibreLinkUp ont été mises à jour. Ouvrez l'application LibreLinkUp, connectez-vous et acceptez les conditions d'utilisation. (astuce : essayez de vous déconnecter et de vous reconnecter)"
           }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I Termini di utilizzo di LibreLinkUp sono stati aggiornati. Apri l'app LibreLinkUp, accedi e accetta i Termini di utilizzo. (suggerimento: prova a disconnetterti e ricollegarti)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreLinkUpの利用規約が更新されました。LibreLinkUpアプリを開き、ログインして利用規約に同意してください。（ヒント：ログアウトして再ログインしてみてください）"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreLinkUp的使用条款已更新。请打开LibreLinkUp应用，登录后接受使用条款。（提示：可尝试退出后重新登录）"
+          }
         }
       }
     },
@@ -2286,6 +3382,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "L'adresse e-mail LLU n'a pas encore été vérifiée. Vérifiez-la à l'aide de l'application LibreLinkUp."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indirizzo e-mail LLU non ancora verificato. Verificare utilizzando l'app LibreLinkUp."
           }
         },
         "ja" : {
@@ -2315,12 +3417,70 @@
             "state" : "translated",
             "value" : "Límite inferior"
           }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limite inferiore"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下限"
+          }
+        }
+      }
+    },
+    "Maybe later" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vielleicht später"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quizás más tarde."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peut-être plus tard"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forse più tardi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "後でね"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "也许稍后"
+          }
         }
       }
     },
     "Minute" : {
       "localizations" : {
         "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minuto"
+          }
+        },
+        "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minuto"
@@ -2360,6 +3520,12 @@
             "value" : "Aucune connexion. Réseau ?"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna connessione. Rete?"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2392,6 +3558,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucune connexion. Erreur inconnue lors de la connexion. Réseau ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna connessione. Errore sconosciuto durante il login. Rete?"
           }
         },
         "ja" : {
@@ -2428,6 +3600,12 @@
             "value" : "Aucune information d'identification n'a (encore) été reçue du téléphone. Essayez d'appuyer sur « Se connecter » sur le téléphone pour renvoyer l'information, puis attendez une minute.\n"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non sono state (ancora) ricevute credenziali dal telefono. Prova a toccare \"Connetti\" sul telefono per inviarle nuovamente all'orologio e attendi un minuto."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2460,6 +3638,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucune donnée reçue depuis %lld min.\n\nVérifiez les connexions réseau et Bluetooth."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun dato ricevuto da %lld min.\n\nControllare le connessioni di rete e Bluetooth."
           }
         },
         "ja" : {
@@ -2496,6 +3680,12 @@
             "value" : "Aucune donnée depuis %lld min."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun dato da %lld min."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2506,6 +3696,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自 %lld 分钟以来未收到数据。"
+          }
+        }
+      }
+    },
+    "No thanks" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nein, danke."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No, gracias."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non merci"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No, grazie"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "結構です"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不用了，谢谢"
           }
         }
       }
@@ -2528,6 +3758,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Non authentifié. Vérifiez les identifiants. Ouvrez l'application LibreLinkUp, déconnectez-vous et reconnectez-vous pour vérifier que tout fonctionne. Utilisez ensuite les mêmes identifiants pour FLwatch."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non autenticato. Controlla le credenziali. Apri l'app LibreLinkUp, esci e accedi nuovamente per verificare che tutto funzioni correttamente. Utilizza quindi le stesse credenziali per FLwatch."
           }
         },
         "ja" : {
@@ -2564,6 +3800,12 @@
             "value" : "Non déterminé"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "non determinato"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2574,6 +3816,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未确定"
+          }
+        }
+      }
+    },
+    "Not happy? Suggestions?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht zufrieden? Vorschläge?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿No estás satisfecho? ¿Alguna sugerencia?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous n'êtes pas satisfait ? Vous avez des suggestions ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non sei soddisfatto? Hai suggerimenti?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不満ですか？ご提案は？"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不满意？有什么建议吗？"
           }
         }
       }
@@ -2596,6 +3878,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ouvrez un ticket sur GitHub"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problema aperto su GitHub"
           }
         },
         "ja" : {
@@ -2630,6 +3918,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ou : Temps écoulé depuis l'injection"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "oppure: Tempo trascorso dall'iniezione"
           }
         },
         "ja" : {
@@ -2700,6 +3994,12 @@
             "value" : "Téléphone : afficher le graphique d'activité de l'insuline"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefono: mostra il grafico dell'attività dell'insulina"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2732,6 +4032,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Téléphone : afficher les marques d'administration d'insuline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefono: mostra i segni di somministrazione dell'insulina"
           }
         },
         "ja" : {
@@ -2768,6 +4074,12 @@
             "value" : "Téléphone : afficher le graphique IOB"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefono: mostra grafico IOB"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2795,11 +4107,54 @@
             "state" : "translated",
             "value" : "¡Reinicie el teléfono y compruébelo una vez si los widgets no funcionan!"
           }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se i widget non funzionano, riavvia il telefono e guarda una volta!"
+          }
         }
       }
     },
     "Portion size" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Portionsgröße"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño de la porción"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille des portions"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dimensione della porzione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分量"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "份量大小"
+          }
+        }
+      }
     },
     "Press \"Connect\" again to resend credentials to watch." : {
       "localizations" : {
@@ -2819,6 +4174,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Appuyez à nouveau sur « Connecter » pour renvoyer les informations d'identification à la montre."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Premi nuovamente \"Connetti\" per inviare nuovamente le credenziali per guardare."
           }
         },
         "ja" : {
@@ -2855,6 +4216,12 @@
             "value" : "À action rapide"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Azione rapida"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2889,6 +4256,12 @@
             "value" : "À action rapide (Novolog, ...)"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Azione rapida (Novolog, ...)"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2904,10 +4277,84 @@
       }
     },
     "Raw" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roh"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crudo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cru"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crudo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生"
+          }
+        }
+      }
     },
     "Record ${insulinUnitsRaw} units of insulin" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notiere ${insulinUnitsRaw} Einheiten Insulin."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar ${insulinUnitsRaw} unidades de insulina."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer ${insulinUnitsRaw} unités d'insuline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registra ${insulinUnitsRaw} unità di insulina"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インスリン ${insulinUnitsRaw} 単位を記録する"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录 ${insulinUnitsRaw} 单位的胰岛素"
+          }
+        }
+      }
     },
     "Record ${unitsDouble} units of insulin" : {
       "extractionState" : "stale",
@@ -2945,7 +4392,44 @@
       }
     },
     "Record ${unitsDoubleWritten} units of insulin (written)" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notiere ${unitsDoubleWritten} Einheiten Insulin (geschrieben)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar ${unitsDoubleWritten} unidades de insulina (escritas)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer ${unitsDoubleWritten} unités d'insuline (inscrites)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrare ${unitsDoubleWritten} unità di insulina (scritte)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インスリン ${unitsDoubleWritten} 単位を記録（記入）"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录 ${unitsDoubleWritten} 单位胰岛素（已记录）"
+          }
+        }
+      }
     },
     "Record Insulin Injection" : {
       "localizations" : {
@@ -2967,6 +4451,12 @@
             "value" : "Enregistrer l'injection d'insuline"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrazione dell'iniezione di insulina"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2982,7 +4472,44 @@
       }
     },
     "Record Insulin Injection (written)" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulininjektion dokumentieren (schriftlich)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registro de inyección de insulina (por escrito)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer l'injection d'insuline (écrit)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrazione dell'iniezione di insulina (scritta)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インスリン注射の記録（書面）"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录胰岛素注射（书面）"
+          }
+        }
+      }
     },
     "Recorded %@ units of insulin." : {
       "localizations" : {
@@ -3004,6 +4531,12 @@
             "value" : "%@ unités d'insuline enregistrées."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrate %@ unità di insulina."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3013,7 +4546,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recorded %@ units of insulin."
+            "value" : "记录了%@单位的胰岛素。"
           }
         }
       }
@@ -3043,6 +4576,12 @@
             "state" : "translated",
             "value" : "Recargar el widget"
           }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricarica widget"
+          }
         }
       }
     },
@@ -3058,6 +4597,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recargar el widget."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricarica widget."
           }
         }
       }
@@ -3080,6 +4625,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Réinitialiser"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reimposta"
           }
         },
         "ja" : {
@@ -3116,6 +4667,12 @@
             "value" : "Réinitialiser l'IOB"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reimposta IOB"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3126,6 +4683,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重置 IOB"
+          }
+        }
+      }
+    },
+    "Resulting carbs" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carbohidratos resultantes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucides résultants"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carboidrati risultanti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "結果としての炭水化物"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最终碳水化合物"
           }
         }
       }
@@ -3148,6 +4739,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Renvoyer la glycémie actuelle."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restituisce il valore attuale della glicemia."
           }
         },
         "ja" : {
@@ -3184,6 +4781,12 @@
             "value" : "augmente"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "in aumento"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3218,6 +4821,12 @@
             "value" : "augmente\n rapidement"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "in rapida ascesa"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3233,7 +4842,44 @@
       }
     },
     "Rounding" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rundung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redondeo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrondi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrotondamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "丸め"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "四舍五入"
+          }
+        }
+      }
     },
     "Select the bolus insulin for the IOB calculations. Currently supported are:\n- Rapid acting (Novolog, Novorapid, ... (peak activity 75 mins))\n- Fast rapid acting (Fiasp, Lyumjev, ... (peak activity 55 mins))" : {
       "localizations" : {
@@ -3253,6 +4899,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sélectionnez l'insuline bolus pour les calculs IOB. Les types actuellement pris en charge sont les suivants :\n- À action rapide (Novolog, Novorapid, ... (pic d'activité à 75 minutes))\n- À Action ultra-rapide (Fiasp, Lyumjev, ... (pic d'activité à 55 minutes))"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selezionare l'insulina in bolo per i calcoli IOB. Attualmente sono supportati:\n- Azione rapida (Novolog, Novorapid, ... (picco di attività 75 minuti))\n- Azione ultra rapida (Fiasp, Lyumjev, ... (picco di attività 55 minuti))"
           }
         },
         "ja" : {
@@ -3289,6 +4941,12 @@
             "value" : "Envoyer un e-mail au support"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia un'e-mail all'assistenza"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3321,6 +4979,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paramètres"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impostazioni"
           }
         },
         "ja" : {
@@ -3357,6 +5021,12 @@
             "value" : "Guide d'installation et d'utilisation"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guida all'installazione e all'uso"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3389,6 +5059,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Intégration Siri"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integrazione con Siri"
           }
         },
         "ja" : {
@@ -3425,6 +5101,12 @@
             "value" : "L'intégration de Siri est encore en cours de développement !\n\nIl est difficile de trouver des phrases correctes et utiles. N'hésitez pas à m'écrire si vous avez des idées.\n\nSiri peut vous indiquer votre glycémie et votre tendance en disant : « Siri, quelle est ma glycémie dans FLwatch » ou « Quel est mon taux de glycémie dans FLwatch ».\n\nComme Siri a parfois du mal à comprendre « FLwatch » (elle comprend toujours « Apple watch »), vous pouvez également utiliser « glucomètre » comme synonyme du nom de l'application : « Siri, quel est mon taux de glucose dans le glucomètre » ou « Quel est mon taux de glucose dans le glucomètre ».\n\nDans l'application Raccourcis, vous pouvez créer un raccourci pour cette action avec n'importe quel nom personnalisé, comme « Taux de glucose actuel », et sélectionner « Afficher sur Apple Watch » pour que la commande fonctionne également sur la montre. Si vous dites ensuite : « Hey Siri, taux de glucose actuel », Siri vous lira la valeur et la tendance.\n\nSiri est également capable d'enregistrer les unités d'insuline pour le calcul de l'IOB.\n\nExplorez les options dans l'application Raccourcis.\n\nVoici la liste complète des phrases :\n\nQuel est mon taux de glucose dans FLwatch ?\nQuel est mon taux de glucose dans FLwatch ?\nQuel est mon taux de glucose dans FLwatch ?\nQuel est mon taux de glucose dans FLwatch ?\nQuel est mon taux de glucose FLwatch ?\nQuel est mon taux de glucose FLwatch ?\nQuel est mon taux de glucose dans FLwatch ?\nQuel est mon taux de glucose dans FLwatch ?\nFLwatch, obtenir le taux de glucose sanguin actuel\nFLwatch, quel est mon taux de glucose sanguin actuel ?\nQuel est mon taux de glucose sanguin actuel dans FLwatch ?\n\nFLwatch, enregistrer l'insuline\nFLwatch, noter l'insuline\nFLwatch, ajouter l'insuline\nXX unités d'insuline dans FLwatch\nFLwatch, XX unités\nFLwatch, XX unités\nXX unités FLwatch\nXX unités FLwatch"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'integrazione con Siri è ancora in fase di sviluppo!\n\nÈ difficile trovare frasi corrette e utili. Se avete qualche idea, scrivetemi.\n\nSiri può dirvi il vostro livello di glucosio nel sangue e l'andamento dicendo: \"Siri, qual è il mio livello di glucosio in FLwatch\" o \"Qual è il mio livello di glucosio in FLwatch\".\n\nPoiché Siri a volte ha difficoltà a comprendere \"FLwatch\" (capisce sempre \"Apple watch\"), puoi anche utilizzare \"glucose monitor\" come sinonimo del nome dell'app: \"Siri, qual è il mio livello di glucosio nel glucose monitor\" o \"Qual è il mio livello di glucosio nel glucose monitor\".\n\nNell'app Scorciatoie puoi creare una scorciatoia per questa azione con un nome personalizzato, ad esempio \"Livello di glucosio attuale\", e selezionare \"Mostra su Apple Watch\" per far funzionare il comando anche sull'orologio. Se poi dici: \"Ehi Siri, livello di glucosio attuale\", Siri ti leggerà il valore e l'andamento.\n\nSiri è anche in grado di registrare le unità di insulina per il calcolo dell'IOB.\n\nEsplora le opzioni nell'app Scorciatoie.\n\nEcco l'elenco completo delle frasi:\n\nQual è il mio livello di glucosio in FLwatch?\nQual è il mio glucosio in FLwatch?\nFLwatch ottieni il glucosio nel sangue attuale\nFLwatch qual è il mio glucosio nel sangue attuale\nQual è il mio glucosio nel sangue attuale in FLwatch\n\nFLwatch registra l'insulina\nFLwatch nota l'insulina\nFLwatch aggiungi insulina\nXX unità di insulina in FLwatch\nFLwatch XX unità\nXX unità FLwatch"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3452,6 +5134,12 @@
             "state" : "translated",
             "value" : "Algo ha ido mal..."
           }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualcosa è andato storto..."
+          }
         }
       }
     },
@@ -3473,6 +5161,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Désolé, il n'y a pas de valeurs glycémiques récentes."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spiacenti, non sono disponibili valori recenti della glicemia."
           }
         },
         "ja" : {
@@ -3509,6 +5203,12 @@
             "value" : "stable"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "stabile"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3535,6 +5235,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Démarrer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inizio"
           }
         },
         "ja" : {
@@ -3571,6 +5277,12 @@
             "value" : "Soumettre"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3597,6 +5309,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Support"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assistenza"
           }
         },
         "ja" : {
@@ -3633,6 +5351,12 @@
             "value" : "Appuyez sur la complication circulaire de la montre : met à jour la valeur glycémique"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tocca la complicazione circolare dell'orologio: aggiorna il valore del glucosio"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3665,6 +5389,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Merci d'avoir téléchargé FLwatch. J'espère qu'il vous sera utile.\n\nPour commencer, veuillez lire le guide CONFIGURATION ET UTILISATION. Si vous avez des questions, veuillez contacter le service d'assistance. Plus d'informations dans l'onglet Paramètres."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grazie per aver scaricato FLwatch. Spero che ti sia utile.\n\nPer iniziare, leggi la guida IMPOSTAZIONE E UTILIZZO. In caso di domande, contatta l'assistenza. Maggiori informazioni nella scheda Impostazioni."
           }
         },
         "ja" : {
@@ -3701,6 +5431,12 @@
             "value" : "La valeur par défaut est de 5 minutes. Notez que le système d'exploitation autorise environ 40 à 70 mises à jour de widgets (complications) maximum par 24 heures. Une fois ce quota atteint, aucune autre mise à jour n'est possible."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'impostazione predefinita è 5 minuti. Si noti che il sistema operativo consente da 40 a 70 aggiornamenti dei widget (complicazioni) al massimo ogni 24 ore. Una volta esaurito questo limite, non saranno più possibili aggiornamenti."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3733,6 +5469,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ce widget affiche la dernière valeur de glycémie."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo widget mostra l'ultimo valore della glicemia."
           }
         },
         "ja" : {
@@ -3769,6 +5511,12 @@
             "value" : "Heure"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tempo"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3801,6 +5549,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Heure:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ora:"
           }
         },
         "ja" : {
@@ -3843,6 +5597,12 @@
             "value" : "Heure: %1$@  (%2$@ h)      Unités: %3$.1f"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ora: %1$@  (%2$@ h)      Unità: %3$.1f"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3856,9 +5616,6 @@
           }
         }
       }
-    },
-    "Total carbs" : {
-
     },
     "Trying to log into wrong regional server. Please contact support." : {
       "localizations" : {
@@ -3878,6 +5635,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Essai de connexion à un serveur régional incorrect. Veuillez contacter l'assistance."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si sta tentando di accedere a un server regionale errato. Contattare l'assistenza."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "間違った地域サーバーにログインしようとしています。サポートまでご連絡ください。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尝试登录错误的区域服务器。请联系客服支持。"
           }
         }
       }
@@ -3903,6 +5678,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Compris"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capito"
           }
         },
         "ja" : {
@@ -3939,6 +5720,12 @@
             "value" : "Unités enregistrées : %@."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unità registrate: %@."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3960,6 +5747,12 @@
             "state" : "translated",
             "value" : "Error desconocido durante la solicitud del gráfico."
           }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Errore sconosciuto durante la richiesta del grafico."
+          }
         }
       }
     },
@@ -3970,6 +5763,12 @@
             "state" : "translated",
             "value" : "Error de estado desconocido 4."
           }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Errore di stato sconosciuto 4."
+          }
         }
       }
     },
@@ -3979,6 +5778,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nota de actualización"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nota di aggiornamento"
           }
         }
       }
@@ -4001,6 +5806,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nom d'utilisateur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome utente"
           }
         },
         "ja" : {
@@ -4035,6 +5846,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nom d'utilisateur (adresse e-mail)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome utente (indirizzo e-mail)"
           }
         },
         "ja" : {
@@ -4081,6 +5898,12 @@
             "value" : "Avertissement"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvertenza"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4113,6 +5936,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Montre : afficher le graphique d'activité de l'insuline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda: mostra il grafico dell'attività dell'insulina"
           }
         },
         "ja" : {
@@ -4149,6 +5978,12 @@
             "value" : "Montre : afficher les marques d'administration d'insuline"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda: mostra i segni di somministrazione dell'insulina"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4181,6 +6016,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Montre : afficher le graphique IOB"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda: mostra grafico IOB"
           }
         },
         "ja" : {
@@ -4217,6 +6058,12 @@
             "value" : "Bienvenue"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benvenuto"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4251,6 +6098,12 @@
             "value" : "Fréquence de mise à jour du widget"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frequenza di aggiornamento dei widget"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4267,6 +6120,12 @@
     },
     "Widgets / Complications" : {
       "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widget / Complicazioni"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4277,6 +6136,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "小工具 / 复杂功能"
+          }
+        }
+      }
+    },
+    "Yes, rate now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ja, jetzt bewerten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sí, califica ahora."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oui, évaluez maintenant"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sì, valuta ora"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "はい、今すぐ評価してください"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "是的，立即评价"
           }
         }
       }
@@ -4305,6 +6204,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Votre glycémie est actuellement de %1$@ et %2$@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo livello di glucosio nel sangue è attualmente %1$@ e %2$@."
           }
         },
         "ja" : {
@@ -4341,6 +6246,12 @@
             "value" : "Votre glycémie n'est actuellement pas disponible."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il valore della glicemia non è attualmente disponibile."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4351,6 +6262,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "您的血糖值目前无法获取。"
+          }
+        }
+      }
+    },
+    "Your feedback helps us improve and makes it easier for others with diabetes to discover the app. And it motivates to continue the work. 😊\nWould you like to leave a quick review?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihr Feedback hilft uns, die App zu verbessern, und macht es anderen Menschen mit Diabetes leichter, die App zu entdecken. Außerdem motiviert es uns, unsere Arbeit fortzusetzen. 😊\nMöchten Sie eine kurze Bewertung hinterlassen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus comentarios nos ayudan a mejorar y facilitan que otras personas con diabetes descubran la aplicación. Además, nos motivan a seguir trabajando. 😊\n¿Te gustaría dejar una breve reseña?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos commentaires nous aident à améliorer notre application et permettent à d'autres personnes atteintes de diabète de la découvrir plus facilement. Ils nous motivent également à poursuivre notre travail. 😊\nSouhaitez-vous laisser un avis rapide ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo feedback ci aiuta a migliorare e rende più facile per altre persone con diabete scoprire l'app. Inoltre, ci motiva a continuare il nostro lavoro. 😊\nTi va di lasciare una breve recensione?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "皆様からのフィードバックはアプリの改善に役立ち、糖尿病の方々がアプリを見つけやすくします。そして開発を続ける原動力にもなります。😊\n簡単なレビューを投稿していただけませんか？"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您的反馈有助于我们改进应用，让其他糖尿病患者更容易发现这款应用。这也会激励我们继续完善产品。😊\n您愿意留下简短评价吗？"
           }
         }
       }

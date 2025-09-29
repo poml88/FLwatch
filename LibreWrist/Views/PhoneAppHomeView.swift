@@ -9,6 +9,7 @@ import SwiftUI
 import OSLog
 import Charts
 import WidgetKit
+import StoreKit
 
 
 struct PhoneAppHomeView: View {
@@ -22,6 +23,14 @@ struct PhoneAppHomeView: View {
 //    @Environment(\.sensorSettingsSingleton) var sensorSettingsSingleton
     @Environment(\.currentIOBSingleton) var currentIOBSingleton
 //    @Environment(\.insulinDeliveryHistorySingleton) var insulinDeliveryHistorySingleton
+    @Environment(\.requestReview) private var requestReview
+    
+
+    @AppStorage(DefaultsKey.hasDeclinedReview.rawValue, store: UserDefaults.group) private var hasDeclinedReview = false
+    @AppStorage(DefaultsKey.lastReviewPromptDate.rawValue, store: UserDefaults.group) private var lastReviewPromptDate: Double = 0
+//    @AppStorage(DefaultsKey.usedDays.rawValue, store: UserDefaults.group) private var usedDays: [String] = []
+    @AppStorage(DefaultsKey.hasPromptedOnce.rawValue, store: UserDefaults.group) private var hasPromptedOnce = false
+    @AppStorage(DefaultsKey.hasAgreedToReview.rawValue, store: UserDefaults.group) private var hasAgreedToReview = false
     
     
     
@@ -40,12 +49,20 @@ struct PhoneAppHomeView: View {
 //    @State private var sensorSettings = SensorSettings()
     @State private var connected = UserDefaults.group.connected
     @State private var isShowingReloadFailed = false
+    @State private var onAppearNotToDoFirstStart: Bool = true
+    @State private var scenePhaseNotToDoFirstStart: Bool = true
+    @State private var showPrompt = false
     
 //    @State var lastReadingDate: Date = Date(timeIntervalSinceNow: -999 * 60)
 //    @State var currentGlucose: Int = 0
 //    @State var trendArrow = "---"
-    let libreLinkUp = LibreLinkUp()
-    @State private var onAppearNotToDoFirstStart: Int = 0
+    
+    private let promptInterval: TimeInterval = 90 * 24 * 60 * 60
+    private let safeRange: ClosedRange<Int> = 80...140
+    private let allowedHours = 18...22
+    private let minimumDaysOfUse = 10
+    
+    private let libreLinkUp = LibreLinkUp()
      
     private let timer = Timer.publish(every: 60, tolerance: 1, on: .main, in: .common).autoconnect()
     
@@ -98,6 +115,29 @@ struct PhoneAppHomeView: View {
             Text(libreLinkUp.libreLinkUpResponse)
         }
         
+        .alert("Enjoying FLwatch?", isPresented: $showPrompt) {
+            Button("Yes, rate now") {
+                requestReview()
+                lastReviewPromptDate = Date().timeIntervalSince1970
+                hasPromptedOnce = true
+                hasAgreedToReview = true
+            }
+            Button("Maybe later", role: .cancel) {
+                lastReviewPromptDate = Date().timeIntervalSince1970
+                hasPromptedOnce = true
+            }
+            Button("Not happy? Suggestions?") {
+                openSupportEmail()
+                hasPromptedOnce = true
+                lastReviewPromptDate = Date().timeIntervalSince1970
+//                hasDeclinedReview = true // optional: don’t ask again
+            }
+            Button("No thanks", role: .destructive) {
+                hasDeclinedReview = true
+            }
+        } message: {
+            Text("Your feedback helps us improve and makes it easier for others with diabetes to discover the app. And it motivates to continue the work. 😊\nWould you like to leave a quick review?")
+        }
         
         .overlay
         {
@@ -152,10 +192,23 @@ struct PhoneAppHomeView: View {
 //                isShowingNotification = true
 //            }
             
-            if onAppearNotToDoFirstStart == 1 {
+            if onAppearNotToDoFirstStart == false { // not to do on first start
+                
                 CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                
+                if shouldShowPrompt {
+                    showPrompt = true
+                }
+                
             }
-            if onAppearNotToDoFirstStart < 1 { onAppearNotToDoFirstStart += 1 }
+            if onAppearNotToDoFirstStart == true { // to do only on first start
+                FLwatchShortcuts.updateAppShortcutParameters() // this was in the app init first, but it seems this was too early... So I moved it here.
+                onAppearNotToDoFirstStart = false
+            }
+            
+            if !hasPromptedOnce {
+                recordDayOfUse()
+            }
             
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
             connected = UserDefaults.group.connected
@@ -179,7 +232,11 @@ struct PhoneAppHomeView: View {
                 print("Scene Phase Active")
 
                 CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-                WidgetCenter.shared.reloadAllTimelines()
+                
+                if scenePhaseNotToDoFirstStart == false {
+                    WidgetCenter.shared.reloadAllTimelines()
+                }
+                if scenePhaseNotToDoFirstStart == true { scenePhaseNotToDoFirstStart = false }
                 
                 connected = UserDefaults.group.connected
                 minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
@@ -227,6 +284,76 @@ struct PhoneAppHomeView: View {
             }
         }
     }
+    
+    private var shouldShowPrompt: Bool {
+        guard !hasDeclinedReview else { return false }
+        
+        guard !hasAgreedToReview else { return false }
+        
+        let now = Date()
+        let secondsSinceLast = now.timeIntervalSince1970 - lastReviewPromptDate
+        
+        guard secondsSinceLast > promptInterval else { return false }
+        
+        let hour = Calendar.current.component(.hour, from: now)
+        guard allowedHours.contains(hour) else { return false }
+        
+        let glucose = libreLinkUpHistory.currentGlucose
+        guard safeRange.contains(glucose) else { return false }
+        
+        if !hasPromptedOnce {
+            let usedDays: [String] = SharedData.usedDays
+            guard usedDays.count >= minimumDaysOfUse else { return false }
+        } else {
+            SharedData.usedDays.removeAll()
+        }
+        
+        return true
+    }
+    
+    private func recordDayOfUse() {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let todayString = formatter.string(from: Date())
+        var usedDays: [String] = SharedData.usedDays
+        if !usedDays.contains(todayString) {
+            usedDays.append(todayString)
+            SharedData.usedDays = usedDays
+        }
+    }
+    
+    private func openSupportEmail() {
+        let to = "flwatch@cmdline.net"
+        let subject = "FLwatch Feedback"
+        let versionNumber: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
+        let buildNumber: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as! String
+        
+        let systemVersion = UIDevice.current.systemVersion
+        let systemName = UIDevice.current.systemName
+        let model = UIDevice.current.model
+        let name = UIDevice.current.name
+        
+        let sensorType = SensorSettingsSingleton.shared.sensorType.description
+        
+        let libreLinkUpDebug = DebugMessageSingleton.shared.libreLinkUpResponseError
+        
+        let messageBody: LocalizedStringResource = "Hello,\n\n*** write your message here ***\n\n\n\nKind regards\n\n\n\n--\nDebug info:\nApp Version: \(versionNumber) Build: \(buildNumber)\nDevice Info: \(systemName) \(systemVersion) on \(name)\nSensor: \(sensorType)\nError Message: \(libreLinkUpDebug)\n\n"
+        let messageBodyString: String = String(localized: messageBody)
+        
+        // Build the URL components safely
+        var comps = URLComponents()
+        comps.scheme = "mailto"
+        comps.path = to
+        comps.queryItems = [
+            URLQueryItem(name: "subject", value: subject),
+            URLQueryItem(name: "body", value: messageBodyString)
+        ]
+        
+        guard let url = comps.url else { return }
+        UIApplication.shared.open(url)
+    }
+    
+    
 }
 
 struct GlucoseValueView: View {
@@ -243,22 +370,33 @@ struct GlucoseValueView: View {
                 .minimumScaleFactor(0.1)
                 .padding()
             
-            VStack {
+            VStack(spacing: 4) {
                 Text("\(libreLinkUpHistory.currentTrendArrow)")
                     .font(.system(size: 50, weight: .bold))
                     .foregroundStyle(foregroundStyleColor)
+//                    .border(.red)
                 Button {
                     isShowingInsulinDeliverySheet.toggle()
                 } label: {
-                    Text("IOB: \(currentIOBSingleton.currentIOB, specifier: "%.2f")u")
-                        .font(.title2)
-                        .foregroundStyle(Color.primary)
+                    let iobValue = currentIOBSingleton.currentIOB
+                    Text(iobValue > 0
+                         ? "IOB: \(iobValue, specifier: "%.2f")u"
+                         : "IOB")
+                    .font(.title2)
+                    .foregroundStyle(Color.primary)
+                    .padding(4) // Add padding so the border doesn't hug the text too tightly
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.primary, lineWidth: 0.5)
+                    )
+                    
                 }
                 .sheet(isPresented: $isShowingInsulinDeliverySheet, content: {
                     PhoneAppInsulinDeliveryView()
                 })
             }
             .padding()
+//            .border(.red)
         }
     }
 }

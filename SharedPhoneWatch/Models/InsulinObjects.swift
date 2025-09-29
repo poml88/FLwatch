@@ -119,16 +119,17 @@ struct InsulinTypePresets: Codable, Identifiable {
     
     func getCurrentIOB() -> Double {
         let idhs = InsulinDeliveryHistorySingleton.shared
+        let timeIntervalSince1970 = Date().timeIntervalSince1970
 //        idhs.read() // It is necessary to read in the UserDefaults value because widgets and app are individual programs with individual Singletons...
         // read is now done from widget directly
 //        var insulinDeliveryHistory: [InsulinDelivery] = insulinDeliveryHistorySingleton.insulinDeliveryHistory
         var sumIOB: Double = 0
         for item in idhs.insulinDeliveryHistory {
-            let timeIntervalBetweenDeliveryAndNow = Date().timeIntervalSince1970 - item.timeStamp
+            let timeIntervalBetweenDeliveryAndNow = timeIntervalSince1970 - item.timeStamp
             if timeIntervalBetweenDeliveryAndNow > 12 * 60 * 60 {
                 idhs.insulinDeliveryHistory.removeAll(where: {$0.id == item.id})
             } else {
-                let timeIntervalBetweenDeliveryAndNow = Date().timeIntervalSince1970 - item.timeStamp
+                let timeIntervalBetweenDeliveryAndNow = timeIntervalSince1970 - item.timeStamp
                 let IOB =   updateIOB(timeStamp: timeIntervalBetweenDeliveryAndNow, insulinType: item.insulinType) * item.insulinUnits
                 sumIOB = sumIOB + IOB
             }
@@ -149,18 +150,21 @@ struct InsulinTypePresets: Codable, Identifiable {
     
     func calculateInsulinOnBoardCurve() -> [ActivityCurveDataPoint] {
         let idhs = InsulinDeliveryHistorySingleton.shared
+        let timeIntervalSince1970: Double = Date().timeIntervalSince1970
 //        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // It is necessary to read in the UserDefaults value because widgets and app are individual programs with individual Singletons...
         
         if idhs.insulinDeliveryHistory.count < 1 { return [] }
         
         var activityCurve: [ActivityCurveDataPoint] = []
         let minutes = 5 * 60
+        let InternvalSixHoursAndTen: Double = 6 * 60 * 60 + 10 * 60
         for timeInterval in stride(from: 6 * 60 * 60, through: -2 * 60 * 60, by: -minutes) {
             var sumIOB: Double = 0
             for item in idhs.insulinDeliveryHistory {
-                let timeIntervalBetweenDeliveryAndNow = Date().timeIntervalSince1970 - item.timeStamp
-                if timeIntervalBetweenDeliveryAndNow < 6 * 60 * 60 {
-                    let timeIntervalBetweenDeliveryAndTimeStampToBeCalculated = Date().timeIntervalSince1970 - Double(timeInterval) - item.timeStamp
+                let timeIntervalBetweenDeliveryAndNow = timeIntervalSince1970 - item.timeStamp // e.g. 600 sec
+                if timeIntervalBetweenDeliveryAndNow < InternvalSixHoursAndTen {
+                    let timeIntervalBetweenDeliveryAndTimeStampToBeCalculated = timeIntervalSince1970 - item.timeStamp - Double(timeInterval) // e.g. 600 sec - 300 sec
+//                    print("timeIntervalBetweenDeliveryAndTimeStampToBeCalculated: \(timeIntervalBetweenDeliveryAndTimeStampToBeCalculated)")
                     if timeIntervalBetweenDeliveryAndTimeStampToBeCalculated >= 0 { // timeIntervalBetweenDeliveryAndTimeStampToBeCalculated < timeIntervalBetweenDeliveryAndNow &&
                         let IOB =   updateIOB(timeStamp: timeIntervalBetweenDeliveryAndTimeStampToBeCalculated, insulinType: item.insulinType) * item.insulinUnits
                         sumIOB = sumIOB + IOB
@@ -169,7 +173,7 @@ struct InsulinTypePresets: Codable, Identifiable {
             }
             if sumIOB > 0 {
                 let dataPoint: ActivityCurveDataPoint = ActivityCurveDataPoint(id: timeInterval, date: Date(timeIntervalSinceNow: -Double(timeInterval)), value: sumIOB)
-//                print("\(dataPoint)")
+//                print("Data point: \(dataPoint)")
                 activityCurve.append(dataPoint)
             }
         }
@@ -217,7 +221,7 @@ struct InsulinTypePresets: Codable, Identifiable {
 #if os(iOS)
         if SharedData.showActivityCurvePhone == false {
             insulinActivityCurve = []
-            insulinOnBoardCurve = insulinOnBoardCurve.filter { $0.date < Date.now }
+            insulinOnBoardCurve = insulinOnBoardCurve.filter { $0.date < Date.now } // Must use Date.now here, if we get the date further up, it will be before the curve is calculated and filter the first point...
             return
         }
 #endif

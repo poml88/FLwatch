@@ -17,7 +17,7 @@ struct LibreWristApp: App {
         if UserDefaults.group.connected == .connecting {
             UserDefaults.group.connected = .disconnected
         }
-        FLwatchShortcuts.updateAppShortcutParameters()
+        
         WatchConnectivityManager.shared.startSession()
         // alternatively the session could be started in AppDelegate see https://developer.apple.com/documentation/swiftui/migrating-to-the-swiftui-life-cycle
 

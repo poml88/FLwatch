@@ -47,7 +47,9 @@ class LibreLinkUp  {
     
     
     
-    
+    init() {
+        print("New instance of LibreLinkUp")
+    }
     
     
     //    init(main: MainDelegate) {
@@ -101,16 +103,26 @@ class LibreLinkUp  {
                         SensorSettingsSingleton.shared.sensorSettings = sensorSettingsRead
                         SensorSettingsSingleton.shared.sensorType = sensorType
                         // TODO: just merge with newer values
-                        if graphHistory.count > 1 {                                                                                 // make sure that [0] exists, must be 2 to drop 1.
-                            LibreLinkUpHistory.shared.libreLinkUpGlucose = graphHistory.reversed().dropLast(graphHistory.count / 2) // deviding by two reduces graph to 6 hours.
-                        } else {
-                            LibreLinkUpHistory.shared.libreLinkUpGlucose = graphHistory                                             // is only 1 value
+                        let graphHistoryReversed: [LibreLinkUpGlucose] = graphHistory.reversed()
+                        let dateSixHoursTenAgo: Date = Date(timeIntervalSinceNow: -6 * 60 * 60 - 10 * 60)
+                        LibreLinkUpHistory.shared.libreLinkUpGlucose = graphHistoryReversed.filter { $0.glucose.date > dateSixHoursTenAgo } // delete everything older than 6 hours.
+                        if LibreLinkUpHistory.shared.libreLinkUpGlucose.count == 0 {
+                            LibreLinkUpHistory.shared.libreLinkUpGlucose.append(graphHistoryReversed[0])
+                            if graphHistoryReversed.indices.contains(1) {
+                                LibreLinkUpHistory.shared.libreLinkUpGlucose.append(graphHistoryReversed[1])
+                            }
                         }
-                        let lastMeasurement = LibreLinkUpHistory.shared.libreLinkUpGlucose[0]
+                        Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpGlucose: \(LibreLinkUpHistory.shared.libreLinkUpGlucose)")
+//                        if graphHistory.count > 1 {                                                                                 // make sure that [0] exists, must be 2 to drop 1.
+//                            LibreLinkUpHistory.shared.libreLinkUpGlucose = graphHistory.reversed().dropLast(graphHistory.count / 2) // deviding by two reduces graph to 6 hours.
+//                        } else {
+//                            LibreLinkUpHistory.shared.libreLinkUpGlucose = graphHistory                                             // is only 1 value
+//                        }
+                        let lastMeasurement: LibreLinkUpGlucose = graphHistoryReversed[0] // access index 0 seems ok, since graphHistory.count > 0
                         LibreLinkUpHistory.shared.lastReadingDate = lastMeasurement.glucose.date
                         //                        minutesSinceLastReading = Int(Date().timeIntervalSince(lastReadingDate) / 60)
                         //                        sensor?.lastReadingDate = lastReadingDate
-                        LibreLinkUpHistory.shared.currentGlucose = lastMeasurement.glucose.value
+                        LibreLinkUpHistory.shared.currentGlucose = lastMeasurement.glucose.value // always mg/dl
                         LibreLinkUpHistory.shared.currentTrendArrow = lastMeasurement.trendArrow?.symbol ?? "---"
                         // TODO: keep the raw values filling the gaps with -1 values
                         //                        history.rawValues = []

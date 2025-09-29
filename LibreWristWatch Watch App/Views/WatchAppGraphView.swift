@@ -19,14 +19,27 @@ struct WatchAppGraphView: View {
     @Environment(\.sensorSettingsSingleton) var sensorSettingsSingleton
     
     var body: some View {
-        let rectXStart: Date = libreLinkUpHistory.libreLinkUpGlucose.last?.glucose.date ?? Date(timeIntervalSinceNow: -6 * 60 * 60)
-        let rectXStop: Date = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date(timeIntervalSinceNow: -1 * 60)
+//        let rectXStart: Date = libreLinkUpHistory.libreLinkUpGlucose.last?.glucose.date ?? Date(timeIntervalSinceNow: -6 * 60 * 60)
+//        let rectXStop: Date = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date(timeIntervalSinceNow: -1 * 60)
+        
+        let date: Date = Date.now
+        
+        let dateSixHoursTenAgo: Date = date.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
+        let timeIntervalSince1970: Double = date.timeIntervalSince1970
+        let timeInternvalSixHoursAndTenAgo: Double = timeIntervalSince1970 - 3600 * 6 - 60 * 10
+        
+        
+        let rectXStart: Date = dateSixHoursTenAgo
+        let rectXStop: Date = Date(timeIntervalSinceNow: 0)
         
         //Configuration
         // 0 = mmoll  1 = mgdl  0.0555
         var chartYScaleMin: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 2.75 : 50 }
         
         let maxBG = libreLinkUpHistory.maxBG
+        
+        let chartXScaleMin: Date = dateSixHoursTenAgo
+        let chartXScaleMax: Date = date
         
         var chartYScaleMax: Double { if maxBG > 300 { sensorSettingsSingleton.sensorSettings.uom == 0 ? 21 : 400}
             else if maxBG > 225 { sensorSettingsSingleton.sensorSettings.uom == 0 ? 18 : 300}
@@ -43,7 +56,6 @@ struct WatchAppGraphView: View {
         var chartRectangleYStart: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? sensorSettingsSingleton.sensorSettings.targetLow.toMmolL() : Double(sensorSettingsSingleton.sensorSettings.targetLow) }
         var chartRectangleYEnd: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? sensorSettingsSingleton.sensorSettings.targetHigh.toMmolL() : Double(sensorSettingsSingleton.sensorSettings.targetHigh) }
         var chartRuleAlarmLL: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? sensorSettingsSingleton.sensorSettings.alarmLow.toMmolL() : Double(sensorSettingsSingleton.sensorSettings.alarmLow) }
-        // Setting to 6 hours below by deleting half of the values.
         
         
         Chart {
@@ -155,14 +167,14 @@ struct WatchAppGraphView: View {
                 if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
                     ForEach(InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory) { item in
                         //                    var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
-                        if item.timeStamp > Date().timeIntervalSince1970 - 3600 * 6 {
+                        if item.timeStamp > timeInternvalSixHoursAndTenAgo {
                             let insulinOnBoardCurve = CurrentIOBSingleton.shared.insulinOnBoardCurve
                             var iobCurveDataPointAtTimeStamp: ActivityCurveDataPoint { insulinOnBoardCurve.first(where: { $0.date > Date(timeIntervalSince1970: item.timeStamp)}) ?? ActivityCurveDataPoint(id: Int(item.timeStamp),date: Date(timeIntervalSince1970: item.timeStamp), value: 1)}
                             
                             var alignment: Alignment {
-                                if item.timeStamp > Date().timeIntervalSince1970 - 40 * 60 {
+                                if item.timeStamp > timeIntervalSince1970 - 40 * 60 {
                                     return .trailing
-                                } else if item.timeStamp < Date().timeIntervalSince1970 - 3600 * 6 + 40 * 60 {
+                                } else if item.timeStamp < timeIntervalSince1970 - 3600 * 6 + 40 * 60 {
                                     return .leading
                                 } else {
                                     return .center
@@ -212,9 +224,10 @@ struct WatchAppGraphView: View {
             }
         }
     }
+        .chartXScale(domain: [chartXScaleMin, chartXScaleMax])
         .chartYScale(domain: [chartYScaleMin, chartYScaleMax])
         
-        .chartXVisibleDomain(length: 3600 * 6)
+//        .chartXVisibleDomain(length: 3600 * 6)
 //                .chartScrollableAxes(.horizontal)
 //                .chartScrollPosition(initialX: Date())
 //                .chartScrollTargetBehavior(

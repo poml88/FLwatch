@@ -275,6 +275,7 @@
 		7B7790BA2E599BA100DE6B01 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7B7790BB2E599BA200DE6B01 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7B7790BC2E599BA300DE6B01 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		7B7F221C2E82D036005E3A72 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7B8965412DC156DD003A50CE /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
 		7B8965442DC17399003A50CE /* PhoneAppSiriSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSiriSheetView.swift; sourceTree = "<group>"; };
 		7B8C80112E48C8B300A9DA79 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
@@ -809,6 +810,7 @@
 				fr,
 				"zh-Hans",
 				ja,
+				it,
 			);
 			mainGroup = 7BA0AE202C582F63004226FE;
 			packageReferences = (
@@ -1097,6 +1099,7 @@
 				7B7790BA2E599BA100DE6B01 /* ja */,
 				7B7790BB2E599BA200DE6B01 /* fr */,
 				7B7790BC2E599BA300DE6B01 /* zh-Hans */,
+				7B7F221C2E82D036005E3A72 /* it */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";

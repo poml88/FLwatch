@@ -29,7 +29,7 @@ struct WatchAppHomeView: View {
 //    @State private var currentIOB: Double = 0.0
 //    @State private var sensorSettings = SensorSettings()
     @State private var connected = UserDefaults.group.connected
-    @State private var onAppearNotToDoFirstStart: Int = 0
+    @State private var onAppearNotToDoFirstStart: Bool = true
     
 //    @State var lastReadingDate: Date = Date(timeIntervalSinceNow: -999 * 60)
 //    @State var currentGlucose: Int = 0
@@ -124,10 +124,17 @@ struct WatchAppHomeView: View {
                 isShowingDisclaimer = true
             }
             
-            if onAppearNotToDoFirstStart == 1 {
+            if onAppearNotToDoFirstStart == false { // not to do on first start
+                
                 CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                      
             }
-            if onAppearNotToDoFirstStart < 1 { onAppearNotToDoFirstStart += 1 }
+            
+            if onAppearNotToDoFirstStart == true { // to do only on first start
+                FLwatchShortcuts.updateAppShortcutParameters() // this was in the app init first, but it seems this was too early... So I moved it here.
+                onAppearNotToDoFirstStart = false
+            }
+            
             
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
             connected = UserDefaults.group.connected

@@ -15,9 +15,9 @@ import SwiftUI
     var libreLinkUpGlucose: [LibreLinkUpGlucose] = []
     var libreLinkUpMinuteGlucose: [LibreLinkUpGlucose] = []
     var lastReadingDate: Date = Date(timeIntervalSinceNow: -999 * 60)
-    var currentGlucose: Int = 0
+    var currentGlucose: Int = 0 // always in mg/dl
     var currentTrendArrow: String = "---"
-    var maxBG: Int = 250
+    var maxBG: Int = 100
     
     let libreLinkUpGlucoseDefaultEntries = [LibreLinkUpGlucose(glucose: Glucose(rawValue: 1000,
                                                                                 rawTemperature: 4,
