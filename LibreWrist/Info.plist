@@ -2,12 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleSpokenName</key>
-	<string>F L wotsch</string>
-	<key>CFBundleDisplayName</key>
-	<string>FLwatch</string>
 	<key>APP_GROUP_ID</key>
 	<string>${APP_GROUP_ID}</string>
+	<key>CFBundleSpokenName</key>
+	<string>F L wotsch</string>
 	<key>INAlternativeAppNames</key>
 	<array>
 		<dict>
@@ -27,7 +25,5 @@
 			<string>ef el wotsch</string>
 		</dict>
 	</array>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 </dict>
 </plist>

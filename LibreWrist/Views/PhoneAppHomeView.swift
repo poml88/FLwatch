@@ -66,7 +66,7 @@ struct PhoneAppHomeView: View {
      
     private let timer = Timer.publish(every: 60, tolerance: 1, on: .main, in: .common).autoconnect()
     
-    
+    private let useLiveActivities  = true
     
     var body: some View {
         VStack {
@@ -203,6 +203,8 @@ struct PhoneAppHomeView: View {
             }
             if onAppearNotToDoFirstStart == true { // to do only on first start
                 FLwatchShortcuts.updateAppShortcutParameters() // this was in the app init first, but it seems this was too early... So I moved it here.
+//      DEVELOPMENT: 1 lines commented out          LiveActivityManager.shared.startIfAllowed(useLiveActivities: useLiveActivities)
+
                 onAppearNotToDoFirstStart = false
             }
             
@@ -233,10 +235,10 @@ struct PhoneAppHomeView: View {
 
                 CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 
-                if scenePhaseNotToDoFirstStart == false {
+                if scenePhaseNotToDoFirstStart == false { // not to do on first start
                     WidgetCenter.shared.reloadAllTimelines()
                 }
-                if scenePhaseNotToDoFirstStart == true { scenePhaseNotToDoFirstStart = false }
+                if scenePhaseNotToDoFirstStart == true { scenePhaseNotToDoFirstStart = false } // to do only on first start
                 
                 connected = UserDefaults.group.connected
                 minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
