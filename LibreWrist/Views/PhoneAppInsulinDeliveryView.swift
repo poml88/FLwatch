@@ -296,24 +296,56 @@ struct PhoneAppInsulinDeliveryView: View {
                     }
                 }
                 .toolbar {
-                    ToolbarItemGroup(placement: .keyboard) {
-                        
-                        
-                        Button("Clear") { clearFocused() }
-                        Spacer()
-                        Button("Done") {
-                            // Preferred: dismiss via FocusState
-                            focused = nil
+                    if focused == .carbsPer100g || focused == .portionGrams || focused == .icrGramsPerUnit {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            // Previous / Next (disabled appropriately)
+                            Button(action: focusPrevious) {
+                                Image(systemName: "chevron.left")
+//                                Text("Prev")
+                            }
+                            .disabled(focused == nil || focused == .carbsPer100g)
                             
-                            // Fallback: resign first responder via UIKit
-                            UIApplication.shared.sendAction(
-                                #selector(UIResponder.resignFirstResponder),
-                                to: nil, from: nil, for: nil
-                            )
+                            Button(action: focusNext) {
+//                                Text("Next")
+                                Image(systemName: "chevron.right")
+                            }
+                            .disabled(focused == nil || focused == .icrGramsPerUnit)
+                            
+                            Spacer()
+                            
+                            Button("Clear") { clearFocused() }
+                            
+                            Spacer()
+                            
+                            Button("Done") {
+                                focused = nil
+                                UIApplication.shared.sendAction(
+                                    #selector(UIResponder.resignFirstResponder),
+                                    to: nil, from: nil, for: nil
+                                )
+                            }
                         }
-                        
                     }
                 }
+//                .toolbar {
+//                    ToolbarItemGroup(placement: .keyboard) {
+//                        
+//                        
+//                        Button("Clear") { clearFocused() }
+//                        Spacer()
+//                        Button("Done") {
+//                            // Preferred: dismiss via FocusState
+//                            focused = nil
+//                            
+//                            // Fallback: resign first responder via UIKit
+//                            UIApplication.shared.sendAction(
+//                                #selector(UIResponder.resignFirstResponder),
+//                                to: nil, from: nil, for: nil
+//                            )
+//                        }
+//                        
+//                    }
+//                }
                 .scrollDismissesKeyboard(.interactively)
                 
                 // MARK: - Alerts
@@ -424,14 +456,37 @@ struct PhoneAppInsulinDeliveryView: View {
         }
     }
     
-    private func clearFocused() {
-            switch focused {
-            case .carbsPer100g:     carbsPer100g = 0
-            case .portionGrams:     portionGrams = 0
-            case .icrGramsPerUnit:  icrGramsPerUnit = 0
-            case nil:               break
-            }
+    private func focusNext() {
+        switch focused {
+        case .carbsPer100g: focused = .portionGrams
+        case .portionGrams: focused = .icrGramsPerUnit
+        case .icrGramsPerUnit: focused = nil // dismiss after last, or change to .carbsPer100g to cycle
+        default: focused = .carbsPer100g
         }
+    }
+
+    private func focusPrevious() {
+        switch focused {
+        case .carbsPer100g: focused = nil // already first
+        case .portionGrams: focused = .carbsPer100g
+        case .icrGramsPerUnit: focused = .portionGrams
+        default: focused = .icrGramsPerUnit // fallback to first
+        }
+    }
+
+    private func clearFocused() {
+        switch focused {
+        case .carbsPer100g:
+            carbsPer100g = 0
+        case .portionGrams:
+            portionGrams = 0
+        case .icrGramsPerUnit:
+            icrGramsPerUnit = 0
+        default:
+            // no-op or clear all if you prefer
+            break
+        }
+    }
 }
 
 #Preview {
