@@ -57,7 +57,7 @@ struct PhoneAppHomeView: View {
 //    @State var currentGlucose: Int = 0
 //    @State var trendArrow = "---"
     
-    private let promptInterval: TimeInterval = 90 * 24 * 60 * 60
+    private let promptInterval: TimeInterval = 30 * 24 * 60 * 60
     private let safeRange: ClosedRange<Int> = 80...140
     private let allowedHours = 18...22
     private let minimumDaysOfUse = 10
@@ -192,6 +192,7 @@ struct PhoneAppHomeView: View {
 //                isShowingNotification = true
 //            }
             
+            //MARK: Skip the following on app start
             if onAppearNotToDoFirstStart == false { // not to do on first start
                 
                 CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
@@ -201,7 +202,10 @@ struct PhoneAppHomeView: View {
                 }
                 
             }
+            
+            //MARK: Do the following only on app start
             if onAppearNotToDoFirstStart == true { // to do only on first start
+                
                 FLwatchShortcuts.updateAppShortcutParameters() // this was in the app init first, but it seems this was too early... So I moved it here.
 //      DEVELOPMENT: 1 lines commented out          LiveActivityManager.shared.startIfAllowed(useLiveActivities: useLiveActivities)
 
@@ -320,6 +324,7 @@ struct PhoneAppHomeView: View {
         var usedDays: [String] = SharedData.usedDays
         if !usedDays.contains(todayString) {
             usedDays.append(todayString)
+   //         usedDays.append("2025-10-10") // for testing purposes
             SharedData.usedDays = usedDays
         }
     }

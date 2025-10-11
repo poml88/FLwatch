@@ -38,6 +38,8 @@ struct PhoneAppInsulinDeliveryView: View {
     @State private var isShowingDifferenceTimePickerSheet = false
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
     
+    @State private var navigationPath = NavigationPath()
+    
     private var watchConnector = WatchConnectivityManager.shared
     
     // Manual doses
@@ -76,7 +78,7 @@ struct PhoneAppInsulinDeliveryView: View {
 
     
     var body: some View {
-        NavigationStack { // necessary for the toolbar of the numeric keyboard
+        NavigationStack(path: $navigationPath) { // necessary for the toolbar of the numeric keyboard
             VStack {
                 Button { dismiss() } label: { Text("Dismiss") }
                     .buttonStyle(.borderedProminent)

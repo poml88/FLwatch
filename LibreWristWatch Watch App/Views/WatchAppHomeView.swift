@@ -124,12 +124,14 @@ struct WatchAppHomeView: View {
                 isShowingDisclaimer = true
             }
             
+            //MARK: Skip the following on app start
             if onAppearNotToDoFirstStart == false { // not to do on first start
                 
                 CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                       
             }
             
+            //MARK: Do the following only on app start
             if onAppearNotToDoFirstStart == true { // to do only on first start
                 FLwatchShortcuts.updateAppShortcutParameters() // this was in the app init first, but it seems this was too early... So I moved it here.
                 onAppearNotToDoFirstStart = false
