@@ -58,8 +58,8 @@ struct PhoneAppHomeView: View {
 //    @State var trendArrow = "---"
     
     private let promptInterval: TimeInterval = 30 * 24 * 60 * 60
-    private let safeRange: ClosedRange<Int> = 80...140
-    private let allowedHours = 18...22
+    private let safeRange: ClosedRange<Int> = 70...180
+    private let allowedHours = 0...24
     private let minimumDaysOfUse = 10
     
     private let libreLinkUp = LibreLinkUp()
@@ -304,7 +304,7 @@ struct PhoneAppHomeView: View {
         let hour = Calendar.current.component(.hour, from: now)
         guard allowedHours.contains(hour) else { return false }
         
-        let glucose = libreLinkUpHistory.currentGlucose
+        let glucose = libreLinkUpHistory.currentGlucose //always in mg/dl
         guard safeRange.contains(glucose) else { return false }
         
         if !hasPromptedOnce {

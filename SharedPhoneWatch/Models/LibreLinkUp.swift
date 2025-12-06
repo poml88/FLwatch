@@ -8,6 +8,7 @@
 import Foundation
 import OSLog
 import SwiftUI
+import StoreKit
 
 // https://github.com/timoschlueter/nightscout-librelink-up
 // https://gist.github.com/khskekec/6c13ba01b10d3018d816706a32ae8ab2
@@ -199,6 +200,7 @@ class LibreLinkUp  {
         request.httpBody = jsonData
         do {
             var redirected: Bool
+            var regionIsRussia = false
             loop: repeat {
                 redirected = false
                 Logger.libreLinkUp.debug("LibreLinkUp: posting to \(request.url!.absoluteString) \(jsonData!.string), headers: \(self.headers)")
@@ -226,7 +228,20 @@ class LibreLinkUp  {
                         }
                         
                         if status == 2 {
+                            let storefront = await Storefront.current
+                            let countryCode = storefront?.countryCode
+                            if countryCode == "RUS" { // || UserDefaults.group.username == "alexey.bozhok@yandex.ru" {
+                                if regionIsRussia == false {
+                                    regionIsRussia = true
+                                    redirected = true
+                                    SharedData.libreLinkUpRegion = "ru"
+                                    Logger.libreLinkUp.debug("LibreLinkUp: redirecting to \(self.regionalSiteURLRU)/\(self.loginEndpoint) ")
+                                    request.url = URL(string: "\(regionalSiteURLRU)/\(loginEndpoint)")!
+                                    continue loop
+                                }
+                            }
                             // {"status":2,"error":{"message":"incorrect username/password"}}, status: 200
+                            regionIsRussia = false
                             throw LibreLinkUpError.notAuthenticated
                         }
                         
@@ -339,6 +354,9 @@ class LibreLinkUp  {
                                 // default "de" and "fr" regional servers
                                 let defaultRegion = regions.contains(country.lowercased()) ? country.lowercased() : SharedData.libreLinkUpRegion
                                 var request = URLRequest(url: URL(string: "\(siteURL)/\(configEndpoint)/country?country=\(country)")!)
+                                if regionIsRussia {
+                                    request = URLRequest(url: URL(string: "\(regionalSiteURLRU)/\(configEndpoint)/country?country=\(country)")!)
+                                }
                                 for (header, value) in headers {
                                     request.setValue(value, forHTTPHeaderField: header)
                                 }
