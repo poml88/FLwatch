@@ -5757,6 +5757,7 @@
       }
     },
     "Unknown status 4 error." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -5771,6 +5772,9 @@
           }
         }
       }
+    },
+    "Unknown status 4 error. Check error message in settings tab and send to support." : {
+
     },
     "Update note" : {
       "localizations" : {

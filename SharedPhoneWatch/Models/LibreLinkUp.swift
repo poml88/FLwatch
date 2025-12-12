@@ -201,6 +201,7 @@ class LibreLinkUp  {
         do {
             var redirected: Bool
             var regionIsRussia = false
+            var regionIsChina = false
             loop: repeat {
                 redirected = false
                 Logger.libreLinkUp.debug("LibreLinkUp: posting to \(request.url!.absoluteString) \(jsonData!.string), headers: \(self.headers)")
@@ -228,21 +229,33 @@ class LibreLinkUp  {
                         }
                         
                         if status == 2 {
-                            let storefront = await Storefront.current
-                            let countryCode = storefront?.countryCode
-                            if countryCode == "RUS" { // || UserDefaults.group.username == "alexey.bozhok@yandex.ru" {
-                                if regionIsRussia == false {
-                                    regionIsRussia = true
-                                    redirected = true
-                                    SharedData.libreLinkUpRegion = "ru"
-                                    Logger.libreLinkUp.debug("LibreLinkUp: redirecting to \(self.regionalSiteURLRU)/\(self.loginEndpoint) ")
-                                    request.url = URL(string: "\(regionalSiteURLRU)/\(loginEndpoint)")!
-                                    continue loop
+                            if let storefront = await Storefront.current {
+                                let countryCode = storefront.countryCode
+                                if countryCode == "RUS" { // || UserDefaults.group.username == "xxx.xxx@yandex.ru" {
+                                    if regionIsRussia == false {
+                                        regionIsRussia = true
+                                        redirected = true
+                                        SharedData.libreLinkUpRegion = "ru"
+                                        Logger.libreLinkUp.debug("LibreLinkUp: Storefront country code: \(countryCode), redirecting to \(self.regionalSiteURLRU)/\(self.loginEndpoint) ")
+                                        request.url = URL(string: "\(regionalSiteURLRU)/\(loginEndpoint)")!
+                                        continue loop
+                                    }
                                 }
+                                if countryCode == "CHN" {
+                                    if regionIsChina == false {
+                                        regionIsChina = true
+                                        redirected = true
+                                        SharedData.libreLinkUpRegion = "cn"
+                                        Logger.libreLinkUp.debug("LibreLinkUp: Storefront country code: \(countryCode), redirecting to \(self.regionalSiteURLCN)/\(self.loginEndpoint) ")
+                                        request.url = URL(string: "\(regionalSiteURLCN)/\(loginEndpoint)")!
+                                        continue loop
+                                    }
+                                }
+                                // {"status":2,"error":{"message":"incorrect username/password"}}, status: 200
+                                regionIsRussia = false
+                                regionIsChina = false
+                                throw LibreLinkUpError.notAuthenticated
                             }
-                            // {"status":2,"error":{"message":"incorrect username/password"}}, status: 200
-                            regionIsRussia = false
-                            throw LibreLinkUpError.notAuthenticated
                         }
                         
                         if status == 429 {
@@ -500,7 +513,6 @@ class LibreLinkUp  {
                 }
                 
                 if status == 4 {
-                    print("voila")
                     if let error = json["error"] as? [String: Any],
                        let message = error["message"] as? String {
                         Logger.general.error("LibreLinkUp: error: \(message)")
