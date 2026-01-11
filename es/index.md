@@ -49,7 +49,10 @@ Lo mismo funciona en el teléfono.
 Para obtener asistencia, abra un ticket, inicie un debate o envíe un correo electrónico a **flwatch [ a t ] cmdline [ d o t ] net**. Agradecemos cualquier comentario. Utilice los mismos métodos que para la asistencia.
 
 ### Donaciones... 
- ¡siempre son bienvenidas! [paypal.me/lovemyhusky](paypal.me/lovemyhusky)
+ ¡siempre son bienvenidas!
+ - <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40">   [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
+- <img src="https://github.githubassets.com/assets/buy_me_a_coffee-63ed78263f6e.svg" alt="buymeacoffee logo" height="40">   [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
+
 
 Echa un vistazo también a estos proyectos:
 
