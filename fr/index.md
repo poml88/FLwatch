@@ -48,7 +48,10 @@ Cela fonctionne de la même manière sur le téléphone.
 Pour obtenir de l'aide, veuillez ouvrir un ticket, lancer une discussion ou envoyer un e-mail à **flwatch [ a t ] cmdline [ d o t ] net**. Vos commentaires sont les bienvenus, veuillez utiliser les mêmes méthodes que pour l'assistance.
 
 ### Dons... 
-...sont toujours les bienvenus ! [paypal.me/lovemyhusky](paypal.me/lovemyhusky)
+...sont toujours les bienvenus !
+- <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40">   [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
+- <img src="https://github.githubassets.com/assets/buy_me_a_coffee-63ed78263f6e.svg" alt="buymeacoffee logo" height="40">   [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
+
 
 {% include screenshots.html %}
 
