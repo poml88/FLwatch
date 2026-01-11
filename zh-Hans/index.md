@@ -48,7 +48,10 @@ hero_title: "FLwatch：血糖传感器图表"
 如需技术支持，请提交问题、发起讨论或发送邮件至 **flwatch [ a t ] cmdline [ d o t ] net**。我们非常欢迎反馈，请通过上述支持渠道提交。
 
 ### 捐赠... 
-...永远欢迎！[paypal.me/lovemyhusky](paypal.me/lovemyhusky)
+...永远欢迎！
+- <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40">   [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
+- <img src="https://github.githubassets.com/assets/buy_me_a_coffee-63ed78263f6e.svg" alt="buymeacoffee logo" height="40">   [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
+
 
 {% include screenshots.html %}
 
