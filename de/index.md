@@ -49,7 +49,9 @@ Das Gleiche funktioniert auch auf dem Telefon.
 Für Support öffnen Sie bitte ein Ticket, starten Sie eine Diskussion oder senden Sie eine E-Mail an **flwatch [ a t ] cmdline [ d o t ] net**. Feedback ist sehr willkommen, bitte nutzen Sie die gleichen Kontaktmöglichkeiten wie für den Support.
 
 ### Spenden... 
-...sind immer sehr willkommen! [paypal.me/lovemyhusky](paypal.me/lovemyhusky)
+...sind immer sehr willkommen!
+[paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
+[buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
 
 {% include screenshots.html %}
 
