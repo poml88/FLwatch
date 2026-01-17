@@ -75,7 +75,7 @@ sitemap: false
   if (!base || base.indexOf("{{") === 0)  base = baseFromPath(); 
   base = base.replace(/\/+$/, ""); // trim trailing slashes
   
-  var path = location.pathname.replace(/\/+$\, "");
+  var path = location.pathname.replace(/\/+$/, "");
   if (path !== base) return;
 
   function pick(lang){
