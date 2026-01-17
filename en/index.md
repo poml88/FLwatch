@@ -51,8 +51,8 @@ For support please open an issue, start a discussion or email **flwatch [ a t ] 
 
 ### Donations... 
 ...are always very welcome!
-- <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40">   [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
-- <img src="https://github.githubassets.com/assets/buy_me_a_coffee-63ed78263f6e.svg" alt="buymeacoffee logo" height="40">   [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
+- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40">   [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
+- <img src="/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40">   [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
 
 {% include screenshots.html %}
 
