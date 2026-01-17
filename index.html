@@ -72,10 +72,15 @@ sitemap: false
 
   var base = "{{ site.baseurl }}"; // Jekyll will expand this
   // Fallback in case baseurl isn't expanded (extra safety)
-  if (base.indexOf('{{') === 0) { base = baseFromPath(); }
+  if (!base || base.indexOf("{{") === 0)  base = baseFromPath(); 
+  base = base.replace(/\/+$/, ""); // trim trailing slashes
+  
+  var path = location.pathname.replace(/\/+$\, "");
+  if (path !== base) return;
 
   function pick(lang){
     lang = (lang || 'en').toLowerCase();
+    
     if(lang.startsWith('de')) return 'de';
     if(lang.startsWith('fr')) return 'fr';
     if(lang.startsWith('es')) return 'es';
@@ -85,15 +90,14 @@ sitemap: false
     return 'en';
   }
 
-  var guess = pick((navigator.languages && navigator.languages[0]) || navigator.language);
+  var langPref = (navigator.languages && navigator.languages[0]) || navigator.language || "en";
+  
+  var guess = pick(langPref);
 
-  // preserve fragment/hash
-  var hash = location.hash || "";
-
-  var target = base + '/' + guess + '/' + hash;
+  var target = base + "/" + guess + "/" + location.search + (location.hash || "");
 
   // Only redirect if URL differs
-  if ((location.pathname + location.hash) !== target) {
+  if (location.href !== new URL(target, location.href).href) {
     location.replace(target);
   }
 })();
