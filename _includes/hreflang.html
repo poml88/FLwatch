@@ -36,4 +36,5 @@ If you have pages with non-parallel structure, add explicit URLs in front matter
 
 {%- comment -%} x-default -> point to English base (customize if you prefer other default) {%- endcomment -%}
 {%- assign en = site.data.languages | where: "code","en" | first -%}
-<link rel="alternate" hreflang="x-default" href="{{ en.path | absolute_url }}" />
+{%- comment -%} <link rel="alternate" hreflang="x-default" href="{{ en.path | absolute_url }}" /> {%- endcomment -%}
+<link rel="alternate" hreflang="x-default" href="https://poml88.github.io/FLwatch/" />

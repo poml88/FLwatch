@@ -4,7 +4,7 @@ title: "FLwatch - Glucose Sensor Graph"
 description: "FLwatch displays your LibreLinkUp glucose readings on iPhone and Apple Watch. Open-source app with insulin-on-board calculation and widgets."
 permalink: /index.html
 image: /assets/images/app-preview-optimized.png
-canonical_url: https://poml88.github.io/FLwatch/en/
+canonical_url: https://poml88.github.io/FLwatch/
 comment: SEO copied from English page - check from time to time
 sitemap: false
 ---
@@ -13,7 +13,6 @@ sitemap: false
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="0; url={{ site.baseurl }}/en/">
   
   
 <!-- SEO -->
@@ -26,7 +25,7 @@ sitemap: false
 
 
   <!-- App-specific meta (kept outside seo tag) -->
-  <meta name="robots" content="max-image-preview:large">
+  <meta name="robots" content="index, follow">
   <meta name="apple-itunes-app" content="app-id=6670172928">
   <link rel="icon" href="/FLwatch/assets/img/favicon.ico">
   <link rel="apple-touch-icon" href="/FLwatch/assets/img/apple-touch-icon.png">
@@ -61,6 +60,11 @@ sitemap: false
   
   <script>
 (function(){
+  const isBot = /googlebot|bingbot|yandex|duckduckbot|baiduspider/i
+  .test(navigator.userAgent);
+  
+  if (isBot) return; // allow indexing
+  
   var supported = ['en','de','fr','es','it','ja','zh-Hans'];
 
   function baseFromPath(){
@@ -107,7 +111,7 @@ sitemap: false
     <a href="{{ site.baseurl }}/de/">Deutsch</a> ·
     <a href="{{ site.baseurl }}/fr/">Français</a> ·
     <a href="{{ site.baseurl }}/es/">Español</a> ·
-    <a href="{{ site.baseurl }}/es/">Italiano</a> ·
+    <a href="{{ site.baseurl }}/it/">Italiano</a> ·
     <a href="{{ site.baseurl }}/ja/">日本語</a> ·
     <a href="{{ site.baseurl }}/zh-Hans/">简体中文</a>
   </p>
