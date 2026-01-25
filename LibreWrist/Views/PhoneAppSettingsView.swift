@@ -43,7 +43,7 @@ struct PhoneAppSettingsView: View {
                         }
                     } label: {
                         Text("Setup and usage guide")
-                        
+                            .padding(2)
                     }
                     .buttonStyle(.bordered)
                     
@@ -51,7 +51,7 @@ struct PhoneAppSettingsView: View {
                         isShowingSiriSheet.toggle()
                     } label: {
                         Text("Siri integration")
-                            .padding(0)
+                            .padding(2)
                         //                            .frame(width: 140, height: 50)
                     }
                     .buttonStyle(.bordered)
@@ -65,7 +65,7 @@ struct PhoneAppSettingsView: View {
                         }
                     } label: {
                         Text("Open issue on GitHub")
-                        
+                            .padding(2)
                     }
                     .buttonStyle(.bordered)
 
@@ -73,7 +73,7 @@ struct PhoneAppSettingsView: View {
                         showingMailView.toggle()
                     } label: {
                         Text("Send Email to Support")
-                            .padding(0)
+                            .padding(2)
                         //                            .frame(width: 140, height: 50)
                     }
                     .buttonStyle(.bordered)

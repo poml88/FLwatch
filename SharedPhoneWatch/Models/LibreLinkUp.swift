@@ -33,7 +33,7 @@ class LibreLinkUp  {
     
     let regions = ["ae", "ap", "au", "ca", "de", "eu", "eu2", "fr", "jp", "la", "us", "ru", "cn"]  // eu2: GB and IE
     
-    let regionalSiteURLRU: String = "https://api.libreview.ru"
+    let regionalSiteURLRU: String = "https://api.libreview.ru" // There are various places where these need to be updated as well
     let regionalSiteURLCN: String = "https://api-cn.myfreestyle.cn"
     var regionalSiteURL: String { SharedData.libreLinkUpRegion == "ru" ? regionalSiteURLRU : SharedData.libreLinkUpRegion == "cn" ? regionalSiteURLCN : "https://api-\(SharedData.libreLinkUpRegion).libreview.io" }
         
@@ -110,7 +110,7 @@ class LibreLinkUp  {
                         if LibreLinkUpHistory.shared.libreLinkUpGlucose.count == 0 {
                             LibreLinkUpHistory.shared.libreLinkUpGlucose.append(graphHistoryReversed[0])
                             if graphHistoryReversed.indices.contains(1) {
-                                LibreLinkUpHistory.shared.libreLinkUpGlucose.append(graphHistoryReversed[1])
+                                LibreLinkUpHistory.shared.libreLinkUpGlucose.append(graphHistoryReversed[1]) // this is only added for trend filter below
                             }
                         }
                         Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpGlucose: \(LibreLinkUpHistory.shared.libreLinkUpGlucose)")
@@ -149,7 +149,7 @@ class LibreLinkUp  {
                         LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose = trend
                         let indexOfMaxGlucoseItem = LibreLinkUpHistory.shared.libreLinkUpGlucose.indices.max(by:
                                                                                                         { LibreLinkUpHistory.shared.libreLinkUpGlucose[$0].glucose.value < LibreLinkUpHistory.shared.libreLinkUpGlucose[$1].glucose.value }
-                        ) ?? 0
+                        ) ?? 0 // Seems to work also with one value only, I guess because it is optional
 #if os(iOS)
                         LibreLinkUpHistory.shared.maxBG = { LibreLinkUpHistory.shared.libreLinkUpGlucose.count > 0 ? LibreLinkUpHistory.shared.libreLinkUpGlucose[indexOfMaxGlucoseItem].glucose.value : 250 }()
 #endif

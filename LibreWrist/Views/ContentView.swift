@@ -47,7 +47,7 @@ struct ContentView: View {
                 }
                 .tag("Donate")
         }
-        .padding()
+//        .padding()
     }
 }
 

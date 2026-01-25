@@ -24,7 +24,7 @@ extension MeasurementColor {
         case .yellow: .yellow
         case .orange: .orange
         case .red:    .red
-        case .gray:   .gray
+        case .gray:   .gray //Color(white: 0.1)
         }
     }
 }
