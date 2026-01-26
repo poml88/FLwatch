@@ -39,9 +39,6 @@ struct FLwatchGraphWidgetEntryView : View {
     @ViewBuilder
     var body: some View {
         
-        
-        
-        
         switch family {
         case .systemSmall:
             ZStack {
@@ -51,11 +48,17 @@ struct FLwatchGraphWidgetEntryView : View {
                     HStack {
                         Spacer()
                         Text(verbatim: glucose)
-                            .font(.system(size: 25, weight: .heavy))
+                            .font(.title2.weight(.heavy))
+                                .minimumScaleFactor(0.7)
+                                .lineLimit(1)
+//                            .font(.system(size: 25, weight: .heavy))
                             .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
-                            .padding(.leading, 10)
+//                            .padding(.leading, 10)
                         Text(verbatim: entry.lastGlucoseMeasurement.trendArrow?.symbol  ?? "-")
-                            .font(.system(size: 25, weight: .heavy, design: .monospaced))
+                            .font(.title2.weight(.heavy).monospaced())
+                                .minimumScaleFactor(0.7)
+                                .lineLimit(1)
+//                            .font(.system(size: 25, weight: .heavy, design: .monospaced))
                             .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
                         //                                .padding(.leading, 60)
                         //                                .padding(.trailing, 5)
@@ -63,10 +66,13 @@ struct FLwatchGraphWidgetEntryView : View {
                         Spacer()
                         Button(intent: ReloadWidgetIntent()) {
                             Image(systemName: "arrow.clockwise")
+//                                .font(.body.weight(.heavy))
+//                                    .minimumScaleFactor(0.7)
+//                                    .lineLimit(1)
                                 .font(.system(size: 20, weight: .heavy, design: .monospaced))
                                 .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
                         }
-                        .padding(.trailing, 5)
+//                        .padding(.trailing, 5)
                     }
                     .padding(.top, 5)
                     .padding(.bottom, -2)
@@ -78,15 +84,22 @@ struct FLwatchGraphWidgetEntryView : View {
                     HStack  {
                         Spacer()
                         Text(currentIOB)
-                            .font(.system(size: 10, weight: .heavy))
+                            .font(.footnote.weight(.heavy).monospaced())
+                                .minimumScaleFactor(0.7)
+                                .lineLimit(1)
+//                            .font(.system(size: 10, weight: .heavy))
                             .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
                         Spacer()
                         //                        Text("88:88")
                         Text(Date(), style: .timer)
                         //Text(verbatim: " ")
-                            .font(.system(size: 10, weight: .heavy))
+                            .font(.footnote.weight(.heavy).monospaced())
+                                .minimumScaleFactor(0.7)
+                                .lineLimit(1)
+//                            .font(.system(size: 10, weight: .heavy))
                             .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
-                            .frame(width: 60)
+                            .frame(width: 60, alignment: .trailing)
+//                            .border(.red)
                         //.colorInvert()
                         //                                .multilineTextAlignment(.center)
                             .monospacedDigit()
@@ -111,13 +124,15 @@ struct FLwatchGraphWidgetEntryView : View {
                         .padding(.trailing, -15)
                     //                    .border(.red)
                     
-                    VStack(alignment: .center, spacing: -10) {
+                    VStack(alignment: .center, spacing: 0) {
                         HStack {
+                            Spacer()
                             Text(verbatim: entry.lastGlucoseMeasurement.trendArrow?.symbol  ?? "-")
                                 .font(.system(size: 48, weight: .heavy, design: .monospaced))
                                 .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
-                                .padding(.leading, 60)
-                                .padding(.trailing, 5)
+                                .padding(.leading, 40)
+//                                .padding(.trailing, 5)
+                            Spacer()
                             Button(intent: ReloadWidgetIntent()) {
                                 Image(systemName: "arrow.clockwise")
                                     .font(.system(size: 20, weight: .heavy, design: .monospaced))
@@ -125,16 +140,26 @@ struct FLwatchGraphWidgetEntryView : View {
                             }
                         }
                         Text(verbatim: glucose)
-                            .font(.system(size: 52, weight: .heavy))
+//                            .font(.largeTitle.weight(.heavy))
+//                                .minimumScaleFactor(0.7)
+//                                .lineLimit(1)
+                             .font(.system(size: 52, weight: .heavy))
                             .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
+                            .padding(.top, -5)
                         HStack (spacing: 15){
                             Text(currentIOB)
-                                .font(.system(size: 20, weight: .heavy))
+                                .font(.body.weight(.heavy))
+                                    .minimumScaleFactor(0.7)
+                                    .lineLimit(1)
+//                                .font(.system(size: 20, weight: .heavy))
                                 .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
                             //                        Text("88:88")
                             Text(Date(), style: .timer)
                             //Text(verbatim: " ")
-                                .font(.system(size: 20, weight: .heavy))
+                                .font(.body.weight(.heavy))
+                                    .minimumScaleFactor(0.7)
+                                    .lineLimit(1)
+//                                .font(.system(size: 20, weight: .heavy))
                                 .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
                                 .frame(width: 60)
                             //.colorInvert()
@@ -196,26 +221,28 @@ struct FLwatchGraphWidgetEntryView : View {
         
         return Chart {
             //MARK: Glucose Graph
-            ForEach(entry.graph) { item in
-                
-                //                        PointMark(x: .value("Time", item.glucose.date),
-                //                                  y: .value("Glucose", item.glucose.value)
-                //                        )
-                //                        .foregroundStyle(item.color.color)
-                //                        .symbolSize(12)
-                var itemValue: Double { entry.uom == 0 ? Double(item.glucose.value) * 0.0555 : Double(item.glucose.value) }
-                LineMark(x: .value("Time", item.glucose.date),
-                         y: .value("Glucose", itemValue),
-                         series: .value("Curve", "Glucose")
-                )
-                //                            .foregroundStyle(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
-                .interpolationMethod(.linear)
-                .lineStyle(.init(lineWidth: 2))
-                .symbol(){
-                    Circle()
-                        .fill(item.color.color)
-                        .strokeBorder(.black, lineWidth: 0.5)
-                        .frame(width: 4, height: 4)
+            if entry.graph.count > 1 {
+                ForEach(entry.graph) { item in
+                    
+                    //                        PointMark(x: .value("Time", item.glucose.date),
+                    //                                  y: .value("Glucose", item.glucose.value)
+                    //                        )
+                    //                        .foregroundStyle(item.color.color)
+                    //                        .symbolSize(12)
+                    var itemValue: Double { entry.uom == 0 ? Double(item.glucose.value) * 0.0555 : Double(item.glucose.value) }
+                    LineMark(x: .value("Time", item.glucose.date),
+                             y: .value("Glucose", itemValue),
+                             series: .value("Curve", "Glucose")
+                    )
+                    //                            .foregroundStyle(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
+                    .interpolationMethod(.linear)
+                    .lineStyle(.init(lineWidth: 2))
+                    .symbol(){
+                        Circle()
+                            .fill(item.color.color)
+                            .strokeBorder(.black, lineWidth: 0.5)
+                            .frame(width: 4, height: 4)
+                    }
                 }
             }
         }

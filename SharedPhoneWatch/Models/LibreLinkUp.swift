@@ -471,11 +471,16 @@ class LibreLinkUp  {
     
     /// - Returns: (data, response, history, logbookData, logbookHistory, logbookAlarms)
     func getPatientGraph() async throws -> (Any, URLResponse, [LibreLinkUpGlucose], Any, [LibreLinkUpGlucose], [LibreLinkUpAlarm], SensorSettings, SensorType) {
-        var request = URLRequest(url: URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)/\(SharedData.libreLinkUpPatientId)/graph")!)
+        
+        let patientId = SharedData.libreLinkUpPatientId
+        let token = SharedData.libreLinkUpToken
+        let accountId = SharedData.libreLinkUpUserId.SHA256
+        
+        var request = URLRequest(url: URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)/\(patientId)/graph")!)
         request.timeoutInterval = 20
         var authenticatedHeaders = headers
-        authenticatedHeaders["Authorization"] = "Bearer \(SharedData.libreLinkUpToken)"
-        authenticatedHeaders["Account-Id"] = SharedData.libreLinkUpUserId.SHA256
+        authenticatedHeaders["Authorization"] = "Bearer \(token)"
+        authenticatedHeaders["Account-Id"] = accountId
         for (header, value) in authenticatedHeaders {
             request.setValue(value, forHTTPHeaderField: header)
         }
@@ -530,12 +535,12 @@ class LibreLinkUp  {
                    let patientDevice = connection["patientDevice"] as? [String: Any]
                 {
                     Logger.libreLinkUp.debug("LibreLinkUp: connection data: \(connection)")
-                    unit = connection["uom"] as? Int ?? 1 == 1 ? .mgdl : .mmoll
+                    let uom = connection["uom"] as? Int ?? 1 // test mmol units: let uom = 0
+                    unit = (uom == 1) ? .mgdl : .mmoll
                     let unitString = "\(unit)"
                     Logger.libreLinkUp.debug("LibreLinkUp: measurement unit: \(unitString)")
                     
                     
-                    let uom = connection["uom"] as? Int ?? 1 // test mmol units: let uom = 0
                     let targetLow = connection["targetLow"] as? Int ?? 0
                     let targetHigh = connection["targetHigh"] as? Int ?? 0
                     
@@ -745,8 +750,8 @@ class LibreLinkUp  {
                                let token = ticketDict["token"] as? String {
                                 Logger.libreLinkUp.debug("LibreLinkUp: new token for logbook: \(token)")
                                 request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                                request.setValue(SharedData.libreLinkUpUserId.SHA256, forHTTPHeaderField: "Account-Id")
-                                request.url = URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)/\(SharedData.libreLinkUpPatientId)/logbook")!
+                                request.setValue(accountId, forHTTPHeaderField: "Account-Id")
+                                request.url = URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)/\(patientId)/logbook")!
                                 Logger.libreLinkUp.debug("LibreLinkUp: URL request: \(request.url!.absoluteString), authenticated headers: \(request.allHTTPHeaderFields!)")
                                 let (data, response) = try await URLSession.shared.data(for: request)
                                 Logger.libreLinkUp.debug("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")

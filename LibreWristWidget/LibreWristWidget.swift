@@ -41,11 +41,13 @@ struct LibreWristWidgetEntryView : View {
                 colorScheme == .dark ? .black : entry.glucoseMeasurement.measurementColor.color // this is the background color, lowest layer in the ZStack
                 VStack(alignment: .center, spacing: -10) {
                     HStack {
+                        Spacer()
                         Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
                             .font(.system(size: 48, weight: .heavy, design: .monospaced))
                             .foregroundColor(colorScheme == .dark ? entry.glucoseMeasurement.measurementColor.color : .black)
-                            .padding(.leading, 60)
-                            .padding(.trailing, 5)
+//                            .padding(.leading, 60)
+//                            .padding(.trailing, 5)
+                        Spacer()
                         Button(intent: ReloadWidgetIntent()) {
                             Image(systemName: "arrow.clockwise")
                                 .font(.system(size: 20, weight: .heavy, design: .monospaced))

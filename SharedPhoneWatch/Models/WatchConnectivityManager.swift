@@ -165,6 +165,21 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         received(userInfo)
     }
     
+    func session(_ session: WCSession,
+                 didFinish userInfoTransfer: WCSessionUserInfoTransfer,
+                 error: Error?) {
+        if let error = error {
+            Logger.connectivity.error("transferUserInfo finished with error: \(error.localizedDescription)")
+        } else {
+            Logger.connectivity.info("transferUserInfo finished successfully. Keys: \(userInfoTransfer.userInfo.keys)")
+        }
+    }
+    
+    func sessionReachabilityDidChange(_ session: WCSession) {
+        Logger.connectivity.info("Reachability changed: reachable=\(session.isReachable)")
+        // Optional: when becoming reachable, try sending any locally queued events
+    }
+    
     var session: WCSession = .default // not sure what happens if WatchConnectivity is not supported, I guess it does not matter, as all modern iPhones and iOS versions support it. All apple watches support it as well, obviously
     
   
@@ -191,6 +206,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         if WCSession.isSupported() {
             session.delegate = self
             session.activate()
+            for transfer in session.outstandingUserInfoTransfers {
+                Logger.connectivity.info("Outstanding transfer: \(transfer.userInfo.keys) isTransferring=\(transfer.isTransferring)")
+                // Optional: if you detect very old or duplicated items, decide whether to cancel or leave them
+                // transfer.cancel() // if appropriate
+            }
         }
     }
 }
