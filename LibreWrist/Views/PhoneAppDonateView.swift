@@ -48,11 +48,25 @@ struct CustomProductStyle: ProductViewStyle {
             } label: {
                 VStack {
                     //                    Text(verbatim: "\(product.displayName) \(product.displayPrice)")
-                    Text(verbatim: product.displayName)
-                    Text(verbatim: product.displayPrice)
+//                    Text(verbatim: product.displayName)
+//                    Text(verbatim: product.displayPrice)
                     //                        .font(.caption2)
+                    
+                    VStack(spacing: 2) {
+                        Text(product.displayName)
+                            .font(.title3)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.8)
+                        Text(product.displayPrice)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                    }
+                    
                 }
                 .frame(maxWidth: .infinity)
+                
+                
             }
             
             .buttonStyle(.bordered)

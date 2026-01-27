@@ -93,9 +93,15 @@ struct CustomProductStyle: ProductViewStyle {
             Button {
                 configuration.purchase()
             } label: {
-                VStack {
-                    Text(verbatim: "\(product.displayName) \(product.displayPrice)")
+                VStack(spacing: 2) {
+                    Text(product.displayName)
                         .font(.caption2)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+                    Text(product.displayPrice)
+                        .font(.caption2)
+                        .fontWeight(.semibold)
                 }
             }
             .buttonStyle(.borderedProminent)
@@ -111,3 +117,4 @@ struct CustomProductStyle: ProductViewStyle {
 #Preview {
     WatchAppDonateView()
 }
+

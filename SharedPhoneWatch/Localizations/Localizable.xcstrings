@@ -1989,6 +1989,9 @@
         }
       }
     },
+    "Do you want to resend the insulin history to the watch?" : {
+
+    },
     "Do you want to reset insulin history?" : {
       "localizations" : {
         "de" : {
@@ -4610,6 +4613,12 @@
           }
         }
       }
+    },
+    "Resend" : {
+
+    },
+    "Resend history to watch" : {
+
     },
     "Reset" : {
       "localizations" : {

@@ -36,6 +36,7 @@ struct PhoneAppInsulinDeliveryView: View {
     @State private var isShowingInsulinDeliverySubmitAlert = false
     @State private var isShowingInsulinDeliveryResetAlert = false
     @State private var isShowingDifferenceTimePickerSheet = false
+    @State private var isShowingInsulinDeliveryResendToWatchAlert = false
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
     
     @State private var navigationPath = NavigationPath()
@@ -294,6 +295,12 @@ struct PhoneAppInsulinDeliveryView: View {
                                 Text("Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())  (\(timeSinceInjection) h)      Units: \(item.insulinUnits, specifier: "%.1f")")
                             }
                             .onDelete(perform: deleteHistory)
+                            Button {
+                                isShowingInsulinDeliveryResendToWatchAlert.toggle()
+                            } label: {
+                                Text("Resend history to watch")
+                            }
+                            .buttonStyle(.borderedProminent)
                         }
                     }
                 }
@@ -387,7 +394,18 @@ struct PhoneAppInsulinDeliveryView: View {
                 } message: {
                     Text("Do you want to reset insulin history?")
                 }
-                
+                .alert("Confirm", isPresented: $isShowingInsulinDeliveryResendToWatchAlert) {
+                    Button("Resend", action: {
+                        pickerTimeStamp = Date.now
+                        let messageToWatch: [String: Any] = ["content": "clearInsulinHistory"]
+                        sendMessagetoOther(message: messageToWatch)
+                        resendHistoryToWatch()
+                        CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                    })
+                    Button("Cancel", role: .cancel, action: {})
+                } message: {
+                    Text("Do you want to resend the insulin history to the watch?")
+                }
                 
             }
             //        .toolbar {
@@ -455,6 +473,27 @@ struct PhoneAppInsulinDeliveryView: View {
                 "timestamp": item.timeStamp
             ]
             sendMessagetoOther(message: messageToWatch)
+        }
+    }
+    
+    private func resendHistoryToWatch() {
+        let history = insulinDeliveryHistorySingleton.insulinDeliveryHistory
+//        let removedItems = offsets.map { history[$0] }
+//        history.remove(atOffsets: offsets)
+//
+//        // Update model & persist
+//        insulinDeliveryHistorySingleton.insulinDeliveryHistory = history
+//        UserDefaults.group.insulinDeliveryHistory = history
+//        CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+
+        // Notify paired watch about deletions (optional)
+        for item in history {
+            let messageToWatch: [String: Any] = ["content": "insulinDelivery", // The insulinTypeSelected is taken from UserDefaults, so does not need to be sent.
+                                                 "timeStamp": item.timeStamp,
+                                                 "units": item.insulinUnits]
+            sendMessagetoOther(message: messageToWatch)
+            
+            
         }
     }
     
