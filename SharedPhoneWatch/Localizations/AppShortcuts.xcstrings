@@ -14,7 +14,8 @@
               "Protokolliere  Insulingabe in ${applicationName}",
               "Speichere Insulingabe in ${applicationName}",
               "Insulin in ${applicationName}",
-              "${insulinUnitsEnum} Einheiten Insulin in ${applicationName}"
+              "${insulinUnitsEnum} Einheiten Insulin in ${applicationName}",
+              "${applicationName}${insulinUnitsEnum} Einheiten"
             ]
           }
         },
@@ -97,7 +98,8 @@
               "${applicationName} 添加胰岛素",
               "${insulinUnitsEnum} ${applicationName}中的胰岛素单位",
               "${insulinUnitsEnum} ${applicationName}单位",
-              "${insulinUnitsEnum} 单位 ${applicationName}"
+              "${insulinUnitsEnum} 单位 ${applicationName}",
+              "${applicationName} ${insulinUnitsEnum} 单位"
             ]
           }
         }

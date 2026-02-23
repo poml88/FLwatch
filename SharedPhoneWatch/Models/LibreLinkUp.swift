@@ -502,6 +502,11 @@ class LibreLinkUp  {
             let status = (response as! HTTPURLResponse).statusCode
             Logger.libreLinkUp.debug("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)")
             responseData = "LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)"
+            
+            if status == 429 {
+                Logger.general.error("LibreLinkUp: error: Too many requests")
+                DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph: 429 Too many requests"
+            }
             // TODO: {"status":911}: server maintenance
             // LibreLinkUp: response data: {"status":4,"error":{"message":"followerNotConnectToPatient"}}, status: 200
             // and now

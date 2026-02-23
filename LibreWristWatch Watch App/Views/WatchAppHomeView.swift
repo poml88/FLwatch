@@ -93,16 +93,7 @@ struct WatchAppHomeView: View {
     message: {
             Text("!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.")
         }
-        .overlay
-        {
-            if isReloading == true {
-                ZStack {
-                    Color(white: 0, opacity: 0.25)
-                    ProgressView().tint(.white)
-                }
-                .ignoresSafeArea()
-            }
-        }
+        
         .onReceive(timer) { time in
             print("Timer")
             
@@ -134,6 +125,24 @@ struct WatchAppHomeView: View {
             //MARK: Do the following only on app start
             if onAppearNotToDoFirstStart == true { // to do only on first start
                 FLwatchShortcuts.updateAppShortcutParameters() // this was in the app init first, but it seems this was too early... So I moved it here.
+                
+                // --------- copied here from .onChange(of: scenePhase) { oldPhase, newPhase in as it currently does not fire at app start
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+
+                WidgetCenter.shared.reloadAllTimelines()
+                
+                connected = UserDefaults.group.connected
+                minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+                if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
+                    Task {
+                        isReloading = true
+                        await libreLinkUp.reloadLibreLinkUp()
+                        minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+                        isReloading = false
+                    }
+                }
+                // -----------------------
+                
                 onAppearNotToDoFirstStart = false
             }
             
@@ -149,9 +158,10 @@ struct WatchAppHomeView: View {
                     connected = .connected
                     UserDefaults.group.connected = .connected
                 }
-            }        }
+            }
+        }
         .onChange(of: scenePhase) { oldPhase, newPhase in
-            if newPhase == .active {
+            if newPhase == .active { // This does not fire anyore at app start since iOS 26...
                 print("Scene Phase Active")
                 
                 CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
@@ -176,7 +186,16 @@ struct WatchAppHomeView: View {
             }
         }
         .overlay {
-            if minutesSinceLastReading >= 3 && isReloading == false {
+            if isReloading == true {
+                ZStack {
+                    Color(white: 0, opacity: 0.25)
+                    ProgressView().tint(.white)
+                }
+                .ignoresSafeArea()
+            }
+            
+            let minutesSinceLastReadingOverlay = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+            if minutesSinceLastReadingOverlay >= 3 && isReloading == false {
                 ZStack {
                     Color(white: 0, opacity: 0.5)
                     

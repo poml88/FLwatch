@@ -57,6 +57,15 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             try? PasswordKeychain.save(password)
             SharedData.libreLinkUpToken = ""
             UserDefaults.group.connected = .newlyConnected
+            let minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+            var connected = UserDefaults.group.connected
+            if minutesSinceLastReading >= 1 && connected == .newlyConnected {
+                Task {
+                    await LibreLinkUp().reloadLibreLinkUp()
+                    connected = .connected
+                    UserDefaults.group.connected = .connected
+                }
+            }
         }
         
         if message["content"] as? String == "insulinDelivery" {
