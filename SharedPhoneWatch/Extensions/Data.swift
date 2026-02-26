@@ -15,7 +15,11 @@ extension Data {
     
     var string: String { String(decoding: self, as: UTF8.self) }
     
-    var SHA256: String { CryptoKit.SHA256.hash(data: self).makeIterator().reduce("", { $0 + String(format: "%02x", $1) }) }
+    var sha256Hex: String {
+        let digest = CryptoKit.SHA256.hash(data: self)
+        return digest.map { String(format: "%02x", $0) }.joined()
+      }
+
     
     var utf8: String {
         String(decoding: self, as: UTF8.self)

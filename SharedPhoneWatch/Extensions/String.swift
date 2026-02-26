@@ -16,5 +16,7 @@ extension String {
     var attributed: AttributedString {
         try! AttributedString(markdown: self)
     }
-    var SHA256: String { self.data(using: .ascii)!.SHA256 }
+    
+    var SHA256: String { Data(self.utf8).sha256Hex }
+
 }

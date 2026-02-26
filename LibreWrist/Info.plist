@@ -6,6 +6,10 @@
 	<string>${APP_GROUP_ID}</string>
 	<key>CFBundleSpokenName</key>
 	<string>F L wotsch</string>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>de.poeml.philipp.LibreWrist.apprefresh</string>
+	</array>
 	<key>INAlternativeAppNames</key>
 	<array>
 		<dict>
@@ -24,6 +28,10 @@
 			<key>INAlternativeAppNamePronunciationHint</key>
 			<string>ef el wotsch</string>
 		</dict>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
 	</array>
 </dict>
 </plist>

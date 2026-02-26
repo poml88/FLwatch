@@ -15,6 +15,18 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
     
 //    @Published var receivedMessage: String = ""
     
+    private static let libreLinkUpSnapshotContent = "libreLinkUpSnapshot"
+    private static let libreLinkUpSnapshotDataKey = "snapshotData"
+
+    private struct LibreLinkUpSnapshotPayload: Codable {
+        let libreLinkUpGlucose: [LibreLinkUpGlucose]
+        let libreLinkUpMinuteGlucose: [LibreLinkUpGlucose]
+        let lastReadingDate: Date
+        let currentGlucose: Int
+        let currentTrendArrow: String
+        let maxBG: Int
+    }
+
     private var messageHandlers: [WatchMessageHandler] = []
     private var requestHandlers: [WatchRequestHandler] = []
     
@@ -57,15 +69,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             try? PasswordKeychain.save(password)
             SharedData.libreLinkUpToken = ""
             UserDefaults.group.connected = .newlyConnected
-            let minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-            var connected = UserDefaults.group.connected
-            if minutesSinceLastReading >= 1 && connected == .newlyConnected {
-                Task {
-                    await LibreLinkUp().reloadLibreLinkUp()
-                    connected = .connected
-                    UserDefaults.group.connected = .connected
-                }
-            }
+            UserDefaults.group.connected = .connected
         }
         
         if message["content"] as? String == "insulinDelivery" {
@@ -120,6 +124,29 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             SharedData.tapComplicationReloads = valueBool
         }
 
+        if message["content"] as? String == Self.libreLinkUpSnapshotContent {
+            guard let snapshotData = message[Self.libreLinkUpSnapshotDataKey] as? Data else {
+                Logger.connectivity.error("Missing LibreLinkUp snapshot data in message")
+                return
+            }
+            do {
+                let snapshot = try JSONDecoder().decode(LibreLinkUpSnapshotPayload.self, from: snapshotData)
+                Task { @MainActor in
+                    let history = LibreLinkUpHistory.shared
+                    history.libreLinkUpGlucose = snapshot.libreLinkUpGlucose
+                    history.libreLinkUpMinuteGlucose = snapshot.libreLinkUpMinuteGlucose
+                    history.lastReadingDate = snapshot.lastReadingDate
+                    history.currentGlucose = snapshot.currentGlucose
+                    history.currentTrendArrow = snapshot.currentTrendArrow
+                    history.maxBG = snapshot.maxBG
+                    CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                    Logger.connectivity.info("Applied LibreLinkUp snapshot from WatchConnectivity")
+                }
+            } catch {
+                Logger.connectivity.error("Failed to decode LibreLinkUp snapshot: \(error.localizedDescription)")
+            }
+        }
+
 
         
         if let replyHandler = replyHandler {
@@ -150,17 +177,62 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             Logger.connectivity.info("Sending message: \(message)")
             session.sendMessage(message, replyHandler: replyHandler, errorHandler: { error in // Watch App: sendMessage only works if app is active in foreground
                 Logger.connectivity.error("\(error)")
-                Logger.connectivity.warning("Error, trying transferUserInfo")
-                //                try? WCSession.default.updateApplicationContext(message)
-                self.session.transferUserInfo(message)
+                if message["useApplicationContext"] as? Bool ?? true {
+                    Logger.connectivity.warning("Error, trying updateApplicationContext")
+                    do {
+                        try self.session.updateApplicationContext(message)
+                    } catch {
+                        Logger.connectivity.error("updateApplicationContext failed: \(error.localizedDescription)")
+                    }
+                } else {
+                    Logger.connectivity.warning("Error, trying transferUserInfo")
+                    //                try? WCSession.default.updateApplicationContext(message)
+                    self.session.transferUserInfo(message) // transferUserInfo does not work in Simulator!!
+                }
             })
         } else {
             Logger.connectivity.warning("Session not reachable / counterpart app not available for live messaging")
-            Logger.connectivity.warning("...trying transferUserInfo with message: \(message)")
-            //            try? WCSession.default.updateApplicationContext(message)
-            self.session.transferUserInfo(message) // transferUserInfo does not work in Simulator!!
+            
+            if message["useApplicationContext"] as? Bool ?? false {
+                Logger.connectivity.warning("Error, trying updateApplicationContext")
+                do {
+                    try self.session.updateApplicationContext(message)
+                } catch {
+                    Logger.connectivity.error("updateApplicationContext failed: \(error.localizedDescription)")
+                }
+            } else {
+                Logger.connectivity.warning("Error, trying transferUserInfo")
+                //                try? WCSession.default.updateApplicationContext(message)
+                self.session.transferUserInfo(message) // transferUserInfo does not work in Simulator!!
+            }
         }
     }
+
+#if os(iOS)
+    func sendLibreLinkUpSnapshotToWatch() {
+        let history = LibreLinkUpHistory.shared
+        let snapshot = LibreLinkUpSnapshotPayload(
+            libreLinkUpGlucose: history.libreLinkUpGlucose,
+            libreLinkUpMinuteGlucose: history.libreLinkUpMinuteGlucose,
+            lastReadingDate: history.lastReadingDate,
+            currentGlucose: history.currentGlucose,
+            currentTrendArrow: history.currentTrendArrow,
+            maxBG: history.maxBG
+        )
+
+        do {
+            let snapshotData = try JSONEncoder().encode(snapshot)
+            let messageToWatch: [String: Any] = [
+                "content": Self.libreLinkUpSnapshotContent,
+                Self.libreLinkUpSnapshotDataKey: snapshotData,
+                "useApplicationContext": true
+            ]
+            sendMessageToPairedDevice(messageToWatch)
+        } catch {
+            Logger.connectivity.error("Failed to encode LibreLinkUp snapshot: \(error.localizedDescription)")
+        }
+    }
+#endif
     
     func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
         received(message)
@@ -248,3 +320,5 @@ private protocol WatchRequestHandler {
 //        WatchMessageService.singleton.send(request: self, responseHandler: responseHandler)
 //    }
 //}
+
+

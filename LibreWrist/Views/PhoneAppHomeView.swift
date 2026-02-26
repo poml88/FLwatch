@@ -166,7 +166,7 @@ struct PhoneAppHomeView: View {
                     }
                     minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
                     isReloading = false
-                    
+//                    WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
                 }
                 scrollPosition = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date.now
             }
@@ -206,6 +206,8 @@ struct PhoneAppHomeView: View {
             //MARK: Do the following only on app start
             if onAppearNotToDoFirstStart == true { // to do only on first start
                 
+                calculateUserdefaultsSize()
+                
                 FLwatchShortcuts.updateAppShortcutParameters() // this was in the app init first, but it seems this was too early... So I moved it here.
 //      DEVELOPMENT: 1 lines commented out          LiveActivityManager.shared.startIfAllowed(useLiveActivities: useLiveActivities)
 
@@ -230,6 +232,7 @@ struct PhoneAppHomeView: View {
                     connected = .connected
                     UserDefaults.group.connected = .connected
                     minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+//                    WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
                 }
             }
         }
@@ -256,6 +259,7 @@ struct PhoneAppHomeView: View {
                         }
                         minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
                         isReloading = false
+//                        WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
                         }
                     }
             } else if newPhase == .inactive {
@@ -359,6 +363,23 @@ struct PhoneAppHomeView: View {
         guard let url = comps.url else { return }
         UIApplication.shared.open(url)
     }
+    
+    private func calculateUserdefaultsSize() {
+        let defaults = UserDefaults.standard
+        if let dict = defaults.dictionaryRepresentation() as? [String: Any] {
+            do {
+                let data = try PropertyListSerialization.data(fromPropertyList: dict,
+                                                              format: .binary,
+                                                              options: 0)
+                print("UserDefaults size: \(data.count) bytes")
+            } catch {
+                print("Error serializing UserDefaults: \(error)")
+            }
+        }
+
+    }
+   
+
     
     
 }

@@ -29,6 +29,10 @@ struct PhoneAppSettingsView: View {
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
     private var watchConnector = WatchConnectivityManager.shared
     let updateFrequencyOptions: [Int] = [1, 5, 10, 15, 20]
+    private var bgAppRefreshExecutionTimestamps: [Date] {
+        (UserDefaults.group.array(forKey: "bgAppRefreshExecutionTimestamps") as? [TimeInterval] ?? [])
+            .map(Date.init(timeIntervalSince1970:))
+    }
     
     var body: some View {
         Form {
@@ -209,6 +213,13 @@ struct PhoneAppSettingsView: View {
                 Text("Sensor: \(SensorSettingsSingleton.shared.sensorType)")
                 
                 Text("Error message: \(DebugMessageSingleton.shared.libreLinkUpResponseError)")
+                
+                if UserDefaults.group.username == "librewidget@cmdline.net" {
+                Text("BG task executions last 12 hours (total): \(bgAppRefreshExecutionTimestamps.count)")
+                    ForEach(Array(bgAppRefreshExecutionTimestamps.enumerated()), id: \.offset) { _, timestamp in
+                        Text(timestamp.formatted(date: .abbreviated, time: .standard))
+                    }
+                }
             }
             header: {
                 Text("Debug Info")
@@ -226,8 +237,6 @@ struct PhoneAppSettingsView: View {
 #Preview {
     PhoneAppSettingsView()
 }
-
-
 
 
 

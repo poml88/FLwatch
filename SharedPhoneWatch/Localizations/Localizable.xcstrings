@@ -879,6 +879,9 @@
         }
       }
     },
+    "BG task executions last 12 hours (total): %lld" : {
+
+    },
     "Blood Glucose" : {
       "localizations" : {
         "de" : {

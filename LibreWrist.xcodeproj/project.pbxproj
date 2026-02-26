@@ -54,6 +54,8 @@
 		7B2E7EC62CB5A05700A3473B /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CD32C6D57F5006F6E53 /* String.swift */; };
 		7B2E7EC72CB5A06300A3473B /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CCF2C6D5103006F6E53 /* Date.swift */; };
 		7B2E7EC82CB5A07600A3473B /* InsulinObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD83562C84DF6200A9B195 /* InsulinObjects.swift */; };
+		7B2ED6B12F4DD8780046F363 /* LibreLinkUpService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2ED6B02F4DD8780046F363 /* LibreLinkUpService.swift */; };
+		7B2ED6B22F4DD8780046F363 /* LibreLinkUpService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2ED6B02F4DD8780046F363 /* LibreLinkUpService.swift */; };
 		7B2F59E82E8C8249008CAB1B /* GlucoseActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2F59E62E8C8249008CAB1B /* GlucoseActivityManager.swift */; };
 		7B435CCC2C6D46DF006F6E53 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CCB2C6D46DF006F6E53 /* Logger.swift */; };
 		7B435CD02C6D5103006F6E53 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CCF2C6D5103006F6E53 /* Date.swift */; };
@@ -268,6 +270,7 @@
 		7B2E7EB42CB59C9500A3473B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7B2E7EBC2CB59DEB00A3473B /* GlucoseMeasurementIOBEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseMeasurementIOBEntry.swift; sourceTree = "<group>"; };
 		7B2E7EC92CB5A5C600A3473B /* LibreWristWatchWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibreWristWatchWidgetExtension.entitlements; sourceTree = "<group>"; };
+		7B2ED6B02F4DD8780046F363 /* LibreLinkUpService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreLinkUpService.swift; sourceTree = "<group>"; };
 		7B2F59E62E8C8249008CAB1B /* GlucoseActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseActivityManager.swift; sourceTree = "<group>"; };
 		7B435CCB2C6D46DF006F6E53 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		7B435CCF2C6D5103006F6E53 /* Date.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Date.swift; sourceTree = "<group>"; };
@@ -472,6 +475,7 @@
 		7B3EA4FE2C6C0B1A0061F239 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				7B2ED6B02F4DD8780046F363 /* LibreLinkUpService.swift */,
 				7B299A0A2C90AF8C002A15C8 /* AuthTicket.swift */,
 				7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */,
 				7B299A102C90AFFC002A15C8 /* Glucose.swift */,
@@ -981,6 +985,7 @@
 				7B9F09A72E731F210037B091 /* SharedDefaults.swift in Sources */,
 				7BFD835E2C84E48E00A9B195 /* ExponentialInsulinModel.swift in Sources */,
 				7BB617F42DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */,
+				7B2ED6B12F4DD8780046F363 /* LibreLinkUpService.swift in Sources */,
 				7BDF0A7D2DBB887400852BAD /* FLwatchShortcuts.swift in Sources */,
 				7B183E972C84B09D0018A24F /* PhoneToWatchConnector.swift in Sources */,
 				7BDF0A712DBA40E200852BAD /* ReadGlucose.swift in Sources */,
@@ -1055,6 +1060,7 @@
 				7B9F09A92E731F210037B091 /* SharedDefaults.swift in Sources */,
 				7B299A122C90AFFC002A15C8 /* Glucose.swift in Sources */,
 				7B8C80122E48C8B300A9DA79 /* ViewModifiers.swift in Sources */,
+				7B2ED6B22F4DD8780046F363 /* LibreLinkUpService.swift in Sources */,
 				7BC51F5B2C7C8589009542D2 /* SensorType.swift in Sources */,
 				7B299A0C2C90AF8C002A15C8 /* AuthTicket.swift in Sources */,
 				7B299A182C90B089002A15C8 /* LibreLinkUpGlucose.swift in Sources */,

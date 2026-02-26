@@ -62,7 +62,7 @@ class LibreLinkUp  {
     //    }
     
     func reloadLibreLinkUp() async {
-        
+        print("reloadLibreLinkUp()")
         var dataString = ""
         var retries = 0
         
@@ -99,7 +99,7 @@ class LibreLinkUp  {
                 //                try await LibreLinkUp().getLastGlucoseData()
                 
                 if graphHistory.count > 0 {
-                    DispatchQueue.main.async { [self] in
+                    await MainActor.run {
                         SharedData.lastOnlineDate = Date()
                         SensorSettingsSingleton.shared.sensorSettings = sensorSettingsRead
                         SensorSettingsSingleton.shared.sensorType = sensorType
@@ -421,7 +421,7 @@ class LibreLinkUp  {
                                         let connection = data[0]
                                         let patientId = connection["patientId"] as! String
                                         Logger.libreLinkUp.debug("LibreLinkUp: first patient Id: \(patientId)")
-                                        DispatchQueue.main.async { [self] in
+                                        await MainActor.run {
                                             SharedData.libreLinkUpPatientId = patientId
                                         }
                                     }

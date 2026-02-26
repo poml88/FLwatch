@@ -65,6 +65,7 @@ enum DefaultsKey: String {
     case hasSeenDisclaimer = "hasSeenDisclaimer"
     case hasSeenWelcomeMessage = "hasSeenWelcomeMessage"
     case hasSeenNotification001 = "hasSeenNotification001"
+    case libreLinkUpHistorySnapshot = "libreLinkUpHistorySnapshotKey"
     
     
     

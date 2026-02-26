@@ -199,7 +199,7 @@ struct InsulinTypePresets: Codable, Identifiable {
     }
     
     func updateCurrentIOBAndGraphs() {
-//                print("Updating graphs: \(Date.now)")
+                print("Updating IOB graphs: \(Date.now)")
         //MARK: Update IOB
         currentIOB = getCurrentIOB()
         
