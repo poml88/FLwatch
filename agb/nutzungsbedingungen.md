@@ -1,3 +1,6 @@
+---
+sitemap: false
+---
 # Allgemeine Geschäftsbedingungen (AGB) / Nutzungsbedingungen
 
 **FLwatch** — Version 1.3

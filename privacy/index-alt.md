@@ -1,4 +1,6 @@
-
+---
+sitemap: false
+---
 # 📌 Datenschutzerklärung für die App FLwatch
 
 *Stand: 28.8.2025*  

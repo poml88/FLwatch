@@ -1,3 +1,6 @@
+---
+sitemap: false
+---
 # Impressum (Angaben nach § 5 DDG)
 
 **Anbieter / Verantwortlicher**

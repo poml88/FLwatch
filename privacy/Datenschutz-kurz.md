@@ -1,4 +1,6 @@
-
+---
+sitemap: false
+---
 # Datenschutzerklärung (Kurzfassung) – FLwatch
 
 **Stand:** 8.09.2025
