@@ -7,5 +7,6 @@ User-agent: *
 Allow: /
 Disallow: /impressum/
 Disallow: /privacy/
+Disallow: /terms/
 
 Sitemap: {{ 'sitemap.xml' | absolute_url }}
