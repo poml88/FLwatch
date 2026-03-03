@@ -49,8 +49,8 @@ Pour obtenir de l'aide, veuillez ouvrir un ticket, lancer une discussion ou envo
 
 ### Dons... 
 ...sont toujours les bienvenus !
-- <img src="/FLwatch/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40">   [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
-- <img src="/FLwatch/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40">   [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
+- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40">   [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
+- <img src="/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40">   [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
 
 
 {% include screenshots.html %}
