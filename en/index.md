@@ -1,7 +1,8 @@
 ---
 layout: landing
-title: "FLwatch - Glucose Sensor Graph"
-description: "FLwatch displays your LibreLinkUp glucose readings on iPhone and Apple Watch. Open-source app with insulin-on-board calculation and widgets."
+title: "FLwatch"
+title_tagline: "Glucose & Insulin Graphs on iPhone & Apple Watch"
+description: "FLwatch is a free open-source app that shows your blood glucose graph, insulin-on-board and insulin activity graphs, and widgets on iPhone and Apple Watch using LibreLinkUp data. Not for medical dosing decisions."
 lang: en
 permalink: /en/
 image: /assets/images/app-preview-optimized.png
