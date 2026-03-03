@@ -1,7 +1,7 @@
 ---
 layout: landing
-title: "FLwatch：血糖传感器图表"
-description: "FLwatch 在 iPhone 与 Apple Watch 上显示 LibreLinkUp 血糖读数。开源应用，带有在体胰岛素 (IOB) 计算和小组件。"
+title: "FLwatch – 适用于 iPhone 和 Apple Watch 的血糖与胰岛素图表"
+description: "FLwatch 是一款免费的开源应用，可使用 LibreLinkUp 数据在 iPhone 和 Apple Watch 上显示血糖、胰岛素在体内残留量（Insulin-on-Board）及其作用曲线，并支持小组件。"
 lang: zh-Hans
 permalink: /zh-Hans/
 image: /assets/images/app-preview-optimized.png

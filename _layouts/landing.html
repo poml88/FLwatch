@@ -8,7 +8,7 @@
   <!-- SEO -->
   {%- seo title=false -%}
   
-  <title>{{ page.title | default: site.title }}</title>
+  <title>{{ page.title | default: site.title }}}</title>
 
   <!-- Hreflang alternate links -->
   {% include hreflang.html %}
@@ -27,14 +27,10 @@
   "description": "FLwatch displays your blood glucose graph and more on iPhone and Apple Watch. Open-source app with insulin on board calculation and widgets.",
   "url": "https://flwatch.app/{{ page.lang | default: site.lang }}/",
   "image": "https://flwatch.app/assets/images/app-preview-optimized.png",
-  "operatingSystem": "iOS 17.5; watchOS 10.5",
+  "operatingSystem": "iOS, watchOS",
   "applicationCategory": "MedicalApplication",
   "downloadUrl": "https://apps.apple.com/app/id6670172928",
-  "offers": {
-    "@type": "Offer",
-    "price": 0,
-    "priceCurrency": "USD"
-  },
+  "offers": { "@type": "Offer", "price": 0 },
   "potentialAction": {
     "@type": "DownloadAction",
     "target": "https://apps.apple.com/app/id6670172928"

@@ -1,7 +1,7 @@
 ---
 layout: landing
-title: "FLwatch：血糖値センサーグラフ"
-description: "FLwatch は LibreLinkUp の血糖値を iPhone と Apple Watch に表示します。オープンソースで、IOB 計算とウィジェットを搭載。"
+title: "FLwatch – iPhoneとApple Watch向けの血糖値・インスリングラフ"
+description: "FLwatchは、LibreLinkUpのデータを使用して、血糖値、インスリン残量（Insulin-on-Board）、インスリン作用のグラフとウィジェットをiPhoneとApple Watchに表示する無料のオープンソースアプリです。"
 lang: ja
 permalink: /ja/
 image: /assets/images/app-preview-optimized.png
