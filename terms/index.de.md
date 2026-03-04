@@ -13,7 +13,7 @@ sitemap: false
 ## 1. Anbieter, Geltungsbereich
 
 (1) Anbieter und Verantwortlicher: **Philipp Pöml**, Limoursstr. 7, 76872 Minfeld, E-Mail: **flwatch@cmdline.net**.
-(2) Diese Bedingungen regeln die Nutzung der iOS-App **FLwatch** sowie der Website **[https://poml88.github.io/FLwatch/](https://poml88.github.io/FLwatch/)** (zusammen „Dienste“). Abweichende Bedingungen gelten nur bei schriftlicher Zustimmung.
+(2) Diese Bedingungen regeln die Nutzung der iOS-App **FLwatch** sowie der Website **[https://flwatch.app/](https://flwatch.app/)** (zusammen „Dienste“). Abweichende Bedingungen gelten nur bei schriftlicher Zustimmung.
 
 ## 2. Leistungsbeschreibung
 

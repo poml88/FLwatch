@@ -20,7 +20,7 @@ Kein Datenschutzbeauftragter bestellt (nicht erforderlich).
 
 ## 2. Geltungsbereich
 
-Diese Datenschutzerklärung gilt für die iOS-App **FLwatch** sowie die Informations-Website unter **[https://poml88.github.io/FLwatch/](https://poml88.github.io/FLwatch/)**.
+Diese Datenschutzerklärung gilt für die iOS-App **FLwatch** sowie die Informations-Website unter **[https://flwatch.app/](https://flwatch.app/)**.
 
 ## 3. Grundsätze
 
