@@ -17,4 +17,4 @@
 For support please open an issue, start a discussion or email **flwatch [ a t ] cmdline [ d o t ] net**. Feedback is very welcome, please use the same methods as for support.
 
 ### Instructions ###
-Please read the [Usage Instructions](https://poml88.github.io/FLwatch#usage) on the main page.
+Please read the [Usage Instructions](https://flwatch.app/#usage) on the main page.
