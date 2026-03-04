@@ -17,6 +17,7 @@ This software is free and open source. It is being developed out of personal nee
 
 ### Usage {#usage}
 ***Installation:*** Make sure that the watchOS app is installed, ideally before starting the iOS app. Depending on your configuration, the watchOS app is either installed automatically, or has to be installed via the “Watch” app on the phone.
+- @TypeOneCallum made a really nice [setup tutorial video](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB) (Thank you!). Watch it and setup will be much easier.
 - The app needs iOS 17.5 and watchOS 10.5
 - TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
 - Settings are made in the iOS app and are then transferred to the watchOS app. This only works if the watchOS app is installed on the watch.
