@@ -64,6 +64,7 @@ struct AddInsulinSiri: AppIntent {
         let units = String(format: "%.1f", insulinDeliveryUnits)
         let dialogString: IntentDialog = "Recorded \(units) units of insulin."
         WidgetCenter.shared.reloadAllTimelines()
+        print("WidgetCenter.shared.reloadAllTimelines()")
         
         return .result(
             dialog: dialogString,

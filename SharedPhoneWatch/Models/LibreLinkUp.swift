@@ -513,6 +513,9 @@ class LibreLinkUp  {
             // LibreLinkUp: response data: {"status":4,"error":{"message":"follower not connect to patient"}}, status: 200
             // LibreLinkUp: response data: {"message":"invalid or expired jwt"}, status: 401
             
+            // TODO: status 401
+            // LibreLinkUp: response data: {"status":401,"error":{"message":"invalid auth session"}}, status: 401
+            
             if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                let status = json["status"] as? Int {
                 

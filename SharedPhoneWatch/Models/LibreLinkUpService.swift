@@ -15,6 +15,8 @@ final class LibreLinkUpService: ObservableObject {
     private let libreLinkUp = LibreLinkUp()
 
     @Published var isReloading = false
+    @Published private(set) var libreLinkUpResponse = "[...]"
+    @Published private(set) var didLastReloadFail = false
 
     /// Awaitable: returns when either (a) no reload was needed, or (b) the reload finished.
     func requestReloadIfNeeded() async {
@@ -32,6 +34,10 @@ final class LibreLinkUpService: ObservableObject {
                         defer { Task { @MainActor in self.isReloading = false } }
 
             await self.libreLinkUp.reloadLibreLinkUp()
+            await MainActor.run {
+                self.libreLinkUpResponse = self.libreLinkUp.libreLinkUpResponse
+                self.didLastReloadFail = self.libreLinkUp.libreLinkUpErrorBool
+            }
 #if os(iOS)
 //            WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
 #endif

@@ -172,6 +172,7 @@ struct PhoneAppConnectView: View {
                                                      "password": password]
                 sendMessagetoOther(message: messageToWatch)
                 WidgetCenter.shared.reloadAllTimelines()
+                print("WidgetCenter.shared.reloadAllTimelines()")
             } catch {
                 print("catch tryToConnect")
                 isShowingConnectionFailed = true

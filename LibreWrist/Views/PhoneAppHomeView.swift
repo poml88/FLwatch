@@ -36,16 +36,16 @@ struct PhoneAppHomeView: View {
     
 //    @State private var selectedlibreLinkHistoryPoint: LibreLinkUpGlucose?
     @State private var minutesSinceLastReading: Int = 999
-    @State private var libreLinkUpResponse: String = "[...]"
+//    @State private var libreLinkUpResponse: String = "[...]"
 //    @State private var libreLinkUpHistory = LibreLinkUpHistory.mock
 //    @State private var libreLinkUpLogbookHistory: [LibreLinkUpGlucose] = []
-    @State private var isReloading: Bool = false
+//    @State private var isReloading: Bool = false
     @State private var isShowingDisclaimer = false
     @State private var isShowingWelcomeMessage = false
     @State private var isShowingNotification = false
     @State private var isShowingInsulinDeliverySheet = false
 //    @State private var currentIOB: Double = 0.0
-    @State private var scrollPosition: Date = Date.now
+//    @State private var scrollPosition: Date = Date.now
 //    @State private var sensorSettings = SensorSettings()
     @State private var connected = UserDefaults.group.connected
     @State private var isShowingReloadFailed = false
@@ -62,7 +62,8 @@ struct PhoneAppHomeView: View {
     private let allowedHours = 0...24
     private let minimumDaysOfUse = 10
     
-    private let libreLinkUp = LibreLinkUp()
+//    private let libreLinkUp = LibreLinkUp()
+    @StateObject private var lluService = LibreLinkUpService.shared
      
     private let timer = Timer.publish(every: 60, tolerance: 1, on: .main, in: .common).autoconnect()
     
@@ -112,7 +113,7 @@ struct PhoneAppHomeView: View {
             //            Button("Accept", role: .cancel, action: {settings.hasSeenDisclaimer = true})
         }
         message: {
-            Text(libreLinkUp.libreLinkUpResponse)
+            Text(lluService.libreLinkUpResponse)
         }
         
         .alert("Enjoying FLwatch?", isPresented: $showPrompt) {
@@ -139,37 +140,28 @@ struct PhoneAppHomeView: View {
             Text("Your feedback helps us improve and makes it easier for others with diabetes to discover the app. And it motivates to continue the work. 😊\nWould you like to leave a quick review?")
         }
         
-        .overlay
-        {
-            if isReloading == true {
-                ZStack {
-                    Color(white: 0, opacity: 0.25)
-                        .cornerRadius(10)
-                    ProgressView().tint(.white)
-                }
-            }
-        }
         .onReceive(timer) { time in
             print("Timer") // Timer fires as well when on a different tab, for example settings tab
             
-            connected = UserDefaults.group.connected
-            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-            if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
-                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-                Task {
-                    
-                    isReloading = true
-                    await libreLinkUp.reloadLibreLinkUp()
-                    if libreLinkUp.libreLinkUpErrorBool == true {
-                        print(libreLinkUp.libreLinkUpResponse)
-                        isShowingReloadFailed = true
-                    }
-                    minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-                    isReloading = false
-//                    WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
-                }
-                scrollPosition = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date.now
-            }
+//            connected = UserDefaults.group.connected
+//            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+//            if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
+//                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+//                Task {
+//                    
+//                    isReloading = true
+//                    await libreLinkUp.reloadLibreLinkUp()
+//                    if libreLinkUp.libreLinkUpErrorBool == true {
+//                        print(libreLinkUp.libreLinkUpResponse)
+//                        isShowingReloadFailed = true
+//                    }
+//                    minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+//                    isReloading = false
+////                    WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
+//                }
+//                scrollPosition = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date.now
+//            }
+            reloadAndUpdateMinutes()
         }
         .onAppear() { // fires when switching the Views, e.g. form settings to home view.
             print("onAppear")
@@ -195,13 +187,13 @@ struct PhoneAppHomeView: View {
             //MARK: Skip the following on app start
             if onAppearNotToDoFirstStart == false { // not to do on first start
                 
-                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+//                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 
                 if shouldShowPrompt {
                     showPrompt = true
                 }
-                
             }
+            // -------------------------------------
             
             //MARK: Do the following only on app start
             if onAppearNotToDoFirstStart == true { // to do only on first start
@@ -217,51 +209,60 @@ struct PhoneAppHomeView: View {
             if !hasPromptedOnce {
                 recordDayOfUse()
             }
+            // ----------------------------------------
             
-            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-            connected = UserDefaults.group.connected
-            if isReloading == false && minutesSinceLastReading >= 1 && connected == .newlyConnected {
-                Task {
-                    isReloading = true
-                    await libreLinkUp.reloadLibreLinkUp()
-                    if libreLinkUp.libreLinkUpErrorBool == true {
-                        print(libreLinkUp.libreLinkUpResponse)
-                        isShowingReloadFailed = true
-                    }
-                    isReloading = false
-                    connected = .connected
-                    UserDefaults.group.connected = .connected
-                    minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-//                    WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
-                }
-            }
+            //MARK: Do the following .onAppear
+//            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+//            connected = UserDefaults.group.connected
+//            if isReloading == false && minutesSinceLastReading >= 1 && connected == .newlyConnected {
+//                Task {
+//                    isReloading = true
+//                    await libreLinkUp.reloadLibreLinkUp()
+//                    if libreLinkUp.libreLinkUpErrorBool == true {
+//                        print(libreLinkUp.libreLinkUpResponse)
+//                        isShowingReloadFailed = true
+//                    }
+//                    isReloading = false
+//                    connected = .connected
+//                    UserDefaults.group.connected = .connected
+//                    minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+////                    WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
+//                }
+//            }
+            reloadAndUpdateMinutes()
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active {
                 print("Scene Phase Active")
 
-                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+//                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 
+                //MARK: Skip the following on app start
                 if scenePhaseNotToDoFirstStart == false { // not to do on first start
                     WidgetCenter.shared.reloadAllTimelines()
+                    print("WidgetCenter.shared.reloadAllTimelines()")
                 }
+                
+                //MARK: Do the following only on app start
                 if scenePhaseNotToDoFirstStart == true { scenePhaseNotToDoFirstStart = false } // to do only on first start
                 
-                connected = UserDefaults.group.connected
-                minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-                if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
-                    Task {
-                        isReloading = true
-                        await libreLinkUp.reloadLibreLinkUp()
-                        if libreLinkUp.libreLinkUpErrorBool == true {
-                            print(libreLinkUp.libreLinkUpResponse)
-                            isShowingReloadFailed = true
-                        }
-                        minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-                        isReloading = false
-//                        WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
-                        }
-                    }
+                //MARK: Do the following .onChange(of: scenePhase) == .active
+                reloadAndUpdateMinutes()
+//                connected = UserDefaults.group.connected
+//                minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+//                if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
+//                    Task {
+//                        isReloading = true
+//                        await libreLinkUp.reloadLibreLinkUp()
+//                        if libreLinkUp.libreLinkUpErrorBool == true {
+//                            print(libreLinkUp.libreLinkUpResponse)
+//                            isShowingReloadFailed = true
+//                        }
+//                        minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+//                        isReloading = false
+////                        WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
+//                        }
+//                    }
             } else if newPhase == .inactive {
                 print("Scene Phase Inactive")
             } else if newPhase == .background {
@@ -269,7 +270,16 @@ struct PhoneAppHomeView: View {
             }
         }
         .overlay {
-            if minutesSinceLastReading >= 3 && isReloading == false {
+            if lluService.isReloading == true {
+                ZStack {
+                    Color(white: 0, opacity: 0.25)
+                        .cornerRadius(10)
+                    ProgressView().tint(.white)
+                }
+            }
+            
+            let minutesSinceLastReadingOverlay = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+            if minutesSinceLastReadingOverlay >= 3 && lluService.isReloading == false {
                 ZStack {
                     Color(white: 0, opacity: 0.5)
                         .cornerRadius(10)
@@ -379,7 +389,13 @@ struct PhoneAppHomeView: View {
 
     }
    
-
+    private func reloadAndUpdateMinutes() {
+        Task {
+            await lluService.requestReloadIfNeeded()
+            isShowingReloadFailed = lluService.didLastReloadFail
+            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+        }
+    }
     
     
 }
@@ -483,4 +499,3 @@ let MockDataPhone = [LibreLinkUpGlucose(glucose: Glucose(rawValue: 1000,
                                                          hasError: false),
                                         color: MeasurementColor.green,
                                         trendArrow: TrendArrow(rawValue: 0))]
-

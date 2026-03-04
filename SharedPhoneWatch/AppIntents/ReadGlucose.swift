@@ -46,6 +46,7 @@ struct ReadGlucose: AppIntent {
             }
         }
         WidgetCenter.shared.reloadAllTimelines()
+        print("WidgetCenter.shared.reloadAllTimelines()")
         return .result(
             dialog: dialogString,
             view: ReadGlucoseView(glucose: glucose, trend: trend)

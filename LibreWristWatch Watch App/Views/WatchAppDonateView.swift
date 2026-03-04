@@ -14,6 +14,13 @@ struct WatchAppDonateView: View {
 //    @State private var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
 //    @AppStorage(SharedData.Keys.insulinDeliveryHistoryUpdated.key, store: SharedData.defaultsGroup) private var insulinDeliveryHistoryUpdated: Bool = false
     @Environment(\.insulinDeliveryHistorySingleton) var insulinDeliveryHistorySingleton
+    
+    @AppStorage(DefaultsKey.insulinTypeSelected.rawValue, store: UserDefaults.group) private var insulinTypeRaw = UserDefaults.group.insulinTypeSelected.rawValue
+
+    private var insulinTypeSelected: InsulinType {
+        InsulinType(rawValue: insulinTypeRaw) ?? UserDefaults.group.insulinTypeSelected
+    }
+
 
     
     private let productIDs = [
@@ -64,6 +71,7 @@ struct WatchAppDonateView: View {
             let model = WKInterfaceDevice.current().model
             let name = WKInterfaceDevice.current().name
             Text("\(systemName) \(systemVersion) on \(name)")
+            Text("Insulin type: \(insulinTypeSelected.description)")
             if insulinDeliveryHistorySingleton.insulinDeliveryHistory.count > 0 {
                 Text("\nInsulin history:")
                 ForEach(insulinDeliveryHistorySingleton.insulinDeliveryHistory, id: \.id) {item in

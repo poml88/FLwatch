@@ -475,7 +475,6 @@
 		7B3EA4FE2C6C0B1A0061F239 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				7B2ED6B02F4DD8780046F363 /* LibreLinkUpService.swift */,
 				7B299A0A2C90AF8C002A15C8 /* AuthTicket.swift */,
 				7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */,
 				7B299A102C90AFFC002A15C8 /* Glucose.swift */,
@@ -489,6 +488,7 @@
 				7B299A0D2C90AFC8002A15C8 /* LibreLinkUpError.swift */,
 				7B299A162C90B089002A15C8 /* LibreLinkUpGlucose.swift */,
 				7B299A1C2C90DC43002A15C8 /* LibreLinkUpHistory.swift */,
+				7B2ED6B02F4DD8780046F363 /* LibreLinkUpService.swift */,
 				7BDB81312CB09AF800F4A60F /* LLUHeaders.swift */,
 				7BA567962CBA9584003244EE /* MailView.swift */,
 				7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */,

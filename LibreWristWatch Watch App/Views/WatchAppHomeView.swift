@@ -30,6 +30,7 @@ struct WatchAppHomeView: View {
     //    @State private var sensorSettings = SensorSettings()
     @State private var connected = UserDefaults.group.connected
     @State private var onAppearNotToDoFirstStart: Bool = true
+    @State private var lastWidgetReloadAt: Date = .distantPast
     
     @StateObject private var lluService = LibreLinkUpService.shared
     
@@ -38,6 +39,18 @@ struct WatchAppHomeView: View {
     //    @State var trendArrow = "---"
     
     private let timer = Timer.publish(every: 60, tolerance: 1, on: .main, in: .common).autoconnect()
+    private let minimumWidgetReloadInterval: TimeInterval = 2
+
+    private func reloadWidgetsIfNeeded(trigger: String) {
+        let now = Date()
+        guard now.timeIntervalSince(lastWidgetReloadAt) >= minimumWidgetReloadInterval else {
+            print("Skipping WidgetCenter.shared.reloadAllTimelines() [\(trigger)]")
+            return
+        }
+        lastWidgetReloadAt = now
+        WidgetCenter.shared.reloadAllTimelines()
+        print("WidgetCenter.shared.reloadAllTimelines() [\(trigger)]")
+    }
     
     
     var body: some View {
@@ -123,8 +136,8 @@ struct WatchAppHomeView: View {
             if onAppearNotToDoFirstStart == false { // not to do on first start
                 
 //                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-                
             }
+            // ------------------------------------
             
             //MARK: Do the following only on app start
             if onAppearNotToDoFirstStart == true { // to do only on first start
@@ -133,7 +146,7 @@ struct WatchAppHomeView: View {
                 // --------------------- copied here from .onChange(of: scenePhase) { oldPhase, newPhase in as it currently does not fire at app start
 //                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 
-                WidgetCenter.shared.reloadAllTimelines()
+                reloadWidgetsIfNeeded(trigger: "onAppear:firstStart")
                 
                 //                connected = UserDefaults.group.connected
                 //                minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
@@ -151,8 +164,9 @@ struct WatchAppHomeView: View {
                 
                 onAppearNotToDoFirstStart = false
             }
+            // ------------------------------------------------
             
-            
+            //MARK: Do the following .onAppear
             //            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
             //            connected = UserDefaults.group.connected
             //            if isReloading == false && minutesSinceLastReading >= 1 && connected == .newlyConnected {
@@ -172,7 +186,7 @@ struct WatchAppHomeView: View {
                 
 //                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 
-                WidgetCenter.shared.reloadAllTimelines()
+                reloadWidgetsIfNeeded(trigger: "scenePhase.active")
                 
                 //                connected = UserDefaults.group.connected
                 //                minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
@@ -274,4 +288,3 @@ let MockDataWatch = [LibreLinkUpGlucose(glucose: Glucose(rawValue: 1000,
                                                          hasError: false),
                                         color: MeasurementColor.green,
                                         trendArrow: TrendArrow(rawValue: 0))]
-
