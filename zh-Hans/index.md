@@ -15,6 +15,7 @@ hero_title: "FLwatch：血糖传感器图表"
 
 ### 使用指南 {#usage}
 ***安装说明：***请确保已安装watchOS应用程序，建议在启动iOS应用前完成安装。根据设备配置，watchOS应用可能自动安装，或需通过手机端“Watch”应用手动安装。
+- @TypeOneCallum 制作了一段非常棒的 [安装教程视频](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB)（感谢！）。观看后，设置过程会变得容易得多。
 - 需iOS 17.5及watchOS 10.5系统
 - TestFlight测试版：[https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
 - 设置在iOS应用中完成后会同步至watchOS应用。此功能仅在手表已安装watchOS应用时生效。

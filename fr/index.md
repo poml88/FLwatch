@@ -15,6 +15,7 @@ Ce logiciel est gratuit et open source. Il est développé pour répondre à des
 
 ### Utilisation {#usage}
 ***Installation :*** Assurez-vous que l'application watchOS est installée, idéalement avant de lancer l'application iOS. Selon votre configuration, l'application watchOS est soit installée automatiquement, soit doit être installée via l'application « Watch » sur le téléphone.
+- @TypeOneCallum a réalisé une excellente [vidéo tutorielle d’installation](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB) (Merci !). Regardez-la et la configuration sera beaucoup plus simple.
 - L'application nécessite iOS 17.5 et watchOS 10.5
 - TestFlight : [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
 - Les paramètres sont définis dans l'application iOS, puis transférés vers l'application watchOS. Cela ne fonctionne que si l'application watchOS est installée sur la montre.

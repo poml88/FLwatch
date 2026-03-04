@@ -16,6 +16,7 @@ hero_title: "FLwatch：血糖値センサーグラフ"
 
 ### 使用方法 {#usage}
 ***インストール方法:*** watchOSアプリがインストールされていることを確認してください（iOSアプリ起動前に実施が望ましい）。環境設定により、watchOSアプリは自動インストールされるか、スマートフォン上の「Watch」アプリ経由で手動インストールが必要です。
+- @TypeOneCallum さんがとても分かりやすい [セットアップのチュートリアル動画](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB) を作ってくれました（ありがとうございます！）。これを見るとセットアップがずっと簡単になります。
 - 動作環境: iOS 17.5 以上、watchOS 10.5 以上
 - TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
 - 設定はiOSアプリで行い、その後watchOSアプリに転送されます。これはwatchOSアプリが時計にインストールされている場合にのみ機能します。
