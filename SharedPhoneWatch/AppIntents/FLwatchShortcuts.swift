@@ -8,7 +8,7 @@
 import Foundation
 import AppIntents
 
-class FLwatchShortcuts: AppShortcutsProvider {
+final class FLwatchShortcuts: AppShortcutsProvider {
     static var shortcutTileColor: ShortcutTileColor = .yellow
 //    @AppShortcutsBuilder
     static var appShortcuts: [AppShortcut] {

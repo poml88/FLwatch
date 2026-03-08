@@ -15,7 +15,7 @@ final class LiveActivityManager {
             switch activity.activityState {
             case .active, .stale:
                 return true
-            case .ended, .dismissed:
+            case .pending, .ended, .dismissed:
                 return false
             @unknown default:
                 return false

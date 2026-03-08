@@ -376,15 +376,14 @@ struct PhoneAppHomeView: View {
     
     private func calculateUserdefaultsSize() {
         let defaults = UserDefaults.standard
-        if let dict = defaults.dictionaryRepresentation() as? [String: Any] {
-            do {
-                let data = try PropertyListSerialization.data(fromPropertyList: dict,
-                                                              format: .binary,
-                                                              options: 0)
-                print("UserDefaults size: \(data.count) bytes")
-            } catch {
-                print("Error serializing UserDefaults: \(error)")
-            }
+        let dict = defaults.dictionaryRepresentation()
+        do {
+            let data = try PropertyListSerialization.data(fromPropertyList: dict,
+                                                          format: .binary,
+                                                          options: 0)
+            print("UserDefaults size: \(data.count) bytes")
+        } catch {
+            print("Error serializing UserDefaults: \(error)")
         }
 
     }
