@@ -119,6 +119,7 @@ class LibreLinkUp  {
 //                            LibreLinkUpHistory.shared.libreLinkUpGlucose = graphHistory                                             // is only 1 value
 //                        }
                         let lastMeasurement: LibreLinkUpGlucose = graphHistoryReversed[0] // access index 0 seems ok, since graphHistory.count > 0
+                        LibreLinkUpHistory.shared.latestLibreLinkUpGlucose = lastMeasurement
                         LibreLinkUpHistory.shared.lastReadingDate = lastMeasurement.glucose.date
                         //                        minutesSinceLastReading = Int(Date().timeIntervalSince(lastReadingDate) / 60)
                         //                        sensor?.lastReadingDate = lastReadingDate

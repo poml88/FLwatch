@@ -21,6 +21,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
     private struct LibreLinkUpSnapshotPayload: Codable {
         let libreLinkUpGlucose: [LibreLinkUpGlucose]
         let libreLinkUpMinuteGlucose: [LibreLinkUpGlucose]
+        let latestLibreLinkUpGlucose: LibreLinkUpGlucose?
         let lastReadingDate: Date
         let currentGlucose: Int
         let currentTrendArrow: String
@@ -135,6 +136,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
                     let history = LibreLinkUpHistory.shared
                     history.libreLinkUpGlucose = snapshot.libreLinkUpGlucose
                     history.libreLinkUpMinuteGlucose = snapshot.libreLinkUpMinuteGlucose
+                    history.latestLibreLinkUpGlucose = snapshot.latestLibreLinkUpGlucose ?? snapshot.libreLinkUpGlucose.first ?? snapshot.libreLinkUpMinuteGlucose.first
                     history.lastReadingDate = snapshot.lastReadingDate
                     history.currentGlucose = snapshot.currentGlucose
                     history.currentTrendArrow = snapshot.currentTrendArrow
@@ -214,6 +216,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         let snapshot = LibreLinkUpSnapshotPayload(
             libreLinkUpGlucose: history.libreLinkUpGlucose,
             libreLinkUpMinuteGlucose: history.libreLinkUpMinuteGlucose,
+            latestLibreLinkUpGlucose: history.latestLibreLinkUpGlucose,
             lastReadingDate: history.lastReadingDate,
             currentGlucose: history.currentGlucose,
             currentTrendArrow: history.currentTrendArrow,
@@ -320,5 +323,4 @@ private protocol WatchRequestHandler {
 //        WatchMessageService.singleton.send(request: self, responseHandler: responseHandler)
 //    }
 //}
-
 

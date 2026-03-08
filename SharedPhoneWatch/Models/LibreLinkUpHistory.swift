@@ -14,6 +14,7 @@ import SwiftUI
 //    var id: [Glucose.ID] = []
     var libreLinkUpGlucose: [LibreLinkUpGlucose] = [] { didSet { persist() } }
     var libreLinkUpMinuteGlucose: [LibreLinkUpGlucose] = [] { didSet { persist() } }
+    var latestLibreLinkUpGlucose: LibreLinkUpGlucose? = nil { didSet { persist() } }
     var lastReadingDate: Date = Date(timeIntervalSinceNow: -999 * 60) { didSet { persist() } }
     var currentGlucose: Int = 0 { didSet { persist() } } // always in mg/dl
     var currentTrendArrow: String = "---" { didSet { persist() } }
@@ -62,6 +63,7 @@ import SwiftUI
     private struct Snapshot: Codable {
         let libreLinkUpGlucose: [LibreLinkUpGlucose]
         let libreLinkUpMinuteGlucose: [LibreLinkUpGlucose]
+        let latestLibreLinkUpGlucose: LibreLinkUpGlucose?
         let lastReadingDate: Date
         let currentGlucose: Int
         let currentTrendArrow: String
@@ -74,6 +76,7 @@ import SwiftUI
         let snapshot = Snapshot(
             libreLinkUpGlucose: libreLinkUpGlucose,
             libreLinkUpMinuteGlucose: libreLinkUpMinuteGlucose,
+            latestLibreLinkUpGlucose: latestLibreLinkUpGlucose,
             lastReadingDate: lastReadingDate,
             currentGlucose: currentGlucose,
             currentTrendArrow: currentTrendArrow,
@@ -95,6 +98,7 @@ import SwiftUI
         isRestoring = true
         libreLinkUpGlucose = snapshot.libreLinkUpGlucose
         libreLinkUpMinuteGlucose = snapshot.libreLinkUpMinuteGlucose
+        latestLibreLinkUpGlucose = snapshot.latestLibreLinkUpGlucose ?? snapshot.libreLinkUpGlucose.first ?? snapshot.libreLinkUpMinuteGlucose.first
         lastReadingDate = snapshot.lastReadingDate
         currentGlucose = snapshot.currentGlucose
         currentTrendArrow = snapshot.currentTrendArrow
@@ -173,6 +177,7 @@ import SwiftUI
                                                                         hasError: false),
                                                        color: MeasurementColor.green,
                                                        trendArrow: TrendArrow(rawValue: 0))]
+        latestLibreLinkUpGlucose = libreLinkUpGlucose.first
         lastOnlineDate = Date(timeIntervalSinceNow: -1 * 60 * 60 * 24)
     }
 }

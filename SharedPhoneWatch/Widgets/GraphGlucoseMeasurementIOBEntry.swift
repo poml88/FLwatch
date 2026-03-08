@@ -113,7 +113,6 @@ struct GraphGlucoseMeasurementIOBEntry: TimelineEntry {
     }
 
     private static func latestHistoryValue(from history: LibreLinkUpHistory) -> LibreLinkUpGlucose? {
-        let candidates = history.libreLinkUpMinuteGlucose + history.libreLinkUpGlucose
-        return candidates.max(by: { $0.glucose.date < $1.glucose.date })
+        history.latestLibreLinkUpGlucose
     }
 }

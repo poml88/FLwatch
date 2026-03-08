@@ -27,8 +27,7 @@ struct ReadGlucose: AppIntent {
         _ = await LibreLinkUpService.shared.requestReloadIfNeeded(maxAgeMinutes: 1)
         let history = LibreLinkUpHistory.shared
         let sensor = SensorSettingsStore.shared
-        let latest = (history.libreLinkUpMinuteGlucose + history.libreLinkUpGlucose)
-            .max(by: { $0.glucose.date < $1.glucose.date })
+        let latest = history.latestLibreLinkUpGlucose
 
         guard let latest else {
             dialogString = "Your blood glucose value is currently not available."
