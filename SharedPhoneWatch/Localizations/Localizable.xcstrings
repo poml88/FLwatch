@@ -3395,9 +3395,6 @@
         }
       }
     },
-    "Live Activity needs to be enabled in the spp settings as well. Tap to open app settings. Current status: %@" : {
-
-    },
     "LLU email address not yet verified. Verify using LibreLinkUp app." : {
       "localizations" : {
         "de" : {
@@ -5434,6 +5431,9 @@
         }
       }
     },
+    "Tap to open app settings." : {
+
+    },
     "Thank you for downloading FLwatch. I hope it will prove useful.\n\nTo get startet, please read the SETUP AND USAGE guide. In case of questions, please contact support. More info on the Settings tab." : {
       "localizations" : {
         "de" : {
@@ -5886,7 +5886,7 @@
         }
       }
     },
-    "Updates of this live activity are not guaranteed. To be confirmed." : {
+    "Updates of this live activity are not guaranteed. To be confirmed.\nTo enable or disable mirroring of the live activity on the watch use the \"Watch\" app on the phone.\nLive Activity needs to be enabled in the app settings as well. Current status: %@" : {
 
     },
     "Username" : {

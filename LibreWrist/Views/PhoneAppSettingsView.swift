@@ -230,7 +230,7 @@ struct PhoneAppSettingsView: View {
                 let name = UIDevice.current.name
                 Text("\(systemName) \(systemVersion) on \(name)")
                 
-                Text("Sensor: \(SensorSettingsSingleton.shared.sensorType)")
+                Text("Sensor: \(SensorSettingsStore.shared.sensorType)")
                 
                 Text("Error message: \(DebugMessageSingleton.shared.libreLinkUpResponseError)")
                 

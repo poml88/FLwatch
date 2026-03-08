@@ -16,7 +16,7 @@ struct WatchAppGraphView: View {
     @AppStorage(DefaultsKey.showActivityCurveWatch.rawValue, store: UserDefaults.group) private var showActivityCurveWatch: Bool = false
     
     @Environment(\.libreLinkUpHistory) var libreLinkUpHistory
-    @Environment(\.sensorSettingsSingleton) var sensorSettingsSingleton
+    @Environment(\.sensorSettingsStore) var sensorSettingsStore
     
     var body: some View {
 //        let rectXStart: Date = libreLinkUpHistory.libreLinkUpGlucose.last?.glucose.date ?? Date(timeIntervalSinceNow: -6 * 60 * 60)
@@ -34,28 +34,28 @@ struct WatchAppGraphView: View {
         
         //Configuration
         // 0 = mmoll  1 = mgdl  0.0555
-        var chartYScaleMin: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 2.75 : 50 }
+        var chartYScaleMin: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 2.75 : 50 }
         
         let maxBG = libreLinkUpHistory.maxBG
         
         let chartXScaleMin: Date = dateSixHoursTenAgo
         let chartXScaleMax: Date = date
         
-        var chartYScaleMax: Double { if maxBG > 300 { sensorSettingsSingleton.sensorSettings.uom == 0 ? 21 : 400}
-            else if maxBG > 225 { sensorSettingsSingleton.sensorSettings.uom == 0 ? 18 : 300}
-            else { sensorSettingsSingleton.sensorSettings.uom == 0 ? 12.5 : 225}
+        var chartYScaleMax: Double { if maxBG > 300 { sensorSettingsStore.sensorSettings.uom == 0 ? 21 : 400}
+            else if maxBG > 225 { sensorSettingsStore.sensorSettings.uom == 0 ? 18 : 300}
+            else { sensorSettingsStore.sensorSettings.uom == 0 ? 12.5 : 225}
         }
         
         let quarterYAxisIOBCurve: Double = (chartYScaleMax - chartYScaleMin) / 4 + 0.25
-        var chartYScaleMinIOBCurve: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 3 : 50 }
+        var chartYScaleMinIOBCurve: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 3 : 50 }
         
-//                var chartYScaleMax: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 12.5 : 225 }
-        var yAxisSteps: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? 3 : 50 }
+//                var chartYScaleMax: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 12.5 : 225 }
+        var yAxisSteps: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 3 : 50 }
         
         
-        var chartRectangleYStart: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? sensorSettingsSingleton.sensorSettings.targetLow.toMmolL() : Double(sensorSettingsSingleton.sensorSettings.targetLow) }
-        var chartRectangleYEnd: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? sensorSettingsSingleton.sensorSettings.targetHigh.toMmolL() : Double(sensorSettingsSingleton.sensorSettings.targetHigh) }
-        var chartRuleAlarmLL: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? sensorSettingsSingleton.sensorSettings.alarmLow.toMmolL() : Double(sensorSettingsSingleton.sensorSettings.alarmLow) }
+        var chartRectangleYStart: Double { sensorSettingsStore.sensorSettings.uom == 0 ? sensorSettingsStore.sensorSettings.targetLow.toMmolL() : Double(sensorSettingsStore.sensorSettings.targetLow) }
+        var chartRectangleYEnd: Double { sensorSettingsStore.sensorSettings.uom == 0 ? sensorSettingsStore.sensorSettings.targetHigh.toMmolL() : Double(sensorSettingsStore.sensorSettings.targetHigh) }
+        var chartRuleAlarmLL: Double { sensorSettingsStore.sensorSettings.uom == 0 ? sensorSettingsStore.sensorSettings.alarmLow.toMmolL() : Double(sensorSettingsStore.sensorSettings.alarmLow) }
         
         
         Chart {
@@ -93,7 +93,7 @@ struct WatchAppGraphView: View {
 //                        .foregroundStyle(.red)
 //                        .symbolSize(3)
                 
-                var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
+                var itemValue: Double { sensorSettingsStore.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                 LineMark(x: .value("Time", item.glucose.date),
                          y: .value("Glucose", itemValue),
                          series: .value("Curve", "Glucose")
@@ -127,7 +127,7 @@ struct WatchAppGraphView: View {
 
 //MARK: Minute Glucose Trend
             ForEach(libreLinkUpHistory.libreLinkUpMinuteGlucose) { item in
-                var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
+                var itemValue: Double { sensorSettingsStore.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                 PointMark(x: .value("Time", item.glucose.date),
                           y: .value("Glucose", itemValue)
                 )
@@ -166,7 +166,7 @@ struct WatchAppGraphView: View {
                 
                 if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
                     ForEach(InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory) { item in
-                        //                    var itemValue: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
+                        //                    var itemValue: Double { sensorSettingsStore.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                         if item.timeStamp > timeInternvalSixHoursAndTenAgo {
                             let insulinOnBoardCurve = CurrentIOBSingleton.shared.insulinOnBoardCurve
                             var iobCurveDataPointAtTimeStamp: ActivityCurveDataPoint { insulinOnBoardCurve.first(where: { $0.date > Date(timeIntervalSince1970: item.timeStamp)}) ?? ActivityCurveDataPoint(id: Int(item.timeStamp),date: Date(timeIntervalSince1970: item.timeStamp), value: 1)}
@@ -181,7 +181,7 @@ struct WatchAppGraphView: View {
                                 }
                             }
                             let shiftInYValue = 10
-                            var shiftInY: Double { sensorSettingsSingleton.sensorSettings.uom == 0 ? shiftInYValue.toMmolL() : Double(shiftInYValue) }
+                            var shiftInY: Double { sensorSettingsStore.sensorSettings.uom == 0 ? shiftInYValue.toMmolL() : Double(shiftInYValue) }
                             PointMark(x: .value("Time", Date(timeIntervalSince1970: item.timeStamp)),
                                       y: .value("Insulin", chartYScaleMinIOBCurve + shiftInY + iobCurveDataPointAtTimeStamp.value * quarterYAxisIOBCurve / maxIOB) // we need to know the IOB at this time stamp.
                             )

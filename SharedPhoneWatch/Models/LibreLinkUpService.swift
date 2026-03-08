@@ -26,6 +26,11 @@ final class LibreLinkUpService: ObservableObject {
         LibreLinkUpHistory.shared.refreshFromPersistedSnapshot()
     }
 
+    @discardableResult
+    func refreshSensorSettingsFromPersistence(force: Bool = false) -> Bool {
+        SensorSettingsStore.shared.refreshFromPersistence(force: force)
+    }
+
     /// Convenience for non-MainActor contexts (widgets/intents) to refresh via the centralized service API.
     @discardableResult
     nonisolated static func refreshHistoryFromPersistenceAsync() async -> Bool {
@@ -51,6 +56,7 @@ final class LibreLinkUpService: ObservableObject {
         return await gate.runOrJoin { [weak self] in
             guard let self else { return false }
             _ = self.refreshHistoryFromPersistence()
+            _ = self.refreshSensorSettingsFromPersistence()
             let secondsSinceLastOnline = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastOnlineDate)
             Logger.libreLinkUpService.info("requestReloadIfNeeded refreshed persisted snapshot before checks (secondsSinceLastOnline: \(String(format: "%.1f", secondsSinceLastOnline)))")
             guard self.canReload() else {

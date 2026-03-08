@@ -47,6 +47,7 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
 
     private static func entryFromHistory() async -> GlucoseMeasurementIOBEntry? {
         let history = LibreLinkUpHistory.shared
+        let sensor = SensorSettingsStore.shared
         guard history.currentGlucose > 0 else { return nil }
 
         guard let latest = latestHistoryValue(from: history) else { return nil }
@@ -55,7 +56,7 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "M/d/yyyy h:mm:ss a"
         let timestamp = formatter.string(from: latest.glucose.date)
-        let uom = history.uom
+        let uom = sensor.sensorSettings.uom
         let value = uom == 0 ? latest.glucose.value.toMmolL() : Double(latest.glucose.value)
 
         let measurement = GlucoseMeasurement(

@@ -354,7 +354,7 @@ struct PhoneAppHomeView: View {
         let model = UIDevice.current.model
         let name = UIDevice.current.name
         
-        let sensorType = SensorSettingsSingleton.shared.sensorType.description
+        let sensorType = SensorSettingsStore.shared.sensorType.description
         
         let libreLinkUpDebug = DebugMessageSingleton.shared.libreLinkUpResponseError
         

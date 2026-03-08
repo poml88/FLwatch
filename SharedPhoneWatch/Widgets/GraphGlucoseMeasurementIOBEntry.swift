@@ -85,6 +85,7 @@ struct GraphGlucoseMeasurementIOBEntry: TimelineEntry {
 
     private static func entryFromHistory() async -> GraphGlucoseMeasurementIOBEntry? {
         let history = LibreLinkUpHistory.shared
+        let sensor = SensorSettingsStore.shared
         guard history.currentGlucose > 0 else { return nil }
         guard let lastGlucose = latestHistoryValue(from: history) else { return nil }
 
@@ -106,7 +107,7 @@ struct GraphGlucoseMeasurementIOBEntry: TimelineEntry {
             lastGlucoseMeasurement: lastGlucose,
             graph: graph,
             currentIOB: currentIOB,
-            uom: history.uom,
+            uom: sensor.sensorSettings.uom,
             maxBG: maxBG
         )
     }

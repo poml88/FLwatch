@@ -26,6 +26,8 @@ struct LibreWristApp: App {
         if UserDefaults.group.connected == .connecting {
             UserDefaults.group.connected = .disconnected
         }
+
+        SensorSettingsStore.shared.refreshFromPersistence(force: true)
         
         WatchConnectivityManager.shared.startSession()
         // alternatively the session could be started in AppDelegate see https://developer.apple.com/documentation/swiftui/migrating-to-the-swiftui-life-cycle
@@ -36,7 +38,7 @@ struct LibreWristApp: App {
     
 //    @State private var history = History()
     @State private var libreLinkUpHistory = LibreLinkUpHistory.shared
-    @State private var sensorSettingsSingleton = SensorSettingsSingleton.shared
+    @State private var sensorSettingsStore = SensorSettingsStore.shared
     @State private var currentIOBSingleton = CurrentIOBSingleton.shared
     @State private var insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
     
@@ -45,11 +47,12 @@ struct LibreWristApp: App {
             ContentView()
 //                .environment(history)
                 .environment(\.libreLinkUpHistory, libreLinkUpHistory)
-                .environment(\.sensorSettingsSingleton, sensorSettingsSingleton)
+                .environment(\.sensorSettingsStore, sensorSettingsStore)
                 .environment(\.currentIOBSingleton, currentIOBSingleton)
                 .environment(\.insulinDeliveryHistorySingleton, insulinDeliveryHistorySingleton)
                 .onChange(of: scenePhase) { _, newPhase in
                     guard newPhase == .active else { return }
+                    SensorSettingsStore.shared.refreshFromPersistence()
                     Logger.bgTaskScheduler.info("Scene active: scheduling next BG refresh")
                     appRefreshScheduler.scheduleNextRefresh()
                 }

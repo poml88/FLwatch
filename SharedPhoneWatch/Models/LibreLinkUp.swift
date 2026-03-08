@@ -101,9 +101,7 @@ class LibreLinkUp  {
                 if graphHistory.count > 0 {
                     await MainActor.run {
                         LibreLinkUpHistory.shared.lastOnlineDate = Date()
-                        SensorSettingsSingleton.shared.sensorSettings = sensorSettingsRead
-                        SensorSettingsSingleton.shared.sensorType = sensorType
-                        LibreLinkUpHistory.shared.uom = sensorSettingsRead.uom
+                        SensorSettingsStore.shared.replaceCacheAndPersist(sensorSettings: sensorSettingsRead, sensorType: sensorType)
                         // TODO: just merge with newer values
                         let graphHistoryReversed: [LibreLinkUpGlucose] = graphHistory.reversed()
                         let dateSixHoursTenAgo: Date = Date(timeIntervalSinceNow: -6 * 60 * 60 - 10 * 60)
