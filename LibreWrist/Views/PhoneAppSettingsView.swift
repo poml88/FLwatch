@@ -105,8 +105,8 @@ struct PhoneAppSettingsView: View {
                     let systemLiveActivityEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
                     ? "System Live Activities: enabled"
                     : "System Live Activities: disabled in iOS settings"
-                    Text("Updates of this live activity are not guaranteed. To be confirmed.")
-                    Link("Live Activity needs to be enabled in the spp settings as well. Tap to open app settings. Current status: \(systemLiveActivityEnabled)", destination: URL(string: UIApplication.openSettingsURLString)!)
+                    Text("Updates of this live activity are not guaranteed. To be confirmed.\nTo enable or disable mirroring of the live activity on the watch use the \"Watch\" app on the phone.\nLive Activity needs to be enabled in the app settings as well. Current status: \(systemLiveActivityEnabled)")
+                    Link("Tap to open app settings.", destination: URL(string: UIApplication.openSettingsURLString)!)
                 }
                     .onChange(of: useLiveActivities) { _, newValue in
                         Task {

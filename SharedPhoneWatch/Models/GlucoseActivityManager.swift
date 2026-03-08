@@ -9,9 +9,9 @@ final class LiveActivityManager {
 
     private let maxGraphPoints = 24
 
-    private func reusableActivity(for userIdHash: String) -> Activity<FLWatchAttributes>? {
+    private func reusableActivity() -> Activity<FLWatchAttributes>? {
         Activity<FLWatchAttributes>.activities.first { activity in
-            guard activity.attributes.userIdHash == userIdHash else { return false }
+            guard activity.attributes.activityIdentifier == FLWatchAttributes.glucoseActivityIdentifier else { return false }
             switch activity.activityState {
             case .active, .stale:
                 return true
@@ -20,6 +20,16 @@ final class LiveActivityManager {
             @unknown default:
                 return false
             }
+        }
+    }
+
+    private func dismissEndedActivitiesOfThisType() async {
+        for activity in Activity<FLWatchAttributes>.activities {
+            guard activity.attributes.activityIdentifier == FLWatchAttributes.glucoseActivityIdentifier else { continue }
+            guard activity.activityState == .ended else { continue }
+            let previousId = activity.id
+            await activity.end(nil, dismissalPolicy: .immediate)
+            Logger.liveActivity.info("Dismissed ended Live Activity \(previousId, privacy: .public) before starting a new one.")
         }
     }
 
@@ -68,12 +78,13 @@ final class LiveActivityManager {
             staleDate: state.timestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval)
         )
 
-        if let existing = reusableActivity(for: userIdHash) {
+        if let existing = reusableActivity() {
             await existing.update(content)
             Logger.liveActivity.log("Updated Live Activity \(existing.id, privacy: .public) from BG refresh/history.")
         } else {
             do {
-                let attrs = FLWatchAttributes(userIdHash: userIdHash)
+                await dismissEndedActivitiesOfThisType()
+                let attrs = FLWatchAttributes()
                 let activity = try Activity.request(attributes: attrs, content: content, pushType: nil)
                 Logger.liveActivity.log("Started local Live Activity \(activity.id, privacy: .public) from BG refresh/history.")
             } catch {

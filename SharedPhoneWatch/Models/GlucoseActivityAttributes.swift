@@ -4,6 +4,7 @@ import ActivityKit
 
 public struct FLWatchAttributes: ActivityAttributes, Codable {
     public static let staleAfterInterval: TimeInterval = 20 * 60
+    public static let glucoseActivityIdentifier = "librewrist.glucose"
 
     public struct ContentState: Codable, Hashable {
         // dynamic state updated locally by the app (BG refresh + foreground refreshes)
@@ -15,9 +16,9 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
     }
 
     // static attributes provided when the local activity is created
-    public var userIdHash: String
+    public var activityIdentifier: String
 
-    public init(userIdHash: String) {
-        self.userIdHash = userIdHash
+    public init(activityIdentifier: String = FLWatchAttributes.glucoseActivityIdentifier) {
+        self.activityIdentifier = activityIdentifier
     }
 }
