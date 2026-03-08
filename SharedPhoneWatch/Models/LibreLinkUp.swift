@@ -100,35 +100,32 @@ class LibreLinkUp  {
                 
                 if graphHistory.count > 0 {
                     await MainActor.run {
-                        LibreLinkUpHistory.shared.lastOnlineDate = Date()
+                        let historyStore = LibreLinkUpHistory.shared
+                        let now = Date()
                         SensorSettingsStore.shared.replaceCacheAndPersist(sensorSettings: sensorSettingsRead, sensorType: sensorType)
                         // TODO: just merge with newer values
                         let graphHistoryReversed: [LibreLinkUpGlucose] = graphHistory.reversed()
                         let dateSixHoursTenAgo: Date = Date(timeIntervalSinceNow: -6 * 60 * 60 - 10 * 60)
-                        LibreLinkUpHistory.shared.libreLinkUpGlucose = graphHistoryReversed.filter { $0.glucose.date > dateSixHoursTenAgo } // delete everything older than 6 hours.
-                        if LibreLinkUpHistory.shared.libreLinkUpGlucose.count == 0 {
-                            LibreLinkUpHistory.shared.libreLinkUpGlucose.append(graphHistoryReversed[0])
+                        var filteredGraphHistory = graphHistoryReversed.filter { $0.glucose.date > dateSixHoursTenAgo } // delete everything older than 6 hours.
+                        if filteredGraphHistory.isEmpty {
+                            filteredGraphHistory.append(graphHistoryReversed[0])
                             if graphHistoryReversed.indices.contains(1) {
-                                LibreLinkUpHistory.shared.libreLinkUpGlucose.append(graphHistoryReversed[1]) // this is only added for trend filter below
+                                filteredGraphHistory.append(graphHistoryReversed[1]) // this is only added for trend filter below
                             }
                         }
-                        Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpGlucose: \(LibreLinkUpHistory.shared.libreLinkUpGlucose)")
+                        Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpGlucose: \(filteredGraphHistory)")
 //                        if graphHistory.count > 1 {                                                                                 // make sure that [0] exists, must be 2 to drop 1.
 //                            LibreLinkUpHistory.shared.libreLinkUpGlucose = graphHistory.reversed().dropLast(graphHistory.count / 2) // deviding by two reduces graph to 6 hours.
 //                        } else {
 //                            LibreLinkUpHistory.shared.libreLinkUpGlucose = graphHistory                                             // is only 1 value
 //                        }
                         let lastMeasurement: LibreLinkUpGlucose = graphHistoryReversed[0] // access index 0 seems ok, since graphHistory.count > 0
-                        LibreLinkUpHistory.shared.latestLibreLinkUpGlucose = lastMeasurement
-                        LibreLinkUpHistory.shared.lastReadingDate = lastMeasurement.glucose.date
                         //                        minutesSinceLastReading = Int(Date().timeIntervalSince(lastReadingDate) / 60)
                         //                        sensor?.lastReadingDate = lastReadingDate
-                        LibreLinkUpHistory.shared.currentGlucose = lastMeasurement.glucose.value // always mg/dl
-                        LibreLinkUpHistory.shared.currentTrendArrow = lastMeasurement.trendArrow?.symbol ?? "---"
                         // TODO: keep the raw values filling the gaps with -1 values
                         //                        history.rawValues = []
                         //                        history.factoryValues = libreLinkUpHistory.libreLinkUpGlucose.dropFirst().map(\.glucose) // TEST
-                        var trend = LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose
+                        var trend = historyStore.libreLinkUpMinuteGlucose
                         //                        Logger.libreLinkUp.info("LibreLinkUp: trend: \(trend)")
                         //                        let a: String = "\(lastMeasurement)"
                         //                        Logger.libreLinkUp.info("LibreLinkUp: lastMeasurement: \(a)")
@@ -138,25 +135,34 @@ class LibreLinkUp  {
                             trend.insert(lastMeasurement, at: 0)
                         }
                         // keep only the latest 16 minutes considering the 17-minute latency of the historic values update. seems to vary between 21 and 17 minutes.
-                        if LibreLinkUpHistory.shared.libreLinkUpGlucose.indices.contains(1) {
-                            var lastGraphItem = LibreLinkUpHistory.shared.libreLinkUpGlucose[1].id // could be -20 after new sensor. // 100
+                        if filteredGraphHistory.indices.contains(1) {
+                            var lastGraphItem = filteredGraphHistory[1].id // could be -20 after new sensor. // 100
                             if lastGraphItem < 60 {
                                 lastGraphItem = 60
                             }
                             trend = trend.filter { $0.id > lastGraphItem } // would be true: -2 > -20 and 62 > -20 // -2 > 100 false // 118 > 100 true
                             trend = trend.filter { $0.id - lastGraphItem < 60 } // 20000 - -20 false // 62 - -20 = 82 false and -2 - -20 = 18 true // 118 - 100 < 60 true
                         }
-                        LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose = trend
-                        let indexOfMaxGlucoseItem = LibreLinkUpHistory.shared.libreLinkUpGlucose.indices.max(by:
-                                                                                                        { LibreLinkUpHistory.shared.libreLinkUpGlucose[$0].glucose.value < LibreLinkUpHistory.shared.libreLinkUpGlucose[$1].glucose.value }
+                        let indexOfMaxGlucoseItem = filteredGraphHistory.indices.max(by:
+                                                                                        { filteredGraphHistory[$0].glucose.value < filteredGraphHistory[$1].glucose.value }
                         ) ?? 0 // Seems to work also with one value only, I guess because it is optional
 #if os(iOS)
-                        LibreLinkUpHistory.shared.maxBG = { LibreLinkUpHistory.shared.libreLinkUpGlucose.count > 0 ? LibreLinkUpHistory.shared.libreLinkUpGlucose[indexOfMaxGlucoseItem].glucose.value : 250 }()
+                        let maxBG = filteredGraphHistory.isEmpty ? 250 : filteredGraphHistory[indexOfMaxGlucoseItem].glucose.value
 #endif
 #if os(watchOS)
-                        LibreLinkUpHistory.shared.maxBG = { LibreLinkUpHistory.shared.libreLinkUpGlucose.count > 0 ? LibreLinkUpHistory.shared.libreLinkUpGlucose[indexOfMaxGlucoseItem].glucose.value : 225 }()
+                        let maxBG = filteredGraphHistory.isEmpty ? 225 : filteredGraphHistory[indexOfMaxGlucoseItem].glucose.value
 #endif
-                        Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpMinuteGlucose: \(LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose)")
+                        _ = historyStore.replaceCacheAndPersist(
+                            libreLinkUpGlucose: filteredGraphHistory,
+                            libreLinkUpMinuteGlucose: trend,
+                            latestLibreLinkUpGlucose: lastMeasurement,
+                            lastReadingDate: lastMeasurement.glucose.date,
+                            currentGlucose: lastMeasurement.glucose.value, // always mg/dl
+                            currentTrendArrow: lastMeasurement.trendArrow?.symbol ?? "---",
+                            maxBG: maxBG,
+                            lastOnlineDate: now
+                        )
+                        Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpMinuteGlucose: \(historyStore.libreLinkUpMinuteGlucose)")
                         // TODO: merge and update sensor history / trend
                         //                            app.main.didParseSensor(app.sensor)
                     }

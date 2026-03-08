@@ -27,6 +27,7 @@ struct LibreWristApp: App {
             UserDefaults.group.connected = .disconnected
         }
 
+        LibreLinkUpHistory.shared.refreshFromPersistence(force: true)
         SensorSettingsStore.shared.refreshFromPersistence(force: true)
         
         WatchConnectivityManager.shared.startSession()
@@ -52,6 +53,7 @@ struct LibreWristApp: App {
                 .environment(\.insulinDeliveryHistorySingleton, insulinDeliveryHistorySingleton)
                 .onChange(of: scenePhase) { _, newPhase in
                     guard newPhase == .active else { return }
+                    LibreLinkUpHistory.shared.refreshFromPersistence()
                     SensorSettingsStore.shared.refreshFromPersistence()
                     Logger.bgTaskScheduler.info("Scene active: scheduling next BG refresh")
                     appRefreshScheduler.scheduleNextRefresh()

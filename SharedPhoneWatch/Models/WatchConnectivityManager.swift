@@ -28,6 +28,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         let maxBG: Int
     }
 
+    @MainActor
+    private static func shouldApplySnapshot(_ snapshot: LibreLinkUpSnapshotPayload, to history: LibreLinkUpHistoryStore) -> Bool {
+        snapshot.lastReadingDate > history.lastReadingDate
+    }
+
     private var messageHandlers: [WatchMessageHandler] = []
     private var requestHandlers: [WatchRequestHandler] = []
     
@@ -134,15 +139,28 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
                 let snapshot = try JSONDecoder().decode(LibreLinkUpSnapshotPayload.self, from: snapshotData)
                 Task { @MainActor in
                     let history = LibreLinkUpHistory.shared
-                    history.libreLinkUpGlucose = snapshot.libreLinkUpGlucose
-                    history.libreLinkUpMinuteGlucose = snapshot.libreLinkUpMinuteGlucose
-                    history.latestLibreLinkUpGlucose = snapshot.latestLibreLinkUpGlucose ?? snapshot.libreLinkUpGlucose.first ?? snapshot.libreLinkUpMinuteGlucose.first
-                    history.lastReadingDate = snapshot.lastReadingDate
-                    history.currentGlucose = snapshot.currentGlucose
-                    history.currentTrendArrow = snapshot.currentTrendArrow
-                    history.maxBG = snapshot.maxBG
+                    guard Self.shouldApplySnapshot(snapshot, to: history) else {
+                        Logger.connectivity.info("Ignored stale LibreLinkUp snapshot from WatchConnectivity")
+                        return
+                    }
+
+                    let didApply = history.replaceCacheAndPersist(
+                        libreLinkUpGlucose: snapshot.libreLinkUpGlucose,
+                        libreLinkUpMinuteGlucose: snapshot.libreLinkUpMinuteGlucose,
+                        latestLibreLinkUpGlucose: snapshot.latestLibreLinkUpGlucose,
+                        lastReadingDate: snapshot.lastReadingDate,
+                        currentGlucose: snapshot.currentGlucose,
+                        currentTrendArrow: snapshot.currentTrendArrow,
+                        maxBG: snapshot.maxBG,
+                        lastOnlineDate: history.lastOnlineDate
+                    )
+                    guard didApply else {
+                        Logger.connectivity.error("Failed to persist LibreLinkUp snapshot from WatchConnectivity")
+                        return
+                    }
+
                     CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-                    Logger.connectivity.info("Applied LibreLinkUp snapshot from WatchConnectivity")
+                    Logger.connectivity.info("Applied fresh LibreLinkUp snapshot from WatchConnectivity")
                 }
             } catch {
                 Logger.connectivity.error("Failed to decode LibreLinkUp snapshot: \(error.localizedDescription)")
@@ -212,27 +230,29 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
 
 #if os(iOS)
     func sendLibreLinkUpSnapshotToWatch() {
-        let history = LibreLinkUpHistory.shared
-        let snapshot = LibreLinkUpSnapshotPayload(
-            libreLinkUpGlucose: history.libreLinkUpGlucose,
-            libreLinkUpMinuteGlucose: history.libreLinkUpMinuteGlucose,
-            latestLibreLinkUpGlucose: history.latestLibreLinkUpGlucose,
-            lastReadingDate: history.lastReadingDate,
-            currentGlucose: history.currentGlucose,
-            currentTrendArrow: history.currentTrendArrow,
-            maxBG: history.maxBG
-        )
+        Task { @MainActor in
+            let history = LibreLinkUpHistory.shared
+            let snapshot = LibreLinkUpSnapshotPayload(
+                libreLinkUpGlucose: history.libreLinkUpGlucose,
+                libreLinkUpMinuteGlucose: history.libreLinkUpMinuteGlucose,
+                latestLibreLinkUpGlucose: history.latestLibreLinkUpGlucose,
+                lastReadingDate: history.lastReadingDate,
+                currentGlucose: history.currentGlucose,
+                currentTrendArrow: history.currentTrendArrow,
+                maxBG: history.maxBG
+            )
 
-        do {
-            let snapshotData = try JSONEncoder().encode(snapshot)
-            let messageToWatch: [String: Any] = [
-                "content": Self.libreLinkUpSnapshotContent,
-                Self.libreLinkUpSnapshotDataKey: snapshotData,
-                "useApplicationContext": true
-            ]
-            sendMessageToPairedDevice(messageToWatch)
-        } catch {
-            Logger.connectivity.error("Failed to encode LibreLinkUp snapshot: \(error.localizedDescription)")
+            do {
+                let snapshotData = try JSONEncoder().encode(snapshot)
+                let messageToWatch: [String: Any] = [
+                    "content": Self.libreLinkUpSnapshotContent,
+                    Self.libreLinkUpSnapshotDataKey: snapshotData,
+                    "useApplicationContext": true
+                ]
+                sendMessageToPairedDevice(messageToWatch)
+            } catch {
+                Logger.connectivity.error("Failed to encode LibreLinkUp snapshot: \(error.localizedDescription)")
+            }
         }
     }
 #endif
@@ -323,4 +343,3 @@ private protocol WatchRequestHandler {
 //        WatchMessageService.singleton.send(request: self, responseHandler: responseHandler)
 //    }
 //}
-

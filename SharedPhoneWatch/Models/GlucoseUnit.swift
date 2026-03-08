@@ -23,6 +23,7 @@ enum GlucoseUnit: String, CustomStringConvertible, CaseIterable, Identifiable {
 
 
 extension Int {
+    @MainActor
     var units: String {
         SensorSettingsStore.shared.sensorSettings.uom == 0 ?
 //        UserDefaults.standard.bool(forKey: "displayingMillimoles") ?
@@ -31,6 +32,7 @@ extension Int {
 }
 
 extension Double {
+    @MainActor
     var units: String {
         SensorSettingsStore.shared.sensorSettings.uom == 0 ?
 //        UserDefaults.standard.bool(forKey: "displayingMillimoles") ?

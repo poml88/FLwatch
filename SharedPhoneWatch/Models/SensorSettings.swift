@@ -6,28 +6,80 @@
 //
 
 import Foundation
+import OSLog
 import SwiftUI
 
+
 struct SensorSettings: Codable, Equatable {
+    private static let defaultUom = 1
+    private static let defaultTargetLow = 70
+    private static let defaultTargetHigh = 180
+    private static let defaultAlarmLow = 80
+    private static let defaultAlarmHigh = 300
+
     let uom: Int
     let targetLow: Int
     let targetHigh: Int
     let alarmLow: Int
     let alarmHigh: Int
 
+    private enum CodingKeys: String, CodingKey {
+        case uom
+        case targetLow
+        case targetHigh
+        case alarmLow
+        case alarmHigh
+    }
+
     static let defaultValue = SensorSettings()
 
     init(uom: Int = 1, targetLow: Int = 70, targetHigh: Int = 180, alarmLow: Int = 80, alarmHigh: Int = 300) {
-        self.uom = uom
-        self.targetLow = targetLow
-        self.targetHigh = targetHigh
-        self.alarmLow = alarmLow
-        self.alarmHigh = alarmHigh
+        let normalizedUom = (uom == 0 || uom == 1) ? uom : Self.defaultUom
+        var normalizedTargetLow = targetLow > 0 ? targetLow : Self.defaultTargetLow
+        var normalizedTargetHigh = targetHigh > 0 ? targetHigh : Self.defaultTargetHigh
+        var normalizedAlarmLow = alarmLow > 0 ? alarmLow : Self.defaultAlarmLow
+        var normalizedAlarmHigh = alarmHigh > 0 ? alarmHigh : Self.defaultAlarmHigh
+
+        if normalizedTargetLow >= normalizedTargetHigh {
+            normalizedTargetLow = Self.defaultTargetLow
+            normalizedTargetHigh = Self.defaultTargetHigh
+        }
+        if normalizedAlarmLow >= normalizedAlarmHigh {
+            normalizedAlarmLow = Self.defaultAlarmLow
+            normalizedAlarmHigh = Self.defaultAlarmHigh
+        }
+
+        self.uom = normalizedUom
+        self.targetLow = normalizedTargetLow
+        self.targetHigh = normalizedTargetHigh
+        self.alarmLow = normalizedAlarmLow
+        self.alarmHigh = normalizedAlarmHigh
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            uom: try container.decodeIfPresent(Int.self, forKey: .uom) ?? Self.defaultUom,
+            targetLow: try container.decodeIfPresent(Int.self, forKey: .targetLow) ?? Self.defaultTargetLow,
+            targetHigh: try container.decodeIfPresent(Int.self, forKey: .targetHigh) ?? Self.defaultTargetHigh,
+            alarmLow: try container.decodeIfPresent(Int.self, forKey: .alarmLow) ?? Self.defaultAlarmLow,
+            alarmHigh: try container.decodeIfPresent(Int.self, forKey: .alarmHigh) ?? Self.defaultAlarmHigh
+        )
+    }
+
+    func normalized() -> SensorSettings {
+        SensorSettings(uom: uom, targetLow: targetLow, targetHigh: targetHigh, alarmLow: alarmLow, alarmHigh: alarmHigh)
     }
 }
 
+@MainActor
 @Observable
 final class SensorSettingsStore {
+    private static let persistenceLogger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "LibreWrist",
+        category: "SensorSettingsStore"
+    )
+
     private struct Snapshot: Codable, Equatable {
         var sensorSettings: SensorSettings
         var sensorTypeRawValue: String
@@ -38,7 +90,7 @@ final class SensorSettingsStore {
         }
 
         init(sensorSettings: SensorSettings = .defaultValue, sensorType: SensorType = .unknown, updatedAt: Date = .distantPast) {
-            self.sensorSettings = sensorSettings
+            self.sensorSettings = sensorSettings.normalized()
             self.sensorTypeRawValue = sensorType.rawValue
             self.updatedAt = updatedAt
         }
@@ -58,19 +110,46 @@ final class SensorSettingsStore {
 
     private init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
-        self.storeURL = Self.makeStoreURL(using: fileManager)
+        self.storeURL = FileStoreIO.makeStoreURL(
+            fileName: "sensor-settings.json",
+            using: fileManager,
+            appGroupID: SharedDefaults.appGroupID
+        )
         self.encoder = JSONEncoder()
         self.decoder = JSONDecoder()
         self.encoder.dateEncodingStrategy = .iso8601
         self.decoder.dateDecodingStrategy = .iso8601
 
-        let initial = Self.readSnapshot(from: storeURL, using: decoder, fileManager: fileManager) ?? Snapshot()
+        let storedSnapshot: Snapshot?
+        var shouldRepairCorruptedStore = false
+        do {
+            storedSnapshot = try FileStoreIO.readSnapshot(
+                Snapshot.self,
+                from: storeURL,
+                using: decoder,
+                fileManager: fileManager
+            )
+        } catch let persistenceError as FileStorePersistenceError {
+            if case .failedToDecodeSnapshot = persistenceError {
+                shouldRepairCorruptedStore = true
+            }
+            Self.logPersistenceError(persistenceError, context: "Initialization read failed")
+            storedSnapshot = nil
+        } catch {
+            Self.logPersistenceError(error, context: "Initialization read failed")
+            storedSnapshot = nil
+        }
+        let initial = storedSnapshot ?? Snapshot()
         self.sensorSettings = initial.sensorSettings
         self.sensorType = initial.sensorType
         self.updatedAt = initial.updatedAt
 
         if fileManager.fileExists(atPath: storeURL.path) {
-            self.lastKnownModificationDate = Self.modificationDate(at: storeURL, fileManager: fileManager)
+            if shouldRepairCorruptedStore {
+                _ = persistCurrentSnapshot()
+            } else {
+                self.lastKnownModificationDate = FileStoreIO.modificationDate(at: storeURL, fileManager: fileManager)
+            }
         } else {
             _ = persistCurrentSnapshot()
         }
@@ -78,8 +157,17 @@ final class SensorSettingsStore {
 
     @discardableResult
     func replaceCacheAndPersist(sensorSettings: SensorSettings, sensorType: SensorType, updatedAt: Date = Date()) -> Bool {
-        let nextSnapshot = Snapshot(sensorSettings: sensorSettings, sensorType: sensorType, updatedAt: updatedAt)
-        guard let modificationDate = Self.writeSnapshot(nextSnapshot, to: storeURL, using: encoder, fileManager: fileManager) else {
+        let nextSnapshot = Snapshot(sensorSettings: sensorSettings.normalized(), sensorType: sensorType, updatedAt: updatedAt)
+        let modificationDate: Date
+        do {
+            modificationDate = try FileStoreIO.writeSnapshot(
+                nextSnapshot,
+                to: storeURL,
+                using: encoder,
+                fileManager: fileManager
+            )
+        } catch {
+            Self.logPersistenceError(error, context: "replaceCacheAndPersist write failed")
             return false
         }
         apply(snapshot: nextSnapshot)
@@ -99,26 +187,55 @@ final class SensorSettingsStore {
 
     @discardableResult
     func refreshFromPersistence(force: Bool = false) -> Bool {
-        if !force,
-           let diskModificationDate = Self.modificationDate(at: storeURL, fileManager: fileManager),
-           let lastKnownModificationDate,
-           diskModificationDate <= lastKnownModificationDate {
+        let snapshot: Snapshot
+        do {
+            guard let loadedSnapshot = try FileStoreIO.readSnapshot(
+                Snapshot.self,
+                from: storeURL,
+                using: decoder,
+                fileManager: fileManager
+            ) else {
+                return false
+            }
+            snapshot = loadedSnapshot
+        } catch {
+            Self.logPersistenceError(error, context: "refreshFromPersistence read failed")
             return false
         }
 
-        guard let snapshot = Self.readSnapshot(from: storeURL, using: decoder, fileManager: fileManager) else {
-            return false
+        let diskModificationDate = FileStoreIO.modificationDate(at: storeURL, fileManager: fileManager)
+        if !force {
+            let isNewerByUpdatedAt = snapshot.updatedAt > updatedAt
+            let isNewerByModificationDate: Bool = {
+                guard let diskModificationDate,
+                      let lastKnownModificationDate else {
+                    return false
+                }
+                return diskModificationDate > lastKnownModificationDate
+            }()
+            guard isNewerByUpdatedAt || isNewerByModificationDate else {
+                return false
+            }
         }
 
         apply(snapshot: snapshot)
-        lastKnownModificationDate = Self.modificationDate(at: storeURL, fileManager: fileManager)
+        lastKnownModificationDate = diskModificationDate
         return true
     }
 
     @discardableResult
     private func persistCurrentSnapshot() -> Bool {
         let snapshot = Snapshot(sensorSettings: sensorSettings, sensorType: sensorType, updatedAt: updatedAt)
-        guard let modificationDate = Self.writeSnapshot(snapshot, to: storeURL, using: encoder, fileManager: fileManager) else {
+        let modificationDate: Date
+        do {
+            modificationDate = try FileStoreIO.writeSnapshot(
+                snapshot,
+                to: storeURL,
+                using: encoder,
+                fileManager: fileManager
+            )
+        } catch {
+            Self.logPersistenceError(error, context: "persistCurrentSnapshot write failed")
             return false
         }
         lastKnownModificationDate = modificationDate
@@ -131,45 +248,8 @@ final class SensorSettingsStore {
         updatedAt = snapshot.updatedAt
     }
 
-    private static func makeStoreURL(using fileManager: FileManager) -> URL {
-        let directoryURL: URL
-        if let appGroupID = SharedDefaults.appGroupID,
-           let containerURL = fileManager.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) {
-            directoryURL = containerURL.appendingPathComponent("Stores", isDirectory: true)
-        } else {
-            let fallback = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-                ?? fileManager.temporaryDirectory
-            directoryURL = fallback.appendingPathComponent("Stores", isDirectory: true)
-        }
-
-        try? fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-        return directoryURL.appendingPathComponent("sensor-settings.json", isDirectory: false)
-    }
-
-    private static func readSnapshot(from url: URL, using decoder: JSONDecoder, fileManager: FileManager) -> Snapshot? {
-        guard fileManager.fileExists(atPath: url.path),
-              let data = try? Data(contentsOf: url),
-              let snapshot = try? decoder.decode(Snapshot.self, from: data) else {
-            return nil
-        }
-        return snapshot
-    }
-
-    @discardableResult
-    private static func writeSnapshot(_ snapshot: Snapshot, to url: URL, using encoder: JSONEncoder, fileManager: FileManager) -> Date? {
-        guard let data = try? encoder.encode(snapshot) else { return nil }
-        do {
-            try fileManager.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try data.write(to: url, options: .atomic)
-            return modificationDate(at: url, fileManager: fileManager) ?? Date()
-        } catch {
-            return nil
-        }
-    }
-
-    private static func modificationDate(at url: URL, fileManager: FileManager) -> Date? {
-        guard let attributes = try? fileManager.attributesOfItem(atPath: url.path) else { return nil }
-        return attributes[.modificationDate] as? Date
+    private static func logPersistenceError(_ error: Error, context: String) {
+        persistenceLogger.error("\(context, privacy: .public): \(error.localizedDescription, privacy: .public)")
     }
 }
 
@@ -189,5 +269,7 @@ extension EnvironmentValues {
 }
 
 private struct SensorSettingsStoreKey: EnvironmentKey {
-    static var defaultValue: SensorSettingsStore = SensorSettingsStore.shared
+    nonisolated static var defaultValue: SensorSettingsStore {
+        MainActor.assumeIsolated { SensorSettingsStore.shared }
+    }
 }

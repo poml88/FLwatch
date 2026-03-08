@@ -23,7 +23,7 @@ final class LibreLinkUpService: ObservableObject {
     /// Refreshes history from the persisted snapshot on MainActor.
     @discardableResult
     func refreshHistoryFromPersistence() -> Bool {
-        LibreLinkUpHistory.shared.refreshFromPersistedSnapshot()
+        LibreLinkUpHistory.shared.refreshFromPersistence()
     }
 
     @discardableResult
@@ -73,7 +73,7 @@ final class LibreLinkUpService: ObservableObject {
             self.isReloading = true
             defer { self.isReloading = false }
 
-            LibreLinkUpHistory.shared.lastOnlineDate = Date()
+            LibreLinkUpHistory.shared.updateLastOnlineDate()
             Logger.libreLinkUpService.info("requestReloadIfNeeded starting network reload")
             await self.libreLinkUp.reloadLibreLinkUp()
             self.libreLinkUpResponse = self.libreLinkUp.libreLinkUpResponse

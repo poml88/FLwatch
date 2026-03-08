@@ -15,6 +15,7 @@ struct LibreWristWatch_Watch_AppApp: App {
 //        UserDefaults.group.register(defaults: Settings.defaults)
         print("init")
 //        FLwatchShortcuts.updateAppShortcutParameters()
+        LibreLinkUpHistory.shared.refreshFromPersistence(force: true)
         SensorSettingsStore.shared.refreshFromPersistence(force: true)
         WatchConnectivityManager.shared.startSession()
     }
@@ -33,6 +34,7 @@ struct LibreWristWatch_Watch_AppApp: App {
                 .environment(\.insulinDeliveryHistorySingleton, insulinDeliveryHistorySingleton)
                 .onChange(of: scenePhase) { _, newPhase in
                     guard newPhase == .active else { return }
+                    LibreLinkUpHistory.shared.refreshFromPersistence()
                     SensorSettingsStore.shared.refreshFromPersistence()
                 }
         }

@@ -45,6 +45,7 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
         return entry
     }
 
+    @MainActor
     private static func entryFromHistory() async -> GlucoseMeasurementIOBEntry? {
         let history = LibreLinkUpHistory.shared
         let sensor = SensorSettingsStore.shared
@@ -84,6 +85,7 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
         )
     }
 
+    @MainActor
     private static func latestHistoryValue(from history: LibreLinkUpHistory) -> LibreLinkUpGlucose? {
         history.latestLibreLinkUpGlucose
     }
