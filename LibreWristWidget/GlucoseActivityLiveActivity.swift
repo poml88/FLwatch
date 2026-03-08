@@ -54,6 +54,9 @@ struct LockScreenView: View {
     var contentState: FLWatchAttributes.ContentState
 
     var body: some View {
+        let staleAfterMinutes = Int(FLWatchAttributes.staleAfterInterval / 60)
+        let isStale = contentState.timestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
+
         VStack(alignment: .leading) {
             HStack {
                 Text("\(contentState.latestGlucoseValue)")
@@ -67,6 +70,13 @@ struct LockScreenView: View {
             }
             MiniChartView(points: contentState.graphPoints)
                 .frame(height: 90)
+        }
+        .overlay {
+            if isStale {
+                Text("Activity has not been updated for \(staleAfterMinutes) mins. Tap to refresh")
+                    .font(.caption2)
+                    .padding(.top, 4)
+            }
         }
         .padding()
     }

@@ -36,6 +36,7 @@ enum DefaultsKey: String {
     case showActivityCurveWatch = "showActivityCurveWatchKey"
     case widgetUpdateFrequency = "widgetUpdateFrequencyKey"
     case tapComplicationReloads = "tapComplicationReloadsKey"
+    case useLiveActivities = "useLiveActivitiesKey"
     case icrGramsPerUnit = "icrGramsPerUnitKey"
     case roundingStep = "roundingStepKey"
     case carbsPer100g = "carbsPer100gKey"
@@ -247,6 +248,11 @@ enum SharedData {
         get { store.getBool(.tapComplicationReloads, defaultValue: false) }
         set { store.setBool(newValue, forKey: .tapComplicationReloads) }
     }
+
+    static var useLiveActivities: Bool {
+        get { store.getBool(.useLiveActivities, defaultValue: true) }
+        set { store.setBool(newValue, forKey: .useLiveActivities) }
+    }
     
     static var libreLinkUpScrapingLogbook: Bool {
         get { store.getBool(.libreLinkUpScrapingLogbook, defaultValue: false) }
@@ -303,7 +309,7 @@ enum SharedData {
         set { store.setDate(newValue, forKey: .libreLinkUpTokenExpirationDate) }
     }
     
-    static var lastOnlineDate: Date {
+    static var lastOnlineDateOBSOLETE: Date {
         get { store.getDate(.lastOnlineDate, defaultValue: Date(timeIntervalSinceNow: -1 * 60 * 60 * 24)) }
         set { store.setDate(newValue, forKey: .lastOnlineDate) }
     }

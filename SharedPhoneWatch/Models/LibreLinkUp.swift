@@ -13,7 +13,7 @@ import StoreKit
 // https://github.com/timoschlueter/nightscout-librelink-up
 // https://gist.github.com/khskekec/6c13ba01b10d3018d816706a32ae8ab2
 
-struct GlucoseMeasurementIOBEntry {
+struct LibreLinkUpLastGlucoseEntry {
     let date: Date
     let glucoseMeasurement: GlucoseMeasurement
     var currentIOB: Double
@@ -100,9 +100,10 @@ class LibreLinkUp  {
                 
                 if graphHistory.count > 0 {
                     await MainActor.run {
-                        SharedData.lastOnlineDate = Date()
+                        LibreLinkUpHistory.shared.lastOnlineDate = Date()
                         SensorSettingsSingleton.shared.sensorSettings = sensorSettingsRead
                         SensorSettingsSingleton.shared.sensorType = sensorType
+                        LibreLinkUpHistory.shared.uom = sensorSettingsRead.uom
                         // TODO: just merge with newer values
                         let graphHistoryReversed: [LibreLinkUpGlucose] = graphHistory.reversed()
                         let dateSixHoursTenAgo: Date = Date(timeIntervalSinceNow: -6 * 60 * 60 - 10 * 60)
@@ -855,7 +856,7 @@ class LibreLinkUp  {
         }
     }
     
-    func getLastGlucoseDataXXX(completion: @escaping (GlucoseMeasurementIOBEntry?, Any?) -> ()) {
+    func getLastGlucoseDataXXX(completion: @escaping (LibreLinkUpLastGlucoseEntry?, Any?) -> ()) {
         if !(SharedData.libreLinkUpUserId.isEmpty ||
              SharedData.libreLinkUpToken.isEmpty) {
             let dateFormatter = DateFormatter()
@@ -885,7 +886,7 @@ class LibreLinkUp  {
                                    let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
                                     let date = dateFormatter.date(from: measurement.timestamp)!
                                     let currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-                                    let glucoseMeasurementEntry = GlucoseMeasurementIOBEntry(date: date, glucoseMeasurement: measurement, currentIOB: currentIOB)
+                                    let glucoseMeasurementEntry = LibreLinkUpLastGlucoseEntry(date: date, glucoseMeasurement: measurement, currentIOB: currentIOB)
                                     let lifeCount = 0 // Int(round(date.timeIntervalSince(activationDate) / 60))
 //                                    let lastGlucose = LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow)
 //
@@ -907,7 +908,7 @@ class LibreLinkUp  {
         }
     }
     
-    func getLastGlucoseData() async throws -> GlucoseMeasurementIOBEntry { // for AppIntent
+    func getLastGlucoseData() async throws -> LibreLinkUpLastGlucoseEntry { // for AppIntent
         if !(SharedData.libreLinkUpUserId.isEmpty ||
              SharedData.libreLinkUpToken.isEmpty) {
             let dateFormatter = DateFormatter()
@@ -937,7 +938,7 @@ class LibreLinkUp  {
                                    let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
                                     let date = dateFormatter.date(from: measurement.timestamp)!
                                     let currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-                                    let glucoseMeasurementEntry = GlucoseMeasurementIOBEntry(date: date, glucoseMeasurement: measurement, currentIOB: currentIOB)
+                                    let glucoseMeasurementEntry = LibreLinkUpLastGlucoseEntry(date: date, glucoseMeasurement: measurement, currentIOB: currentIOB)
                                     return glucoseMeasurementEntry
                                 }
                             }
@@ -946,6 +947,6 @@ class LibreLinkUp  {
                 
             }
         }
-        return GlucoseMeasurementIOBEntry(date: Date(), glucoseMeasurement: GlucoseMeasurement(factoryTimestamp: "", timestamp: "", type: 0, alarmType: 3, valueInMgPerDl: 0, trendArrow: .stable, trendMessage: "", measurementColor: .green, glucoseUnits: 1, value: 0, isHigh: false, isLow: false), currentIOB: 0.0)
+        return LibreLinkUpLastGlucoseEntry(date: Date(), glucoseMeasurement: GlucoseMeasurement(factoryTimestamp: "", timestamp: "", type: 0, alarmType: 3, valueInMgPerDl: 0, trendArrow: .stable, trendMessage: "", measurementColor: .green, glucoseUnits: 1, value: 0, isHigh: false, isLow: false), currentIOB: 0.0)
     }
 }

@@ -24,22 +24,36 @@ struct ReadGlucose: AppIntent {
     //    func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         var dialogString: IntentDialog = "[...]"
-        let libreLinkUp = LibreLinkUp()
-        let gme = try await libreLinkUp.getLastGlucoseData()
+        _ = await LibreLinkUpService.shared.requestReloadIfNeeded(maxAgeMinutes: 1)
+        let history = LibreLinkUpHistory.shared
+        let latest = (history.libreLinkUpMinuteGlucose + history.libreLinkUpGlucose)
+            .max(by: { $0.glucose.date < $1.glucose.date })
+
+        guard let latest else {
+            dialogString = "Your blood glucose value is currently not available."
+            return .result(
+                dialog: dialogString,
+                view: ReadGlucoseView(glucose: "not available", trend: "not determined")
+            )
+        }
+
+        let readingDate = latest.glucose.date
+        let glucoseValue = latest.glucose.value
+        let uom = history.uom
         var glucose: String {
-            if gme.glucoseMeasurement.value <= 0 {
+            if glucoseValue <= 0 {
                 return "not available"
-            } else if gme.glucoseMeasurement.glucoseUnits == 1 {
-                return "\(Int(gme.glucoseMeasurement.value))"
+            } else if uom == 1 {
+                return "\(glucoseValue)"
             } else {
-                return String(format: "%.1f", gme.glucoseMeasurement.value)
+                return String(format: "%.1f", glucoseValue.toMmolL())
             }
         }
-        let trend = gme.glucoseMeasurement.trendArrow?.descriptionSiri ?? "not determined"
+        let trend = latest.trendArrow?.descriptionSiri ?? "not determined"
         if glucose == "not available" {
             dialogString = "Your blood glucose value is currently not available."
         } else {
-            if Int(Date().timeIntervalSince(gme.date) / 60) <= 3 {
+            if Int(Date().timeIntervalSince(readingDate) / 60) <= 3 {
                 dialogString = "Your blood glucose is currently \(glucose) and \(trend)."
             } else {
                 dialogString = "Sorry, there are no recent blood glucose values."

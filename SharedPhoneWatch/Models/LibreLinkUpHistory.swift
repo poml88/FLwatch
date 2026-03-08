@@ -18,6 +18,12 @@ import SwiftUI
     var currentGlucose: Int = 0 { didSet { persist() } } // always in mg/dl
     var currentTrendArrow: String = "---" { didSet { persist() } }
     var maxBG: Int = 100 { didSet { persist() } }
+    var uom: Int = 1 { didSet { persist() } } // 0: mmol/L, 1: mg/dL
+    var lastOnlineDate: Date = Date(timeIntervalSinceNow: -1 * 60 * 60 * 24) {
+        didSet {
+            persist()
+        }
+    }
     
     let libreLinkUpGlucoseDefaultEntries = [LibreLinkUpGlucose(glucose: Glucose(rawValue: 1000,
                                                                                 rawTemperature: 4,
@@ -61,6 +67,8 @@ import SwiftUI
         let currentGlucose: Int
         let currentTrendArrow: String
         let maxBG: Int
+        let uom: Int?
+        let lastOnlineDate: Date?
     }
 
     private func persist() {
@@ -71,10 +79,16 @@ import SwiftUI
             lastReadingDate: lastReadingDate,
             currentGlucose: currentGlucose,
             currentTrendArrow: currentTrendArrow,
-            maxBG: maxBG
+            maxBG: maxBG,
+            uom: uom,
+            lastOnlineDate: lastOnlineDate
         )
         UserDefaults.group.setObject(snapshot, forKey: .libreLinkUpHistorySnapshot)
     }
+
+
+
+  
 
     @discardableResult
     private func restore() -> Bool {
@@ -88,8 +102,17 @@ import SwiftUI
         currentGlucose = snapshot.currentGlucose
         currentTrendArrow = snapshot.currentTrendArrow
         maxBG = snapshot.maxBG
+        uom = snapshot.uom ?? 1
+        lastOnlineDate = snapshot.lastOnlineDate ?? Date(timeIntervalSinceNow: -1 * 60 * 60 * 24)
         isRestoring = false
         return true
+    }
+
+    /// Refreshes the in-memory singleton from app-group persistence.
+    /// Useful in widgets/intents where another process may have written newer data.
+    @discardableResult
+    func refreshFromPersistedSnapshot() -> Bool {
+        restore()
     }
 
     private func loadDefaultData() {
@@ -154,6 +177,8 @@ import SwiftUI
                                                                         hasError: false),
                                                        color: MeasurementColor.green,
                                                        trendArrow: TrendArrow(rawValue: 0))]
+        uom = 1
+        lastOnlineDate = Date(timeIntervalSinceNow: -1 * 60 * 60 * 24)
     }
 }
 

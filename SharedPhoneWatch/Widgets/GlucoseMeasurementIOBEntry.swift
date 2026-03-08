@@ -17,101 +17,75 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
     static let invalidEntry = GlucoseMeasurementIOBEntry(date: Date(), glucoseMeasurement: GlucoseMeasurement(factoryTimestamp: "", timestamp: "", type: 0, alarmType: 3, valueInMgPerDl: 0, trendArrow: .unknown, trendMessage: "", measurementColor: .gray, glucoseUnits: 1, value: 0, isHigh: false, isLow: false), currentIOB: -1)
     
     
-    static func getLastGlucoseMeasurement(timeout: TimeInterval = 10,
+    static func getLastGlucoseMeasurement(timeout _: TimeInterval = 10,
                                           completion: @escaping (GlucoseMeasurementIOBEntry?, Error?) -> Void) {
-        //        let settings = Settings()
-        // Early exit if settings missing – safe single completion path.
+        Task {
+            do {
+                let entry = try await getLastGlucoseMeasurement()
+                await MainActor.run { completion(entry, nil) }
+            } catch {
+                await MainActor.run { completion(nil, error) }
+            }
+        }
+    }
+
+    static func getLastGlucoseMeasurement(maxAgeMinutes: Int = 1,
+                                          forceReload: Bool = false) async throws -> GlucoseMeasurementIOBEntry {
         guard !(SharedData.libreLinkUpUserId.isEmpty || SharedData.libreLinkUpToken.isEmpty) else {
-            DispatchQueue.main.async {
-                let err = NSError(domain: "MissingSettings", code: -5,
-                                  userInfo: [NSLocalizedDescriptionKey: "Missing UserId or Token"])
-                completion(nil, err)
-            }
-            return
+            throw NSError(domain: "MissingSettings", code: -5,
+                          userInfo: [NSLocalizedDescriptionKey: "Missing UserId or Token"])
         }
-        
-        let syncQueue = DispatchQueue(label: "widget.provider.fetch.lock")
-        var finished = false
-        func markFinished() -> Bool {
-            return syncQueue.sync {
-                if finished { return false }
-                finished = true
-                return true
-            }
+
+        _ = await LibreLinkUpService.shared.requestReloadIfNeeded(maxAgeMinutes: maxAgeMinutes, force: forceReload)
+
+        guard let entry = await entryFromHistory() else {
+            throw NSError(domain: "ResponseError", code: -3,
+                          userInfo: [NSLocalizedDescriptionKey: "No glucose item found in history."])
         }
-        
-        let timeoutErr = NSError(domain: "WidgetTimeout", code: -1,
-                                 userInfo: [NSLocalizedDescriptionKey: "Timeout fetching glucose"])
-        let timeoutWork = DispatchWorkItem {
-            // Important: check finished for the OUTER block
-            guard markFinished() else { return }
-            DispatchQueue.main.async {
-                completion(nil, timeoutErr)
-            }
-        }
-        DispatchQueue.global().asyncAfter(deadline: .now() + timeout, execute: timeoutWork)
-        
-        // Build request
-        let regionalSiteURLRU = "https://api.libreview.ru"
-        let regionalSiteURLCN = "https://api-cn.myfreestyle.cn"
-        let regionalSiteURL: String = {
-            if SharedData.libreLinkUpRegion == "ru" { return regionalSiteURLRU }
-            if SharedData.libreLinkUpRegion == "cn" { return regionalSiteURLCN }
-            return "https://api-\(SharedData.libreLinkUpRegion).libreview.io"
-        }()
-        var request = URLRequest(url: URL(string: "\(regionalSiteURL)/llu/connections")!)
-        request.timeoutInterval = timeout
-        request.httpMethod = "GET"
-        var authenticatedHeaders = LLUHeaders().headers
-        authenticatedHeaders["Authorization"] = "Bearer \(SharedData.libreLinkUpToken)"
-        authenticatedHeaders["Account-Id"] = SharedData.libreLinkUpUserId.SHA256
-        for (h, v) in authenticatedHeaders { request.setValue(v, forHTTPHeaderField: h) }
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            // Early-return the OUTER closure if another path finished already
-            guard markFinished() else { return }
-            timeoutWork.cancel()
-            
-            DispatchQueue.main.async {
-                if let data = data {
-                    do {
-                        if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                           let dataArray = json["data"] as? [[String: Any]],
-                           let connection = dataArray.first,
-                           let lastGlucoseMeasurement = connection["glucoseMeasurement"] as? [String: Any],
-                           let measurementData = try? JSONSerialization.data(withJSONObject: lastGlucoseMeasurement),
-                           let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
-                            let df = DateFormatter()
-                            df.locale = Locale(identifier: "en_US_POSIX")
-                            df.dateFormat = "M/d/yyyy h:mm:ss a"
-                            if let date = df.date(from: measurement.timestamp) {
-                                InsulinDeliveryHistorySingleton.shared.read() // widget has to read the history from UserDefaults, as the singleton is only updated in the main app.
-                                let currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-                                let entry = GlucoseMeasurementIOBEntry(date: date,
-                                                                       glucoseMeasurement: measurement,
-                                                                       currentIOB: currentIOB)
-                                completion(entry, nil)
-                            } else {
-                                let err = NSError(domain: "ParseError", code: -2,
-                                                  userInfo: [NSLocalizedDescriptionKey: "Invalid timestamp"])
-                                completion(nil, err)
-                            }
-                        } else {
-                            let err = NSError(domain: "ResponseError", code: -3,
-                                              userInfo: [NSLocalizedDescriptionKey: "No glucose item found in response."])
-                            completion(nil, err)
-                        }
-                    } catch {
-                        completion(nil, error)
-                    }
-                } else if let error = error {
-                    completion(nil, error)
-                } else {
-                    let err = NSError(domain: "UnknownError", code: -4, userInfo: nil)
-                    completion(nil, err)
-                }
-            }
-        }.resume()
+        return entry
+    }
+
+    private static func entryFromHistory() async -> GlucoseMeasurementIOBEntry? {
+        let history = LibreLinkUpHistory.shared
+        guard history.currentGlucose > 0 else { return nil }
+
+        guard let latest = latestHistoryValue(from: history) else { return nil }
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "M/d/yyyy h:mm:ss a"
+        let timestamp = formatter.string(from: latest.glucose.date)
+        let uom = history.uom
+        let value = uom == 0 ? latest.glucose.value.toMmolL() : Double(latest.glucose.value)
+
+        let measurement = GlucoseMeasurement(
+            factoryTimestamp: timestamp,
+            timestamp: timestamp,
+            type: 0,
+            alarmType: nil,
+            valueInMgPerDl: latest.glucose.value,
+            trendArrow: latest.trendArrow,
+            trendMessage: nil,
+            measurementColor: latest.color,
+            glucoseUnits: uom,
+            value: value,
+            isHigh: false,
+            isLow: false
+        )
+
+        InsulinDeliveryHistorySingleton.shared.read() // widget/intents must refresh singleton from UserDefaults.
+        let currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
+
+        return GlucoseMeasurementIOBEntry(
+            date: latest.glucose.date,
+            glucoseMeasurement: measurement,
+            currentIOB: currentIOB
+        )
+    }
+
+    private static func latestHistoryValue(from history: LibreLinkUpHistory) -> LibreLinkUpGlucose? {
+        let candidates = history.libreLinkUpMinuteGlucose + history.libreLinkUpGlucose
+        return candidates.max(by: { $0.glucose.date < $1.glucose.date })
     }
     
     
@@ -122,4 +96,3 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
 //    }
     
 }
-

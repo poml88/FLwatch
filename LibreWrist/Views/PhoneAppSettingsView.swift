@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MessageUI
+import ActivityKit
 
 struct PhoneAppSettingsView: View {
     
@@ -20,6 +21,7 @@ struct PhoneAppSettingsView: View {
     @AppStorage(DefaultsKey.showActivityCurveWatch.rawValue, store: UserDefaults.group) private var showActivityCurveWatch: Bool = false
     @AppStorage(DefaultsKey.widgetUpdateFrequency.rawValue, store: UserDefaults.group) private var widgetUpdateFrequency: Int = 5
     @AppStorage(DefaultsKey.tapComplicationReloads.rawValue, store: UserDefaults.group) private var tapComplicationReloads: Bool = false
+    @AppStorage(DefaultsKey.useLiveActivities.rawValue, store: UserDefaults.group) private var useLiveActivities: Bool = true
     
     
     @State private var isScreenAlwaysOn = false
@@ -96,6 +98,24 @@ struct PhoneAppSettingsView: View {
                     .onChange(of: isScreenAlwaysOn) {
                         print("yes")
                         UIApplication.shared.isIdleTimerDisabled.toggle()
+                    }
+
+                Toggle(isOn: $useLiveActivities) {
+                    Text("Enable Live Activity")
+                    let systemLiveActivityEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
+                    ? "System Live Activities: enabled"
+                    : "System Live Activities: disabled in iOS settings"
+                    Text("Updates of this live activity are not guaranteed. To be confirmed.")
+                    Link("Live Activity needs to be enabled in the spp settings as well. Tap to open app settings. Current status: \(systemLiveActivityEnabled)", destination: URL(string: UIApplication.openSettingsURLString)!)
+                }
+                    .onChange(of: useLiveActivities) { _, newValue in
+                        Task {
+                            if newValue {
+                                await LiveActivityManager.shared.refreshFromCurrentHistory(useLiveActivities: true)
+                            } else {
+                                await LiveActivityManager.shared.endAllActivities()
+                            }
+                        }
                     }
             } header: {
                 Text("Settings")
@@ -237,7 +257,5 @@ struct PhoneAppSettingsView: View {
 #Preview {
     PhoneAppSettingsView()
 }
-
-
 
 

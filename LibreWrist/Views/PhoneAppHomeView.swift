@@ -31,6 +31,7 @@ struct PhoneAppHomeView: View {
 //    @AppStorage(DefaultsKey.usedDays.rawValue, store: UserDefaults.group) private var usedDays: [String] = []
     @AppStorage(DefaultsKey.hasPromptedOnce.rawValue, store: UserDefaults.group) private var hasPromptedOnce = false
     @AppStorage(DefaultsKey.hasAgreedToReview.rawValue, store: UserDefaults.group) private var hasAgreedToReview = false
+    @AppStorage(DefaultsKey.useLiveActivities.rawValue, store: UserDefaults.group) private var useLiveActivities = true
     
     
     
@@ -66,8 +67,6 @@ struct PhoneAppHomeView: View {
     @StateObject private var lluService = LibreLinkUpService.shared
      
     private let timer = Timer.publish(every: 60, tolerance: 1, on: .main, in: .common).autoconnect()
-    
-    private let useLiveActivities  = true
     
     var body: some View {
         VStack {
@@ -161,7 +160,8 @@ struct PhoneAppHomeView: View {
 //                }
 //                scrollPosition = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date.now
 //            }
-            reloadAndUpdateMinutes()
+            
+            reloadAndUpdateMinutes(refreshLiveActivity: true)
         }
         .onAppear() { // fires when switching the Views, e.g. form settings to home view.
             print("onAppear")
@@ -201,8 +201,8 @@ struct PhoneAppHomeView: View {
                 calculateUserdefaultsSize()
                 
                 FLwatchShortcuts.updateAppShortcutParameters() // this was in the app init first, but it seems this was too early... So I moved it here.
-//      DEVELOPMENT: 1 lines commented out          LiveActivityManager.shared.startIfAllowed(useLiveActivities: useLiveActivities)
-
+//      TODO: 1 lines commented out          LiveActivityManager.shared.startIfAllowed(useLiveActivities: useLiveActivities)
+                LiveActivityManager.shared.startIfAllowed(useLiveActivities: useLiveActivities)
                 onAppearNotToDoFirstStart = false
             }
             
@@ -247,7 +247,7 @@ struct PhoneAppHomeView: View {
                 if scenePhaseNotToDoFirstStart == true { scenePhaseNotToDoFirstStart = false } // to do only on first start
                 
                 //MARK: Do the following .onChange(of: scenePhase) == .active
-                reloadAndUpdateMinutes()
+                reloadAndUpdateMinutes(refreshLiveActivity: true)
 //                connected = UserDefaults.group.connected
 //                minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
 //                if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
@@ -389,9 +389,12 @@ struct PhoneAppHomeView: View {
 
     }
    
-    private func reloadAndUpdateMinutes() {
+    private func reloadAndUpdateMinutes(refreshLiveActivity: Bool = false) {
         Task {
             await lluService.requestReloadIfNeeded()
+            if refreshLiveActivity {
+                await LiveActivityManager.shared.refreshFromCurrentHistory(useLiveActivities: useLiveActivities)
+            }
             isShowingReloadFailed = lluService.didLastReloadFail
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
         }

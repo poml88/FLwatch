@@ -217,7 +217,7 @@ struct WatchAppHomeView: View {
                 .ignoresSafeArea()
             }
             
-            let minutesSinceLastReadingOverlay = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+            let minutesSinceLastReadingOverlay = Int(Date().timeIntervalSince(libreLinkUpHistory.lastReadingDate) / 60)
             if minutesSinceLastReadingOverlay >= 3 && lluService.isReloading == false {
                 ZStack {
                     Color(white: 0, opacity: 0.5)
@@ -246,7 +246,7 @@ struct WatchAppHomeView: View {
     private func reloadAndUpdateMinutes() {
         Task {
             await lluService.requestReloadIfNeeded()
-            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+            minutesSinceLastReading = Int(Date().timeIntervalSince(libreLinkUpHistory.lastReadingDate) / 60)
         }
     }
     

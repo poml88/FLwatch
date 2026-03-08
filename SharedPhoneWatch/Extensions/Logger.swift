@@ -30,6 +30,10 @@ extension Logger {
     static let libreLinkUp = Logger(subsystem: subsystem, category: "LibreLinkUp")
     
     static let bgTaskScheduler = Logger(subsystem: subsystem, category: "BGTaskScheduler")
+    
+    static let libreLinkUpService = Logger(subsystem: subsystem, category: "LibreLinkUpService")
+    
+    static let liveActivity = Logger(subsystem: subsystem, category: "LiveActivity")
 
 }
 

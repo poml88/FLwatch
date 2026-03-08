@@ -62,7 +62,7 @@ struct WatchAppNightView: View {
 //                .padding()
             }
             .overlay {
-                if Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60) >= 3 {
+                if Int(Date().timeIntervalSince(libreLinkUpHistory.lastReadingDate) / 60) >= 3 {
                     ZStack {
                         Color(white: 0, opacity: 0.5)
                         
@@ -72,7 +72,7 @@ struct WatchAppNightView: View {
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 40)
                             
-                            Text("No data since \(Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)) min.")
+                            Text("No data since \(Int(Date().timeIntervalSince(libreLinkUpHistory.lastReadingDate) / 60)) min.")
                                 .multilineTextAlignment(.center)
                         }
                         
@@ -80,6 +80,9 @@ struct WatchAppNightView: View {
                     }
                     .ignoresSafeArea()
                 }
+            }
+            .onAppear {
+                _ = LibreLinkUpService.shared.refreshHistoryFromPersistence()
             }
         }
 
