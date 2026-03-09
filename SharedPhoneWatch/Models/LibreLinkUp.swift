@@ -683,7 +683,7 @@ class LibreLinkUp  {
                             
                             let measurementString = "\(measurement)"
                             Logger.libreLinkUp.debug("LibreLinkUp: last glucose measurement: \(measurementString) (JSON: \(lastGlucoseMeasurement))")
-#warning ("Do something with trend arrow")
+                            //TODO: ("Do something with trend arrow")
                             //                            if lastGlucose.trendArrow != nil {
                             //                                DispatchQueue.main.async { [self] in
                             //                                    PhoneAppHomeView(trendArrow: TrendArrow = lastGlucose.trendArrow)!

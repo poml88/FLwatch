@@ -4,10 +4,11 @@ import OSLog
 
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
+    private static let maxGraphPoints = 72
+    private static let maxMinutePoints = 48
 
     private init() {}
 
-    private let maxGraphPoints = 24
 
     private func reusableActivity() -> Activity<FLWatchAttributes>? {
         Activity<FLWatchAttributes>.activities.first { activity in
@@ -49,29 +50,56 @@ final class LiveActivityManager {
             return
         }
 
-        let userIdHash = SharedData.libreLinkUpUserId.SHA256
-        guard !userIdHash.isEmpty else {
-            Logger.liveActivity.error("Cannot update Live Activity: empty user id hash.")
-            return
-        }
-
         _ = await LibreLinkUpService.refreshHistoryFromPersistenceAsync()
 
         let state = await MainActor.run { () -> FLWatchAttributes.ContentState in
             let history = LibreLinkUpHistory.shared
-            let pointsAscending = history.libreLinkUpGlucose
-                .sorted(by: { $0.glucose.date < $1.glucose.date })
-                .suffix(maxGraphPoints)
-                .map { reading in
-                    [Int(reading.glucose.date.timeIntervalSince1970), reading.glucose.value]
-                }
+            _ = SensorSettingsStore.shared.refreshFromPersistence()
+            let sensorSettings = SensorSettingsStore.shared.sensorSettings
+            let cutoffDate = Date.now.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
 
-            return FLWatchAttributes.ContentState(
+            let graphPoints = Array(history.libreLinkUpGlucose
+                .filter { $0.glucose.date >= cutoffDate }
+                .sorted { $0.glucose.date < $1.glucose.date }
+                .suffix(Self.maxGraphPoints)
+                .map {
+                    FLWatchAttributes.GraphPoint(
+                        timestamp: $0.glucose.date,
+                        valueInMgPerDl: $0.glucose.value,
+                        colorRawValue: $0.color.rawValue
+                    )
+                })
+
+            let minutePoints = Array(history.libreLinkUpMinuteGlucose
+                .filter { $0.glucose.date >= cutoffDate }
+                .sorted { $0.glucose.date < $1.glucose.date }
+                .sampled(maxCount: Self.maxMinutePoints)
+                .map {
+                    FLWatchAttributes.GraphPoint(
+                        timestamp: $0.glucose.date,
+                        valueInMgPerDl: $0.glucose.value,
+                        colorRawValue: MeasurementColor.yellow.rawValue
+                    )
+                })
+
+            let state = FLWatchAttributes.ContentState(
                 latestGlucoseValue: history.currentGlucose,
                 trend: history.currentTrendArrow,
                 timestamp: history.lastReadingDate,
-                graphPoints: Array(pointsAscending)
+                graphPoints: graphPoints,
+                minutePoints: minutePoints,
+                glucoseUnit: sensorSettings.uom,
+                targetLow: sensorSettings.targetLow,
+                targetHigh: sensorSettings.targetHigh,
+                alarmLow: sensorSettings.alarmLow,
+                maxGlucoseValue: history.maxBG
             )
+
+            if let payloadSize = Self.encodedSize(of: state) {
+                Logger.liveActivity.debug("Live Activity state payload size: \(payloadSize, privacy: .public) bytes")
+            }
+
+            return state
         }
         let content = ActivityContent(
             state: state,
@@ -109,4 +137,27 @@ final class LiveActivityManager {
         }
     }
 
+    private static func encodedSize(of state: FLWatchAttributes.ContentState) -> Int? {
+        do {
+            let stateData = try JSONEncoder().encode(state)
+            let attrsData = try JSONEncoder().encode(FLWatchAttributes())
+            return stateData.count + attrsData.count
+        } catch {
+            Logger.liveActivity.error("Failed to measure Live Activity payload size: \(error.localizedDescription)")
+            return nil
+        }
+    }
 }
+private extension Array {
+    func sampled(maxCount: Int) -> [Element] {
+        guard count > maxCount, maxCount > 1 else {
+            return self
+        }
+
+        let step = Double(count - 1) / Double(maxCount - 1)
+        return (0..<maxCount).map { index in
+            self[Int((Double(index) * step).rounded(.toNearestOrAwayFromZero))]
+        }
+    }
+}
+

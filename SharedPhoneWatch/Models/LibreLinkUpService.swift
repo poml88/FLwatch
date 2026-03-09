@@ -5,13 +5,14 @@
 //  Created by Peter Müller on 24.02.26.
 //
 
+import Foundation
 import SwiftUI
-import Darwin
 import OSLog
 
 @MainActor
 final class LibreLinkUpService: ObservableObject {
     static let shared = LibreLinkUpService()
+    private static let peerReloadWaitTimeout: TimeInterval = 15
 
     private let gate = ReloadGate()
     private let libreLinkUp = LibreLinkUp()
@@ -22,8 +23,8 @@ final class LibreLinkUpService: ObservableObject {
 
     /// Refreshes history from the persisted snapshot on MainActor.
     @discardableResult
-    func refreshHistoryFromPersistence() -> Bool {
-        LibreLinkUpHistory.shared.refreshFromPersistence()
+    func refreshHistoryFromPersistence(force: Bool = false) -> Bool {
+        LibreLinkUpHistory.shared.refreshFromPersistence(force: force)
     }
 
     @discardableResult
@@ -53,7 +54,11 @@ final class LibreLinkUpService: ObservableObject {
     func requestReloadIfNeeded(maxAgeMinutes: Int = 1, force: Bool = false) async -> Bool {
         Logger.libreLinkUpService.info("requestReloadIfNeeded called (maxAgeMinutes: \(maxAgeMinutes), force: \(force))")
 
-        return await gate.runOrJoin { [weak self] in
+        let baselineUpdatedAt = LibreLinkUpHistory.shared.updatedAt
+        let baselineLastReadingDate = LibreLinkUpHistory.shared.lastReadingDate
+
+        return await gate.runOrJoin(
+            op: { [weak self] in
             guard let self else { return false }
             _ = self.refreshHistoryFromPersistence()
             _ = self.refreshSensorSettingsFromPersistence()
@@ -87,22 +92,80 @@ final class LibreLinkUpService: ObservableObject {
 //            WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
 #endif
             return true
+            },
+            waitForPeerResult: { [weak self] in
+                guard let self else { return false }
+                return await self.waitForPeerReloadResult(
+                    baselineUpdatedAt: baselineUpdatedAt,
+                    baselineLastReadingDate: baselineLastReadingDate,
+                    timeout: Self.peerReloadWaitTimeout
+                )
+            }
+        )
+    }
+
+    private func waitForPeerReloadResult(
+        baselineUpdatedAt: Date,
+        baselineLastReadingDate: Date,
+        timeout: TimeInterval,
+        pollIntervalNanoseconds: UInt64 = 300_000_000
+    ) async -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        while Date() < deadline {
+            if Task.isCancelled {
+                return false
+            }
+
+            try? await Task.sleep(nanoseconds: pollIntervalNanoseconds)
+
+            _ = refreshHistoryFromPersistence(force: true)
+            _ = refreshSensorSettingsFromPersistence(force: true)
+
+            let history = LibreLinkUpHistory.shared
+            if history.updatedAt > baselineUpdatedAt || history.lastReadingDate > baselineLastReadingDate {
+                Logger.libreLinkUpService.info("requestReloadIfNeeded observed fresh persisted data from peer process")
+                return true
+            }
         }
+
+        Logger.libreLinkUpService.info("requestReloadIfNeeded timed out waiting for peer process reload result")
+        return false
     }
 }
 
 actor ReloadGate {
     private var inFlightTask: Task<Bool, Never>?
-    private static let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "LibreWrist", category: "ReloadGate")
+    private let fileManager = FileManager.default
+    private let encoder = JSONEncoder()
+    private let decoder = JSONDecoder()
 
-    func runOrJoin(_ op: @escaping @MainActor @Sendable () async -> Bool) async -> Bool {
+    private static let leaseDuration: TimeInterval = 15
+
+    private struct LeaseSnapshot: Codable {
+        let ownerID: String
+        let acquiredAt: Date
+        let expiresAt: Date
+    }
+
+    private enum LeaseClaimResult {
+        case acquired(LeaseSnapshot)
+        case heldByPeer
+    }
+
+    private let ownerID = UUID().uuidString
+
+    func runOrJoin(
+        op: @escaping @MainActor @Sendable () async -> Bool,
+        waitForPeerResult: @escaping @MainActor @Sendable () async -> Bool
+    ) async -> Bool {
         if let inFlightTask {
             Logger.libreLinkUpService.info("ReloadGate: joining existing in-flight reload task")
             return await inFlightTask.value
         }
 
         let task = Task {
-            await runWithInterprocessLock(op)
+            await runWithInterprocessLease(op: op, waitForPeerResult: waitForPeerResult)
         }
         inFlightTask = task
         let result = await task.value
@@ -110,49 +173,91 @@ actor ReloadGate {
         return result
     }
 
-    private func runWithInterprocessLock(_ op: @escaping @MainActor @Sendable () async -> Bool) async -> Bool {
+    private func runWithInterprocessLease(
+        op: @escaping @MainActor @Sendable () async -> Bool,
+        waitForPeerResult: @escaping @MainActor @Sendable () async -> Bool
+    ) async -> Bool {
         do {
-            let fd = try await Self.acquireLockFileDescriptor()
-            defer { Self.releaseLockFileDescriptor(fd) }
-            return await op()
-        } catch {
-            // Fallback to in-process gating if the shared lock cannot be created.
-            return await op()
-        }
-    }
-
-    private static func lockFileURL() -> URL {
-        if let appGroupID = SharedDefaults.appGroupID,
-           let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) {
-            return containerURL.appendingPathComponent("librelinkup-reload.lock")
-        }
-        return FileManager.default.temporaryDirectory.appendingPathComponent("librelinkup-reload.lock")
-    }
-
-    private static func acquireLockFileDescriptor() async throws -> Int32 {
-        try await withCheckedThrowingContinuation { continuation in
-            let lockFilePath = lockFileURL().path
-            DispatchQueue.global(qos: .utility).async {
-                let fd = open(lockFilePath, O_CREAT | O_RDWR, 0o666)
-                guard fd >= 0 else {
-                    continuation.resume(throwing: NSError(domain: "ReloadGateLock", code: Int(errno)))
-                    return
+            switch try claimLease() {
+            case let .acquired(lease):
+                defer { releaseLeaseIfOwned(lease) }
+                return await op()
+            case .heldByPeer:
+                if await waitForPeerResult() {
+                    return true
                 }
 
-                guard flock(fd, LOCK_EX) == 0 else {
-                    let lockErrno = errno
-                    close(fd)
-                    continuation.resume(throwing: NSError(domain: "ReloadGateLock", code: Int(lockErrno)))
-                    return
+                switch try claimLease() {
+                case let .acquired(lease):
+                    defer { releaseLeaseIfOwned(lease) }
+                    return await op()
+                case .heldByPeer:
+                    return false
                 }
-
-                continuation.resume(returning: fd)
             }
+        } catch {
+            Logger.libreLinkUpService.error("ReloadGate coordination failed; falling back to in-process gating only")
+            return await op()
         }
     }
 
-    private static func releaseLockFileDescriptor(_ fd: Int32) {
-        _ = flock(fd, LOCK_UN)
-        close(fd)
+    private func claimLease(now: Date = Date()) throws -> LeaseClaimResult {
+        if let currentLease = try readLease(),
+           currentLease.ownerID != ownerID,
+           currentLease.expiresAt > now {
+            Logger.libreLinkUpService.info("ReloadGate: peer process already owns reload lease until \(currentLease.expiresAt.formatted(date: .omitted, time: .standard), privacy: .public)")
+            return .heldByPeer
+        }
+
+        let nextLease = LeaseSnapshot(
+            ownerID: ownerID,
+            acquiredAt: now,
+            expiresAt: now.addingTimeInterval(Self.leaseDuration)
+        )
+        _ = try FileStoreIO.writeSnapshot(
+            nextLease,
+            to: leaseFileURL(),
+            using: encoder,
+            fileManager: fileManager
+        )
+
+        guard let confirmedLease = try readLease(),
+              confirmedLease.ownerID == ownerID,
+              confirmedLease.acquiredAt == nextLease.acquiredAt else {
+            Logger.libreLinkUpService.info("ReloadGate: lease claim lost to peer process")
+            return .heldByPeer
+        }
+
+        return .acquired(confirmedLease)
+    }
+
+    private func releaseLeaseIfOwned(_ lease: LeaseSnapshot) {
+        do {
+            guard let currentLease = try readLease(),
+                  currentLease.ownerID == lease.ownerID,
+                  currentLease.acquiredAt == lease.acquiredAt else {
+                return
+            }
+            try fileManager.removeItem(at: leaseFileURL())
+        } catch {
+            Logger.libreLinkUpService.error("ReloadGate failed to release reload lease")
+        }
+    }
+
+    private func readLease() throws -> LeaseSnapshot? {
+        try FileStoreIO.readSnapshot(
+            LeaseSnapshot.self,
+            from: leaseFileURL(),
+            using: decoder,
+            fileManager: fileManager
+        )
+    }
+
+    private func leaseFileURL() -> URL {
+        FileStoreIO.makeStoreURL(
+            fileName: "librelinkup-reload-lease.json",
+            using: fileManager,
+            appGroupID: SharedDefaults.appGroupID
+        )
     }
 }
