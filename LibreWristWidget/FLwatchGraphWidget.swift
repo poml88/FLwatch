@@ -16,6 +16,16 @@ struct FLwatchGraphWidgetEntryView : View {
     @Environment(\.widgetFamily) private var family
     @Environment(\.colorScheme) var colorScheme
     
+    private let staleThreshold: TimeInterval = 5 * 60
+    
+    var isStaleGlucose: Bool {
+        Date().timeIntervalSince(entry.date) > staleThreshold
+    }
+    
+    var glucoseFontWeight: Font.Weight {
+        isStaleGlucose ? .regular : .heavy
+    }
+    
     var glucose: String {
         if entry.lastGlucoseMeasurement.glucose.value <= 0 {
             return "--"
@@ -48,11 +58,12 @@ struct FLwatchGraphWidgetEntryView : View {
                     HStack {
                         Spacer()
                         Text(verbatim: glucose)
-                            .font(.title2.weight(.heavy))
+                            .font(.title2.weight(glucoseFontWeight))
                                 .minimumScaleFactor(0.7)
                                 .lineLimit(1)
 //                            .font(.system(size: 25, weight: .heavy))
                             .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
+                            .strikethrough(isStaleGlucose)
 //                            .padding(.leading, 10)
                         Text(verbatim: entry.lastGlucoseMeasurement.trendArrow?.symbol  ?? "-")
                             .font(.title2.weight(.heavy).monospaced())
@@ -91,7 +102,7 @@ struct FLwatchGraphWidgetEntryView : View {
                             .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
                         Spacer()
                         //                        Text("88:88")
-                        Text(Date(), style: .timer)
+                        Text(entry.date, style: .timer)
                         //Text(verbatim: " ")
                             .font(.footnote.weight(.heavy).monospaced())
                                 .minimumScaleFactor(0.7)
@@ -143,7 +154,8 @@ struct FLwatchGraphWidgetEntryView : View {
 //                            .font(.largeTitle.weight(.heavy))
 //                                .minimumScaleFactor(0.7)
 //                                .lineLimit(1)
-                             .font(.system(size: 52, weight: .heavy))
+                             .font(.system(size: 52, weight: glucoseFontWeight))
+                             .strikethrough(isStaleGlucose)
                             .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
                             .padding(.top, -5)
                         HStack (spacing: 15){
@@ -154,7 +166,7 @@ struct FLwatchGraphWidgetEntryView : View {
 //                                .font(.system(size: 20, weight: .heavy))
                                 .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
                             //                        Text("88:88")
-                            Text(Date(), style: .timer)
+                            Text(entry.date, style: .timer)
                             //Text(verbatim: " ")
                                 .font(.body.weight(.heavy))
                                     .minimumScaleFactor(0.7)

@@ -22,11 +22,11 @@ struct Provider: TimelineProvider {
         
         let interval = SharedData.widgetUpdateFrequency
         
-        GlucoseMeasurementIOBEntry.getLastGlucoseMeasurement { glucoseMeasurementEntry, error in
+        GlucoseMeasurementIOBEntry.getLastGlucoseMeasurement { glucoseMeasurementEntry, _ in
             
             if let gme = glucoseMeasurementEntry {
                 // Ensure recent enough
-                if Int(Date().timeIntervalSince(gme.date) / 60) <= 3 {
+                if Int(Date().timeIntervalSince(gme.date) / 60) <= 15 {
                     entries.append(gme)
                 } else {
                     var entry = GlucoseMeasurementIOBEntry.invalidEntry

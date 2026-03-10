@@ -19,9 +19,11 @@ struct FLWatchLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
+                    let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
                     Text("\(context.state.latestGlucoseValue.units(for: context.state.glucoseUnit)) \(context.state.latestTrend)")
                         .font(.title2)
-                        .bold()
+                        .strikethrough(isStaleGlucose)
+                        .bold(!isStaleGlucose)
                         .foregroundStyle(context.state.latestMeasurementColor.color)
                     
                 }
@@ -48,8 +50,10 @@ struct FLWatchLiveActivityWidget: Widget {
 //                        .frame(height: 84)
                 }
             } compactLeading: {
+                let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
                 Text("\(context.state.latestGlucoseValue.units(for: context.state.glucoseUnit)) \(context.state.latestTrend)")
-                    .bold()
+                    .strikethrough(isStaleGlucose)
+                    .bold(!isStaleGlucose)
                     .foregroundStyle(context.state.latestMeasurementColor.color)
             } compactTrailing: {
                 Text(
@@ -65,8 +69,11 @@ struct FLWatchLiveActivityWidget: Widget {
                     .monospacedDigit()
                     .frame(width: 50, alignment: .trailing)
             } minimal: {
+                let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
                 Text(context.state.latestGlucoseValue.units(for: context.state.glucoseUnit))
-                    .bold()
+                    .strikethrough(isStaleGlucose)
+                    .bold(!isStaleGlucose)
+                    .foregroundStyle(context.state.latestMeasurementColor.color)
             }
         }
         .supplementalActivityFamilies([.small, .medium])
@@ -85,13 +92,13 @@ private struct LockScreenView: View {
             case .medium:
                 MediumSupplementalActivityView(contentState: contentState)
             @unknown default:
-                DefaultLockScreenActivityView(contentState: contentState)
+                DefaultLockScreenActivityView(contentState: contentState) //currently never reached
             }
         }
     }
 }
 
-private struct DefaultLockScreenActivityView: View {
+private struct DefaultLockScreenActivityView: View { // currently never displayed
     let contentState: FLWatchAttributes.ContentState
 
     var body: some View {
@@ -136,21 +143,27 @@ private struct SmallSupplementalActivityView: View {
     let contentState: FLWatchAttributes.ContentState
 
     var body: some View {
-        let staleAfterMinutes = Int(FLWatchAttributes.staleAfterInterval / 60)
-        let isStale = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
+//        let staleAfterMinutes = Int(FLWatchAttributes.staleAfterInterval / 60)
+        let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
+        
+//        var glucoseFontWeight: Font.Weight {
+//            isStaleGlucose ? .regular : .heavy
+//        }
 
         VStack (spacing: 5){
             HStack {
                 Text(contentState.latestGlucoseValue.units(for: contentState.glucoseUnit))
                     .font(.footnote)
-                    .bold()
+                    .strikethrough(isStaleGlucose)
+                    .bold(!isStaleGlucose)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
                     .foregroundStyle(contentState.latestMeasurementColor.color)
 
                 Text(contentState.latestTrend)
                     .font(.footnote)
-                    .bold()
+                    .strikethrough(isStaleGlucose)
+                    .bold(!isStaleGlucose)
                     .foregroundStyle(contentState.latestMeasurementColor.color)
                 
                 Spacer()
@@ -174,13 +187,13 @@ private struct SmallSupplementalActivityView: View {
             GlucoseLiveActivityChart(contentState: contentState, showsAxes: true)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .overlay {
-            if isStale {
-                Text("Activity has not been updated for \(staleAfterMinutes) mins. Tap to refresh")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-        }
+//        .overlay {
+//            if isStale {
+//                Text("Activity has not been updated for \(staleAfterMinutes) mins. Tap to refresh")
+//                    .font(.caption2)
+//                    .foregroundStyle(.secondary)
+//            }
+//        }
         .padding(5)
     }
 }
@@ -189,21 +202,27 @@ private struct MediumSupplementalActivityView: View {
     let contentState: FLWatchAttributes.ContentState
     
     var body: some View {
-        let staleAfterMinutes = Int(FLWatchAttributes.staleAfterInterval / 60)
-        let isStale = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
+//        let staleAfterMinutes = Int(FLWatchAttributes.staleAfterInterval / 60)
+        let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
+        
+//        var glucoseFontWeight: Font.Weight {
+//            isStaleGlucose ? .regular : .heavy
+//        }
 
         VStack (spacing: 8){
             HStack {
                 Text(contentState.latestGlucoseValue.units(for: contentState.glucoseUnit))
                     .font(.title)
-                    .bold()
+                    .strikethrough(isStaleGlucose)
+                    .bold(!isStaleGlucose)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
                     .foregroundStyle(contentState.latestMeasurementColor.color)
 
                 Text(contentState.latestTrend)
                     .font(.title)
-                    .bold()
+                    .strikethrough(isStaleGlucose)
+                    .bold(!isStaleGlucose)
                     .foregroundStyle(contentState.latestMeasurementColor.color)
                 
                 Spacer()
@@ -226,13 +245,13 @@ private struct MediumSupplementalActivityView: View {
             GlucoseLiveActivityChart(contentState: contentState, showsAxes: true)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .overlay {
-            if isStale {
-                Text("Activity has not been updated for \(staleAfterMinutes) mins. Tap to refresh")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-        }
+//        .overlay {
+//            if isStaleGlucose {
+//                Text("Activity has not been updated for \(staleAfterMinutes) mins. Tap to refresh")
+//                    .font(.caption2)
+//                    .foregroundStyle(.secondary)
+//            }
+//        }
         .padding()
     }
 }

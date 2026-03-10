@@ -15,6 +15,16 @@ struct LibreWristWidgetEntryView : View {
     @Environment(\.widgetFamily) private var family
     @Environment(\.colorScheme) var colorScheme
     
+    private let staleThreshold: TimeInterval = 5 * 60
+    
+    var isStaleGlucose: Bool {
+        Date().timeIntervalSince(entry.date) > staleThreshold
+    }
+    
+    var glucoseFontWeight: Font.Weight {
+        isStaleGlucose ? .regular : .heavy
+    }
+    
     var glucose: String {
         if entry.glucoseMeasurement.value <= 0 {
             return "--"
@@ -55,14 +65,15 @@ struct LibreWristWidgetEntryView : View {
                         }
                     }
                     Text(verbatim: glucose)
-                        .font(.system(size: 52, weight: .heavy))
+                        .font(.system(size: 52, weight: glucoseFontWeight))
                         .foregroundColor(colorScheme == .dark ? entry.glucoseMeasurement.measurementColor.color : .black)
+                        .strikethrough(isStaleGlucose)
                     HStack (spacing: 15){
                         Text(currentIOB)
                             .font(.system(size: 20, weight: .heavy))
                             .foregroundColor(colorScheme == .dark ? .gray : .black)
 //                        Text("88:88")
-                        Text(Date(), style: .timer)
+                        Text(entry.date, style: .timer)
                         //Text(verbatim: " ")
                             .font(.system(size: 20, weight: .heavy))
                             .foregroundColor(colorScheme == .dark ? .gray : .black)
@@ -95,10 +106,11 @@ struct LibreWristWidgetEntryView : View {
                     }
                     .buttonStyle(PlainButtonStyle())
                     Text(verbatim: glucose)
-                        .font(.system(size: 20, weight: .heavy))
+                        .font(.system(size: 20, weight: glucoseFontWeight))
+                        .strikethrough(isStaleGlucose)
                     //.colorInvert()
                     
-                    Text(Date(), style: .timer)
+                    Text(entry.date, style: .timer)
                     //Text(verbatim: " ")
                         .font(.system(size: 10, weight: .heavy))
                     //.colorInvert()
@@ -125,7 +137,7 @@ struct LibreWristWidgetEntryView : View {
                             Text(currentIOB)
                                 .font(.system(size: 15, weight: .heavy))
                         }
-                        Text(Date(), style: .timer)
+                        Text(entry.date, style: .timer)
                         //Text(verbatim: " ")
                             .font(.system(size: 12, weight: .heavy))
                         //.colorInvert()
@@ -141,7 +153,8 @@ struct LibreWristWidgetEntryView : View {
                         //.widgetAccentable()
                         
                         Text(verbatim: glucose)
-                            .font(.system(size: 25, weight: .heavy))
+                            .font(.system(size: 25, weight: glucoseFontWeight))
+                            .strikethrough(isStaleGlucose)
                         //.colorInvert()
                     }
                     .fixedSize()
