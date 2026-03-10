@@ -3,7 +3,7 @@ import Foundation
 import ActivityKit
 
 public struct FLWatchAttributes: ActivityAttributes, Codable {
-    public static let staleAfterInterval: TimeInterval = 5 * 60
+    public static let staleAfterInterval: TimeInterval = 20 * 60
     public static let glucoseActivityIdentifier = "librewrist.glucose"
 
     public struct GraphPoint: Hashable, Identifiable {

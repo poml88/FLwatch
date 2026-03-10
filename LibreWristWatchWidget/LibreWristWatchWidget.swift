@@ -15,6 +15,17 @@ struct LibreWristWidgetEntryView : View {
     
     @AppStorage(DefaultsKey.tapComplicationReloads.rawValue, store: UserDefaults.group) private var tapComplicationReloads: Bool = false
     
+    private let staleThreshold: TimeInterval = 5 * 60
+    
+    var isStaleGlucose: Bool {
+        Date().timeIntervalSince(entry.date) > staleThreshold
+    }
+    
+    var glucoseFontWeight: Font.Weight {
+        isStaleGlucose ? .regular : .heavy
+    }
+
+    
     var glucose: String {
         if entry.glucoseMeasurement.value <= 0 {
             return "--"
@@ -54,7 +65,8 @@ struct LibreWristWidgetEntryView : View {
                 if tapComplicationReloads, #available(watchOS 11.0, *) {
                     Button(intent: ReloadWidgetIntent()) {
                         Text(verbatim: glucose)
-                            .font(.system(size: 20, weight: .heavy))
+                            .font(.system(size: 20, weight: glucoseFontWeight))
+                            .strikethrough(isStaleGlucose)
                             .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
                         //.colorInvert()
                             .widgetAccentable()
@@ -62,13 +74,14 @@ struct LibreWristWidgetEntryView : View {
                     .buttonStyle(PlainButtonStyle())
                 } else {
                     Text(verbatim: glucose)
-                        .font(.system(size: 20, weight: .heavy))
+                        .font(.system(size: 20, weight: glucoseFontWeight))
+                        .strikethrough(isStaleGlucose)
                         .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
                     //.colorInvert()
                         .widgetAccentable()
                 }
                 
-                Text(Date(), style: .timer)
+                Text(entry.date, style: .timer)
                 //Text(verbatim: " ")
                     .font(.system(size: 10, weight: .heavy))
                 //.colorInvert()
@@ -93,7 +106,7 @@ struct LibreWristWidgetEntryView : View {
                         Text(currentIOB)
                             .font(.system(size: 18, weight: .heavy))
                     }
-                    Text(Date(), style: .timer)
+                    Text(entry.date, style: .timer)
                     //Text(verbatim: " ")
                         .font(.system(size: 14, weight: .heavy))
                     //.colorInvert()
@@ -112,7 +125,8 @@ struct LibreWristWidgetEntryView : View {
                         .widgetAccentable()
                     
                     Text(verbatim: glucose)
-                        .font(.system(size: 27, weight: .heavy))
+                        .font(.system(size: 27, weight: glucoseFontWeight))
+                        .strikethrough(isStaleGlucose)
                         .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
                     //.colorInvert()
                         .widgetAccentable()
@@ -141,12 +155,14 @@ struct LibreWristWidgetEntryView : View {
 //                AccessoryWidgetBackground()
                 
                 Text("\(glucose) \(entry.glucoseMeasurement.trendArrow?.symbol ?? "-")")
+                
                     .foregroundColor(entry.glucoseMeasurement.measurementColor.color)
-                    .fontWeight(.bold)
+                    .strikethrough(isStaleGlucose)
+                    .fontWeight(glucoseFontWeight)
                 //.colorInvert()
                     .widgetCurvesContent()
                     .widgetLabel {
-                        Text(Date(), style: .timer)
+                        Text(entry.date, style: .timer)
                         //Text(verbatim: " ")
                         //.colorInvert()
                         //                                        .multilineTextAlignment(.center)
@@ -157,7 +173,8 @@ struct LibreWristWidgetEntryView : View {
              .containerBackground(.background, for: .widget)
             
         case .accessoryInline:
-            Text("\(glucose)  \(entry.glucoseMeasurement.trendArrow?.symbol ?? "-")  \(Date(), style: .timer)")
+            Text("\(glucose)  \(entry.glucoseMeasurement.trendArrow?.symbol ?? "-")  \(entry.date, style: .timer)")
+                .strikethrough(isStaleGlucose)
                     .widgetAccentable()
             .containerBackground(.background, for: .widget)
             

@@ -21,7 +21,14 @@ struct FLWatchLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
+                    let isStaleActivity: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
+                    
+                    let staleGlucoseThreshold: TimeInterval = 10 * 60
+                    
+                    var isStaleGlucose: Bool {
+                        Date().timeIntervalSince(context.state.latestTimestamp ) > staleGlucoseThreshold
+                    }
+
                     
                     HStack {
                         Text("\(context.state.latestGlucoseValue.units(for: context.state.glucoseUnit)) \(context.state.latestTrend)")
@@ -74,7 +81,12 @@ struct FLWatchLiveActivityWidget: Widget {
 //                        .frame(height: 84)
                 }
             } compactLeading: {
-                let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
+                let staleGlucoseThreshold: TimeInterval = 10 * 60
+                
+                var isStaleGlucose: Bool {
+                    Date().timeIntervalSince(context.state.latestTimestamp ) > staleGlucoseThreshold
+                }
+                
                 Text("\(context.state.latestGlucoseValue.units(for: context.state.glucoseUnit)) \(context.state.latestTrend)")
                     .strikethrough(isStaleGlucose)
                     .bold(!isStaleGlucose)
@@ -93,7 +105,12 @@ struct FLWatchLiveActivityWidget: Widget {
                     .monospacedDigit()
                     .frame(width: 50, alignment: .trailing)
             } minimal: {
-                let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
+                let staleGlucoseThreshold: TimeInterval = 10 * 60
+                
+                var isStaleGlucose: Bool {
+                    Date().timeIntervalSince(context.state.latestTimestamp ) > staleGlucoseThreshold
+                }
+                
                 Text(context.state.latestGlucoseValue.units(for: context.state.glucoseUnit))
                     .strikethrough(isStaleGlucose)
                     .bold(!isStaleGlucose)
@@ -172,12 +189,11 @@ private struct SmallSupplementalActivityView: View {
     let contentState: FLWatchAttributes.ContentState
 
     var body: some View {
-//        let staleAfterMinutes = Int(FLWatchAttributes.staleAfterInterval / 60)
-        let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
+        let staleGlucoseThreshold: TimeInterval = 10 * 60
         
-//        var glucoseFontWeight: Font.Weight {
-//            isStaleGlucose ? .regular : .heavy
-//        }
+        var isStaleGlucose: Bool {
+            Date().timeIntervalSince(contextState.latestTimestamp ) > staleGlucoseThreshold
+        }
 
         VStack (spacing: 5){
             HStack {
@@ -249,11 +265,12 @@ private struct MediumSupplementalActivityView: View {
     
     var body: some View {
 //        let staleAfterMinutes = Int(FLWatchAttributes.staleAfterInterval / 60)
-        let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
+        let staleGlucoseThreshold: TimeInterval = 10 * 60
         
-//        var glucoseFontWeight: Font.Weight {
-//            isStaleGlucose ? .regular : .heavy
-//        }
+        var isStaleGlucose: Bool {
+            Date().timeIntervalSince(contextState.latestTimestamp ) > staleGlucoseThreshold
+        }
+
 
         VStack (spacing: 8){
             HStack {

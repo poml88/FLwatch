@@ -23,7 +23,7 @@ struct WatchAppHomeView: View {
     //    @State private var selectedlibreLinkHistoryPoint: LibreLinkUpGlucose?
     @State private var libreLinkUpResponse: String = "[...]"
     //    @State private var libreLinkUpLogbookHistory: [LibreLinkUpGlucose] = []
-    @State private var minutesSinceLastReading: Int = 999
+//    @State private var minutesSinceLastReading: Int = 999
     //    @State private var isReloading: Bool = false
     @State private var isShowingDisclaimer = false
     //    @State private var currentIOB: Double = 0.0
@@ -31,6 +31,7 @@ struct WatchAppHomeView: View {
     @State private var connected = UserDefaults.group.connected
     @State private var onAppearNotToDoFirstStart: Bool = true
     @State private var lastWidgetReloadAt: Date = .distantPast
+    @State private var currentTime: Date = Date()
     
     @StateObject private var lluService = LibreLinkUpService.shared
     
@@ -41,17 +42,15 @@ struct WatchAppHomeView: View {
     private let timer = Timer.publish(every: 60, tolerance: 1, on: .main, in: .common).autoconnect()
     private let minimumWidgetReloadInterval: TimeInterval = 2
 
-    private func reloadWidgetsIfNeeded(trigger: String) {
-        let now = Date()
-        guard now.timeIntervalSince(lastWidgetReloadAt) >= minimumWidgetReloadInterval else {
-            print("Skipping WidgetCenter.shared.reloadAllTimelines() [\(trigger)]")
-            return
-        }
-        lastWidgetReloadAt = now
-        WidgetCenter.shared.reloadAllTimelines()
-        print("WidgetCenter.shared.reloadAllTimelines() [\(trigger)]")
+    private var minutesSinceLastReading: Int {
+        max(Int(currentTime.timeIntervalSince(libreLinkUpHistory.lastReadingDate) / 60), 0)
     }
-    
+
+    private var isReadingStale: Bool {
+        minutesSinceLastReading >= 3
+    }
+
+  
     
     var body: some View {
         VStack{
@@ -111,6 +110,7 @@ struct WatchAppHomeView: View {
         
         .onReceive(timer) { time in
             print("Timer")
+            currentTime = time
             
             //            connected = UserDefaults.group.connected
             //            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
@@ -123,11 +123,12 @@ struct WatchAppHomeView: View {
             //                    isReloading = false
             //                }
             //            }
-            reloadAndUpdateMinutes()
+            reloadAndRefreshHistory()
 
         }
         .onAppear() { // fires when switching the Views, e.g. form settings to home view.
             print("onAppear")
+            currentTime = Date()
             if SharedData.hasSeenDisclaimer == false {
                 isShowingDisclaimer = true
             }
@@ -158,7 +159,7 @@ struct WatchAppHomeView: View {
                 //                        isReloading = false
                 //                    }
                 //                }
-                reloadAndUpdateMinutes()
+                reloadAndRefreshHistory()
 
                 // -----------------------
                 
@@ -187,6 +188,7 @@ struct WatchAppHomeView: View {
 //                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 
                 reloadWidgetsIfNeeded(trigger: "scenePhase.active")
+                currentTime = Date()
                 
                 //                connected = UserDefaults.group.connected
                 //                minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
@@ -198,7 +200,7 @@ struct WatchAppHomeView: View {
                 //                        isReloading = false
                 //                    }
                 //                }
-                reloadAndUpdateMinutes()
+                reloadAndRefreshHistory()
 
                 
                 
@@ -217,8 +219,7 @@ struct WatchAppHomeView: View {
                 .ignoresSafeArea()
             }
             
-            let minutesSinceLastReadingOverlay = Int(Date().timeIntervalSince(libreLinkUpHistory.lastReadingDate) / 60)
-            if minutesSinceLastReadingOverlay >= 3 && lluService.isReloading == false {
+            if isReadingStale && lluService.isReloading == false {
                 ZStack {
                     Color(white: 0, opacity: 0.5)
                     
@@ -243,11 +244,24 @@ struct WatchAppHomeView: View {
         }
     }
     
-    private func reloadAndUpdateMinutes() {
+    private func reloadAndRefreshHistory() {
         Task {
+            currentTime = Date()
+            _ = lluService.refreshHistoryFromPersistence(force: true)
             await lluService.requestReloadIfNeeded()
-            minutesSinceLastReading = Int(Date().timeIntervalSince(libreLinkUpHistory.lastReadingDate) / 60)
+            currentTime = Date()
         }
+    }
+    
+    private func reloadWidgetsIfNeeded(trigger: String) {
+        let now = Date()
+        guard now.timeIntervalSince(lastWidgetReloadAt) >= minimumWidgetReloadInterval else {
+            print("Skipping WidgetCenter.shared.reloadAllTimelines() [\(trigger)]")
+            return
+        }
+        lastWidgetReloadAt = now
+        WidgetCenter.shared.reloadAllTimelines()
+        print("WidgetCenter.shared.reloadAllTimelines() [\(trigger)]")
     }
     
 }
