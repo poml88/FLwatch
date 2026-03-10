@@ -192,7 +192,7 @@ private struct SmallSupplementalActivityView: View {
         let staleGlucoseThreshold: TimeInterval = 10 * 60
         
         var isStaleGlucose: Bool {
-            Date().timeIntervalSince(contextState.latestTimestamp ) > staleGlucoseThreshold
+            Date().timeIntervalSince(contentState.latestTimestamp ) > staleGlucoseThreshold
         }
 
         VStack (spacing: 5){
@@ -268,7 +268,7 @@ private struct MediumSupplementalActivityView: View {
         let staleGlucoseThreshold: TimeInterval = 10 * 60
         
         var isStaleGlucose: Bool {
-            Date().timeIntervalSince(contextState.latestTimestamp ) > staleGlucoseThreshold
+            Date().timeIntervalSince(contentState.latestTimestamp ) > staleGlucoseThreshold
         }
 
 
