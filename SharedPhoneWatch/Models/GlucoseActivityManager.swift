@@ -84,8 +84,9 @@ final class LiveActivityManager {
 
             let state = FLWatchAttributes.ContentState(
                 latestGlucoseValue: history.currentGlucose,
-                trend: history.currentTrendArrow,
-                timestamp: history.lastReadingDate,
+                latestTrend: history.currentTrendArrow,
+                latestTimestamp: history.lastReadingDate,
+                latestColor: history.latestLibreLinkUpGlucose?.color.rawValue ?? 0,
                 graphPoints: graphPoints,
                 minutePoints: minutePoints,
                 glucoseUnit: sensorSettings.uom,
@@ -103,7 +104,7 @@ final class LiveActivityManager {
         }
         let content = ActivityContent(
             state: state,
-            staleDate: state.timestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval)
+            staleDate: state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval)
         )
 
         if let existing = reusableActivity() {
@@ -160,4 +161,3 @@ private extension Array {
         }
     }
 }
-

@@ -33,6 +33,35 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         snapshot.lastReadingDate > history.lastReadingDate
     }
 
+    private static func mergeMinuteGlucose(
+        existing: [LibreLinkUpGlucose],
+        received: [LibreLinkUpGlucose]
+    ) -> [LibreLinkUpGlucose] {
+        var mergedByID: [Int: LibreLinkUpGlucose] = [:]
+
+        for entry in existing {
+            mergedByID[entry.id] = entry
+        }
+
+        for entry in received {
+            guard let current = mergedByID[entry.id] else {
+                mergedByID[entry.id] = entry
+                continue
+            }
+
+            if entry.glucose.date >= current.glucose.date {
+                mergedByID[entry.id] = entry
+            }
+        }
+
+        return mergedByID.values.sorted {
+            if $0.id == $1.id {
+                return $0.glucose.date > $1.glucose.date
+            }
+            return $0.id > $1.id
+        }
+    }
+
     private var messageHandlers: [WatchMessageHandler] = []
     private var requestHandlers: [WatchRequestHandler] = []
     
@@ -139,6 +168,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
                 let snapshot = try JSONDecoder().decode(LibreLinkUpSnapshotPayload.self, from: snapshotData)
                 Task { @MainActor in
                     let history = LibreLinkUpHistory.shared
+                    _ = history.refreshFromPersistence()
                     guard Self.shouldApplySnapshot(snapshot, to: history) else {
                         Logger.connectivity.info("Ignored stale LibreLinkUp snapshot from WatchConnectivity")
                         return
@@ -146,7 +176,10 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
 
                     let didApply = history.replaceCacheAndPersist(
                         libreLinkUpGlucose: snapshot.libreLinkUpGlucose,
-                        libreLinkUpMinuteGlucose: snapshot.libreLinkUpMinuteGlucose,
+                        libreLinkUpMinuteGlucose: Self.mergeMinuteGlucose(
+                            existing: history.libreLinkUpMinuteGlucose,
+                            received: snapshot.libreLinkUpMinuteGlucose
+                        ),
                         latestLibreLinkUpGlucose: snapshot.latestLibreLinkUpGlucose,
                         lastReadingDate: snapshot.lastReadingDate,
                         currentGlucose: snapshot.currentGlucose,

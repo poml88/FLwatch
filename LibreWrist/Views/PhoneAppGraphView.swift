@@ -12,6 +12,7 @@ struct PhoneAppGraphView: View {
     
     @Environment(\.libreLinkUpHistory) var libreLinkUpHistory
     @Environment(\.sensorSettingsStore) var sensorSettingsStore
+    @Environment(\.currentIOBSingleton) var currentIOBSingleton
     
     @AppStorage(DefaultsKey.showInsulinDeliveryMarksPhone.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksPhone: Bool = false
     @AppStorage(DefaultsKey.showIOBCurvePhone.rawValue, store: UserDefaults.group) private var showIOBCurvePhone: Bool = false
@@ -155,8 +156,8 @@ struct PhoneAppGraphView: View {
             
 //MARK: IOB Curve
             if showIOBCurvePhone == true {
-                let insulinOnBoardCurve = CurrentIOBSingleton.shared.insulinOnBoardCurve
-                let maxIOB = CurrentIOBSingleton.shared.maxIOB
+                let insulinOnBoardCurve = currentIOBSingleton.insulinOnBoardCurve
+                let maxIOB = currentIOBSingleton.maxIOB
                 
                 if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
                     
@@ -180,13 +181,13 @@ struct PhoneAppGraphView: View {
 //MARK: Insulin delivery marks
                 if showInsulinDeliveryMarksPhone == true {
                     
-                    let maxIOB = CurrentIOBSingleton.shared.maxIOB
+                    let maxIOB = currentIOBSingleton.maxIOB
                     
                     if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
                         ForEach(InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory) { item in
                             //                    var itemValue: Double { sensorSettingsStore.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                             if item.timeStamp > timeInternvalSixHoursAndTenAgo {
-                                let insulinOnBoardCurve = CurrentIOBSingleton.shared.insulinOnBoardCurve
+                                let insulinOnBoardCurve = currentIOBSingleton.insulinOnBoardCurve
                                 var iobCurveDataPointAtTimeStamp: ActivityCurveDataPoint { insulinOnBoardCurve.first(where: { $0.date > Date(timeIntervalSince1970: item.timeStamp)}) ?? ActivityCurveDataPoint(id: Int(item.timeStamp),date: Date(timeIntervalSince1970: item.timeStamp), value: 0)}
                                 
                                 var alignment: Alignment {
@@ -221,8 +222,8 @@ struct PhoneAppGraphView: View {
 //MARK: Insulin activity graph
             if showActivityCurvePhone == true {
                 
-                let insulinActivityCurve = CurrentIOBSingleton.shared.insulinActivityCurve
-                let maxActivity = CurrentIOBSingleton.shared.maxActivity
+                let insulinActivityCurve = currentIOBSingleton.insulinActivityCurve
+                let maxActivity = currentIOBSingleton.maxActivity
                 
                 if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
                     ForEach(insulinActivityCurve) { item in

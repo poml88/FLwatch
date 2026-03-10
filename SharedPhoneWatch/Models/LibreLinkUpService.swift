@@ -44,6 +44,10 @@ final class LibreLinkUpService: ObservableObject {
         now.timeIntervalSince(LibreLinkUpHistory.shared.lastOnlineDate) < Double(maxAgeMinutes * 60)
     }
 
+    func hasFreshReading(maxAgeMinutes: Int = 1, now: Date = Date()) -> Bool {
+        now.timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) < Double(maxAgeMinutes * 60)
+    }
+
     private func canReload() -> Bool {
         let connected = UserDefaults.group.connected
         return connected == .connected || connected == .newlyConnected
@@ -64,21 +68,23 @@ final class LibreLinkUpService: ObservableObject {
             _ = self.refreshSensorSettingsFromPersistence()
             let secondsSinceLastOnline = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastOnlineDate)
             Logger.libreLinkUpService.info("requestReloadIfNeeded refreshed persisted snapshot before checks (secondsSinceLastOnline: \(String(format: "%.1f", secondsSinceLastOnline)))")
+
+            // IOB decays over time even when we skip or block a network reload.
+            // Recalculate first so phone/watch UI can redraw from local state alone.
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+
             guard self.canReload() else {
                 Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: not connected (state: \(UserDefaults.group.connected.rawValue))")
                 return false
             }
-            guard force || !self.hasRecentOnlineCall(maxAgeMinutes: maxAgeMinutes) else {
-                let age = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastOnlineDate)
-                Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: recent online call \(String(format: "%.1f", age))s ago (throttle: \(maxAgeMinutes * 60)s)")
+            guard force || !self.hasFreshReading(maxAgeMinutes: maxAgeMinutes) else {
+                let age = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate)
+                Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: current reading age \(String(format: "%.1f", age))s is within freshness window (throttle: \(maxAgeMinutes * 60)s)")
                 return false
             }
-
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
             self.isReloading = true
             defer { self.isReloading = false }
 
-            LibreLinkUpHistory.shared.updateLastOnlineDate()
             Logger.libreLinkUpService.info("requestReloadIfNeeded starting network reload")
             await self.libreLinkUp.reloadLibreLinkUp()
             self.libreLinkUpResponse = self.libreLinkUp.libreLinkUpResponse
@@ -86,6 +92,7 @@ final class LibreLinkUpService: ObservableObject {
             if self.didLastReloadFail {
                 Logger.libreLinkUpService.error("requestReloadIfNeeded completed with failure")
             } else {
+                LibreLinkUpHistory.shared.updateLastOnlineDate()
                 Logger.libreLinkUpService.info("requestReloadIfNeeded completed successfully")
             }
 #if os(iOS)

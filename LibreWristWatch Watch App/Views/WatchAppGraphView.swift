@@ -17,6 +17,7 @@ struct WatchAppGraphView: View {
     
     @Environment(\.libreLinkUpHistory) var libreLinkUpHistory
     @Environment(\.sensorSettingsStore) var sensorSettingsStore
+    @Environment(\.currentIOBSingleton) var currentIOBSingleton
     
     var body: some View {
 //        let rectXStart: Date = libreLinkUpHistory.libreLinkUpGlucose.last?.glucose.date ?? Date(timeIntervalSinceNow: -6 * 60 * 60)
@@ -137,8 +138,8 @@ struct WatchAppGraphView: View {
 
 //MARK: IOB Curve
             if showIOBCurveWatch == true {
-                let insulinOnBoardCurve = CurrentIOBSingleton.shared.insulinOnBoardCurve
-                let maxIOB = CurrentIOBSingleton.shared.maxIOB
+                let insulinOnBoardCurve = currentIOBSingleton.insulinOnBoardCurve
+                let maxIOB = currentIOBSingleton.maxIOB
                 
                 if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
                     
@@ -162,13 +163,13 @@ struct WatchAppGraphView: View {
 //MARK: Insulin delivery marks
             if showInsulinDeliveryMarksWatch == true {
                 
-                let maxIOB = CurrentIOBSingleton.shared.maxIOB
+                let maxIOB = currentIOBSingleton.maxIOB
                 
                 if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
                     ForEach(InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory) { item in
                         //                    var itemValue: Double { sensorSettingsStore.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                         if item.timeStamp > timeInternvalSixHoursAndTenAgo {
-                            let insulinOnBoardCurve = CurrentIOBSingleton.shared.insulinOnBoardCurve
+                            let insulinOnBoardCurve = currentIOBSingleton.insulinOnBoardCurve
                             var iobCurveDataPointAtTimeStamp: ActivityCurveDataPoint { insulinOnBoardCurve.first(where: { $0.date > Date(timeIntervalSince1970: item.timeStamp)}) ?? ActivityCurveDataPoint(id: Int(item.timeStamp),date: Date(timeIntervalSince1970: item.timeStamp), value: 1)}
                             
                             var alignment: Alignment {
@@ -203,8 +204,8 @@ struct WatchAppGraphView: View {
 //MARK: Insulin activity graph
         if showActivityCurveWatch == true {
             
-            let insulinActivityCurve = CurrentIOBSingleton.shared.insulinActivityCurve
-            let maxActivity = CurrentIOBSingleton.shared.maxActivity
+            let insulinActivityCurve = currentIOBSingleton.insulinActivityCurve
+            let maxActivity = currentIOBSingleton.maxActivity
                         
             if InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.count > 0 {
                 ForEach(insulinActivityCurve) { item in
@@ -286,4 +287,3 @@ struct WatchAppGraphView: View {
 #Preview {
     WatchAppGraphView()
 }
-

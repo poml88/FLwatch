@@ -23,8 +23,9 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
     public struct ContentState: Codable, Hashable {
         // dynamic state updated locally by the app (BG refresh + foreground refreshes)
         public var latestGlucoseValue: Int
-        public var trend: String
-        public var timestamp: Date
+        public var latestTrend: String
+        public var latestTimestamp: Date
+        public var latestColor: Int
         public var graphPoints: [GraphPoint]
         public var minutePoints: [GraphPoint]
         public var glucoseUnit: Int
@@ -35,8 +36,9 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
 
         private enum CodingKeys: String, CodingKey {
             case latestGlucoseValue = "l"
-            case trend = "r"
-            case timestamp = "t"
+            case latestTrend = "r"
+            case latestTimestamp = "t"
+            case latestColor = "c"
             case graphPoints = "g"
             case minutePoints = "m"
             case glucoseUnit = "u"
@@ -48,8 +50,9 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
 
         public init(
             latestGlucoseValue: Int,
-            trend: String,
-            timestamp: Date,
+            latestTrend: String,
+            latestTimestamp: Date,
+            latestColor: Int,
             graphPoints: [GraphPoint],
             minutePoints: [GraphPoint],
             glucoseUnit: Int,
@@ -59,8 +62,9 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             maxGlucoseValue: Int
         ) {
             self.latestGlucoseValue = latestGlucoseValue
-            self.trend = trend
-            self.timestamp = timestamp
+            self.latestTrend = latestTrend
+            self.latestTimestamp = latestTimestamp
+            self.latestColor = latestColor
             self.graphPoints = graphPoints
             self.minutePoints = minutePoints
             self.glucoseUnit = glucoseUnit
@@ -72,11 +76,12 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
 
         public init(from decoder: any Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
-            let baseTimestamp = try container.decode(Double.self, forKey: .timestamp)
+            let baseTimestamp = try container.decode(Double.self, forKey: .latestTimestamp)
 
             latestGlucoseValue = try container.decode(Int.self, forKey: .latestGlucoseValue)
-            trend = try container.decode(String.self, forKey: .trend)
-            timestamp = Date(timeIntervalSince1970: baseTimestamp)
+            latestTrend = try container.decode(String.self, forKey: .latestTrend)
+            latestTimestamp = Date(timeIntervalSince1970: baseTimestamp)
+            latestColor = try container.decode(Int.self, forKey: .latestColor)
             graphPoints = try Self.decodePoints(from: container, forKey: .graphPoints, baseTimestamp: baseTimestamp)
             minutePoints = try Self.decodePoints(from: container, forKey: .minutePoints, baseTimestamp: baseTimestamp)
             glucoseUnit = try container.decode(Int.self, forKey: .glucoseUnit)
@@ -88,11 +93,12 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
 
         public func encode(to encoder: any Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
-            let baseTimestamp = timestamp.timeIntervalSince1970
+            let baseTimestamp = latestTimestamp.timeIntervalSince1970
 
             try container.encode(latestGlucoseValue, forKey: .latestGlucoseValue)
-            try container.encode(trend, forKey: .trend)
-            try container.encode(baseTimestamp, forKey: .timestamp)
+            try container.encode(latestTrend, forKey: .latestTrend)
+            try container.encode(baseTimestamp, forKey: .latestTimestamp)
+            try container.encode(latestColor, forKey: .latestColor)
             try Self.encodePoints(graphPoints, to: &container, forKey: .graphPoints, baseTimestamp: baseTimestamp)
             try Self.encodePoints(minutePoints, to: &container, forKey: .minutePoints, baseTimestamp: baseTimestamp)
             try container.encode(glucoseUnit, forKey: .glucoseUnit)
