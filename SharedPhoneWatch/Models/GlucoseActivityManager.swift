@@ -54,9 +54,16 @@ final class LiveActivityManager {
 
         let state = await MainActor.run { () -> FLWatchAttributes.ContentState in
             let history = LibreLinkUpHistory.shared
+            let insulinHistory = InsulinDeliveryHistorySingleton.shared
+            insulinHistory.read()
+            let currentIOB = CurrentIOBSingleton.shared
+            currentIOB.updateCurrentIOBAndGraphs()
             _ = SensorSettingsStore.shared.refreshFromPersistence()
             let sensorSettings = SensorSettingsStore.shared.sensorSettings
             let cutoffDate = Date.now.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
+            let showIOBCurve = SharedData.showIOBCurvePhone
+            let showActivityCurve = SharedData.showActivityCurvePhone
+            let showInsulinDeliveryMarks = SharedData.showInsulinDeliveryMarksPhone
 
             let graphPoints = Array(history.libreLinkUpGlucose
                 .filter { $0.glucose.date >= cutoffDate }
@@ -82,6 +89,34 @@ final class LiveActivityManager {
                     )
                 })
 
+            let iobPoints = Array(currentIOB.insulinOnBoardCurve
+                .filter { $0.date >= cutoffDate }
+                .map {
+                    FLWatchAttributes.ActivityPoint(
+                        timestamp: $0.date,
+                        valueInHundredths: Int(($0.value * 100).rounded())
+                    )
+                })
+
+            let activityPoints = Array(currentIOB.insulinActivityCurve
+                .filter { $0.date >= cutoffDate }
+                .map {
+                    FLWatchAttributes.ActivityPoint(
+                        timestamp: $0.date,
+                        valueInHundredths: Int(($0.value * 100).rounded())
+                    )
+                })
+
+            let insulinMarkers = Array(insulinHistory.insulinDeliveryHistory
+                .filter { Date(timeIntervalSince1970: $0.timeStamp) >= cutoffDate }
+                .sorted { $0.timeStamp < $1.timeStamp }
+                .map {
+                    FLWatchAttributes.InsulinMarker(
+                        timestamp: Date(timeIntervalSince1970: $0.timeStamp),
+                        insulinUnitsInHundredths: Int(($0.insulinUnits * 100).rounded())
+                    )
+                })
+
             let state = FLWatchAttributes.ContentState(
                 latestGlucoseValue: history.currentGlucose,
                 latestTrend: history.currentTrendArrow,
@@ -93,7 +128,16 @@ final class LiveActivityManager {
                 targetLow: sensorSettings.targetLow,
                 targetHigh: sensorSettings.targetHigh,
                 alarmLow: sensorSettings.alarmLow,
-                maxGlucoseValue: history.maxBG
+                maxGlucoseValue: history.maxBG,
+                currentIOBInHundredths: Int((currentIOB.currentIOB * 100).rounded()),
+                iobPoints: iobPoints,
+                maxIOBInHundredths: max(1, Int((currentIOB.maxIOB * 100).rounded())),
+                activityPoints: activityPoints,
+                maxActivityInHundredths: max(1, Int((currentIOB.maxActivity * 100).rounded())),
+                insulinMarkers: insulinMarkers,
+                showIOBCurve: showIOBCurve,
+                showActivityCurve: showActivityCurve,
+                showInsulinDeliveryMarks: showInsulinDeliveryMarks
             )
 
             if let payloadSize = Self.encodedSize(of: state) {

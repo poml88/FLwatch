@@ -15,7 +15,7 @@ struct LibreWristApp: App {
     private static let appRefreshTaskIdentifier = "de.poeml.philipp.LibreWrist.apprefresh"
     private let appRefreshScheduler = BGAppRefreshScheduler(
         taskIdentifier: appRefreshTaskIdentifier,
-        refreshInterval: 5 * 60
+        refreshInterval: 5 * 60 // seems to result in 8-10 minute intervals
     )
 
     @Environment(\.scenePhase) private var scenePhase

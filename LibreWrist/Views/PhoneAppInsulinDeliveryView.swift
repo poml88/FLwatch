@@ -88,6 +88,22 @@ struct PhoneAppInsulinDeliveryView: View {
                 Form {
                     // MARK: Manual entry (existing)
                     Section {
+                        Picker(selection: $insulinTypeSelected) {
+                            ForEach(InsulinType.allCases, id: \.self) {
+                                Text($0.description)
+                            }
+                        } label: {
+                            Text("Bolus insulin")
+                        }
+                        //                .labelsHidden()
+                        //                                    .pickerStyle(.navigationLink)
+                        .onChange(of: insulinTypeSelected) {oldValue, newValue in
+                            UserDefaults.group.insulinTypeSelected = newValue
+                            let messageToWatch: [String: Any] = ["content": "updateInsulinTypeSelected",
+                                                                 "insulinTypeSelected": newValue.rawValue]
+                            sendMessagetoOther(message: messageToWatch)
+                        }
+                        
                         Picker("Insulin units", selection: $insulinSelected) {
                             ForEach(insulinDoses, id: \.self) {
                                 Text("\($0, specifier: "%.1f")")
@@ -118,7 +134,7 @@ struct PhoneAppInsulinDeliveryView: View {
                         .disabled(insulinSelected == 0.0 && !hasValidCalculatedDose)
                         
                     } header: {
-                        Text("Bolus Insulin (\(insulinTypeSelected.description))")
+                        Text("Record insulin units")
                     }
                     
                     
@@ -138,6 +154,29 @@ struct PhoneAppInsulinDeliveryView: View {
                             Text("g")
                                 .foregroundStyle(.secondary)
                         }
+                    
+//                    GeometryReader { proxy in
+//                        HStack(spacing: 8) {
+//                            Text("Carbs per 100 g")
+//                                .frame(width: proxy.size.width * 0.7, alignment: .leading)
+//
+//                            HStack(spacing: 4) {
+//                                TextField("0", value: $carbsPer100g,
+//                                          format: .number.precision(.fractionLength(0...2)))
+//                                .keyboardType(.decimalPad)
+//                                .focused($focused, equals: .carbsPer100g)
+//                                .multilineTextAlignment(.trailing)
+//                                .onChange(of: carbsPer100g) { carbsPer100g = max(0, carbsPer100g) }
+//
+//                                Text("g")
+//                                    .foregroundStyle(.secondary)
+//                            }
+//                            .frame(width: proxy.size.width * 0.3, alignment: .trailing)
+//                        }
+//                    }
+//                    .frame(height: 22)
+                    
+                    
                         
                         HStack {
                             Text("Portion size")
@@ -373,6 +412,7 @@ struct PhoneAppInsulinDeliveryView: View {
                         sendMessagetoOther(message: messageToWatch)
                         
                         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                        refreshLiveActivityIfNeeded()
                         dismiss()
                         //                        selectedTab = "Home"
                     })
@@ -389,6 +429,7 @@ struct PhoneAppInsulinDeliveryView: View {
                         let messageToWatch: [String: Any] = ["content": "clearInsulinHistory"]
                         sendMessagetoOther(message: messageToWatch)
                         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                        refreshLiveActivityIfNeeded()
                     })
                     Button("Cancel", role: .cancel, action: {})
                 } message: {
@@ -401,6 +442,7 @@ struct PhoneAppInsulinDeliveryView: View {
                         sendMessagetoOther(message: messageToWatch)
                         resendHistoryToWatch()
                         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                        refreshLiveActivityIfNeeded()
                     })
                     Button("Cancel", role: .cancel, action: {})
                 } message: {
@@ -449,6 +491,7 @@ struct PhoneAppInsulinDeliveryView: View {
         sendMessagetoOther(message: messageToWatch)
         
         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+        refreshLiveActivityIfNeeded()
         dismiss()
     }
     
@@ -465,6 +508,7 @@ struct PhoneAppInsulinDeliveryView: View {
         insulinDeliveryHistorySingleton.insulinDeliveryHistory = history
         UserDefaults.group.insulinDeliveryHistory = history
         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+        refreshLiveActivityIfNeeded()
 
         // Notify paired watch about deletions (optional)
         for item in removedItems {
@@ -494,6 +538,13 @@ struct PhoneAppInsulinDeliveryView: View {
             sendMessagetoOther(message: messageToWatch)
             
             
+        }
+    }
+
+    private func refreshLiveActivityIfNeeded() {
+        guard SharedData.useLiveActivities else { return }
+        Task {
+            await LiveActivityManager.shared.refreshFromCurrentHistory(useLiveActivities: true)
         }
     }
     
