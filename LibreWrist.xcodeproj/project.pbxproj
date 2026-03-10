@@ -1214,6 +1214,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LibreWristWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FLwatchWidget;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_WKAppBundleIdentifier = "$(WATCHKIT_APP_BUNDLE_IDENTIFIER)";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1243,6 +1244,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LibreWristWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FLwatchWidget;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_WKAppBundleIdentifier = "$(WATCHKIT_APP_BUNDLE_IDENTIFIER)";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1272,6 +1274,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LibreWristWatchWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FLwatchWatchWidget;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_WKAppBundleIdentifier = "$(WATCHKIT_APP_BUNDLE_IDENTIFIER)";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1304,6 +1307,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LibreWristWatchWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FLwatchWatchWidget;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_WKAppBundleIdentifier = "$(WATCHKIT_APP_BUNDLE_IDENTIFIER)";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
