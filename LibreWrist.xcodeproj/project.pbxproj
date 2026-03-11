@@ -368,7 +368,7 @@
 		7BC51F612C7C9CD1009542D2 /* LibreWristConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LibreWristConfig.xcconfig; sourceTree = "<group>"; };
 		7BC51F622C7C9D51009542D2 /* LibreWrist.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibreWrist.entitlements; sourceTree = "<group>"; };
 		7BC51F632C7C9E96009542D2 /* LibreWristWatch Watch App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "LibreWristWatch Watch App.entitlements"; sourceTree = "<group>"; };
-		7BC51F642C7CA68D009542D2 /* LibreWristWatch-Watch-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "LibreWristWatch-Watch-App-Info.plist"; sourceTree = SOURCE_ROOT; };
+		7BC51F642C7CA68D009542D2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7BC51FBA2C7D04DE009542D2 /* WatchAppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAppSettingsView.swift; sourceTree = "<group>"; };
 		7BC51FBC2C7D31C3009542D2 /* History.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = History.swift; sourceTree = "<group>"; };
 		7BCA58682C8A292600C50F11 /* SensorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorSettings.swift; sourceTree = "<group>"; };
@@ -640,7 +640,7 @@
 				7B183E982C84B0AA0018A24F /* WatchToPhoneConnector.swift */,
 				7BC51FBF2C7D3D4B009542D2 /* Views */,
 				7B69F7C22CDD74DF00E3A50C /* Localizable.oldwatchstrings */,
-				7BC51F642C7CA68D009542D2 /* LibreWristWatch-Watch-App-Info.plist */,
+				7BC51F642C7CA68D009542D2 /* Info.plist */,
 				7BC51F632C7C9E96009542D2 /* LibreWristWatch Watch App.entitlements */,
 				7BC51F3B2C7C77B3009542D2 /* Assets.xcassets */,
 				7BC51F3D2C7C77B3009542D2 /* Preview Content */,
@@ -1642,7 +1642,7 @@
 				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "LibreWristWatch-Watch-App-Info.plist";
+				INFOPLIST_FILE = "LibreWristWatch Watch App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = FLwatch;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = de.poeml.philipp.LibreWrist;
@@ -1676,7 +1676,7 @@
 				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "LibreWristWatch-Watch-App-Info.plist";
+				INFOPLIST_FILE = "LibreWristWatch Watch App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = FLwatch;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = de.poeml.philipp.LibreWrist;
