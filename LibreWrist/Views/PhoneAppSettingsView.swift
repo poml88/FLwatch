@@ -103,7 +103,7 @@ struct PhoneAppSettingsView: View {
                     }
 
                 Toggle(isOn: $useLiveActivities) {
-                    Text("Enable Live Activity")
+                    Text("Enable Live Activities")
                     let systemLiveActivityEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
                     ? "System Live Activities: enabled"
                     : "System Live Activities: disabled in iOS settings"
@@ -309,4 +309,3 @@ struct PhoneAppSettingsView: View {
 #Preview {
     PhoneAppSettingsView()
 }
-

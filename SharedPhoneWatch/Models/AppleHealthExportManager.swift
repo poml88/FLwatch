@@ -21,13 +21,13 @@ enum AppleHealthAuthorizationState: Equatable {
     var statusText: String {
         switch self {
         case .unavailable:
-            return "Apple Health is not available on this device."
+            return String(localized: "Apple Health is not available on this device.")
         case .notDetermined:
-            return "Permission has not been requested yet."
+            return String(localized: "Permission has not been requested yet.")
         case .denied:
-            return "Apple Health write access is not granted."
+            return String(localized: "Apple Health write access is not granted.")
         case .authorized:
-            return "Apple Health export is authorized."
+            return String(localized: "Apple Health export is authorized.")
         }
     }
 }
