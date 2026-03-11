@@ -399,16 +399,19 @@ struct PhoneAppInsulinDeliveryView: View {
                 // MARK: - Alerts
                 .alert ("Confirm", isPresented: $isShowingInsulinDeliverySubmitAlert) {
                     Button("Submit", action: {
-                        let insulinDeliveryTimeStamp = pickerTimeStamp.timeIntervalSince1970
+                        let insulinDeliveryTimeStamp = pickerTimeStamp
                         let insulinDeliveryUnits = insulinSelected
-                        let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: insulinDeliveryTimeStamp, insulinUnits: insulinDeliveryUnits, insulinType: UserDefaults.group.insulinTypeSelected.rawValue)
-                        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // seems not to be necessary, but just to be sure....
-                        insulinDeliveryHistorySingleton.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
-                        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
+                        let delivery = insulinDeliveryHistorySingleton.recordDelivery(
+                            timestamp: insulinDeliveryTimeStamp,
+                            insulinUnits: insulinDeliveryUnits,
+                            insulinType: UserDefaults.group.insulinTypeSelected.rawValue
+                        )
                         
                         let messageToWatch: [String: Any] = ["content": "insulinDelivery", // The insulinTypeSelected is taken from UserDefaults, so does not need to be sent.
-                                                             "timeStamp": insulinDeliveryTimeStamp,
-                                                             "units": insulinDeliveryUnits]
+                                                             "id": delivery.id.uuidString,
+                                                             "timeStamp": insulinDeliveryTimeStamp.timeIntervalSince1970,
+                                                             "units": insulinDeliveryUnits,
+                                                             "insulinType": delivery.insulinType]
                         sendMessagetoOther(message: messageToWatch)
                         
                         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
@@ -424,8 +427,7 @@ struct PhoneAppInsulinDeliveryView: View {
                 .alert("Confirm", isPresented: $isShowingInsulinDeliveryResetAlert) {
                     Button("Reset", action: {
                         pickerTimeStamp = Date.now
-                        insulinDeliveryHistorySingleton.insulinDeliveryHistory = []
-                        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
+                        insulinDeliveryHistorySingleton.clearHistory()
                         let messageToWatch: [String: Any] = ["content": "clearInsulinHistory"]
                         sendMessagetoOther(message: messageToWatch)
                         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
@@ -468,23 +470,22 @@ struct PhoneAppInsulinDeliveryView: View {
     
     // MARK: - Submit helper (shared path, unchanged logic)
     private func submitInsulinXXX(units: Double, timestamp: Date, source: String) {
-        let insulinDeliveryTimeStamp = timestamp.timeIntervalSince1970
         let insulinDeliveryUnits = units
-        
-        let insulinDeliveryHistoryItem = InsulinDelivery(
-            id: UUID(),
-            timestamp: insulinDeliveryTimeStamp,
+
+        _ = source
+
+        let delivery = insulinDeliveryHistorySingleton.recordDelivery(
+            timestamp: timestamp,
             insulinUnits: insulinDeliveryUnits,
             insulinType: UserDefaults.group.insulinTypeSelected.rawValue
         )
-        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? []
-        insulinDeliveryHistorySingleton.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
-        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistorySingleton.insulinDeliveryHistory
         
         var messageToWatch: [String: Any] = [
             "content": "insulinDelivery",
-            "timeStamp": insulinDeliveryTimeStamp,
-            "units": insulinDeliveryUnits
+            "id": delivery.id.uuidString,
+            "timeStamp": timestamp.timeIntervalSince1970,
+            "units": insulinDeliveryUnits,
+            "insulinType": delivery.insulinType
         ]
         // Optional: tag the origin (manual/calculated); safe if ignored by receiver
         messageToWatch["source"] = source
@@ -500,13 +501,13 @@ struct PhoneAppInsulinDeliveryView: View {
     }
     
     private func deleteHistory(at offsets: IndexSet) {
+        insulinDeliveryHistorySingleton.read()
         var history = insulinDeliveryHistorySingleton.insulinDeliveryHistory
         let removedItems = offsets.map { history[$0] }
         history.remove(atOffsets: offsets)
 
         // Update model & persist
-        insulinDeliveryHistorySingleton.insulinDeliveryHistory = history
-        UserDefaults.group.insulinDeliveryHistory = history
+        insulinDeliveryHistorySingleton.replaceHistory(history)
         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
         refreshLiveActivityIfNeeded()
 
@@ -514,6 +515,7 @@ struct PhoneAppInsulinDeliveryView: View {
         for item in removedItems {
             let messageToWatch: [String: Any] = [
                 "content": "deleteInsulin",
+                "id": item.id.uuidString,
                 "timestamp": item.timeStamp
             ]
             sendMessagetoOther(message: messageToWatch)
@@ -521,6 +523,7 @@ struct PhoneAppInsulinDeliveryView: View {
     }
     
     private func resendHistoryToWatch() {
+        insulinDeliveryHistorySingleton.read()
         let history = insulinDeliveryHistorySingleton.insulinDeliveryHistory
 //        let removedItems = offsets.map { history[$0] }
 //        history.remove(atOffsets: offsets)
@@ -533,8 +536,10 @@ struct PhoneAppInsulinDeliveryView: View {
         // Notify paired watch about deletions (optional)
         for item in history {
             let messageToWatch: [String: Any] = ["content": "insulinDelivery", // The insulinTypeSelected is taken from UserDefaults, so does not need to be sent.
+                                                 "id": item.id.uuidString,
                                                  "timeStamp": item.timeStamp,
-                                                 "units": item.insulinUnits]
+                                                 "units": item.insulinUnits,
+                                                 "insulinType": item.insulinType]
             sendMessagetoOther(message: messageToWatch)
             
             

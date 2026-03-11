@@ -29,6 +29,10 @@
 			<string>ef el wotsch</string>
 		</dict>
 	</array>
+	<key>NSHealthShareUsageDescription</key>
+	<string>LibreWrist can write glucose graph history and manual insulin injections to Apple Health when you enable export.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>LibreWrist writes glucose graph history and manual insulin injections to Apple Health after you grant permission.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

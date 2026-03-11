@@ -50,7 +50,7 @@ struct InsulinDelivery: Codable, Identifiable {
     let insulinType: Int
     
     init(id: UUID, timestamp: Double, insulinUnits: Double, insulinType: Int) {
-        self.id = UUID()
+        self.id = id
         self.timeStamp = timestamp
         self.insulinUnits = insulinUnits
         self.insulinType = insulinType
@@ -85,20 +85,99 @@ struct InsulinTypePresets: Codable, Identifiable {
     }()
     
     private init() {
-        insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? []
+        insulinDeliveryHistory = Self.canonicalized(UserDefaults.group.insulinDeliveryHistory ?? [])
+    }
+
+    private static func canonicalized(_ history: [InsulinDelivery]) -> [InsulinDelivery] {
+        var seen = Set<UUID>()
+        return history
+            .sorted {
+                if $0.timeStamp == $1.timeStamp {
+                    return $0.id.uuidString < $1.id.uuidString
+                }
+                return $0.timeStamp < $1.timeStamp
+            }
+            .filter { seen.insert($0.id).inserted }
+    }
+
+    private func mergePersistedHistoryIntoMemory() {
+        let persistedHistory = UserDefaults.group.insulinDeliveryHistory ?? []
+        insulinDeliveryHistory = Self.canonicalized(insulinDeliveryHistory + persistedHistory)
+    }
+
+    private func persistCurrentHistory() {
+        insulinDeliveryHistory = Self.canonicalized(insulinDeliveryHistory)
+        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
     }
     
     func save() {
-        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
+        mergePersistedHistoryIntoMemory()
+        persistCurrentHistory()
     }
     
     func read() {
-        insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? []
+        insulinDeliveryHistory = Self.canonicalized(UserDefaults.group.insulinDeliveryHistory ?? [])
     }
     
     func saveAndUpdateIOB() {
-        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
+        mergePersistedHistoryIntoMemory()
+        persistCurrentHistory()
         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+    }
+
+    @discardableResult
+    func recordDelivery(id: UUID = UUID(), timestamp: Date, insulinUnits: Double, insulinType: Int) -> InsulinDelivery {
+        mergePersistedHistoryIntoMemory()
+        if let existingDelivery = insulinDeliveryHistory.first(where: { $0.id == id }) {
+            return existingDelivery
+        }
+
+        let delivery = InsulinDelivery(
+            id: id,
+            timestamp: timestamp.timeIntervalSince1970,
+            insulinUnits: insulinUnits,
+            insulinType: insulinType
+        )
+        insulinDeliveryHistory.append(delivery)
+        saveAndUpdateIOB()
+        Task {
+            await AppleHealthExportManager.shared.exportInsulinDeliveriesIfNeeded([delivery])
+        }
+        return delivery
+    }
+
+    func replaceHistory(_ history: [InsulinDelivery]) {
+        insulinDeliveryHistory = Self.canonicalized(history)
+        persistCurrentHistory()
+    }
+
+    @discardableResult
+    func removeDelivery(id: UUID) -> Bool {
+        mergePersistedHistoryIntoMemory()
+        let originalCount = insulinDeliveryHistory.count
+        insulinDeliveryHistory.removeAll { $0.id == id }
+        let didRemove = insulinDeliveryHistory.count != originalCount
+        if didRemove {
+            persistCurrentHistory()
+        }
+        return didRemove
+    }
+
+    @discardableResult
+    func removeDeliveries(timestamp: Double) -> Bool {
+        mergePersistedHistoryIntoMemory()
+        let originalCount = insulinDeliveryHistory.count
+        insulinDeliveryHistory.removeAll { $0.timeStamp == timestamp }
+        let didRemove = insulinDeliveryHistory.count != originalCount
+        if didRemove {
+            persistCurrentHistory()
+        }
+        return didRemove
+    }
+
+    func clearHistory() {
+        insulinDeliveryHistory = []
+        persistCurrentHistory()
     }
 }
 
@@ -119,6 +198,7 @@ struct InsulinTypePresets: Codable, Identifiable {
     
     func getCurrentIOB() -> Double {
         let idhs = InsulinDeliveryHistorySingleton.shared
+        idhs.read()
         let timeIntervalSince1970 = Date().timeIntervalSince1970
 //        idhs.read() // It is necessary to read in the UserDefaults value because widgets and app are individual programs with individual Singletons...
         // read is now done from widget directly
@@ -199,7 +279,8 @@ struct InsulinTypePresets: Codable, Identifiable {
     }
     
     func updateCurrentIOBAndGraphs() {
-                print("Updating IOB graphs: \(Date.now)")
+        InsulinDeliveryHistorySingleton.shared.read()
+        print("Updating IOB graphs: \(Date.now)")
         //MARK: Update IOB
         currentIOB = getCurrentIOB()
         
@@ -268,5 +349,3 @@ private struct InsulinDeliveryHistorySingletonKey: EnvironmentKey {
 private struct CurrentIOBSingletonKey: EnvironmentKey {
     static var defaultValue: CurrentIOBSingleton = CurrentIOBSingleton.shared
 }
-
-

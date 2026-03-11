@@ -35,5 +35,6 @@ extension Logger {
     
     static let liveActivity = Logger(subsystem: subsystem, category: "LiveActivity")
 
-}
+    static let healthKit = Logger(subsystem: subsystem, category: "HealthKit")
 
+}

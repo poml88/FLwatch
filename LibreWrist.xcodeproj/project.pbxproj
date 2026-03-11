@@ -189,6 +189,10 @@
 		7BDF0A722DBA40E200852BAD /* ReadGlucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BDF0A702DBA40D500852BAD /* ReadGlucose.swift */; };
 		7BDF0A7D2DBB887400852BAD /* FLwatchShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BDF0A7B2DBB886400852BAD /* FLwatchShortcuts.swift */; };
 		7BDF0A812DBB8B4500852BAD /* Glucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B299A102C90AFFC002A15C8 /* Glucose.swift */; };
+		7BF0A0022F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF0A0012F8A000100C0D001 /* AppleHealthExportManager.swift */; };
+		7BF0A0032F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF0A0012F8A000100C0D001 /* AppleHealthExportManager.swift */; };
+		7BF0A0042F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF0A0012F8A000100C0D001 /* AppleHealthExportManager.swift */; };
+		7BF0A0052F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF0A0012F8A000100C0D001 /* AppleHealthExportManager.swift */; };
 		7BFD83572C84DF6200A9B195 /* InsulinObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD83562C84DF6200A9B195 /* InsulinObjects.swift */; };
 		7BFD83582C84DF6200A9B195 /* InsulinObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD83562C84DF6200A9B195 /* InsulinObjects.swift */; };
 		7BFD835B2C84E48800A9B195 /* InsulinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD835A2C84E48800A9B195 /* InsulinModel.swift */; };
@@ -373,6 +377,7 @@
 		7BDB81312CB09AF800F4A60F /* LLUHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLUHeaders.swift; sourceTree = "<group>"; };
 		7BDF0A702DBA40D500852BAD /* ReadGlucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadGlucose.swift; sourceTree = "<group>"; };
 		7BDF0A7B2DBB886400852BAD /* FLwatchShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLwatchShortcuts.swift; sourceTree = "<group>"; };
+		7BF0A0012F8A000100C0D001 /* AppleHealthExportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleHealthExportManager.swift; sourceTree = "<group>"; };
 		7BFD83562C84DF6200A9B195 /* InsulinObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinObjects.swift; sourceTree = "<group>"; };
 		7BFD835A2C84E48800A9B195 /* InsulinModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InsulinModel.swift; sourceTree = "<group>"; };
 		7BFD835D2C84E48E00A9B195 /* ExponentialInsulinModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExponentialInsulinModel.swift; sourceTree = "<group>"; };
@@ -518,6 +523,7 @@
 				7BFD83562C84DF6200A9B195 /* InsulinObjects.swift */,
 				7B1A7CA32C79E413006D603C /* LibreLinkUp.swift */,
 				7B299A192C90B0A1002A15C8 /* LibreLinkUpAlarm.swift */,
+				7BF0A0012F8A000100C0D001 /* AppleHealthExportManager.swift */,
 				7B299A0D2C90AFC8002A15C8 /* LibreLinkUpError.swift */,
 				7B299A162C90B089002A15C8 /* LibreLinkUpGlucose.swift */,
 				7B299A1C2C90DC43002A15C8 /* LibreLinkUpHistory.swift */,
@@ -944,6 +950,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7BF0A0042F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */,
 				7BDF0A812DBB8B4500852BAD /* Glucose.swift in Sources */,
 				7B299A1D2C90DC43002A15C8 /* LibreLinkUpHistory.swift in Sources */,
 				7B2ED6B12F4DD8780046F363 /* LibreLinkUpService.swift in Sources */,
@@ -990,6 +997,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7BF0A0052F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */,
 				7B299A122C90AFFC002A15C8 /* Glucose.swift in Sources */,
 				7BA3043E2F5E31F6005384BF /* FileStoreHelper.swift in Sources */,
 				7B299A182C90B089002A15C8 /* LibreLinkUpGlucose.swift in Sources */,
@@ -1035,6 +1043,7 @@
 				7BA304152F5E30B0005384BF /* SensorSettings.swift in Sources */,
 				7BA304162F5E30B0005384BF /* PasswordKeychain.swift in Sources */,
 				7B096C9B2E33F2CA00B6744C /* PhoneAppGraphView.swift in Sources */,
+				7BF0A0022F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */,
 				7BA304172F5E30B0005384BF /* SensorType.swift in Sources */,
 				7BFD83572C84DF6200A9B195 /* InsulinObjects.swift in Sources */,
 				7B462BFD2C7FBAC8003FEDC3 /* MeasurementColor.swift in Sources */,
@@ -1109,6 +1118,7 @@
 				7BA3043C2F5E31F6005384BF /* FileStoreHelper.swift in Sources */,
 				7BC51F482C7C7FA3009542D2 /* WatchAppHomeView.swift in Sources */,
 				7BA304232F5E30B0005384BF /* LibreLinkUp.swift in Sources */,
+				7BF0A0032F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */,
 				7BDF0A722DBA40E200852BAD /* ReadGlucose.swift in Sources */,
 				7B9F09A42E73075B0037B091 /* AddInsulinSiri.swift in Sources */,
 				7BFD83582C84DF6200A9B195 /* InsulinObjects.swift in Sources */,
@@ -1636,7 +1646,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = FLwatch;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = de.poeml.philipp.LibreWrist;
-				INFOPLIST_KEY_WKSupportsLiveActivityLaunchAttributeTypes = FLwatch.FLWatchAttributes;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1671,7 +1680,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = FLwatch;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = de.poeml.philipp.LibreWrist;
-				INFOPLIST_KEY_WKSupportsLiveActivityLaunchAttributeTypes = FLwatch.FLWatchAttributes;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

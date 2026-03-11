@@ -29,6 +29,8 @@ struct PhoneAppSettingsView: View {
     @State private var isShowingSiriSheet = false
     @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
+    @State private var appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
+    @State private var appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
     private var watchConnector = WatchConnectivityManager.shared
     let updateFrequencyOptions: [Int] = [1, 5, 10, 15, 20]
     private var bgAppRefreshExecutionTimestamps: [Date] {
@@ -119,6 +121,43 @@ struct PhoneAppSettingsView: View {
                     }
             } header: {
                 Text("Settings")
+            }
+
+            Section {
+                Toggle(
+                    "Export glucose graph history and insulin to Apple Health",
+                    isOn: Binding(
+                        get: { appleHealthExportEnabled },
+                        set: { newValue in
+                            if newValue {
+                                Task {
+                                    let state = await AppleHealthExportManager.shared.requestWriteAuthorizationAndEnableExport()
+                                    await MainActor.run {
+                                        appleHealthAuthorizationState = state
+                                        appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
+                                    }
+                                }
+                            } else {
+                                AppleHealthExportManager.shared.disableExport()
+                                appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
+                                appleHealthExportEnabled = false
+                            }
+                        }
+                    )
+                )
+                .disabled(appleHealthAuthorizationState == .unavailable)
+
+                Text(appleHealthAuthorizationState.statusText)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+
+                if appleHealthAuthorizationState == .denied {
+                    Link("Open app settings", destination: URL(string: UIApplication.openSettingsURLString)!)
+                }
+            } header: {
+                Text("Apple Health")
+            } footer: {
+                Text("Permission is requested only when you turn this on. LibreWrist exports manual insulin injections and graph history glucose values only, and tags samples with HealthKit sync identifiers to avoid duplicates.")
             }
             
             Section {
@@ -246,10 +285,18 @@ struct PhoneAppSettingsView: View {
                 
             }
         }
+        .onAppear {
+            refreshAppleHealthStatus()
+        }
         
     }
     func sendMessagetoOther(message: [String: Any]) {
         watchConnector.sendMessageToPairedDevice(message)
+    }
+
+    private func refreshAppleHealthStatus() {
+        appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
+        appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
     }
     
 }
@@ -257,5 +304,4 @@ struct PhoneAppSettingsView: View {
 #Preview {
     PhoneAppSettingsView()
 }
-
 

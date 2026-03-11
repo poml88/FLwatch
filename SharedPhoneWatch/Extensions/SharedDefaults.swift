@@ -37,6 +37,7 @@ enum DefaultsKey: String {
     case widgetUpdateFrequency = "widgetUpdateFrequencyKey"
     case tapComplicationReloads = "tapComplicationReloadsKey"
     case useLiveActivities = "useLiveActivitiesKey"
+    case appleHealthExportEnabled = "appleHealthExportEnabledKey"
     case icrGramsPerUnit = "icrGramsPerUnitKey"
     case roundingStep = "roundingStepKey"
     case carbsPer100g = "carbsPer100gKey"
@@ -252,6 +253,11 @@ enum SharedData {
     static var useLiveActivities: Bool {
         get { store.getBool(.useLiveActivities, defaultValue: true) }
         set { store.setBool(newValue, forKey: .useLiveActivities) }
+    }
+
+    static var appleHealthExportEnabled: Bool {
+        get { store.getBool(.appleHealthExportEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .appleHealthExportEnabled) }
     }
     
     static var libreLinkUpScrapingLogbook: Bool {

@@ -843,6 +843,9 @@
         }
       }
     },
+    "Apple Health" : {
+
+    },
     "Ask the system to record insulin units for IOB calculation." : {
       "localizations" : {
         "de" : {
@@ -2273,6 +2276,9 @@
           }
         }
       }
+    },
+    "Export glucose graph history and insulin to Apple Health" : {
+
     },
     "falling" : {
       "localizations" : {
@@ -3896,6 +3902,9 @@
         }
       }
     },
+    "Open app settings" : {
+
+    },
     "Open issue on GitHub" : {
       "localizations" : {
         "de" : {
@@ -4009,6 +4018,9 @@
           }
         }
       }
+    },
+    "Permission is requested only when you turn this on. LibreWrist exports manual insulin injections and graph history glucose values only, and tags samples with HealthKit sync identifiers to avoid duplicates." : {
+
     },
     "Phone: show insulin activity graph" : {
       "localizations" : {

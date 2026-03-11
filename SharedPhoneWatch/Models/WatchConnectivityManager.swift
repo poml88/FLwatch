@@ -108,22 +108,34 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         }
         
         if message["content"] as? String == "insulinDelivery" {
-            let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: message["timeStamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600, insulinUnits: message["units"] as? Double ?? 0.0, insulinType: UserDefaults.group.insulinTypeSelected.rawValue)
-            idhs.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
-            idhs.saveAndUpdateIOB()
+            let deliveryID = UUID(uuidString: message["id"] as? String ?? "") ?? UUID()
+            let timeStamp = message["timeStamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600
+            let insulinUnits = message["units"] as? Double ?? 0.0
+            let insulinType = message["insulinType"] as? Int ?? UserDefaults.group.insulinTypeSelected.rawValue
+            idhs.recordDelivery(
+                id: deliveryID,
+                timestamp: Date(timeIntervalSince1970: timeStamp),
+                insulinUnits: insulinUnits,
+                insulinType: insulinType
+            )
         }
         
         if message["content"] as? String == "clearInsulinHistory" {
-            idhs.insulinDeliveryHistory = []
-            idhs.saveAndUpdateIOB()
+            idhs.clearHistory()
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
         }
         
         if message["content"] as? String == "deleteInsulin" {
-            let timeStamp = message["timestamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600
-            if let idx = idhs.insulinDeliveryHistory.firstIndex(where: { $0.timeStamp == timeStamp }) {
-                idhs.insulinDeliveryHistory.remove(at: idx)
+            let didRemove: Bool
+            if let idString = message["id"] as? String, let deliveryID = UUID(uuidString: idString) {
+                didRemove = idhs.removeDelivery(id: deliveryID)
+            } else {
+                let timeStamp = message["timestamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600
+                didRemove = idhs.removeDeliveries(timestamp: timeStamp)
             }
-            idhs.saveAndUpdateIOB()
+            if didRemove {
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            }
         }
         
         if message["content"] as? String == "updateInsulinTypeSelected" {

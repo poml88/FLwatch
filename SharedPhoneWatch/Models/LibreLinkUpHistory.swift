@@ -18,6 +18,7 @@ final class LibreLinkUpHistoryStore {
     )
 
     private struct Snapshot: Codable {
+        var fullLibreLinkUpGlucose: [LibreLinkUpGlucose]
         var libreLinkUpGlucose: [LibreLinkUpGlucose]
         var libreLinkUpMinuteGlucose: [LibreLinkUpGlucose]
         var latestLibreLinkUpGlucose: LibreLinkUpGlucose?
@@ -27,6 +28,58 @@ final class LibreLinkUpHistoryStore {
         var maxBG: Int
         var lastOnlineDate: Date
         var updatedAt: Date
+
+        private enum CodingKeys: String, CodingKey {
+            case fullLibreLinkUpGlucose
+            case libreLinkUpGlucose
+            case libreLinkUpMinuteGlucose
+            case latestLibreLinkUpGlucose
+            case lastReadingDate
+            case currentGlucose
+            case currentTrendArrow
+            case maxBG
+            case lastOnlineDate
+            case updatedAt
+        }
+
+        init(
+            fullLibreLinkUpGlucose: [LibreLinkUpGlucose],
+            libreLinkUpGlucose: [LibreLinkUpGlucose],
+            libreLinkUpMinuteGlucose: [LibreLinkUpGlucose],
+            latestLibreLinkUpGlucose: LibreLinkUpGlucose?,
+            lastReadingDate: Date,
+            currentGlucose: Int,
+            currentTrendArrow: String,
+            maxBG: Int,
+            lastOnlineDate: Date,
+            updatedAt: Date
+        ) {
+            self.fullLibreLinkUpGlucose = fullLibreLinkUpGlucose
+            self.libreLinkUpGlucose = libreLinkUpGlucose
+            self.libreLinkUpMinuteGlucose = libreLinkUpMinuteGlucose
+            self.latestLibreLinkUpGlucose = latestLibreLinkUpGlucose
+            self.lastReadingDate = lastReadingDate
+            self.currentGlucose = currentGlucose
+            self.currentTrendArrow = currentTrendArrow
+            self.maxBG = maxBG
+            self.lastOnlineDate = lastOnlineDate
+            self.updatedAt = updatedAt
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let graphHistory = try container.decode([LibreLinkUpGlucose].self, forKey: .libreLinkUpGlucose)
+            self.fullLibreLinkUpGlucose = try container.decodeIfPresent([LibreLinkUpGlucose].self, forKey: .fullLibreLinkUpGlucose) ?? graphHistory
+            self.libreLinkUpGlucose = graphHistory
+            self.libreLinkUpMinuteGlucose = try container.decode([LibreLinkUpGlucose].self, forKey: .libreLinkUpMinuteGlucose)
+            self.latestLibreLinkUpGlucose = try container.decodeIfPresent(LibreLinkUpGlucose.self, forKey: .latestLibreLinkUpGlucose)
+            self.lastReadingDate = try container.decode(Date.self, forKey: .lastReadingDate)
+            self.currentGlucose = try container.decode(Int.self, forKey: .currentGlucose)
+            self.currentTrendArrow = try container.decode(String.self, forKey: .currentTrendArrow)
+            self.maxBG = try container.decode(Int.self, forKey: .maxBG)
+            self.lastOnlineDate = try container.decode(Date.self, forKey: .lastOnlineDate)
+            self.updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        }
     }
 
     // Legacy UserDefaults payload to support migration to file-based stores.
@@ -43,6 +96,7 @@ final class LibreLinkUpHistoryStore {
 
     static let shared: LibreLinkUpHistoryStore = LibreLinkUpHistoryStore()
 
+    private(set) var fullLibreLinkUpGlucose: [LibreLinkUpGlucose]
     private(set) var libreLinkUpGlucose: [LibreLinkUpGlucose]
     private(set) var libreLinkUpMinuteGlucose: [LibreLinkUpGlucose]
     private(set) var latestLibreLinkUpGlucose: LibreLinkUpGlucose?
@@ -93,6 +147,7 @@ final class LibreLinkUpHistoryStore {
         let initial = storedSnapshot
             ?? Self.readLegacySnapshotFromUserDefaults()
             ?? Self.defaultSnapshot()
+        self.fullLibreLinkUpGlucose = initial.fullLibreLinkUpGlucose
         self.libreLinkUpGlucose = initial.libreLinkUpGlucose
         self.libreLinkUpMinuteGlucose = initial.libreLinkUpMinuteGlucose
         self.latestLibreLinkUpGlucose = initial.latestLibreLinkUpGlucose
@@ -116,6 +171,7 @@ final class LibreLinkUpHistoryStore {
 
     @discardableResult
     func replaceCacheAndPersist(
+        fullLibreLinkUpGlucose: [LibreLinkUpGlucose]? = nil,
         libreLinkUpGlucose: [LibreLinkUpGlucose],
         libreLinkUpMinuteGlucose: [LibreLinkUpGlucose],
         latestLibreLinkUpGlucose: LibreLinkUpGlucose?,
@@ -129,7 +185,11 @@ final class LibreLinkUpHistoryStore {
         let normalizedLatest = latestLibreLinkUpGlucose
             ?? libreLinkUpGlucose.first
             ?? libreLinkUpMinuteGlucose.first
+        let previousLatestDate = self.latestLibreLinkUpGlucose?.glucose.date ?? .distantPast
+        let shouldExportGlucose = (normalizedLatest?.glucose.date ?? .distantPast) > previousLatestDate
+        let normalizedFullGraphHistory = fullLibreLinkUpGlucose ?? libreLinkUpGlucose
         let nextSnapshot = Snapshot(
+            fullLibreLinkUpGlucose: normalizedFullGraphHistory,
             libreLinkUpGlucose: libreLinkUpGlucose,
             libreLinkUpMinuteGlucose: libreLinkUpMinuteGlucose,
             latestLibreLinkUpGlucose: normalizedLatest,
@@ -155,12 +215,18 @@ final class LibreLinkUpHistoryStore {
         }
         apply(snapshot: nextSnapshot)
         lastKnownModificationDate = modificationDate
+        if shouldExportGlucose {
+            Task {
+                await AppleHealthExportManager.shared.exportGlucoseSamplesIfNeeded(normalizedFullGraphHistory)
+            }
+        }
         return true
     }
 
     @discardableResult
     func updateLastOnlineDate(_ lastOnlineDate: Date = Date(), updatedAt: Date = Date()) -> Bool {
         replaceCacheAndPersist(
+            fullLibreLinkUpGlucose: fullLibreLinkUpGlucose,
             libreLinkUpGlucose: libreLinkUpGlucose,
             libreLinkUpMinuteGlucose: libreLinkUpMinuteGlucose,
             latestLibreLinkUpGlucose: latestLibreLinkUpGlucose,
@@ -222,6 +288,7 @@ final class LibreLinkUpHistoryStore {
     @discardableResult
     private func persistCurrentSnapshot() -> Bool {
         let snapshot = Snapshot(
+            fullLibreLinkUpGlucose: fullLibreLinkUpGlucose,
             libreLinkUpGlucose: libreLinkUpGlucose,
             libreLinkUpMinuteGlucose: libreLinkUpMinuteGlucose,
             latestLibreLinkUpGlucose: latestLibreLinkUpGlucose,
@@ -249,6 +316,7 @@ final class LibreLinkUpHistoryStore {
     }
 
     private func apply(snapshot: Snapshot) {
+        fullLibreLinkUpGlucose = snapshot.fullLibreLinkUpGlucose
         libreLinkUpGlucose = snapshot.libreLinkUpGlucose
         libreLinkUpMinuteGlucose = snapshot.libreLinkUpMinuteGlucose
         latestLibreLinkUpGlucose = snapshot.latestLibreLinkUpGlucose
@@ -266,6 +334,7 @@ final class LibreLinkUpHistoryStore {
         let graphHistory = defaultGraphEntries(now: now)
         let minuteHistory = defaultMinuteEntries(now: now)
         return Snapshot(
+            fullLibreLinkUpGlucose: graphHistory,
             libreLinkUpGlucose: graphHistory,
             libreLinkUpMinuteGlucose: minuteHistory,
             latestLibreLinkUpGlucose: graphHistory.first,
@@ -365,6 +434,7 @@ final class LibreLinkUpHistoryStore {
             return nil
         }
         return Snapshot(
+            fullLibreLinkUpGlucose: legacySnapshot.libreLinkUpGlucose,
             libreLinkUpGlucose: legacySnapshot.libreLinkUpGlucose,
             libreLinkUpMinuteGlucose: legacySnapshot.libreLinkUpMinuteGlucose,
             latestLibreLinkUpGlucose: legacySnapshot.latestLibreLinkUpGlucose

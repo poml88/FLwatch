@@ -105,6 +105,7 @@ class LibreLinkUp  {
                         SensorSettingsStore.shared.replaceCacheAndPersist(sensorSettings: sensorSettingsRead, sensorType: sensorType)
                         // TODO: just merge with newer values
                         let graphHistoryReversed: [LibreLinkUpGlucose] = graphHistory.reversed()
+                        let fullGraphHistory = graphHistoryReversed
                         let dateSixHoursTenAgo: Date = Date(timeIntervalSinceNow: -6 * 60 * 60 - 10 * 60)
                         var filteredGraphHistory = graphHistoryReversed.filter { $0.glucose.date > dateSixHoursTenAgo } // delete everything older than 6 hours.
                         if filteredGraphHistory.isEmpty {
@@ -153,6 +154,7 @@ class LibreLinkUp  {
                         let maxBG = filteredGraphHistory.isEmpty ? 225 : filteredGraphHistory[indexOfMaxGlucoseItem].glucose.value
 #endif
                         _ = historyStore.replaceCacheAndPersist(
+                            fullLibreLinkUpGlucose: fullGraphHistory,
                             libreLinkUpGlucose: filteredGraphHistory,
                             libreLinkUpMinuteGlucose: trend,
                             latestLibreLinkUpGlucose: lastMeasurement,

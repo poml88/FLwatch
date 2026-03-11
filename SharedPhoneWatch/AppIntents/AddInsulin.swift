@@ -138,15 +138,18 @@ struct AddInsulin: AppIntent {
         //            insulinDeliveryUnits = Double(formattedString ?? 0.0)
         
         //        var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
-        let idhs = InsulinDeliveryHistorySingleton.shared
         let insulinDeliveryTimeStamp = Date.now.timeIntervalSince1970
-        let insulinDeliveryHistoryItem = InsulinDelivery(id: UUID(), timestamp: insulinDeliveryTimeStamp, insulinUnits: insulinDeliveryUnits, insulinType: UserDefaults.group.insulinTypeSelected.rawValue)
-        idhs.insulinDeliveryHistory.append(insulinDeliveryHistoryItem)
-        idhs.saveAndUpdateIOB()
+        let delivery = InsulinDeliveryHistorySingleton.shared.recordDelivery(
+            timestamp: Date(timeIntervalSince1970: insulinDeliveryTimeStamp),
+            insulinUnits: insulinDeliveryUnits,
+            insulinType: UserDefaults.group.insulinTypeSelected.rawValue
+        )
         
         let messageToWatch: [String: Any] = ["content": "insulinDelivery",
+                                             "id": delivery.id.uuidString,
                                              "timeStamp": insulinDeliveryTimeStamp,
-                                             "units": insulinDeliveryUnits]
+                                             "units": insulinDeliveryUnits,
+                                             "insulinType": delivery.insulinType]
         sendMessagetoOther(message: messageToWatch)
         
         let units = String(format: "%.1f", insulinDeliveryUnits)
@@ -369,5 +372,3 @@ extension InsulinUnitsEnum: AppEnum {
         .value30
     ]
 }
-
-

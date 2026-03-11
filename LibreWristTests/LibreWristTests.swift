@@ -33,4 +33,27 @@ final class LibreWristTests: XCTestCase {
         }
     }
 
+    func testGlucoseSyncIdentifierIsStable() throws {
+        let reading = LibreLinkUpGlucose(
+            glucose: Glucose(143, id: 42, date: Date(timeIntervalSince1970: 1_710_000_000), source: "LibreLinkUp"),
+            color: .green,
+            trendArrow: .stable
+        )
+
+        XCTAssertEqual(
+            AppleHealthExportManager.glucoseSyncIdentifier(for: reading),
+            "librewrist.glucose.1710000000.143"
+        )
+    }
+
+    func testInsulinSyncIdentifierIgnoresRecordUUID() throws {
+        let first = InsulinDelivery(id: UUID(), timestamp: 1_710_000_000, insulinUnits: 4.5, insulinType: InsulinType.rapidActing.rawValue)
+        let second = InsulinDelivery(id: UUID(), timestamp: 1_710_000_000, insulinUnits: 4.5, insulinType: InsulinType.rapidActing.rawValue)
+
+        XCTAssertEqual(
+            AppleHealthExportManager.insulinSyncIdentifier(for: first),
+            AppleHealthExportManager.insulinSyncIdentifier(for: second)
+        )
+    }
+
 }
