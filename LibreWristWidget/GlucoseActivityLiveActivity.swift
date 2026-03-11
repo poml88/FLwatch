@@ -21,27 +21,30 @@ struct FLWatchLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    let isStaleActivity: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
-                    
-                    let staleGlucoseThreshold: TimeInterval = 10 * 60
-                    
-                    var isStaleGlucose: Bool {
-                        Date().timeIntervalSince(context.state.latestTimestamp ) > staleGlucoseThreshold
-                    }
-
+//                    let isStaleActivity: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleActivityAfterInterval) <= Date()
+                                        
+//                    var isStaleGlucose: Bool {
+//                        Date().timeIntervalSince(context.state.latestTimestamp ) > FLWatchAttributes.staleGlucoseAfterInterval
+//                    }
+                    let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
                     
                     HStack {
                         Text("\(context.state.latestGlucoseValue.units(for: context.state.glucoseUnit)) \(context.state.latestTrend)")
-                            .font(.title2)
+//                            .font(.headline)
                             .strikethrough(isStaleGlucose)
                             .bold(!isStaleGlucose)
                             .foregroundStyle(context.state.latestMeasurementColor.color)
+                            .lineLimit(1)
+                            .allowsTightening(true)
+                            .minimumScaleFactor(0.7)
                         
                         if context.state.currentIOB > 0 {
                             Text(context.state.currentIOBText)
-                                .font(.footnote)
+//                                .font(.footnote)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
+                                .allowsTightening(true)
+                                .minimumScaleFactor(0.7)
                         }
                     }
                 }
@@ -56,8 +59,11 @@ struct FLWatchLiveActivityWidget: Widget {
                                 maxPrecision: .seconds(1)
                             )
                         )
-                            .bold()
+//                            .bold()
                             .monospacedDigit()
+                            .lineLimit(1)
+                            .allowsTightening(true)
+                            .minimumScaleFactor(0.7)
                             .frame(width: 50, alignment: .trailing)
 
 //                        if context.state.currentIOB > 0 {
@@ -76,16 +82,29 @@ struct FLWatchLiveActivityWidget: Widget {
 //                    }
 //                }
                 DynamicIslandExpandedRegion(.bottom) {
-                    GlucoseLiveActivityChart(contentState: context.state, showsAxes: true)
-                        .padding(.top, 0)
+                    
+                    GlucoseLiveActivityChart(
+                        contentState: context.state,
+                        showsAxes: true,
+                        xAxisFont: Font.system(size: 8, weight: .regular),
+                        yAxisFont: Font.system(size: 8, weight: .regular),
+                        graphLineWidth: 3,
+                        graphPointSize: 3,
+                        minutePointSize: 8,
+                        insulinMarkerFontSize: 12,
+                        insulinAnnotationFont: Font.system(size: 12, weight: .regular)
+                    )
+//                    .padding(.top, 0)
+//                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    
+//                    GlucoseLiveActivityChart(contentState: context.state, showsAxes: true)
+//                        .padding(.top, 0)
 //                        .frame(height: 84)
                 }
             } compactLeading: {
-                let staleGlucoseThreshold: TimeInterval = 10 * 60
                 
-                var isStaleGlucose: Bool {
-                    Date().timeIntervalSince(context.state.latestTimestamp ) > staleGlucoseThreshold
-                }
+                let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
+
                 
                 Text("\(context.state.latestGlucoseValue.units(for: context.state.glucoseUnit)) \(context.state.latestTrend)")
                     .strikethrough(isStaleGlucose)
@@ -105,11 +124,9 @@ struct FLWatchLiveActivityWidget: Widget {
                     .monospacedDigit()
                     .frame(width: 50, alignment: .trailing)
             } minimal: {
-                let staleGlucoseThreshold: TimeInterval = 10 * 60
-                
-                var isStaleGlucose: Bool {
-                    Date().timeIntervalSince(context.state.latestTimestamp ) > staleGlucoseThreshold
-                }
+  
+                let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
+
                 
                 Text(context.state.latestGlucoseValue.units(for: context.state.glucoseUnit))
                     .strikethrough(isStaleGlucose)
@@ -143,8 +160,8 @@ private struct DefaultLockScreenActivityView: View { // currently never displaye
     let contentState: FLWatchAttributes.ContentState
 
     var body: some View {
-        let staleAfterMinutes = Int(FLWatchAttributes.staleAfterInterval / 60)
-        let isStale = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval) <= Date()
+        let staleAfterMinutes = Int(FLWatchAttributes.staleActivityAfterInterval / 60)
+        let isStale = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleActivityAfterInterval) <= Date()
 
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
@@ -189,11 +206,8 @@ private struct SmallSupplementalActivityView: View {
     let contentState: FLWatchAttributes.ContentState
 
     var body: some View {
-        let staleGlucoseThreshold: TimeInterval = 10 * 60
         
-        var isStaleGlucose: Bool {
-            Date().timeIntervalSince(contentState.latestTimestamp ) > staleGlucoseThreshold
-        }
+        let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
 
         VStack (spacing: 5){
             HStack {
@@ -202,13 +216,17 @@ private struct SmallSupplementalActivityView: View {
                     .strikethrough(isStaleGlucose)
                     .bold(!isStaleGlucose)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    .allowsTightening(true)
+                    .minimumScaleFactor(0.7)
                     .foregroundStyle(contentState.latestMeasurementColor.color)
 
                 Text(contentState.latestTrend)
                     .font(.footnote)
                     .strikethrough(isStaleGlucose)
                     .bold(!isStaleGlucose)
+                    .lineLimit(1)
+                    .allowsTightening(true)
+                    .minimumScaleFactor(0.7)
                     .foregroundStyle(contentState.latestMeasurementColor.color)
 
                 if contentState.currentIOB > 0 {
@@ -229,9 +247,12 @@ private struct SmallSupplementalActivityView: View {
                         maxPrecision: .seconds(1)
                     )
                 )
-                .font(.footnote)
-                    .bold()
+                .font(.caption)
+//                    .bold()
                     .monospacedDigit()
+                    .lineLimit(1)
+                    .allowsTightening(true)
+                    .minimumScaleFactor(0.7)
                     .frame(width: 50, alignment: .trailing)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -241,10 +262,10 @@ private struct SmallSupplementalActivityView: View {
                 showsAxes: true,
                 xAxisFont: Font.system(size: 8, weight: .regular),
                 yAxisFont: Font.system(size: 8, weight: .regular),
-                graphLineWidth: 3,
-                graphPointSize: 4,
-                minutePointSize: 12,
-                insulinMarkerFontSize: 12,
+                graphLineWidth: 2,
+                graphPointSize: 2,
+                minutePointSize: 5,
+                insulinMarkerFontSize: 8,
                 insulinAnnotationFont: Font.system(size: 8, weight: .regular)
             )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -265,17 +286,15 @@ private struct MediumSupplementalActivityView: View {
     
     var body: some View {
 //        let staleAfterMinutes = Int(FLWatchAttributes.staleAfterInterval / 60)
-        let staleGlucoseThreshold: TimeInterval = 10 * 60
         
-        var isStaleGlucose: Bool {
-            Date().timeIntervalSince(contentState.latestTimestamp ) > staleGlucoseThreshold
-        }
+        let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
+
 
 
         VStack (spacing: 8){
             HStack {
                 Text(contentState.latestGlucoseValue.units(for: contentState.glucoseUnit))
-                    .font(.title)
+//                    .font(.title)
                     .strikethrough(isStaleGlucose)
                     .bold(!isStaleGlucose)
                     .lineLimit(1)
@@ -283,14 +302,14 @@ private struct MediumSupplementalActivityView: View {
                     .foregroundStyle(contentState.latestMeasurementColor.color)
 
                 Text(contentState.latestTrend)
-                    .font(.title)
+//                    .font(.title)
                     .strikethrough(isStaleGlucose)
                     .bold(!isStaleGlucose)
                     .foregroundStyle(contentState.latestMeasurementColor.color)
 
                 if contentState.currentIOB > 0 {
                     Text("IOB \(contentState.currentIOBText)")
-                        .font(.headline)
+//                        .font(.headline)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -306,8 +325,12 @@ private struct MediumSupplementalActivityView: View {
                         maxPrecision: .seconds(1)
                     )
                 )
-                    .bold()
+//                    .bold()
                     .monospacedDigit()
+                    .lineLimit(1)
+//                    .truncationMode(.head)
+                    .allowsTightening(true)
+                    .minimumScaleFactor(0.7)
                     .frame(width: 50, alignment: .trailing)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -317,10 +340,10 @@ private struct MediumSupplementalActivityView: View {
                 showsAxes: true,
                 xAxisFont: .footnote,
                 yAxisFont: .footnote,
-                graphLineWidth: 4,
-                graphPointSize: 6,
-                minutePointSize: 18,
-                insulinMarkerFontSize: 15,
+                graphLineWidth: 3,
+                graphPointSize: 3,
+                minutePointSize: 10,
+                insulinMarkerFontSize: 12,
                 insulinAnnotationFont: .footnote
             )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -198,6 +198,39 @@ final class AppleHealthExportManager {
 #endif
     }
 
+    func deleteInsulinDeliveriesIfPresent(_ deliveries: [InsulinDelivery]) async {
+#if os(iOS) && canImport(HealthKit)
+        guard authorizationState() == .authorized else { return }
+
+        let uniqueDeliveries = uniqueInsulinDeliveries(deliveries)
+        guard !uniqueDeliveries.isEmpty else { return }
+
+        let dates = uniqueDeliveries.map { Date(timeIntervalSince1970: $0.timeStamp) }
+        let identifiersToDelete = Set(uniqueDeliveries.map(Self.insulinSyncIdentifier(for:)))
+
+        do {
+            let existingSamples = try await existingInsulinSamples(
+                start: dates.min() ?? .distantPast,
+                end: dates.max() ?? .distantFuture
+            )
+            let matchingSamples = existingSamples.filter { sample in
+                guard let syncIdentifier = sample.metadata?[HKMetadataKeySyncIdentifier] as? String else {
+                    return false
+                }
+                return identifiersToDelete.contains(syncIdentifier)
+            }
+
+            guard !matchingSamples.isEmpty else { return }
+            try await delete(samples: matchingSamples)
+            Logger.healthKit.info("Deleted \(matchingSamples.count, privacy: .public) insulin sample(s) from Apple Health.")
+        } catch {
+            Logger.healthKit.error("Insulin delete failed: \(error.localizedDescription, privacy: .public)")
+        }
+#else
+        _ = deliveries
+#endif
+    }
+
     static func glucoseSyncIdentifier(for reading: LibreLinkUpGlucose) -> String {
         let timestamp = Int(reading.glucose.date.timeIntervalSince1970.rounded())
         return "librewrist.glucose.\(timestamp).\(reading.glucose.value)"
@@ -256,6 +289,22 @@ final class AppleHealthExportManager {
         }
     }
 
+    private func delete(samples: [HKObject]) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            healthStore.delete(samples) { success, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                if success {
+                    continuation.resume(returning: ())
+                    return
+                }
+                continuation.resume(throwing: AppleHealthExportError.deleteFailed)
+            }
+        }
+    }
+
     private func existingSyncIdentifiers(
         for sampleType: HKSampleType,
         start: Date,
@@ -283,6 +332,29 @@ final class AppleHealthExportManager {
                     }
                 )
                 continuation.resume(returning: syncIdentifiers)
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    private func existingInsulinSamples(start: Date, end: Date) async throws -> [HKQuantitySample] {
+        let queryStart = start.addingTimeInterval(-5 * 60)
+        let queryEnd = end.addingTimeInterval(5 * 60)
+        let predicate = HKQuery.predicateForSamples(withStart: queryStart, end: queryEnd, options: [])
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: insulinType,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: nil
+            ) { _, samples, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                continuation.resume(returning: (samples as? [HKQuantitySample]) ?? [])
             }
             healthStore.execute(query)
         }
@@ -317,6 +389,7 @@ final class AppleHealthExportManager {
 private enum AppleHealthExportError: LocalizedError {
     case authorizationFailed
     case saveFailed
+    case deleteFailed
 
     var errorDescription: String? {
         switch self {
@@ -324,6 +397,8 @@ private enum AppleHealthExportError: LocalizedError {
             return "Apple Health authorization did not complete successfully."
         case .saveFailed:
             return "Apple Health did not confirm that the samples were saved."
+        case .deleteFailed:
+            return "Apple Health did not confirm that the samples were deleted."
         }
     }
 }

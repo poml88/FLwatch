@@ -239,7 +239,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         }
         if session.isReachable {
             //            let message: [String: Any] = ["message": message]
-            Logger.connectivity.info("Sending message: \(message)")
+            Logger.connectivity.info("Session reachable, sending message: \(message)")
             session.sendMessage(message, replyHandler: replyHandler, errorHandler: { error in // Watch App: sendMessage only works if app is active in foreground
                 Logger.connectivity.error("\(error)")
                 if message["useApplicationContext"] as? Bool ?? true {
@@ -257,16 +257,15 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             })
         } else {
             Logger.connectivity.warning("Session not reachable / counterpart app not available for live messaging")
-            
             if message["useApplicationContext"] as? Bool ?? false {
-                Logger.connectivity.warning("Error, trying updateApplicationContext")
+                Logger.connectivity.warning("Trying updateApplicationContext. Sending message: \(message).")
                 do {
                     try self.session.updateApplicationContext(message)
                 } catch {
                     Logger.connectivity.error("updateApplicationContext failed: \(error.localizedDescription)")
                 }
             } else {
-                Logger.connectivity.warning("Error, trying transferUserInfo")
+                Logger.connectivity.warning("Trying transferUserInfo. Sending message: \(message).")
                 //                try? WCSession.default.updateApplicationContext(message)
                 self.session.transferUserInfo(message) // transferUserInfo does not work in Simulator!!
             }

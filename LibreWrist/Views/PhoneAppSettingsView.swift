@@ -107,7 +107,9 @@ struct PhoneAppSettingsView: View {
                     let systemLiveActivityEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
                     ? "System Live Activities: enabled"
                     : "System Live Activities: disabled in iOS settings"
-                    Text("Updates of this live activity are not guaranteed. To be confirmed.\nTo enable or disable mirroring of the live activity on the watch use the \"Watch\" app on the phone.\nLive Activity needs to be enabled in the app settings as well. Current status: \(systemLiveActivityEnabled)")
+                    Text("Updates of this live activity are not guaranteed. On my phone about every 8 minutes.\nTo enable or disable mirroring of the live activity to the Smart Stack of the Watch use the \"Watch\" app on the phone.\nLive Activity needs to be enabled in the app settings as well. Current status: \(systemLiveActivityEnabled)")
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.trailing, 8)
                     Link("Tap to open app settings.", destination: URL(string: UIApplication.openSettingsURLString)!)
                 }
                     .onChange(of: useLiveActivities) { _, newValue in
@@ -125,7 +127,7 @@ struct PhoneAppSettingsView: View {
 
             Section {
                 Toggle(
-                    "Export glucose graph history and insulin to Apple Health",
+                    "Export glucose and insulin data to Apple Health",
                     isOn: Binding(
                         get: { appleHealthExportEnabled },
                         set: { newValue in
@@ -148,7 +150,7 @@ struct PhoneAppSettingsView: View {
                 .disabled(appleHealthAuthorizationState == .unavailable)
 
                 Text(appleHealthAuthorizationState.statusText)
-                    .font(.footnote)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
 
                 if appleHealthAuthorizationState == .denied {
@@ -157,51 +159,10 @@ struct PhoneAppSettingsView: View {
             } header: {
                 Text("Apple Health")
             } footer: {
-                Text("Permission is requested only when you turn this on. LibreWrist exports manual insulin injections and graph history glucose values only, and tags samples with HealthKit sync identifiers to avoid duplicates.")
+                Text("Permission is requested only when you turn this on. FLwatch exports insulin injections and glucose values, and tags samples with HealthKit sync identifiers to avoid duplicates.")
             }
             
-            Section {
-                Toggle("Phone: show insulin delivery marks", isOn: $showInsulinDeliveryMarksPhone)
-                    .onChange(of: showInsulinDeliveryMarksPhone) {
-                        print("yes")
-                    }
-                
-                Toggle("Phone: show IOB graph", isOn: $showIOBCurvePhone)
-                    .onChange(of: showIOBCurvePhone) {
-                        print("yes")
-                    }
-                
-                Toggle("Phone: show insulin activity graph", isOn: $showActivityCurvePhone)
-                    .onChange(of: showActivityCurvePhone) {
-                        print("yes")
-                    }
-                
-                Toggle("Watch: show insulin delivery marks", isOn: $showInsulinDeliveryMarksWatch)
-                    .onChange(of: showInsulinDeliveryMarksWatch) { oldValue, newValue in
-                        print("yes")
-                        let messageToWatch: [String: Any] = ["content": "showInsulinDeliveryMarksWatchMessage",
-                                                             "showInsulinDeliveryMarksWatch": newValue]
-                        sendMessagetoOther(message: messageToWatch)
-                    }
-                
-                Toggle("Watch: show IOB graph", isOn: $showIOBCurveWatch)
-                    .onChange(of: showIOBCurveWatch) { oldValue, newValue in
-                        print("yes")
-                        let messageToWatch: [String: Any] = ["content": "showIOBCurveWatchMessage",
-                                                             "showIOBCurveWatch": newValue]
-                        sendMessagetoOther(message: messageToWatch)
-                    }
-                
-                Toggle("Watch: show insulin activity graph", isOn: $showActivityCurveWatch)
-                    .onChange(of: showActivityCurveWatch) { oldValue, newValue in
-                        print("yes")
-                        let messageToWatch: [String: Any] = ["content": "showActivityCurveWatchMessage",
-                                                             "showActivityCurveWatch": newValue]
-                        sendMessagetoOther(message: messageToWatch)
-                    }
-            } header: {
-                Text("Insulin marks and graphs")
-            }
+            
             
             Section {
                 Toggle(isOn: $tapComplicationReloads) {
@@ -255,6 +216,50 @@ struct PhoneAppSettingsView: View {
                 Text("Select the bolus insulin for the IOB calculations. Currently supported are:\n- Rapid acting (Novolog, Novorapid, ... (peak activity 75 mins))\n- Fast rapid acting (Fiasp, Lyumjev, ... (peak activity 55 mins))")
             }
             .fixedSize(horizontal: false, vertical: true)
+            
+            Section {
+                Toggle("Phone: show insulin delivery marks", isOn: $showInsulinDeliveryMarksPhone)
+                    .onChange(of: showInsulinDeliveryMarksPhone) {
+                        print("yes")
+                    }
+                
+                Toggle("Phone: show IOB graph", isOn: $showIOBCurvePhone)
+                    .onChange(of: showIOBCurvePhone) {
+                        print("yes")
+                    }
+                
+                Toggle("Phone: show insulin activity graph", isOn: $showActivityCurvePhone)
+                    .onChange(of: showActivityCurvePhone) {
+                        print("yes")
+                    }
+                
+                Toggle("Watch: show insulin delivery marks", isOn: $showInsulinDeliveryMarksWatch)
+                    .onChange(of: showInsulinDeliveryMarksWatch) { oldValue, newValue in
+                        print("yes")
+                        let messageToWatch: [String: Any] = ["content": "showInsulinDeliveryMarksWatchMessage",
+                                                             "showInsulinDeliveryMarksWatch": newValue]
+                        sendMessagetoOther(message: messageToWatch)
+                    }
+                
+                Toggle("Watch: show IOB graph", isOn: $showIOBCurveWatch)
+                    .onChange(of: showIOBCurveWatch) { oldValue, newValue in
+                        print("yes")
+                        let messageToWatch: [String: Any] = ["content": "showIOBCurveWatchMessage",
+                                                             "showIOBCurveWatch": newValue]
+                        sendMessagetoOther(message: messageToWatch)
+                    }
+                
+                Toggle("Watch: show insulin activity graph", isOn: $showActivityCurveWatch)
+                    .onChange(of: showActivityCurveWatch) { oldValue, newValue in
+                        print("yes")
+                        let messageToWatch: [String: Any] = ["content": "showActivityCurveWatchMessage",
+                                                             "showActivityCurveWatch": newValue]
+                        sendMessagetoOther(message: messageToWatch)
+                    }
+            } header: {
+                Text("Insulin marks and graphs")
+            }
+            
             
             Section {
                 

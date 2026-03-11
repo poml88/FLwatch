@@ -34,6 +34,7 @@ struct LibreWristApp: App {
         // alternatively the session could be started in AppDelegate see https://developer.apple.com/documentation/swiftui/migrating-to-the-swiftui-life-cycle
         appRefreshScheduler.register()
         appRefreshScheduler.scheduleNextRefresh()
+        scheduleAppleHealthCatchUpExport()
 
     }
     
@@ -55,6 +56,7 @@ struct LibreWristApp: App {
                     guard newPhase == .active else { return }
                     LibreLinkUpHistory.shared.refreshFromPersistence()
                     SensorSettingsStore.shared.refreshFromPersistence()
+                    scheduleAppleHealthCatchUpExport()
                     Logger.bgTaskScheduler.info("Scene active: scheduling next BG refresh")
                     appRefreshScheduler.scheduleNextRefresh()
                 }
@@ -64,6 +66,12 @@ struct LibreWristApp: App {
 //                    print("stack trace:\n" + Thread.callStackSymbols.joined(separator: "\n"))
 //                    return .systemAction
 //                })
+        }
+    }
+
+    private func scheduleAppleHealthCatchUpExport() {
+        Task {
+            await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
         }
     }
 }

@@ -76,6 +76,8 @@ struct PhoneAppInsulinDeliveryView: View {
     enum Field: Hashable { case carbsPer100g, portionGrams, icrGramsPerUnit }
     
     @FocusState private var focused: Field?
+    
+    private let keyboardToolbarClearance: CGFloat = 56
 
     
     var body: some View {
@@ -143,38 +145,47 @@ struct PhoneAppInsulinDeliveryView: View {
                     Section {
                         HStack {
                             Text("Carbs per 100 g")
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
+
                             Spacer()
+
                             TextField("0", value: $carbsPer100g,
                                       format: .number.precision(.fractionLength(0...2)))
-                            .keyboardType(.decimalPad)
-                            .focused($focused, equals: .carbsPer100g)
-                            .multilineTextAlignment(.trailing)
-                            .frame(minWidth: 90)
-                            .onChange(of: carbsPer100g) { carbsPer100g = max(0, carbsPer100g) }
+                                .keyboardType(.decimalPad)
+                                .focused($focused, equals: .carbsPer100g)
+                                .multilineTextAlignment(.trailing)
+                                .frame(minWidth: 90)
+
+                                .onChange(of: carbsPer100g) { carbsPer100g = max(0, carbsPer100g) }
+
                             Text("g")
                                 .foregroundStyle(.secondary)
                         }
+
                     
-//                    GeometryReader { proxy in
-//                        HStack(spacing: 8) {
-//                            Text("Carbs per 100 g")
-//                                .frame(width: proxy.size.width * 0.7, alignment: .leading)
+//                        GeometryReader { proxy in
+//                            HStack(spacing: 8) {
+//                                Text("Carbs per 100 g")
+//                                    .frame(width: proxy.size.width * 0.7, alignment: .leading)
 //
-//                            HStack(spacing: 4) {
-//                                TextField("0", value: $carbsPer100g,
-//                                          format: .number.precision(.fractionLength(0...2)))
-//                                .keyboardType(.decimalPad)
-//                                .focused($focused, equals: .carbsPer100g)
-//                                .multilineTextAlignment(.trailing)
-//                                .onChange(of: carbsPer100g) { carbsPer100g = max(0, carbsPer100g) }
+//                                HStack(spacing: 7) {
+//                                    TextField("0", value: $carbsPer100g,
+//                                              format: .number.precision(.fractionLength(0...2)))
+//                                    .keyboardType(.decimalPad)
+//                                    .focused($focused, equals: .carbsPer100g)
+//                                    .multilineTextAlignment(.trailing)
+//                                    .onChange(of: carbsPer100g) { carbsPer100g = max(0, carbsPer100g) }
 //
-//                                Text("g")
-//                                    .foregroundStyle(.secondary)
+//                                    Text("g")
+//                                        .foregroundStyle(.secondary)
+//                                        .padding(.trailing, 10)
+//                                }
+//                                .frame(width: proxy.size.width * 0.3, alignment: .trailing)
+//
 //                            }
-//                            .frame(width: proxy.size.width * 0.3, alignment: .trailing)
 //                        }
-//                    }
-//                    .frame(height: 22)
+//                        .frame(height: 22)
                     
                     
                         
@@ -343,36 +354,38 @@ struct PhoneAppInsulinDeliveryView: View {
                         }
                     }
                 }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    Color.clear
+                        .frame(height: focused == nil ? 0 : keyboardToolbarClearance)
+                        .allowsHitTesting(false)
+                }
                 .toolbar {
-                    if focused == .carbsPer100g || focused == .portionGrams || focused == .icrGramsPerUnit {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            // Previous / Next (disabled appropriately)
-                            Button(action: focusPrevious) {
-                                Image(systemName: "chevron.left")
-//                                Text("Prev")
-                            }
-                            .disabled(focused == nil || focused == .carbsPer100g)
-                            
-                            Button(action: focusNext) {
-//                                Text("Next")
-                                Image(systemName: "chevron.right")
-                            }
-                            .disabled(focused == nil || focused == .icrGramsPerUnit)
-                            
-                            Spacer()
-                            
-                            Button("Clear") { clearFocused() }
-                            
-                            Spacer()
-                            
-                            Button("Done") {
-                                focused = nil
-                                UIApplication.shared.sendAction(
-                                    #selector(UIResponder.resignFirstResponder),
-                                    to: nil, from: nil, for: nil
-                                )
-                            }
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Button(action: focusPrevious) {
+                            Image(systemName: "chevron.left")
                         }
+                        .disabled(focused == nil || focused == .carbsPer100g)
+                        .opacity(focused == nil ? 0.35 : 1)
+
+                        Button(action: focusNext) {
+                            Image(systemName: "chevron.right")
+                        }
+                        .disabled(focused == nil || focused == .icrGramsPerUnit)
+                        .opacity(focused == nil ? 0.35 : 1)
+
+                        Spacer()
+
+                        Button("Clear") { clearFocused() }
+                            .disabled(focused == nil)
+                            .opacity(focused == nil ? 0.35 : 1)
+
+                        Spacer()
+
+                        Button("Done") {
+                            focused = nil
+                        }
+                        .disabled(focused == nil)
+                        .opacity(focused == nil ? 0.35 : 1)
                     }
                 }
 //                .toolbar {
@@ -427,7 +440,10 @@ struct PhoneAppInsulinDeliveryView: View {
                 .alert("Confirm", isPresented: $isShowingInsulinDeliveryResetAlert) {
                     Button("Reset", action: {
                         pickerTimeStamp = Date.now
+                        insulinDeliveryHistorySingleton.read()
+                        let removedItems = insulinDeliveryHistorySingleton.insulinDeliveryHistory
                         insulinDeliveryHistorySingleton.clearHistory()
+                        deleteInsulinFromAppleHealth(removedItems)
                         let messageToWatch: [String: Any] = ["content": "clearInsulinHistory"]
                         sendMessagetoOther(message: messageToWatch)
                         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
@@ -508,6 +524,7 @@ struct PhoneAppInsulinDeliveryView: View {
 
         // Update model & persist
         insulinDeliveryHistorySingleton.replaceHistory(history)
+        deleteInsulinFromAppleHealth(removedItems)
         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
         refreshLiveActivityIfNeeded()
 
@@ -543,6 +560,12 @@ struct PhoneAppInsulinDeliveryView: View {
             sendMessagetoOther(message: messageToWatch)
             
             
+        }
+    }
+
+    private func deleteInsulinFromAppleHealth(_ deliveries: [InsulinDelivery]) {
+        Task {
+            await AppleHealthExportManager.shared.deleteInsulinDeliveriesIfPresent(deliveries)
         }
     }
 

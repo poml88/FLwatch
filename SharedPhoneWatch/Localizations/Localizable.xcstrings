@@ -2277,7 +2277,7 @@
         }
       }
     },
-    "Export glucose graph history and insulin to Apple Health" : {
+    "Export glucose and insulin data to Apple Health" : {
 
     },
     "falling" : {
@@ -4019,7 +4019,7 @@
         }
       }
     },
-    "Permission is requested only when you turn this on. LibreWrist exports manual insulin injections and graph history glucose values only, and tags samples with HealthKit sync identifiers to avoid duplicates." : {
+    "Permission is requested only when you turn this on. FLwatch exports insulin injections and glucose values, and tags samples with HealthKit sync identifiers to avoid duplicates." : {
 
     },
     "Phone: show insulin activity graph" : {
@@ -5903,7 +5903,7 @@
         }
       }
     },
-    "Updates of this live activity are not guaranteed. To be confirmed.\nTo enable or disable mirroring of the live activity on the watch use the \"Watch\" app on the phone.\nLive Activity needs to be enabled in the app settings as well. Current status: %@" : {
+    "Updates of this live activity are not guaranteed. On my phone about every 8 minutes.\nTo enable or disable mirroring of the live activity to the Smart Stack of the Watch use the \"Watch\" app on the phone.\nLive Activity needs to be enabled in the app settings as well. Current status: %@" : {
 
     },
     "Username" : {

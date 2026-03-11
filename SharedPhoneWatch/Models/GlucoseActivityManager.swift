@@ -148,7 +148,7 @@ final class LiveActivityManager {
         }
         let content = ActivityContent(
             state: state,
-            staleDate: state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleAfterInterval)
+            staleDate: state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleActivityAfterInterval)
         )
 
         if let existing = reusableActivity() {
