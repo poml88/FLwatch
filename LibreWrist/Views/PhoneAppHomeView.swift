@@ -161,7 +161,7 @@ struct PhoneAppHomeView: View {
 //                scrollPosition = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date.now
 //            }
             
-            reloadAndUpdateMinutes(refreshLiveActivity: true)
+            reloadAndUpdateMinutes(refreshLiveActivity: true, trigger: "timer")
         }
         .onAppear() { // fires when switching the Views, e.g. form settings to home view.
             print("onAppear")
@@ -187,7 +187,7 @@ struct PhoneAppHomeView: View {
             //MARK: Skip the following on app start
             if onAppearNotToDoFirstStart == false { // not to do on first start
                 
-//                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                reloadAndUpdateMinutes(trigger: ".onAppear")
                 
                 if shouldShowPrompt {
                     showPrompt = true
@@ -229,7 +229,7 @@ struct PhoneAppHomeView: View {
 ////                    WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
 //                }
 //            }
-            reloadAndUpdateMinutes()
+//            reloadAndUpdateMinutes()
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active {
@@ -247,7 +247,7 @@ struct PhoneAppHomeView: View {
                 if scenePhaseNotToDoFirstStart == true { scenePhaseNotToDoFirstStart = false } // to do only on first start
                 
                 //MARK: Do the following .onChange(of: scenePhase) == .active
-                reloadAndUpdateMinutes(refreshLiveActivity: true)
+                reloadAndUpdateMinutes(refreshLiveActivity: true, trigger: "scenePhase.active")
 //                connected = UserDefaults.group.connected
 //                minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
 //                if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
@@ -388,7 +388,8 @@ struct PhoneAppHomeView: View {
 
     }
    
-    private func reloadAndUpdateMinutes(refreshLiveActivity: Bool = false) {
+    private func reloadAndUpdateMinutes(refreshLiveActivity: Bool = false, trigger: String) {
+        print("reloadAndUpdateMinutes() [\(trigger)]")
         Task {
             await lluService.requestReloadIfNeeded()
             if refreshLiveActivity {

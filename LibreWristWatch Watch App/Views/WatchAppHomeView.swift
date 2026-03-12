@@ -31,6 +31,7 @@ struct WatchAppHomeView: View {
     @State private var connected = UserDefaults.group.connected
     @State private var onAppearNotToDoFirstStart: Bool = true
     @State private var lastWidgetReloadAt: Date = .distantPast
+    @State private var lastHistoryReloadAt: Date = .distantPast
     @State private var currentTime: Date = Date()
     
     @StateObject private var lluService = LibreLinkUpService.shared
@@ -41,6 +42,7 @@ struct WatchAppHomeView: View {
     
     private let timer = Timer.publish(every: 60, tolerance: 1, on: .main, in: .common).autoconnect()
     private let minimumWidgetReloadInterval: TimeInterval = 2
+    private let minimumHistoryReloadInterval: TimeInterval = 2
 
     private var minutesSinceLastReading: Int {
         max(Int(currentTime.timeIntervalSince(libreLinkUpHistory.lastReadingDate) / 60), 0)
@@ -111,20 +113,7 @@ struct WatchAppHomeView: View {
         .onReceive(timer) { time in
             print("Timer")
             currentTime = time
-            
-            //            connected = UserDefaults.group.connected
-            //            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-            //            if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
-            //                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-            //                Task {
-            //                    isReloading = true
-            //                    await libreLinkUp.reloadLibreLinkUp()
-            //                    minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-            //                    isReloading = false
-            //                }
-            //            }
-            reloadAndRefreshHistory()
-
+            reloadAndRefreshHistory(trigger: "timer")
         }
         .onAppear() { // fires when switching the Views, e.g. form settings to home view.
             print("onAppear")
@@ -133,10 +122,11 @@ struct WatchAppHomeView: View {
                 isShowingDisclaimer = true
             }
             
+            reloadAndRefreshHistory(trigger: ".onAppear") // Do this early
+            
             //MARK: Skip the following on app start
             if onAppearNotToDoFirstStart == false { // not to do on first start
                 
-//                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
             }
             // ------------------------------------
             
@@ -144,42 +134,16 @@ struct WatchAppHomeView: View {
             if onAppearNotToDoFirstStart == true { // to do only on first start
                 FLwatchShortcuts.updateAppShortcutParameters() // this was in the app init first, but it seems this was too early... So I moved it here.
                 
-                // --------------------- copied here from .onChange(of: scenePhase) { oldPhase, newPhase in as it currently does not fire at app start
-//                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-                
-                reloadWidgetsIfNeeded(trigger: "onAppear:firstStart")
-                
-                //                connected = UserDefaults.group.connected
-                //                minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-                //                if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
-                //                    Task {
-                //                        isReloading = true
-                //                        await libreLinkUp.reloadLibreLinkUp()
-                //                        minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-                //                        isReloading = false
-                //                    }
-                //                }
-                reloadAndRefreshHistory()
-
-                // -----------------------
+//                reloadWidgetsIfNeeded(trigger: "onAppear:firstStart")
                 
                 onAppearNotToDoFirstStart = false
             }
             // ------------------------------------------------
             
             //MARK: Do the following .onAppear
-            //            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-            //            connected = UserDefaults.group.connected
-            //            if isReloading == false && minutesSinceLastReading >= 1 && connected == .newlyConnected {
-            //                Task {
-            //                    isReloading = true
-            //                    await libreLinkUp.reloadLibreLinkUp()
-            //                    minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-            //                    isReloading = false
-            //                    connected = .connected
-            //                    UserDefaults.group.connected = .connected
-            //                }
-            //            }
+            
+            
+            
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active { // This does not fire anyore at app start since iOS 26...
@@ -189,18 +153,8 @@ struct WatchAppHomeView: View {
                 
                 reloadWidgetsIfNeeded(trigger: "scenePhase.active")
                 currentTime = Date()
-                
-                //                connected = UserDefaults.group.connected
-                //                minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-                //                if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
-                //                    Task {
-                //                        isReloading = true
-                //                        await libreLinkUp.reloadLibreLinkUp()
-                //                        minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-                //                        isReloading = false
-                //                    }
-                //                }
-                reloadAndRefreshHistory()
+
+                reloadAndRefreshHistory(trigger: "scenePhase.active")
 
                 
                 
@@ -244,13 +198,19 @@ struct WatchAppHomeView: View {
         }
     }
     
-    private func reloadAndRefreshHistory() {
+    private func reloadAndRefreshHistory(trigger: String) {
+        let now = Date()
+        guard now.timeIntervalSince(lastHistoryReloadAt) >= minimumHistoryReloadInterval else {
+            print("Skipping reloadAndRefreshHistory() [\(trigger)]")
+            return
+        }
+        lastHistoryReloadAt = now
         Task {
             currentTime = Date()
-            _ = lluService.refreshHistoryFromPersistence(force: true)
             await lluService.requestReloadIfNeeded()
             currentTime = Date()
         }
+        print("reloadAndRefreshHistory() [\(trigger)]")
     }
     
     private func reloadWidgetsIfNeeded(trigger: String) {
@@ -272,33 +232,4 @@ struct WatchAppHomeView: View {
     //        .environment(History.test)
 }
 
-let MockDataWatch = [LibreLinkUpGlucose(glucose: Glucose(rawValue: 1000,
-                                                         rawTemperature: 4,
-                                                         temperatureAdjustment: 4,
-                                                         trendRate: 4.0,
-                                                         trendArrow: .stable,
-                                                         id: 6020,
-                                                         date: Date(timeIntervalSinceNow: -3 * 60 * 60),
-                                                         hasError: false),
-                                        color: MeasurementColor.green,
-                                        trendArrow: TrendArrow(rawValue: 0)),
-                     LibreLinkUpGlucose(glucose: Glucose(rawValue: 1500,
-                                                         rawTemperature: 4,
-                                                         temperatureAdjustment: 4,
-                                                         trendRate: 4.0,
-                                                         trendArrow: .stable,
-                                                         id: 6025,
-                                                         date: Date(timeIntervalSinceNow: -2 * 60 * 60),
-                                                         hasError: false),
-                                        color: MeasurementColor.green,
-                                        trendArrow: TrendArrow(rawValue: 0)),
-                     LibreLinkUpGlucose(glucose: Glucose(rawValue: 800,
-                                                         rawTemperature: 4,
-                                                         temperatureAdjustment: 4,
-                                                         trendRate: 4.0,
-                                                         trendArrow: .stable,
-                                                         id: 6030,
-                                                         date: Date(timeIntervalSinceNow: -1 * 60 * 60),
-                                                         hasError: false),
-                                        color: MeasurementColor.green,
-                                        trendArrow: TrendArrow(rawValue: 0))]
+

@@ -13,6 +13,7 @@ struct LibreWristWidgetBundle: WidgetBundle {
     var body: some Widget {
         LibreWristWidget()
         FLwatchGraphWidget()
+        FLwatchFullGraphWidget()
         FLWatchLiveActivityWidget()
     }
 }

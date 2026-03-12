@@ -60,18 +60,17 @@ final class LibreLinkUpService: ObservableObject {
 
         let baselineUpdatedAt = LibreLinkUpHistory.shared.updatedAt
         let baselineLastReadingDate = LibreLinkUpHistory.shared.lastReadingDate
+        
+        _ = self.refreshHistoryFromPersistence()
+        _ = self.refreshSensorSettingsFromPersistence()
+        CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
 
         return await gate.runOrJoin(
             op: { [weak self] in
             guard let self else { return false }
-            _ = self.refreshHistoryFromPersistence()
-            _ = self.refreshSensorSettingsFromPersistence()
+            
             let secondsSinceLastOnline = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastOnlineDate)
             Logger.libreLinkUpService.info("requestReloadIfNeeded refreshed persisted snapshot before checks (secondsSinceLastOnline: \(String(format: "%.1f", secondsSinceLastOnline)))")
-
-            // IOB decays over time even when we skip or block a network reload.
-            // Recalculate first so phone/watch UI can redraw from local state alone.
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
 
             guard self.canReload() else {
                 Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: not connected (state: \(UserDefaults.group.connected.rawValue))")

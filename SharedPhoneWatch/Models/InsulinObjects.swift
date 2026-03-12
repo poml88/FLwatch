@@ -200,22 +200,22 @@ struct InsulinTypePresets: Codable, Identifiable {
         let idhs = InsulinDeliveryHistorySingleton.shared
         idhs.read()
         let timeIntervalSince1970 = Date().timeIntervalSince1970
-//        idhs.read() // It is necessary to read in the UserDefaults value because widgets and app are individual programs with individual Singletons...
-        // read is now done from widget directly
-//        var insulinDeliveryHistory: [InsulinDelivery] = insulinDeliveryHistorySingleton.insulinDeliveryHistory
         var sumIOB: Double = 0
-        for item in idhs.insulinDeliveryHistory {
-            let timeIntervalBetweenDeliveryAndNow = timeIntervalSince1970 - item.timeStamp
-            if timeIntervalBetweenDeliveryAndNow > 12 * 60 * 60 {
-                idhs.insulinDeliveryHistory.removeAll(where: {$0.id == item.id})
-            } else {
-                let timeIntervalBetweenDeliveryAndNow = timeIntervalSince1970 - item.timeStamp
-                let IOB =   updateIOB(timeStamp: timeIntervalBetweenDeliveryAndNow, insulinType: item.insulinType) * item.insulinUnits
-                sumIOB = sumIOB + IOB
-            }
+
+        let activeHistory = idhs.insulinDeliveryHistory.filter {
+            timeIntervalSince1970 - $0.timeStamp <= 12 * 60 * 60
         }
-        
-        idhs.save()
+
+        for item in activeHistory {
+            let timeIntervalBetweenDeliveryAndNow = timeIntervalSince1970 - item.timeStamp
+            let IOB = updateIOB(timeStamp: timeIntervalBetweenDeliveryAndNow, insulinType: item.insulinType) * item.insulinUnits
+            sumIOB += IOB
+        }
+
+        if activeHistory.count != idhs.insulinDeliveryHistory.count {
+            idhs.replaceHistory(activeHistory)
+        }
+
         let currentIOB: Double = sumIOB
         return currentIOB
     }

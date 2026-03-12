@@ -160,44 +160,7 @@ private struct DefaultLockScreenActivityView: View { // currently never displaye
     let contentState: FLWatchAttributes.ContentState
 
     var body: some View {
-        let staleAfterMinutes = Int(FLWatchAttributes.staleActivityAfterInterval / 60)
-        let isStale = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleActivityAfterInterval) <= Date()
-
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(contentState.latestGlucoseValue.units(for: contentState.glucoseUnit))
-                        .font(.system(size: 42, weight: .semibold))
-                    Text(contentState.unitString)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text(contentState.latestTrend)
-                        .font(.headline)
-                        .foregroundStyle(contentState.latestMeasurementColor.color)
-                    if contentState.currentIOB > 0 {
-                        Text("IOB \(contentState.currentIOBText)")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    Text(DateFormatter.localizedString(from: contentState.latestTimestamp, dateStyle: .none, timeStyle: .short))
-                        .font(.caption2)
-                }
-            }
-
-            GlucoseLiveActivityChart(contentState: contentState, showsAxes: true)
-                .frame(height: 112)
-                
-            if isStale {
-                Text("Activity has not been updated for \(staleAfterMinutes) mins. Tap to refresh")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-        }
+       Text("This view is replaced by the MediumSupplementalActivityView view.")
         .padding()
     }
 }
@@ -254,6 +217,7 @@ private struct SmallSupplementalActivityView: View {
                     .allowsTightening(true)
                     .minimumScaleFactor(0.7)
                     .frame(width: 50, alignment: .trailing)
+
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -285,11 +249,8 @@ private struct MediumSupplementalActivityView: View {
     let contentState: FLWatchAttributes.ContentState
     
     var body: some View {
-//        let staleAfterMinutes = Int(FLWatchAttributes.staleAfterInterval / 60)
-        
+        let isStaleActivity: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleActivityAfterInterval) <= Date()
         let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
-
-
 
         VStack (spacing: 8){
             HStack {
@@ -315,6 +276,22 @@ private struct MediumSupplementalActivityView: View {
                 }
                 
                 Spacer()
+                
+                if isStaleActivity {
+                    HStack(spacing: 6) {
+                        Text("Update")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Button(intent: RefreshLiveActivityIntent()) {
+                            Image(systemName: "arrow.clockwise.circle.fill")
+                        }
+                        .buttonStyle(.plain)
+                    }
+//                    .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+
+
 
                 Text(
                     .currentDate,
@@ -335,7 +312,7 @@ private struct MediumSupplementalActivityView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            GlucoseLiveActivityChart(
+                      GlucoseLiveActivityChart(
                 contentState: contentState,
                 showsAxes: true,
                 xAxisFont: .footnote,

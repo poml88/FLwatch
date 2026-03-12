@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7A1F7C0C2FDF000100A1B2C3 /* FLwatchFullGraphWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1F7C0B2FDF000100A1B2C3 /* FLwatchFullGraphWidget.swift */; };
+		7A1F7C0E2FDF000200A1B2C3 /* FullGraphGlucoseIOBTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1F7C0D2FDF000200A1B2C3 /* FullGraphGlucoseIOBTimelineProvider.swift */; };
+		7A1F7C102FDF000300A1B2C3 /* FullGraphGlucoseMeasurementIOBEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1F7C0F2FDF000300A1B2C3 /* FullGraphGlucoseMeasurementIOBEntry.swift */; };
 		7B022C9B2CADDBE800CA64B4 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B022C9A2CADDBE800CA64B4 /* WidgetKit.framework */; };
 		7B022C9D2CADDBE800CA64B4 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B022C9C2CADDBE800CA64B4 /* SwiftUI.framework */; };
 		7B022CA02CADDBE800CA64B4 /* LibreWristWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B022C9F2CADDBE800CA64B4 /* LibreWristWidgetBundle.swift */; };
@@ -74,6 +77,9 @@
 		7B7D08812CB9C64E00FC1973 /* ExponentialInsulinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD835D2C84E48E00A9B195 /* ExponentialInsulinModel.swift */; };
 		7B7D08822CB9C6BA00FC1973 /* InsulinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD835A2C84E48800A9B195 /* InsulinModel.swift */; };
 		7B7D08832CB9C6BA00FC1973 /* InsulinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD835A2C84E48800A9B195 /* InsulinModel.swift */; };
+		7B895E942F61E6D10034A79D /* RefreshLiveActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B895E932F61E6B70034A79D /* RefreshLiveActivityIntent.swift */; };
+		7B895E962F61E7620034A79D /* RefreshLiveActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B895E932F61E6B70034A79D /* RefreshLiveActivityIntent.swift */; };
+		7B895E972F61E7D50034A79D /* GlucoseActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2F59E62E8C8249008CAB1B /* GlucoseActivityManager.swift */; };
 		7B8965422DC156E9003A50CE /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8965412DC156DD003A50CE /* WatchConnectivityManager.swift */; };
 		7B8965432DC156E9003A50CE /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8965412DC156DD003A50CE /* WatchConnectivityManager.swift */; };
 		7B8965452DC17399003A50CE /* PhoneAppSiriSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8965442DC17399003A50CE /* PhoneAppSiriSheetView.swift */; };
@@ -276,6 +282,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7A1F7C0B2FDF000100A1B2C3 /* FLwatchFullGraphWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLwatchFullGraphWidget.swift; sourceTree = "<group>"; };
+		7A1F7C0D2FDF000200A1B2C3 /* FullGraphGlucoseIOBTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullGraphGlucoseIOBTimelineProvider.swift; sourceTree = "<group>"; };
+		7A1F7C0F2FDF000300A1B2C3 /* FullGraphGlucoseMeasurementIOBEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullGraphGlucoseMeasurementIOBEntry.swift; sourceTree = "<group>"; };
 		7B022C992CADDBE800CA64B4 /* FLwatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FLwatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B022C9A2CADDBE800CA64B4 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		7B022C9C2CADDBE800CA64B4 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -321,6 +330,7 @@
 		7B7790BB2E599BA200DE6B01 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7B7790BC2E599BA300DE6B01 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		7B7F221C2E82D036005E3A72 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		7B895E932F61E6B70034A79D /* RefreshLiveActivityIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefreshLiveActivityIntent.swift; sourceTree = "<group>"; };
 		7B8965412DC156DD003A50CE /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
 		7B8965442DC17399003A50CE /* PhoneAppSiriSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSiriSheetView.swift; sourceTree = "<group>"; };
 		7B8C80112E48C8B300A9DA79 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
@@ -457,6 +467,7 @@
 		7B022C9E2CADDBE800CA64B4 /* LibreWristWidget */ = {
 			isa = PBXGroup;
 			children = (
+				7A1F7C0B2FDF000100A1B2C3 /* FLwatchFullGraphWidget.swift */,
 				7BB435682F200D3100EB8DD3 /* FLwatchGraphWidget.swift */,
 				7BA9736B2E8B328800B71523 /* GlucoseActivityLiveActivity.swift */,
 				7B022CA12CADDBE800CA64B4 /* LibreWristWidget.swift */,
@@ -543,6 +554,7 @@
 		7B631AAA2CB85F3300CE9EEF /* AppIntents */ = {
 			isa = PBXGroup;
 			children = (
+				7B895E932F61E6B70034A79D /* RefreshLiveActivityIntent.swift */,
 				7B9F09A22E7307510037B091 /* AddInsulinSiri.swift */,
 				7B19E69B2DBD66DE00F8EA7C /* AddInsulin.swift */,
 				7BDF0A7B2DBB886400852BAD /* FLwatchShortcuts.swift */,
@@ -625,6 +637,8 @@
 		7BA5679A2CBC1040003244EE /* Widgets */ = {
 			isa = PBXGroup;
 			children = (
+				7A1F7C0D2FDF000200A1B2C3 /* FullGraphGlucoseIOBTimelineProvider.swift */,
+				7A1F7C0F2FDF000300A1B2C3 /* FullGraphGlucoseMeasurementIOBEntry.swift */,
 				7BBEDFC52F1EC04C001735E8 /* GraphGlucoseIOBTimelineProvider.swift */,
 				7BBEDFC72F1EC0F5001735E8 /* GraphGlucoseMeasurementIOBEntry.swift */,
 				7BA5679B2CBC1079003244EE /* GlucoseIOBTimelineProvider.swift */,
@@ -950,6 +964,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7B895E962F61E7620034A79D /* RefreshLiveActivityIntent.swift in Sources */,
 				7BF0A0042F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */,
 				7BDF0A812DBB8B4500852BAD /* Glucose.swift in Sources */,
 				7B299A1D2C90DC43002A15C8 /* LibreLinkUpHistory.swift in Sources */,
@@ -957,6 +972,7 @@
 				7B1A7CA42C79E413006D603C /* LibreLinkUp.swift in Sources */,
 				7B299A0B2C90AF8C002A15C8 /* AuthTicket.swift in Sources */,
 				7B299A0E2C90AFC8002A15C8 /* LibreLinkUpError.swift in Sources */,
+				7B895E972F61E7D50034A79D /* GlucoseActivityManager.swift in Sources */,
 				7B299A1A2C90B0A1002A15C8 /* LibreLinkUpAlarm.swift in Sources */,
 				7BCA58692C8A292600C50F11 /* SensorSettings.swift in Sources */,
 				7BADE0122C73E3440074A47F /* SensorType.swift in Sources */,
@@ -966,6 +982,8 @@
 				7BADE0232C73EB450074A47F /* GlucoseUnit.swift in Sources */,
 				7BADE01D2C73E4E70074A47F /* Int.swift in Sources */,
 				7BADE0212C73EB060074A47F /* Double.swift in Sources */,
+				7A1F7C0C2FDF000100A1B2C3 /* FLwatchFullGraphWidget.swift in Sources */,
+				7A1F7C102FDF000300A1B2C3 /* FullGraphGlucoseMeasurementIOBEntry.swift in Sources */,
 				7BB435692F200D3F00EB8DD3 /* FLwatchGraphWidget.swift in Sources */,
 				7BA5679C2CBC1079003244EE /* GlucoseIOBTimelineProvider.swift in Sources */,
 				7B022CA22CADDBE800CA64B4 /* LibreWristWidget.swift in Sources */,
@@ -978,6 +996,7 @@
 				7B631AAE2CB85FBB00CE9EEF /* Reload.swift in Sources */,
 				7B9F09A82E731F210037B091 /* SharedDefaults.swift in Sources */,
 				7BDB81342CB09AF800F4A60F /* LLUHeaders.swift in Sources */,
+				7A1F7C0E2FDF000200A1B2C3 /* FullGraphGlucoseIOBTimelineProvider.swift in Sources */,
 				7BBEDFC62F1EC04C001735E8 /* GraphGlucoseIOBTimelineProvider.swift in Sources */,
 				7BB98DFB2CB14AB8000A354D /* Data.swift in Sources */,
 				7B2E7EBD2CB59DEB00A3473B /* GlucoseMeasurementIOBEntry.swift in Sources */,
@@ -1075,6 +1094,7 @@
 				7BA3041E2F5E30B0005384BF /* Double.swift in Sources */,
 				7BDB81322CB09AF800F4A60F /* LLUHeaders.swift in Sources */,
 				7BC51FBD2C7D31C3009542D2 /* History.swift in Sources */,
+				7B895E942F61E6D10034A79D /* RefreshLiveActivityIntent.swift in Sources */,
 				7BA3041F2F5E30B0005384BF /* GlucoseUnit.swift in Sources */,
 				7B9B7A7B2C875453004B30FD /* PhoneAppSettingsView.swift in Sources */,
 				7BA0AE5B2C5AE980004226FE /* PhoneAppHomeView.swift in Sources */,
@@ -1646,6 +1666,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = FLwatch;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = de.poeml.philipp.LibreWrist;
+				INFOPLIST_KEY_WKSupportsLiveActivityLaunchAttributeTypes = FLWatchAttributes;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1680,6 +1701,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = FLwatch;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = de.poeml.philipp.LibreWrist;
+				INFOPLIST_KEY_WKSupportsLiveActivityLaunchAttributeTypes = FLWatchAttributes;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
