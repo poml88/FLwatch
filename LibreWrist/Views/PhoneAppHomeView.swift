@@ -62,7 +62,7 @@ struct PhoneAppHomeView: View {
     private let safeRange: ClosedRange<Int> = 70...180
     private let allowedHours = 0...24
     private let minimumDaysOfUse = 10
-    private let defaultOverlayConnectionMessage = "Check that the Libre app is running."
+    private let defaultOverlayConnectionMessage = String(localized: "Check that Libre app is running.")
     
 //    private let libreLinkUp = LibreLinkUp()
     @StateObject private var lluService = LibreLinkUpService.shared

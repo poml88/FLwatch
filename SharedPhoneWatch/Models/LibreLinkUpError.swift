@@ -28,7 +28,7 @@ enum LibreLinkUpError: LocalizedError {
         switch self {
         case .noConnectionLogin:     String(localized: "No connection. Unknown error during login. Network?")
         case .noConnectionGraph:     String(localized: "No connection. Network?")
-        case .tooManyRequests:       String(localized: "Too many requests.")
+        case .tooManyRequests:       String(localized: "Too many network requests.")
         case .serverMaintenance:     String(localized: "Server maintenance.")
         case .notAuthenticated: String(localized: "Not authenticated. Check credentials. Open LibreLinkUp app, log out and log in again to verify all is working. Use same credentials for FLwatch then.")
         case .invalidAuthSession:    String(localized: "Invalid auth session.")
