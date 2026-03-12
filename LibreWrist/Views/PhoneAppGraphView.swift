@@ -24,6 +24,27 @@ struct PhoneAppGraphView: View {
 //        let rectXStart: Date = libreLinkUpHistory.libreLinkUpGlucose.last?.glucose.date ?? Date(timeIntervalSinceNow: -6 * 60 * 60)
 //        let rectXStop: Date = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date(timeIntervalSinceNow: -1 * 60)
         
+//        let glucoseLineColor = Color(red: 0.54, green: 0.56, blue: 0.60)
+//        let minuteGlucoseColor = Color(red: 0.58, green: 0.38, blue: 0.95)
+        let minuteGlucoseColor = Color(red: 0.96, green: 0.78, blue: 0.18) // #F5C72E
+
+//        A good option is a slightly deeper golden yellow:
+//
+//        Color(red: 0.96, green: 0.78, blue: 0.18) // #F5C72E
+//        Why this works:
+//
+//        still clearly “yellow”
+//        warmer and deeper than SwiftUI .yellow
+//        reads more golden/amber, so it won’t feel identical
+//        stays visible in both light and dark mode
+//        A couple of nearby options:
+//
+//        Softer gold:
+//        Color(red: 0.93, green: 0.76, blue: 0.24) // #EDC13D
+//        Richer amber-yellow:
+//        Color(red: 0.98, green: 0.74, blue: 0.12) // #FABD1F
+
+        
         let date: Date = Date.now
         
         let dateSixHoursTenAgo: Date = date.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
@@ -102,7 +123,8 @@ struct PhoneAppGraphView: View {
             //                    }
 
 //MARK: Glucose Graph
-            ForEach(libreLinkUpHistory.libreLinkUpGlucose) { item in
+            let graphData = libreLinkUpHistory.libreLinkUpGlucose.filter { $0.glucose.date > dateSixHoursTenAgo } // delete everything older than 6:10 h.
+            ForEach(graphData) { item in
                 
                 //                        PointMark(x: .value("Time", item.glucose.date),
                 //                                  y: .value("Glucose", item.glucose.value)
@@ -115,6 +137,7 @@ struct PhoneAppGraphView: View {
                          series: .value("Curve", "Glucose")
                 )
                 .interpolationMethod(.linear)
+//                .foregroundStyle(glucoseLineColor)
                 .lineStyle(.init(lineWidth: 5))
                 .symbol(){
                     Circle()
@@ -144,12 +167,13 @@ struct PhoneAppGraphView: View {
             }
             
 //MARK: Minute Glucose Trend
-            ForEach(libreLinkUpHistory.libreLinkUpMinuteGlucose) { item in
+            let minuteGlucose = libreLinkUpHistory.libreLinkUpMinuteGlucose.dropFirst()
+            ForEach(minuteGlucose) { item in
                 var itemValue: Double { sensorSettingsStore.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                 PointMark(x: .value("Time", item.glucose.date),
                           y: .value("Glucose", itemValue)
                 )
-                .foregroundStyle(Color.yellow)
+                .foregroundStyle(minuteGlucoseColor)
                 .symbolSize(20)
                 
             }

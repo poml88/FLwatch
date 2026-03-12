@@ -205,11 +205,11 @@ struct FLwatchGraphWidgetEntryView : View {
         let date: Date = Date.now
         
         let dateSixHoursTenAgo: Date = date.addingTimeInterval(-2 * 60 * 60 - 10 * 60)
-        let timeIntervalSince1970: Double = date.timeIntervalSince1970
-        let timeInternvalSixHoursAndTenAgo: Double = timeIntervalSince1970 - 3600 * 2 - 60 * 10
+//        let timeIntervalSince1970: Double = date.timeIntervalSince1970
+//        let timeInternvalSixHoursAndTenAgo: Double = timeIntervalSince1970 - 3600 * 2 - 60 * 10
         
-        let rectXStart: Date = dateSixHoursTenAgo
-        let rectXStop: Date = date
+//        let rectXStart: Date = dateSixHoursTenAgo
+//        let rectXStop: Date = date
         
         //Configuration
         // 0 = mmoll  1 = mgdl  0.0555
@@ -235,7 +235,7 @@ struct FLwatchGraphWidgetEntryView : View {
             //MARK: Glucose Graph
             if entry.graph.count > 1 {
                 ForEach(entry.graph) { item in
-                    
+                    var strokeColor: Color { colorScheme == .dark ? item.color.color : .black }
                     //                        PointMark(x: .value("Time", item.glucose.date),
                     //                                  y: .value("Glucose", item.glucose.value)
                     //                        )
@@ -252,7 +252,7 @@ struct FLwatchGraphWidgetEntryView : View {
                     .symbol(){
                         Circle()
                             .fill(item.color.color)
-                            .strokeBorder(.black, lineWidth: 0.5)
+                            .strokeBorder(strokeColor, lineWidth: 0.5)
                             .frame(width: 4, height: 4)
                     }
                 }
@@ -265,14 +265,14 @@ struct FLwatchGraphWidgetEntryView : View {
             AxisMarks(values: .stride(by: .hour, count: 2)) { _ in
                 AxisGridLine(stroke: .init(lineWidth: 0.5, dash: [2, 3]))
                 AxisTick(length: -5, stroke: .init(lineWidth: 1))
-                    .foregroundStyle(entry.lastGlucoseMeasurement.glucose.value == 0 ? Color(white: 0.4) : Color.gray)
+//                    .foregroundStyle(entry.lastGlucoseMeasurement.glucose.value == 0 ? Color(white: 0.4) : Color.gray)
                 //                        AxisValueLabel( anchor: .top)
                 AxisValueLabel(format: .dateTime.hour(.defaultDigits(amPM: .narrow)), anchor: .top)
             }
             AxisMarks(values: .stride(by: .hour, count: 1)) { _ in
                 //                        AxisGridLine(stroke: .init(lineWidth: 0.5, dash: [2, 3]))
                 AxisTick(length: -5, stroke: .init(lineWidth: 1))
-                    .foregroundStyle(entry.lastGlucoseMeasurement.glucose.value == 0 ? Color(white: 0.4) : Color.gray)
+//                    .foregroundStyle(entry.lastGlucoseMeasurement.glucose.value == 0 ? Color(white: 0.4) : Color.gray)
             }
         }
         
@@ -280,7 +280,7 @@ struct FLwatchGraphWidgetEntryView : View {
             AxisMarks(position: .trailing, values: .stride(by: yAxisSteps)) { value in
                 AxisGridLine(stroke: .init(lineWidth: 0.5))
                 //                        AxisTick(length: 5, stroke: .init(lineWidth: 1))
-                    .foregroundStyle(entry.lastGlucoseMeasurement.glucose.value == 0 ? Color(white: 0.4) : Color.gray)
+//                    .foregroundStyle(entry.lastGlucoseMeasurement.glucose.value == 0 ? Color(white: 0.4) : Color.gray)
                 AxisValueLabel()
                 
             }

@@ -23,6 +23,8 @@ struct WatchAppGraphView: View {
 //        let rectXStart: Date = libreLinkUpHistory.libreLinkUpGlucose.last?.glucose.date ?? Date(timeIntervalSinceNow: -6 * 60 * 60)
 //        let rectXStop: Date = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date(timeIntervalSinceNow: -1 * 60)
         
+        let minuteGlucoseColor = Color(red: 0.96, green: 0.78, blue: 0.18)
+        
         let date: Date = Date.now
         
         let dateSixHoursTenAgo: Date = date.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
@@ -86,7 +88,8 @@ struct WatchAppGraphView: View {
 //                        .lineStyle(.init(lineWidth: 1, dash: [2]))
        
 //MARK: Glucose Graph
-            ForEach(libreLinkUpHistory.libreLinkUpGlucose) { item in
+            let graphData = libreLinkUpHistory.libreLinkUpGlucose.filter { $0.glucose.date > dateSixHoursTenAgo } // delete everything older than 6:10 h.
+            ForEach(graphData) { item in
                 
 //                        PointMark(x: .value("Time", item.glucose.date),
 //                                  y: .value("Glucose", item.glucose.value)
@@ -127,12 +130,13 @@ struct WatchAppGraphView: View {
             }
 
 //MARK: Minute Glucose Trend
-            ForEach(libreLinkUpHistory.libreLinkUpMinuteGlucose) { item in
+            let minuteGlucose = libreLinkUpHistory.libreLinkUpMinuteGlucose.dropFirst()
+            ForEach(minuteGlucose) { item in
                 var itemValue: Double { sensorSettingsStore.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value) }
                 PointMark(x: .value("Time", item.glucose.date),
                           y: .value("Glucose", itemValue)
                 )
-                .foregroundStyle(.yellow)
+                .foregroundStyle(minuteGlucoseColor)
                 .symbolSize(8)
             }
 

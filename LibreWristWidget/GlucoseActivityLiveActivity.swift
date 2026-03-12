@@ -370,11 +370,11 @@ private struct GlucoseLiveActivityChart: View {
     }
 
     private var chartXScaleMin: Date {
-        contentState.latestTimestamp.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
+        Date().addingTimeInterval(-6 * 60 * 60 - 10 * 60)
     }
 
     private var chartXScaleMax: Date {
-        max(contentState.latestTimestamp, contentState.graphPoints.last?.timestamp ?? contentState.latestTimestamp)
+        Date()
     }
 
     private var chartYScaleMin: Double {
@@ -448,11 +448,12 @@ private struct GlucoseLiveActivityChart: View {
             }
 
             ForEach(contentState.minutePoints) { point in
+                let minuteGlucoseColor = Color(red: 0.96, green: 0.78, blue: 0.18) // #F5C72E
                 PointMark(
                     x: .value("Time", point.timestamp),
                     y: .value("Glucose", scaledValue(point.valueInMgPerDl))
                 )
-                .foregroundStyle(Color.yellow)
+                .foregroundStyle(minuteGlucoseColor)
                 .symbolSize(minutePointSize)
             }
 
@@ -682,7 +683,7 @@ private extension FLWatchAttributes.ContentState {
             glucoseUnit: 1,
             targetLow: 70,
             targetHigh: 180,
-            alarmLow: 55,
+            alarmLow: 85,
             maxGlucoseValue: 180,
             currentIOBInHundredths: 138,
             iobPoints: [
