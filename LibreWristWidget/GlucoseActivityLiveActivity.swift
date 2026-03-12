@@ -461,7 +461,7 @@ private struct GlucoseLiveActivityChart: View {
                 ForEach(contentState.iobPoints) { point in
                     LineMark(
                         x: .value("Time", point.timestamp),
-                        y: .value("Insulin", scaledIOBValue(point.value)),
+                        y: .value("Insulin", scaledIOBValue(point.iobValue)),
                         series: .value("Curve", "Insulin")
                     )
                     .foregroundStyle(.orange)
@@ -490,7 +490,7 @@ private struct GlucoseLiveActivityChart: View {
                 ForEach(contentState.activityPoints) { point in
                     LineMark(
                         x: .value("Time", point.timestamp),
-                        y: .value("Activity", scaledActivityValue(point.value)),
+                        y: .value("Activity", scaledActivityValue(point.activityValue)),
                         series: .value("Curve", "Activity")
                     )
                     .foregroundStyle(.brown)
@@ -553,7 +553,7 @@ private struct GlucoseLiveActivityChart: View {
         let shiftInYValue = showsAxes ? 10 : 5
         let shiftInY = contentState.glucoseUnit == 0 ? Double(shiftInYValue).toMmolL() : Double(shiftInYValue)
         let curvePoint = contentState.iobPoints.first(where: { $0.timestamp > marker.timestamp })
-        return chartYScaleMinIOBCurve + shiftInY + scaledIOBComponent(curvePoint?.value ?? 0, maxValue: contentState.maxIOB)
+        return chartYScaleMinIOBCurve + shiftInY + scaledIOBComponent(curvePoint?.iobValue ?? 0, maxValue: contentState.maxIOB)
     }
 
     private func scaledIOBComponent(_ value: Double, maxValue: Double) -> Double {
@@ -585,15 +585,15 @@ private extension FLWatchAttributes.ContentState {
     }
 
     var currentIOB: Double {
-        Double(currentIOBInHundredths) / 100
+        Double(currentIOBInHundredths) / Double(FLWatchAttributes.iobValueScale)
     }
 
     var maxIOB: Double {
-        max(Double(maxIOBInHundredths) / 100, 0.01)
+        max(Double(maxIOBInHundredths) / Double(FLWatchAttributes.iobValueScale), 0.01)
     }
 
     var maxActivity: Double {
-        max(Double(maxActivityInHundredths) / 100, 0.01)
+        max(Double(maxActivityInHundredths) / Double(FLWatchAttributes.activityValueScale), 0.01)
     }
 
     var currentIOBText: String {
@@ -602,8 +602,12 @@ private extension FLWatchAttributes.ContentState {
 }
 
 private extension FLWatchAttributes.ActivityPoint {
-    var value: Double {
-        Double(valueInHundredths) / 100
+    var iobValue: Double {
+        Double(valueInHundredths) / Double(FLWatchAttributes.iobValueScale)
+    }
+
+    var activityValue: Double {
+        Double(valueInHundredths) / Double(FLWatchAttributes.activityValueScale)
     }
 }
 
@@ -694,12 +698,12 @@ private extension FLWatchAttributes.ContentState {
             ],
             maxIOBInHundredths: 180,
             activityPoints: [
-                .init(timestamp: now.addingTimeInterval(-3 * 60 * 60), valueInHundredths: 5),
-                .init(timestamp: now.addingTimeInterval(-2 * 60 * 60), valueInHundredths: 40),
-                .init(timestamp: now.addingTimeInterval(-60 * 60), valueInHundredths: 30),
-                .init(timestamp: now.addingTimeInterval(-0), valueInHundredths: 10)
+                .init(timestamp: now.addingTimeInterval(-3 * 60 * 60), valueInHundredths: 50),
+                .init(timestamp: now.addingTimeInterval(-2 * 60 * 60), valueInHundredths: 400),
+                .init(timestamp: now.addingTimeInterval(-60 * 60), valueInHundredths: 300),
+                .init(timestamp: now.addingTimeInterval(-0), valueInHundredths: 100)
             ],
-            maxActivityInHundredths: 25,
+            maxActivityInHundredths: 250,
             insulinMarkers: [
                 .init(timestamp: now.addingTimeInterval(-3 * 60 * 60), insulinUnitsInHundredths: 250),
                 .init(timestamp: now.addingTimeInterval(-75 * 60), insulinUnitsInHundredths: 150)

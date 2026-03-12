@@ -6,6 +6,8 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
     public static let staleActivityAfterInterval: TimeInterval = 1 * 60
     public static let staleGlucoseAfterInterval: TimeInterval = 9 * 60
     public static let glucoseActivityIdentifier = "librewrist.glucose"
+    public static let iobValueScale = 100
+    public static let activityValueScale = 1000
 
     public struct GraphPoint: Hashable, Identifiable {
         public let timestamp: Date

@@ -94,7 +94,7 @@ final class LiveActivityManager {
                 .map {
                     FLWatchAttributes.ActivityPoint(
                         timestamp: $0.date,
-                        valueInHundredths: Int(($0.value * 100).rounded())
+                        valueInHundredths: Int(($0.value * Double(FLWatchAttributes.iobValueScale)).rounded())
                     )
                 })
 
@@ -103,7 +103,7 @@ final class LiveActivityManager {
                 .map {
                     FLWatchAttributes.ActivityPoint(
                         timestamp: $0.date,
-                        valueInHundredths: Int(($0.value * 100).rounded())
+                        valueInHundredths: Int(($0.value * Double(FLWatchAttributes.activityValueScale)).rounded())
                     )
                 })
 
@@ -129,11 +129,11 @@ final class LiveActivityManager {
                 targetHigh: sensorSettings.targetHigh,
                 alarmLow: sensorSettings.alarmLow,
                 maxGlucoseValue: history.maxBG,
-                currentIOBInHundredths: Int((currentIOB.currentIOB * 100).rounded()),
+                currentIOBInHundredths: Int((currentIOB.currentIOB * Double(FLWatchAttributes.iobValueScale)).rounded()),
                 iobPoints: iobPoints,
-                maxIOBInHundredths: max(1, Int((currentIOB.maxIOB * 100).rounded())),
+                maxIOBInHundredths: max(1, Int((currentIOB.maxIOB * Double(FLWatchAttributes.iobValueScale)).rounded())),
                 activityPoints: activityPoints,
-                maxActivityInHundredths: max(1, Int((currentIOB.maxActivity * 100).rounded())),
+                maxActivityInHundredths: max(1, Int((currentIOB.maxActivity * Double(FLWatchAttributes.activityValueScale)).rounded())),
                 insulinMarkers: insulinMarkers,
                 showIOBCurve: showIOBCurve,
                 showActivityCurve: showActivityCurve,
