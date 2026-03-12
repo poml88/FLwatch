@@ -29,9 +29,7 @@ struct Provider: TimelineProvider {
                 if Int(Date().timeIntervalSince(gme.date) / 60) <= 15 {
                     entries.append(gme)
                 } else {
-                    var entry = GlucoseMeasurementIOBEntry.invalidEntry
-                    entry.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-                    entries.append(entry)
+                    entries.append(gme.invalidated(currentIOB: CurrentIOBSingleton.shared.getCurrentIOB()))
                 }
             } else {
                 // On timeout / error return an invalid (fallback) entry quickly

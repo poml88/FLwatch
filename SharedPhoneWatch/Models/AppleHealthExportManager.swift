@@ -108,6 +108,12 @@ final class AppleHealthExportManager {
         await exportInsulinDeliveriesIfNeeded(insulinHistory.insulinDeliveryHistory)
     }
 
+    func exportInsulinCatchUpIfNeeded() async {
+        let insulinHistory = InsulinDeliveryHistorySingleton.shared
+        insulinHistory.read()
+        await exportInsulinDeliveriesIfNeeded(insulinHistory.insulinDeliveryHistory)
+    }
+
     func exportGlucoseSamplesIfNeeded(_ readings: [LibreLinkUpGlucose]) async {
 #if os(iOS) && canImport(HealthKit)
         guard isExportEnabled, authorizationState() == .authorized else { return }

@@ -100,30 +100,32 @@ struct FullGraphGlucoseMeasurementIOBEntry: TimelineEntry {
         maxBG: 250
     )
     
-    static let invalidEntry = FullGraphGlucoseMeasurementIOBEntry(
-        date: Date(),
-        lastGlucoseMeasurement: LibreLinkUpGlucose(
-            glucose: Glucose(0, id: 0, date: Date(), source: ""),
-            color: .gray,
-            trendArrow: .unknown
-        ),
-        graph: [LibreLinkUpGlucose(glucose: Glucose(0, id: 0, date: Date(), source: "Sample"), color: .green, trendArrow: .stable)],
-        minutePoints: [],
-        currentIOB: -1,
-        iobPoints: [],
-        maxIOB: 0.01,
-        activityPoints: [],
-        maxActivity: 0.01,
-        insulinMarkers: [],
-        targetLow: SensorSettings.defaultValue.targetLow,
-        targetHigh: SensorSettings.defaultValue.targetHigh,
-        alarmLow: SensorSettings.defaultValue.alarmLow,
-        showIOBCurve: false,
-        showActivityCurve: false,
-        showInsulinDeliveryMarks: false,
-        uom: 1,
-        maxBG: 250
-    )
+    static var invalidEntry: FullGraphGlucoseMeasurementIOBEntry {
+        FullGraphGlucoseMeasurementIOBEntry(
+            date: Date(),
+            lastGlucoseMeasurement: LibreLinkUpGlucose(
+                glucose: Glucose(0, id: 0, date: Date(), source: ""),
+                color: .gray,
+                trendArrow: .unknown
+            ),
+            graph: [LibreLinkUpGlucose(glucose: Glucose(0, id: 0, date: Date(), source: "Sample"), color: .green, trendArrow: .stable)],
+            minutePoints: [],
+            currentIOB: -1,
+            iobPoints: [],
+            maxIOB: 0.01,
+            activityPoints: [],
+            maxActivity: 0.01,
+            insulinMarkers: [],
+            targetLow: SensorSettings.defaultValue.targetLow,
+            targetHigh: SensorSettings.defaultValue.targetHigh,
+            alarmLow: SensorSettings.defaultValue.alarmLow,
+            showIOBCurve: false,
+            showActivityCurve: false,
+            showInsulinDeliveryMarks: false,
+            uom: 1,
+            maxBG: 250
+        )
+    }
     
     static func getPatientGraph(timeout _: TimeInterval = 10,
                                 completion: @escaping (FullGraphGlucoseMeasurementIOBEntry?, Error?) -> Void) {

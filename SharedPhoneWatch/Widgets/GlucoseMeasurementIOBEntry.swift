@@ -14,7 +14,13 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
     
     static let sampleEntry = GlucoseMeasurementIOBEntry(date: Date(), glucoseMeasurement: GlucoseMeasurement(factoryTimestamp: "", timestamp: "", type: 0, alarmType: 3, valueInMgPerDl: 105, trendArrow: .stable, trendMessage: "", measurementColor: .green, glucoseUnits: 1, value: 105, isHigh: false, isLow: false), currentIOB: 0.1)
     
-    static let invalidEntry = GlucoseMeasurementIOBEntry(date: Date(), glucoseMeasurement: GlucoseMeasurement(factoryTimestamp: "", timestamp: "", type: 0, alarmType: 3, valueInMgPerDl: 0, trendArrow: .unknown, trendMessage: "", measurementColor: .gray, glucoseUnits: 1, value: 0, isHigh: false, isLow: false), currentIOB: -1)
+    static var invalidEntry: GlucoseMeasurementIOBEntry {
+        GlucoseMeasurementIOBEntry(
+            date: Date(),
+            glucoseMeasurement: GlucoseMeasurement(factoryTimestamp: "", timestamp: "", type: 0, alarmType: 3, valueInMgPerDl: 0, trendArrow: .unknown, trendMessage: "", measurementColor: .gray, glucoseUnits: 1, value: 0, isHigh: false, isLow: false),
+            currentIOB: -1
+        )
+    }
     
     
     static func getLastGlucoseMeasurement(timeout _: TimeInterval = 10,
@@ -89,8 +95,27 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
     private static func latestHistoryValue(from history: LibreLinkUpHistory) -> LibreLinkUpGlucose? {
         history.latestLibreLinkUpGlucose
     }
-    
-    
+
+    func invalidated(currentIOB: Double) -> GlucoseMeasurementIOBEntry {
+        GlucoseMeasurementIOBEntry(
+            date: date,
+            glucoseMeasurement: GlucoseMeasurement(
+                factoryTimestamp: glucoseMeasurement.factoryTimestamp,
+                timestamp: glucoseMeasurement.timestamp,
+                type: glucoseMeasurement.type,
+                alarmType: glucoseMeasurement.alarmType,
+                valueInMgPerDl: 0,
+                trendArrow: .unknown,
+                trendMessage: glucoseMeasurement.trendMessage,
+                measurementColor: .gray,
+                glucoseUnits: glucoseMeasurement.glucoseUnits,
+                value: 0,
+                isHigh: false,
+                isLow: false
+            ),
+            currentIOB: currentIOB
+        )
+    }
 //    static func updateIOB(timeStamp time: Double) -> Double {
 //        let model = ExponentialInsulinModel(actionDuration: 270 * 60, peakActivityTime: 120 * 60, delay: 15 * 60)
 //        let result = model.percentEffectRemaining(at: Date().timeIntervalSince1970 - time)

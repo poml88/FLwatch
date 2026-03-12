@@ -40,19 +40,21 @@ struct GraphGlucoseMeasurementIOBEntry: TimelineEntry {
     )
     
     
-    static let invalidEntry = GraphGlucoseMeasurementIOBEntry(
-        date: Date(),
-        lastGlucoseMeasurement: LibreLinkUpGlucose(
-            glucose: Glucose(0, id: 0, date: Date(), source: ""),
-            color: .gray,
-            trendArrow: .unknown
-        ),
-        graph: [LibreLinkUpGlucose(glucose: Glucose(0, id: 0, date: Date(), source: "Sample"), color: .green, trendArrow: .stable)
-               ],
-        currentIOB: -1,
-        uom: 1,
-        maxBG: 250
-    )
+    static var invalidEntry: GraphGlucoseMeasurementIOBEntry {
+        GraphGlucoseMeasurementIOBEntry(
+            date: Date(),
+            lastGlucoseMeasurement: LibreLinkUpGlucose(
+                glucose: Glucose(0, id: 0, date: Date(), source: ""),
+                color: .gray,
+                trendArrow: .unknown
+            ),
+            graph: [LibreLinkUpGlucose(glucose: Glucose(0, id: 0, date: Date(), source: "Sample"), color: .green, trendArrow: .stable)
+                   ],
+            currentIOB: -1,
+            uom: 1,
+            maxBG: 250
+        )
+    }
     
     
     static func getPatientGraph(timeout _: TimeInterval = 10,
@@ -116,5 +118,20 @@ struct GraphGlucoseMeasurementIOBEntry: TimelineEntry {
     @MainActor
     private static func latestHistoryValue(from history: LibreLinkUpHistory) -> LibreLinkUpGlucose? {
         history.latestLibreLinkUpGlucose
+    }
+
+    func invalidated(currentIOB: Double) -> GraphGlucoseMeasurementIOBEntry {
+        GraphGlucoseMeasurementIOBEntry(
+            date: date,
+            lastGlucoseMeasurement: LibreLinkUpGlucose(
+                glucose: Glucose(0, id: 0, date: date, source: lastGlucoseMeasurement.glucose.source),
+                color: .gray,
+                trendArrow: .unknown
+            ),
+            graph: graph,
+            currentIOB: currentIOB,
+            uom: uom,
+            maxBG: maxBG
+        )
     }
 }

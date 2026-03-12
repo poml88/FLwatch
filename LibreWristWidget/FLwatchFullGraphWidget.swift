@@ -18,7 +18,7 @@ struct FLwatchFullGraphWidgetEntryView: View {
     private let staleThreshold: TimeInterval = 5 * 60
     
     var isStaleGlucose: Bool {
-        Date().timeIntervalSince(entry.date) > staleThreshold
+        Date().timeIntervalSince(entry.date) > staleThreshold && !(entry.lastGlucoseMeasurement.glucose.value <= 0)
     }
     
     var glucoseFontWeight: Font.Weight {

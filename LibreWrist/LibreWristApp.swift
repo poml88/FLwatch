@@ -34,7 +34,7 @@ struct LibreWristApp: App {
         // alternatively the session could be started in AppDelegate see https://developer.apple.com/documentation/swiftui/migrating-to-the-swiftui-life-cycle
         appRefreshScheduler.register()
         appRefreshScheduler.scheduleNextRefresh()
-
+        scheduleAppleHealthCatchUpExport()
     }
     
 //    @State private var history = History()
@@ -70,7 +70,7 @@ struct LibreWristApp: App {
 
     private func scheduleAppleHealthCatchUpExport() {
         Task {
-            await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
+            await AppleHealthExportManager.shared.exportInsulinCatchUpIfNeeded()
         }
     }
 }

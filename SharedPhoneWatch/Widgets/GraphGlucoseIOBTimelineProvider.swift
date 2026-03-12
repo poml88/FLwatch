@@ -29,10 +29,7 @@ struct GraphProvider: TimelineProvider {
                 if Int(Date().timeIntervalSince(gme.date) / 60) <= 15 {
                     entries.append(gme)
                 } else {
-                    var entry = GraphGlucoseMeasurementIOBEntry.invalidEntry
-                    entry.currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
-                    entry.graph = gme.graph
-                    entries.append(entry)
+                    entries.append(gme.invalidated(currentIOB: CurrentIOBSingleton.shared.getCurrentIOB()))
                 }
             } else {
                 // On timeout / error return an invalid (fallback) entry quickly
