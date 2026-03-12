@@ -170,9 +170,6 @@
 		7BC51F592C7C8564009542D2 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE01A2C73E4B60074A47F /* Data.swift */; };
 		7BC51F5A2C7C8573009542D2 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CD32C6D57F5006F6E53 /* String.swift */; };
 		7BC51F5B2C7C8589009542D2 /* SensorType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE0112C73E3440074A47F /* SensorType.swift */; };
-		7BC51FBB2C7D04DE009542D2 /* WatchAppSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC51FBA2C7D04DE009542D2 /* WatchAppSettingsView.swift */; };
-		7BC51FBD2C7D31C3009542D2 /* History.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC51FBC2C7D31C3009542D2 /* History.swift */; };
-		7BC51FBE2C7D31C3009542D2 /* History.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC51FBC2C7D31C3009542D2 /* History.swift */; };
 		7BCA58692C8A292600C50F11 /* SensorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCA58682C8A292600C50F11 /* SensorSettings.swift */; };
 		7BCA586A2C8A292600C50F11 /* SensorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCA58682C8A292600C50F11 /* SensorSettings.swift */; };
 		7BD2C65D2DC3BE6D0079EE4A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7BD2C65B2DC3BE6D0079EE4A /* InfoPlist.strings */; };
@@ -370,8 +367,6 @@
 		7BC51F622C7C9D51009542D2 /* LibreWrist.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibreWrist.entitlements; sourceTree = "<group>"; };
 		7BC51F632C7C9E96009542D2 /* LibreWristWatch Watch App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "LibreWristWatch Watch App.entitlements"; sourceTree = "<group>"; };
 		7BC51F642C7CA68D009542D2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		7BC51FBA2C7D04DE009542D2 /* WatchAppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAppSettingsView.swift; sourceTree = "<group>"; };
-		7BC51FBC2C7D31C3009542D2 /* History.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = History.swift; sourceTree = "<group>"; };
 		7BCA58682C8A292600C50F11 /* SensorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorSettings.swift; sourceTree = "<group>"; };
 		7BD2C65C2DC3BE6D0079EE4A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7BD2C65F2DC3BEC60079EE4A /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -520,7 +515,6 @@
 				7B2F59E62E8C8249008CAB1B /* GlucoseActivityManager.swift */,
 				7B299A132C90B06C002A15C8 /* GlucoseMeasurement.swift */,
 				7BADE0222C73EB450074A47F /* GlucoseUnit.swift */,
-				7BC51FBC2C7D31C3009542D2 /* History.swift */,
 				7BFD83562C84DF6200A9B195 /* InsulinObjects.swift */,
 				7B1A7CA32C79E413006D603C /* LibreLinkUp.swift */,
 				7B299A192C90B0A1002A15C8 /* LibreLinkUpAlarm.swift */,
@@ -672,7 +666,6 @@
 			children = (
 				7BC51F392C7C77B2009542D2 /* ContentView.swift */,
 				7BC51F472C7C7FA3009542D2 /* WatchAppHomeView.swift */,
-				7BC51FBA2C7D04DE009542D2 /* WatchAppSettingsView.swift */,
 				7BC51F492C7C80FE009542D2 /* WatchAppNightView.swift */,
 				7BB762FD2C8262E600C43600 /* WatchAppActionView.swift */,
 				7BB762FF2C82642900C43600 /* WatchAppDonateView.swift */,
@@ -1078,7 +1071,6 @@
 				7B435CD02C6D5103006F6E53 /* Date.swift in Sources */,
 				7BA3041E2F5E30B0005384BF /* Double.swift in Sources */,
 				7BDB81322CB09AF800F4A60F /* LLUHeaders.swift in Sources */,
-				7BC51FBD2C7D31C3009542D2 /* History.swift in Sources */,
 				7B895E942F61E6D10034A79D /* RefreshLiveActivityIntent.swift in Sources */,
 				7BA3041F2F5E30B0005384BF /* GlucoseUnit.swift in Sources */,
 				7B9B7A7B2C875453004B30FD /* PhoneAppSettingsView.swift in Sources */,
@@ -1126,7 +1118,6 @@
 				7BDF0A722DBA40E200852BAD /* ReadGlucose.swift in Sources */,
 				7B9F09A42E73075B0037B091 /* AddInsulinSiri.swift in Sources */,
 				7BFD83582C84DF6200A9B195 /* InsulinObjects.swift in Sources */,
-				7BC51FBB2C7D04DE009542D2 /* WatchAppSettingsView.swift in Sources */,
 				7BB763002C82642900C43600 /* WatchAppDonateView.swift in Sources */,
 				7BA304242F5E30B0005384BF /* Int.swift in Sources */,
 				7B19E69E2DBF7A6200F8EA7C /* AddInsulin.swift in Sources */,
@@ -1139,7 +1130,6 @@
 				7BA304282F5E30B0005384BF /* AuthTicket.swift in Sources */,
 				7BA304292F5E30B0005384BF /* LibreLinkUpGlucose.swift in Sources */,
 				7BC51F592C7C8564009542D2 /* Data.swift in Sources */,
-				7BC51FBE2C7D31C3009542D2 /* History.swift in Sources */,
 				7B462BFE2C7FC46A003FEDC3 /* MeasurementColor.swift in Sources */,
 				7BA3042A2F5E30B0005384BF /* PasswordKeychain.swift in Sources */,
 				7BB762FE2C8262E600C43600 /* WatchAppActionView.swift in Sources */,
