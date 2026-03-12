@@ -112,29 +112,35 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             let timeStamp = message["timeStamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600
             let insulinUnits = message["units"] as? Double ?? 0.0
             let insulinType = message["insulinType"] as? Int ?? UserDefaults.group.insulinTypeSelected.rawValue
-            idhs.recordDelivery(
-                id: deliveryID,
-                timestamp: Date(timeIntervalSince1970: timeStamp),
-                insulinUnits: insulinUnits,
-                insulinType: insulinType
-            )
+            Task { @MainActor in
+                idhs.recordDelivery(
+                    id: deliveryID,
+                    timestamp: Date(timeIntervalSince1970: timeStamp),
+                    insulinUnits: insulinUnits,
+                    insulinType: insulinType
+                )
+            }
         }
         
         if message["content"] as? String == "clearInsulinHistory" {
-            idhs.clearHistory()
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            Task { @MainActor in
+                idhs.clearHistory()
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            }
         }
         
         if message["content"] as? String == "deleteInsulin" {
-            let didRemove: Bool
-            if let idString = message["id"] as? String, let deliveryID = UUID(uuidString: idString) {
-                didRemove = idhs.removeDelivery(id: deliveryID)
-            } else {
-                let timeStamp = message["timestamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600
-                didRemove = idhs.removeDeliveries(timestamp: timeStamp)
-            }
-            if didRemove {
-                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            Task { @MainActor in
+                let didRemove: Bool
+                if let idString = message["id"] as? String, let deliveryID = UUID(uuidString: idString) {
+                    didRemove = idhs.removeDelivery(id: deliveryID)
+                } else {
+                    let timeStamp = message["timestamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600
+                    didRemove = idhs.removeDeliveries(timestamp: timeStamp)
+                }
+                if didRemove {
+                    CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                }
             }
         }
         
@@ -147,18 +153,24 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         if message["content"] as? String == "showInsulinDeliveryMarksWatchMessage" {
             let valueBool = message["showInsulinDeliveryMarksWatch"] as? Bool ?? false
             SharedData.showInsulinDeliveryMarksWatch = valueBool
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            Task { @MainActor in
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            }
         }
         if message["content"] as? String == "showIOBCurveWatchMessage" {
             let valueBool = message["showIOBCurveWatch"] as? Bool ?? false
             SharedData.showIOBCurveWatch = valueBool
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            Task { @MainActor in
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            }
         }
         
         if message["content"] as? String == "showActivityCurveWatchMessage" {
             let valueBool = message["showActivityCurveWatch"] as? Bool ?? false
             SharedData.showActivityCurveWatch = valueBool
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            Task { @MainActor in
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            }
         }
         
         if message["content"] as? String == "updateWidgetUpdateFrequency" {

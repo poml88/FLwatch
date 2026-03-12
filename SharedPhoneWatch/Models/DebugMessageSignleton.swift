@@ -30,6 +30,7 @@ import SwiftUI
 //    var sensorSettings: SensorSettings = SensorSettings()
 //    var sensorType: SensorType = .unknown
     var libreLinkUpResponseError: String = "[...]"
+    var libreLinkUpOverlayError: String = ""
     
     static let shared: DebugMessageSingleton = {
         let instance = DebugMessageSingleton()

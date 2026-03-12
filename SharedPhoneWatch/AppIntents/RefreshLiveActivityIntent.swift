@@ -19,9 +19,11 @@ struct RefreshLiveActivityIntent: LiveActivityIntent {
     @MainActor
     func perform() async throws -> some IntentResult {
         _ = await LibreLinkUpService.shared.requestReloadIfNeeded(force: true)
-        await LiveActivityManager.shared.refreshFromCurrentHistory(useLiveActivities: SharedData.useLiveActivities)
+        await LiveActivityManager.shared.refreshFromCurrentHistory(
+            useLiveActivities: SharedData.useLiveActivities,
+            reloadFailed: LibreLinkUpService.shared.didLastReloadFail
+        )
         WidgetCenter.shared.reloadAllTimelines()
         return .result()
     }
 }
-

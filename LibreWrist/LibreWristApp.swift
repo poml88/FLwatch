@@ -134,7 +134,10 @@ final class BGAppRefreshScheduler {
         let refreshTask = Task {
             Logger.bgTaskScheduler.info("Calling requestReloadIfNeeded()")
             await LibreLinkUpService.shared.requestReloadIfNeeded()
-            await LiveActivityManager.shared.refreshFromCurrentHistory(useLiveActivities: SharedData.useLiveActivities)
+            await LiveActivityManager.shared.refreshFromCurrentHistory(
+                useLiveActivities: SharedData.useLiveActivities,
+                reloadFailed: LibreLinkUpService.shared.didLastReloadFail
+            )
             Logger.bgTaskScheduler.info("requestReloadIfNeeded() completed; live activity updated from BG refresh")
             WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
             Logger.bgTaskScheduler.info("new data sent to watch")

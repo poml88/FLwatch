@@ -249,7 +249,7 @@ private struct MediumSupplementalActivityView: View {
     let contentState: FLWatchAttributes.ContentState
     
     var body: some View {
-        let isStaleActivity: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleActivityAfterInterval) <= Date()
+        let isUpdateUI: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.updateUIAfterInterval) <= Date()
         let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
 
         VStack (spacing: 8){
@@ -277,7 +277,7 @@ private struct MediumSupplementalActivityView: View {
                 
                 Spacer()
                 
-                if isStaleActivity {
+                if isUpdateUI {
                     HStack(spacing: 6) {
                         Text("Update")
                             .font(.caption)

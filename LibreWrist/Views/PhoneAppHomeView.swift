@@ -62,6 +62,7 @@ struct PhoneAppHomeView: View {
     private let safeRange: ClosedRange<Int> = 70...180
     private let allowedHours = 0...24
     private let minimumDaysOfUse = 10
+    private let defaultOverlayConnectionMessage = "Check that the Libre app is running."
     
 //    private let libreLinkUp = LibreLinkUp()
     @StateObject private var lluService = LibreLinkUpService.shared
@@ -290,13 +291,14 @@ struct PhoneAppHomeView: View {
                             .frame(width: 100)
                             .padding()
                         
-                        Text("No data received since \(minutesSinceLastReading) min.\n\nCheck network and bluetooth connections.")
+                        Text("No data received since \(minutesSinceLastReading) min.\n\n\(overlayConnectionMessage)")
                             .multilineTextAlignment(.center)
                             .padding()
                     }
                     .background()
                     .cornerRadius(10)
                     .opacity(0.5)
+                    .padding()
                 }
 //                .ignoresSafeArea()
                 .allowsHitTesting(false) // passes taps/clicks through to the bottom layer
@@ -329,6 +331,16 @@ struct PhoneAppHomeView: View {
         }
         
         return true
+    }
+
+    private var overlayConnectionMessage: String {
+        let localizedNetworkError = DebugMessageSingleton.shared.libreLinkUpOverlayError.trimmingCharacters(in: .whitespacesAndNewlines)
+        return localizedNetworkError.isEmpty ? defaultOverlayConnectionMessage : localizedNetworkError
+    }
+
+    private var shouldShowReloadFailedAlert: Bool {
+        guard lluService.didLastReloadFail else { return false }
+        return lluService.libreLinkUpResponse != LibreLinkUpError.noConnectionGraph.localizedDescription
     }
     
     private func recordDayOfUse() {
@@ -393,9 +405,12 @@ struct PhoneAppHomeView: View {
         Task {
             await lluService.requestReloadIfNeeded()
             if refreshLiveActivity {
-                await LiveActivityManager.shared.refreshFromCurrentHistory(useLiveActivities: useLiveActivities)
+                await LiveActivityManager.shared.refreshFromCurrentHistory(
+                    useLiveActivities: useLiveActivities,
+                    reloadFailed: lluService.didLastReloadFail
+                )
             }
-            isShowingReloadFailed = lluService.didLastReloadFail
+            isShowingReloadFailed = shouldShowReloadFailedAlert
             minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
         }
     }

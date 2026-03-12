@@ -34,9 +34,9 @@ final class LibreLinkUpService: ObservableObject {
 
     /// Convenience for non-MainActor contexts (widgets/intents) to refresh via the centralized service API.
     @discardableResult
-    nonisolated static func refreshHistoryFromPersistenceAsync() async -> Bool {
+    nonisolated static func refreshHistoryFromPersistenceAsync(force: Bool = false) async -> Bool {
         await MainActor.run {
-            LibreLinkUpService.shared.refreshHistoryFromPersistence()
+            LibreLinkUpService.shared.refreshHistoryFromPersistence(force: force)
         }
     }
 

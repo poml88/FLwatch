@@ -40,7 +40,7 @@ final class LiveActivityManager {
         }
     }
 
-    func refreshFromCurrentHistory(useLiveActivities: Bool) async {
+    func refreshFromCurrentHistory(useLiveActivities: Bool, reloadFailed: Bool = false) async {
         guard useLiveActivities else {
             await endAllActivities()
             return
@@ -50,7 +50,12 @@ final class LiveActivityManager {
             return
         }
 
-        _ = await LibreLinkUpService.refreshHistoryFromPersistenceAsync()
+        if reloadFailed {
+            Logger.liveActivity.info("Reload failed; refreshing persisted glucose data before rebuilding Live Activity.")
+            _ = await LibreLinkUpService.refreshHistoryFromPersistenceAsync(force: true)
+        } else {
+            _ = await LibreLinkUpService.refreshHistoryFromPersistenceAsync()
+        }
 
         let state = await MainActor.run { () -> FLWatchAttributes.ContentState in
             let history = LibreLinkUpHistory.shared
@@ -58,7 +63,7 @@ final class LiveActivityManager {
             insulinHistory.read()
             let currentIOB = CurrentIOBSingleton.shared
             currentIOB.updateCurrentIOBAndGraphs()
-            _ = SensorSettingsStore.shared.refreshFromPersistence()
+            _ = SensorSettingsStore.shared.refreshFromPersistence(force: reloadFailed)
             let sensorSettings = SensorSettingsStore.shared.sensorSettings
             let cutoffDate = Date.now.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
             let showIOBCurve = SharedData.showIOBCurvePhone

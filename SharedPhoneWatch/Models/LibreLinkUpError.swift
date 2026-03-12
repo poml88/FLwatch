@@ -10,7 +10,10 @@ import Foundation
 enum LibreLinkUpError: LocalizedError {
     case noConnectionLogin
     case noConnectionGraph
+    case tooManyRequests
+    case serverMaintenance
     case notAuthenticated
+    case invalidAuthSession
     case jsonDecoding
     case touNotAccepted
     case verifyEmail
@@ -25,7 +28,10 @@ enum LibreLinkUpError: LocalizedError {
         switch self {
         case .noConnectionLogin:     String(localized: "No connection. Unknown error during login. Network?")
         case .noConnectionGraph:     String(localized: "No connection. Network?")
+        case .tooManyRequests:       String(localized: "Too many requests.")
+        case .serverMaintenance:     String(localized: "Server maintenance.")
         case .notAuthenticated: String(localized: "Not authenticated. Check credentials. Open LibreLinkUp app, log out and log in again to verify all is working. Use same credentials for FLwatch then.")
+        case .invalidAuthSession:    String(localized: "Invalid auth session.")
         case .jsonDecoding:     String(localized: "JSON decoding error.")
         case .touNotAccepted:   String(localized: "LibreLinkUp's Terms of Use were updated. Open LibreLinkUp app, log in, and accept Terms of Use. (tip: try log out and re-login)")
         case .ppNotAccepted:    String(localized: "LibreLinkUp's Privacy Policy was updated. Open LibreLinkUp app, log in, and accept Privacy Policy. (tip: try log out and re-login)")
