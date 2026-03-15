@@ -23,6 +23,11 @@
   flag: "🇮🇹"
   path: "/it/"
 
+- code: nl
+  name: Nederlands
+  flag: "🇳🇱"
+  path: "/nl/"
+
 - code: ja
   name: 日本語
   flag: "🇯🇵"
