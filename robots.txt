@@ -8,5 +8,8 @@ Allow: /
 Disallow: /impressum/
 Disallow: /privacy/
 Disallow: /terms/
+Disallow: /*/index/
+Disallow: /*/privacy/
+Disallow: /*/terms/
 
 Sitemap: {{ 'sitemap.xml' | absolute_url }}
