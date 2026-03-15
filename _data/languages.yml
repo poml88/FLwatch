@@ -33,6 +33,11 @@
   flag: "🇷🇺"
   path: "/ru/"
 
+- code: pl
+  name: Polski
+  flag: "🇵🇱"
+  path: "/pl/"
+
 - code: ja
   name: 日本語
   flag: "🇯🇵"

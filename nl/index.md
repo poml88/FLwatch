@@ -13,17 +13,17 @@ hero_title: "FLwatch - Glucosesensorgrafiek"
 Deze software is gratis en open source. Ze is ontwikkeld vanuit persoonlijke behoeften, maar iedereen zou er baat bij moeten kunnen hebben.
 
 ### Gebruik {#usage}
-***Installatie:*** Zorg ervoor dat de watchOS-app is geinstalleerd, idealiter voordat je de iOS-app start. Afhankelijk van je configuratie wordt de watchOS-app automatisch geinstalleerd of moet die via de app `Watch` op de telefoon worden geinstalleerd.
+***Installatie:*** Zorg ervoor dat de watchOS-app is geïnstalleerd, idealiter voordat je de iOS-app start. Afhankelijk van je configuratie wordt de watchOS-app automatisch geïnstalleerd of moet die via de app `Watch` op de telefoon worden geïnstalleerd.
 - @TypeOneCallum heeft een erg goede [video-handleiding voor de setup](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB) gemaakt (dank je). Als je die bekijkt, wordt de installatie een stuk eenvoudiger.
 - De app vereist iOS 17.5 en watchOS 10.5.
 - TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
-- De instellingen worden in de iOS-app gedaan en daarna naar de watchOS-app overgezet. Dit werkt alleen als de watchOS-app op het horloge is geinstalleerd.
-- ***De verbinding tussen de apps opzetten:*** Om alles te laten werken, moet je jezelf eerst uitnodigen als je eigen volger. *LibreView-inloggegevens werken niet.* In de LibreLink- of Libre 3-app vind je onder Delen / Verbonden apps de optie om LibreLinkUp te verbinden of te beheren. Tik op `Verbinding toevoegen` en vul het e-mailadres in dat je voor het volgeraccount wilt gebruiken. Naar dat adres wordt vervolgens een uitnodiging gestuurd. Dat e-mailadres mag hetzelfde zijn als voor LibreView. Om het LibreLinkUp-volgeraccount in te stellen, installeer je daarna de [LibreLinkUp-app](https://apps.apple.com/us/app/librelinkup/id1234323923) op je telefoon en volg je de stappen met het e-mailadres dat je net hebt uitgenodigd. Mogelijk helpt ook deze [stap-voor-stap-handleiding](https://www.librelinkup.com/articles/getting-started). Zorg ervoor dat je je eigen bloedglucosegrafiek in de LibreLinkUp-app kunt zien. Open daarna FLwatch en vul de gegevens van het volgeraccount in, zoals hieronder beschreven. Momenteel ondersteunt FLwatch slechts een gevolgde patient per volgeraccount.
+- De instellingen worden in de iOS-app gedaan en daarna naar de watchOS-app overgezet. Dit werkt alleen als de watchOS-app op het horloge is geïnstalleerd.
+- ***De verbinding tussen de apps opzetten:*** Om alles te laten werken, moet je jezelf eerst uitnodigen als je eigen volger. *LibreView-inloggegevens werken niet.* In de LibreLink- of Libre 3-app vind je onder Delen / Verbonden apps de optie om LibreLinkUp te verbinden of te beheren. Tik op `Verbinding toevoegen` en vul het e-mailadres in dat je voor het volgeraccount wilt gebruiken. Naar dat adres wordt vervolgens een uitnodiging gestuurd. Dat e-mailadres mag hetzelfde zijn als voor LibreView. Om het LibreLinkUp-volgeraccount in te stellen, installeer je daarna de [LibreLinkUp-app](https://apps.apple.com/us/app/librelinkup/id1234323923) op je telefoon en volg je de stappen met het e-mailadres dat je net hebt uitgenodigd. Mogelijk helpt ook deze [stap-voor-stap-handleiding](https://www.librelinkup.com/articles/getting-started). Zorg ervoor dat je je eigen bloedglucosegrafiek in de LibreLinkUp-app kunt zien. Open daarna FLwatch en vul de gegevens van het volgeraccount in, zoals hieronder beschreven. Momenteel ondersteunt FLwatch slechts een gevolgde patiënt per volgeraccount.
 - Daarna kan de LibreLinkUp-app worden gesloten of verwijderd, maar mogelijk heb je die later nog nodig om nieuwe gebruiksvoorwaarden of privacyvoorwaarden te accepteren, of gewoon om te controleren of het account en de verbinding nog werken.
-- Om verbinding te maken met je LibreLinkUp-volgeraccount voer je je inloggegevens in FLwatch in op het tabblad `Verbinden`. Als de watchOS-app is geinstalleerd, worden de gegevens doorgestuurd naar de Watch-app. Je kunt de gegevens opnieuw overzetten door nogmaals op de knop `Verbinden` te tikken.
+- Om verbinding te maken met je LibreLinkUp-volgeraccount voer je je inloggegevens in FLwatch in op het tabblad `Verbinden`. Als de watchOS-app is geïnstalleerd, worden de gegevens doorgestuurd naar de Watch-app. Je kunt de gegevens opnieuw overzetten door nogmaals op de knop `Verbinden` te tikken.
 - Het kan tot een minuut duren voordat de gegevens zijn opgehaald en weergegeven.
 - Om de insulineberekening te gebruiken, tik je op het IOB-label op het startscherm. Ondersteunde insulinetypen zijn momenteel snelwerkend (Novolog, Novorapid, ...) en ultrasnelwerkend (Fiasp, Lyumjev, ...). Meer insulines kunnen op verzoek worden toegevoegd. *Laat het gerust weten.*
-  - De app gebruikt het exponentiele model van LoopKit. Dat model heeft drie parameters: `actionDuration`, `peakActivityTime` en `delay`. Voor snelwerkende insuline zijn die waarden 360, 75 en 10 minuten; voor ultrasnelwerkende insuline 360, 55 en 10 minuten.
+  - De app gebruikt het exponentiële model van LoopKit. Dat model heeft drie parameters: `actionDuration`, `peakActivityTime` en `delay`. Voor snelwerkende insuline zijn die waarden 360, 75 en 10 minuten; voor ultrasnelwerkende insuline 360, 55 en 10 minuten.
 - Er is een instelling om de glucosegrafiek een uur lang op het horloge zichtbaar te houden: ga op het horloge of in de telefoon-app `Watch` naar Instellingen -> Algemeen -> Terug naar klok, scrol omlaag, tik op `FLwatch` en kies `Na 1 uur`. Zo blijft FLwatch een uur op de voorgrond en krijgt het een redelijk aantal updates, bijvoorbeeld elke minuut.
 - De makkelijkste manier om de telefoon- of horloge-app te starten is door een widget of complicatie op je beginscherm, vergrendelscherm, wijzerplaat of een andere plek te zetten en daarop te tikken.
 - Om de app handsfree met Siri te openen kun je op de telefoon een opdracht aanmaken met bijvoorbeeld de naam `glucosegrafiek` of `bloedsuiker`. Die opdracht opent simpelweg FLwatch. Kies daarbij de optie `toon op Apple Watch`. Als je daarna Siri activeert en `glucosegrafiek` zegt, wordt FLwatch met de grafiek geopend.
@@ -38,10 +38,10 @@ Hetzelfde werkt ook op de telefoon.
 * IOB-grafiek
 * Grafiek van insulineactiviteit
 * iOS-widgets en lockscreen-widgets met en zonder grafiek(en)
-* LiveActivity
+* Live Activities
 * Widget voor de stand-bymodus
 * watchOS-widgets / complicaties
-* CarPlay-ondersteuning via widgets en LiveActivity
+* CarPlay-ondersteuning via widgets en Live Activities
 
 ### Nog te doen
 - Trainingsactiviteit implementeren

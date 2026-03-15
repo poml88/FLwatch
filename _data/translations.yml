@@ -154,6 +154,29 @@ ru:
     app_subtitle: "Приложение-компаньон для iOS и watchOS для просмотра данных о глюкозе и инсулине."
     built_with: "Этот сайт с открытым исходным кодом. Помогите сделать его лучше."
     meta_description: "FLwatch для iOS и watchOS показывает ваши данные LibreLinkUp на iPhone и Apple Watch."
+pl:
+  brand:
+    name: "FLwatch"
+  headings:
+    contents: "Spis treści"
+    language: "Język"
+    legal: "Informacje prawne"
+  labels:
+    privacy: "Polityka prywatności"
+    impressum: "Nota prawna"
+    terms: "Warunki korzystania"
+  buttons:
+    menu_open: "Otwórz menu"
+    menu_close: "Zamknij menu"
+    theme_toggle: "Przełącz motyw"
+    appstore_cta: "Pobierz z App Store"
+    github_cta: "Zobacz kod na GitHub"
+    home_aria: "Strona główna"
+  strings:
+    title: "FLwatch – aplikacja na iOS i watchOS"
+    app_subtitle: "Aplikacja towarzysząca na iOS i watchOS do podglądu danych o glukozie i insulinie."
+    built_with: "Ta strona jest open source. Pomóż nam ją ulepszyć."
+    meta_description: "FLwatch dla iOS i watchOS pokazuje odczyty LibreLinkUp na iPhonie i Apple Watch."
 fr:
   brand:
     name: "FLwatch"

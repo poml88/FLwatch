@@ -7,4 +7,4 @@ sitemap: false
 ---
 # Gebruiksvoorwaarden
 
-Dit is een onofficiele vertaling. Alleen de Duitse versie is juridisch bindend. Zie de [Duitse gebruiksvoorwaarden]({{ site.baseurl }}/terms/).
+Dit is een onofficiële vertaling. Alleen de Duitse versie is juridisch bindend. Zie de [Duitse gebruiksvoorwaarden]({{ site.baseurl }}/terms/).
