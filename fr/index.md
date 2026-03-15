@@ -39,10 +39,10 @@ Cela fonctionne de la même manière sur le téléphone.
 * Graphique de l'insuline à bord
 * Graphique de l'activité de l'insuline
 * Widgets iOS et widgets d'écran de verrouillage avec et sans graphique(s)
-* LiveActivity
+* Live Activities
 * Widget en mode veille
 * Widgets watchOS / complications
-* Prise en charge de CarPlay via les widgets et LiveActivity
+* Prise en charge de CarPlay via les widgets et Live Activities
 
 ### À faire
 - Implémenter l'activité d'entraînement

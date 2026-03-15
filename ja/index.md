@@ -40,10 +40,10 @@ hero_title: "FLwatch：血糖値センサーグラフ"
 * インスリンオンボードグラフ
 * インスリン活性グラフ
 * グラフあり・なしのiOSウィジェットおよびロック画面ウィジェット
-* LiveActivity
+* Live Activities
 * スタンバイモードウィジェット
 * watchOSウィジェット / コンプリケーション
-* ウィジェットおよびLiveActivityによるCarPlay対応
+* ウィジェットおよびLive ActivitiesによるCarPlay対応
 
 ### 開発予定
 - ワークアウトアクティビティを実装

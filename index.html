@@ -59,7 +59,7 @@ sitemap: false
 (function(){
  
   
-  var supported = ['en','de','fr','es','it','nl','ja','zh-Hans'];
+  var supported = ['en','de','fr','es','it','nl','ru','ja','zh-Hans'];
 
   function baseFromPath(){
     var parts = location.pathname.split('/').filter(Boolean);
@@ -83,6 +83,7 @@ sitemap: false
     if(lang.startsWith('es')) return 'es';
     if(lang.startsWith('it')) return 'it';
     if(lang.startsWith('nl')) return 'nl';
+    if(lang.startsWith('ru')) return 'ru';
     if(lang.startsWith('ja')) return 'ja';
     if(lang==='zh-cn' || lang==='zh-hans' || lang.startsWith('zh')) return 'zh-Hans';
     return 'en';
@@ -112,12 +113,12 @@ sitemap: false
     <a href="{{ site.baseurl }}/es/">Español</a> ·
     <a href="{{ site.baseurl }}/it/">Italiano</a> ·
     <a href="{{ site.baseurl }}/nl/">Nederlands</a> ·
+    <a href="{{ site.baseurl }}/ru/">Русский</a> ·
     <a href="{{ site.baseurl }}/ja/">日本語</a> ·
     <a href="{{ site.baseurl }}/zh-Hans/">简体中文</a>
   </p>
 </body>
 </html>
-
 
 
 

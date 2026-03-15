@@ -40,10 +40,10 @@ Das Gleiche funktioniert auch auf dem Telefon.
 * Insulin-On-Board-Diagramm
 * Insulinaktivitätsdiagramm
 * iOS-Widgets und Widgets für den Sperrbildschirm mit und ohne Graph(en)
-* LiveActivity
+* Live Activities
 * Widget für den Standby-Modus
 * watchOS-Widgets / Komplikationen
-* CarPlay-Unterstützung über Widgets und LiveActivity
+* CarPlay-Unterstützung über Widgets und Live Activities
 
 ### ToDo
 - Trainingsaktivitaet implementieren

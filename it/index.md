@@ -39,10 +39,10 @@ Lo stesso funziona sul telefono.
 * grafico dell'insulina a bordo
 * grafico dell'attività dell'insulina
 * widget iOS e widget della schermata di blocco con e senza grafico/i
-* LiveActivity
+* Live Activities
 * widget in modalità standby
 * widget watchOS / complicazioni
-* supporto CarPlay tramite widget e LiveActivity
+* supporto CarPlay tramite widget e Live Activities
 
 ### Da fare
 - Implementare l'attività di allenamento

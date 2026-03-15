@@ -28,6 +28,11 @@
   flag: "🇳🇱"
   path: "/nl/"
 
+- code: ru
+  name: Русский
+  flag: "🇷🇺"
+  path: "/ru/"
+
 - code: ja
   name: 日本語
   flag: "🇯🇵"

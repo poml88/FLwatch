@@ -41,10 +41,10 @@ Same works on the phone.
 * insulin on board graph
 * insulin activity graph
 * iOS widgets and lock screen widgets with and without graph(s)
-* LiveActivity
+* Live Activities
 * stand by mode widget
 * watchOS widgets / complications
-* CarPlay support via widgets and LiveActivity
+* CarPlay support via widgets and Live Activities
 
 ### ToDo
 - Implement workout activity

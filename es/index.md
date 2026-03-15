@@ -40,10 +40,10 @@ Lo mismo funciona en el teléfono.
 * Gráfico de insulina a bordo
 * Gráfico de actividad de la insulina
 * Widgets de iOS y widgets de pantalla de bloqueo con y sin gráfico(s)
-* LiveActivity
+* Live Activities
 * Widget de modo de espera
 * Widgets/complicaciones de watchOS
-* Compatibilidad con CarPlay mediante widgets y LiveActivity
+* Compatibilidad con CarPlay mediante widgets y Live Activities
 
 ### Tareas pendientes
 - Implementar actividad de entrenamiento
