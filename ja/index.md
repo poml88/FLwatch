@@ -17,7 +17,7 @@ hero_title: "FLwatch：血糖値センサーグラフ"
 ### 使用方法 {#usage}
 ***インストール方法:*** watchOSアプリがインストールされていることを確認してください（iOSアプリ起動前に実施が望ましい）。環境設定により、watchOSアプリは自動インストールされるか、スマートフォン上の「Watch」アプリ経由で手動インストールが必要です。
 - @TypeOneCallum さんがとても分かりやすい [セットアップのチュートリアル動画](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB) を作ってくれました（ありがとうございます！）。これを見るとセットアップがずっと簡単になります。
-- 動作環境: iOS 17.5 以上、watchOS 10.5 以上
+- 動作環境: iOS 18 以上、watchOS 10.5 以上
 - TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
 - 設定はiOSアプリで行い、その後watchOSアプリに転送されます。これはwatchOSアプリが時計にインストールされている場合にのみ機能します。
 - ***アプリ間の接続確立:*** 機能させるには、まず自分自身をフォロワーとして招待する必要があります。*LibreViewの認証情報は使用できません。* 操作手順：LibreLink / Libre 3アプリの「共有」＞「接続済みアプリ」内に「接続 / LibreLinkUpを管理」項目があります。「接続を追加」をタップし、フォロワーアカウントに使用するメールアドレスを入力すると、そのアドレスに招待状が送信されます（メールアドレスはLibreViewと同じでも構いません）。次に、LibreLinkUpフォロワーアカウントを設定するには、スマートフォンに[LibreLinkUpアプリ](https://apps.apple.com/us/app/librelinkup/id1234323923)をインストールし、先ほど招待したメールアドレスを使用して指示に従ってください。参考になるかもしれない[ステップバイステップガイド](https://www.librelinkup.com/articles/getting-started)があります。LibreLinkUpアプリで自身の血糖値グラフが表示できることを確認してください。最後に、FLwatchを開き、フォロワーアカウントの認証情報を入力します（下記参照）。現在FLwatchでは、1つのフォロワーアカウントにつき1人のフォロー対象患者のみサポートされています。
