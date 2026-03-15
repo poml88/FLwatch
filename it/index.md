@@ -38,12 +38,14 @@ Lo stesso funziona sul telefono.
 * calcolo dell'insulina a bordo (IOB)
 * grafico dell'insulina a bordo
 * grafico dell'attività dell'insulina
-* widget iOS e widget della schermata di blocco
+* widget iOS e widget della schermata di blocco con e senza grafico/i
+* LiveActivity
 * widget in modalità standby
 * widget watchOS / complicazioni
+* supporto CarPlay tramite widget e LiveActivity
 
-### Da fare 
-- Widget con grafico della glicemia
+### Da fare
+- Implementare l'attività di allenamento
 
 ### Assistenza e feedback {#support}
 Per assistenza, apri una segnalazione, avvia una discussione o invia un'e-mail a **flwatch [ a t ] cmdline [ d o t ] net**. I feedback sono molto graditi, utilizza gli stessi metodi utilizzati per l'assistenza.
@@ -62,4 +64,3 @@ Dai un'occhiata anche a questi progetti:
 [DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard]( https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
 Tutti i nomi di prodotti e aziende, marchi commerciali, marchi di servizio, marchi registrati e marchi di servizio registrati sono di proprietà dei rispettivi titolari. Il loro utilizzo ha scopo puramente informativo e non implica alcuna affiliazione o approvazione da parte loro. Nota: questa app non ha alcun legame con Abbott Diabetes Care Inc. e non è da essa approvata.
-

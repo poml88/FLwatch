@@ -38,12 +38,14 @@ Cela fonctionne de la même manière sur le téléphone.
 * Calcul de l'insuline à bord (IOB)
 * Graphique de l'insuline à bord
 * Graphique de l'activité de l'insuline
-* Widgets iOS et widgets d'écran de verrouillage
+* Widgets iOS et widgets d'écran de verrouillage avec et sans graphique(s)
+* LiveActivity
 * Widget en mode veille
 * Widgets watchOS / complications
+* Prise en charge de CarPlay via les widgets et LiveActivity
 
-### À faire 
-- Widget avec graphique de glycémie
+### À faire
+- Implémenter l'activité d'entraînement
 
 ### Assistance et commentaires {#support}
 Pour obtenir de l'aide, veuillez ouvrir un ticket, lancer une discussion ou envoyer un e-mail à **flwatch [ a t ] cmdline [ d o t ] net**. Vos commentaires sont les bienvenus, veuillez utiliser les mêmes méthodes que pour l'assistance.

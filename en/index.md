@@ -40,12 +40,14 @@ Same works on the phone.
 * insulin on board calculation (IOB)
 * insulin on board graph
 * insulin activity graph
-* iOS widgets and lock screen widgets
+* iOS widgets and lock screen widgets with and without graph(s)
+* LiveActivity
 * stand by mode widget
 * watchOS widgets / complications
+* CarPlay support via widgets and LiveActivity
 
-### ToDo 
-- Widget with BG graph
+### ToDo
+- Implement workout activity
 
 ### Support and Feedback {#support}
 For support please open an issue, start a discussion or email **flwatch [ a t ] cmdline [ d o t ] net**. Feedback is very welcome, please use the same methods as for support.

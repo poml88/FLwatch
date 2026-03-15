@@ -39,12 +39,14 @@ Das Gleiche funktioniert auch auf dem Telefon.
 * Berechnung der Insulin-On-Board-Menge (IOB)
 * Insulin-On-Board-Diagramm
 * Insulinaktivitätsdiagramm
-* iOS-Widgets und Widgets für den Sperrbildschirm
+* iOS-Widgets und Widgets für den Sperrbildschirm mit und ohne Graph(en)
+* LiveActivity
 * Widget für den Standby-Modus
 * watchOS-Widgets / Komplikationen
+* CarPlay-Unterstützung über Widgets und LiveActivity
 
-### ToDo 
-- Widget mit Blutzuckerdiagramm
+### ToDo
+- Trainingsaktivitaet implementieren
 
 ### Support und Feedback {#support}
 Für Support öffnen Sie bitte ein Ticket, starten Sie eine Diskussion oder senden Sie eine E-Mail an **flwatch [ a t ] cmdline [ d o t ] net**. Feedback ist sehr willkommen, bitte nutzen Sie die gleichen Kontaktmöglichkeiten wie für den Support.

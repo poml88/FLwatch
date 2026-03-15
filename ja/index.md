@@ -39,12 +39,14 @@ hero_title: "FLwatch：血糖値センサーグラフ"
 * インスリンオンボード計算（IOB）
 * インスリンオンボードグラフ
 * インスリン活性グラフ
-* iOSウィジェットおよびロック画面ウィジェット
+* グラフあり・なしのiOSウィジェットおよびロック画面ウィジェット
+* LiveActivity
 * スタンバイモードウィジェット
 * watchOSウィジェット / コンプリケーション
+* ウィジェットおよびLiveActivityによるCarPlay対応
 
-### 開発予定 
-- 血糖値グラフ付きウィジェット
+### 開発予定
+- ワークアウトアクティビティを実装
 
 ### サポートとフィードバック {#support}
 サポートが必要な場合は、イシューを開く、ディスカッションを開始する、または **flwatch [ a t ] cmdline [ d o t ] net** までメールをお送りください。フィードバックは大歓迎です。サポートと同様の方法でお寄せください。
@@ -63,5 +65,3 @@ hero_title: "FLwatch：血糖値センサーグラフ"
 [DiaBLE](https://github.com/gui-dos/DiaBLE)、[LoopKit](https://github.com/LoopKit)、[GlucoseDirect](https://github.com/creepymonster/GlucoseDirect)、[Nightguard]( https://github.com/nightscout/nightguard)、 [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
 すべての製品名、会社名、商標、サービスマーク、登録商標、登録サービスマークは、それぞれの所有者に帰属します。それらの使用は情報提供を目的としたものであり、いかなる提携や推奨を意味するものではありません。ご注意：本アプリはアボット・ダイアベティス・ケア社とは一切関係がなく、同社の推奨を受けていません。
-
-
