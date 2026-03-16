@@ -1,13 +1,13 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "${applicationName} record insulin" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "de" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+  "sourceLanguage": "en",
+  "strings": {
+    "${applicationName} record insulin": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "de": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Notiere ${insulinUnitsEnum} Insulineinheiten in ${applicationName}",
               "Insulingabe in ${applicationName}",
               "Protokolliere ${insulinUnitsEnum} Insulineinheiten in ${applicationName}",
@@ -19,10 +19,10 @@
             ]
           }
         },
-        "en" : {
-          "stringSet" : {
-            "state" : "new",
-            "values" : [
+        "en": {
+          "stringSet": {
+            "state": "new",
+            "values": [
               "${applicationName} record insulin",
               "${applicationName} note insulin",
               "${applicationName} add insulin",
@@ -34,10 +34,10 @@
             ]
           }
         },
-        "es" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName} registrar insulina",
               "${applicationName} anotar insulina",
               "${applicationName} añadir insulina",
@@ -49,10 +49,10 @@
             ]
           }
         },
-        "fr" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "fr": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName} enregistrer l'insuline",
               "${applicationName} noter l'insuline",
               "${applicationName} ajouter l'insuline",
@@ -64,10 +64,10 @@
             ]
           }
         },
-        "it" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "it": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName} registra l'insulina",
               "${applicationName} nota l'insulina",
               "${applicationName} aggiungi insulina",
@@ -77,10 +77,10 @@
             ]
           }
         },
-        "ja" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "ja": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName} インスリンを記録する",
               "${applicationName} インスリンをメモする",
               "${applicationName} インスリンを追加する",
@@ -90,10 +90,10 @@
             ]
           }
         },
-        "zh-Hans" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "zh-Hans": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName} 记录胰岛素",
               "${applicationName} 添加胰岛素",
               "${insulinUnitsEnum} ${applicationName}中的胰岛素单位",
@@ -102,77 +102,146 @@
               "${applicationName} ${insulinUnitsEnum} 单位"
             ]
           }
+        },
+        "pl": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName} zapisz insulinę",
+              "${applicationName} zanotuj insulinę",
+              "${applicationName} dodaj insulinę",
+              "${insulinUnitsEnum} jednostek insuliny w ${applicationName}",
+              "${applicationName} ${insulinUnitsEnum} jednostka",
+              "${applicationName} ${insulinUnitsEnum} jednostki",
+              "${insulinUnitsEnum} jednostka ${applicationName}",
+              "${insulinUnitsEnum} jednostki ${applicationName}"
+            ]
+          }
+        },
+        "nl": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName} registreer insuline",
+              "${applicationName} noteer insuline",
+              "${applicationName} voeg insuline toe",
+              "${insulinUnitsEnum} eenheden insuline in ${applicationName}",
+              "${applicationName} ${insulinUnitsEnum} eenheid",
+              "${applicationName} ${insulinUnitsEnum} eenheden",
+              "${insulinUnitsEnum} eenheid ${applicationName}",
+              "${insulinUnitsEnum} eenheden ${applicationName}"
+            ]
+          }
+        },
+        "ru": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName} записать инсулин",
+              "${applicationName} отметить инсулин",
+              "${applicationName} добавить инсулин",
+              "${insulinUnitsEnum} единиц инсулина в ${applicationName}",
+              "${applicationName} ${insulinUnitsEnum} единица",
+              "${applicationName} ${insulinUnitsEnum} единицы",
+              "${insulinUnitsEnum} единица ${applicationName}",
+              "${insulinUnitsEnum} единицы ${applicationName}"
+            ]
+          }
         }
       }
     },
-    "${applicationName} write down insulin" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "de" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+    "${applicationName} write down insulin": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "de": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName} notiere Insulin"
             ]
           }
         },
-        "en" : {
-          "stringSet" : {
-            "state" : "new",
-            "values" : [
+        "en": {
+          "stringSet": {
+            "state": "new",
+            "values": [
               "${applicationName} write down insulin"
             ]
           }
         },
-        "es" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName} anotar la insulina"
             ]
           }
         },
-        "fr" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "fr": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName} noter l'insuline"
             ]
           }
         },
-        "it" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "it": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName} nota l'insulina"
             ]
           }
         },
-        "ja" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "ja": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName} インスリンを書き留める"
             ]
           }
         },
-        "zh-Hans" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "zh-Hans": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName} 记录胰岛素"
+            ]
+          }
+        },
+        "pl": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName} zanotuj insulinę"
+            ]
+          }
+        },
+        "nl": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName} noteer insuline"
+            ]
+          }
+        },
+        "ru": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName} отметить инсулин"
             ]
           }
         }
       }
     },
-    "What is my glucose in ${applicationName}" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "de" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+    "What is my glucose in ${applicationName}": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "de": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Wie ist mein ${applicationName} Blutzucker",
               "Blutzuckerwert in ${applicationName}",
               "Wie ist mein Blutzucker in ${applicationName}",
@@ -181,10 +250,10 @@
             ]
           }
         },
-        "en" : {
-          "stringSet" : {
-            "state" : "new",
-            "values" : [
+        "en": {
+          "stringSet": {
+            "state": "new",
+            "values": [
               "What is my glucose in ${applicationName}",
               "What's my glucose in ${applicationName}",
               "What is my glucose level in ${applicationName}",
@@ -199,10 +268,10 @@
             ]
           }
         },
-        "es" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Cuál es mi nivel de glucosa en ${applicationName}",
               "Cuál es mi glucosa en ${applicationName}",
               "Cuál es mi nivel de glucosa en ${applicationName}",
@@ -212,10 +281,10 @@
             ]
           }
         },
-        "fr" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "fr": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Quel est mon taux de glucose dans ${applicationName}",
               "Quel est mon glycémie dans ${applicationName}",
               "${applicationName} obtenir le taux de glycémie actuel",
@@ -224,10 +293,10 @@
             ]
           }
         },
-        "it" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "it": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Qual è il mio livello di glucosio in ${applicationName}?",
               "Qual è il mio glucosio in ${applicationName}?",
               "${applicationName} ottieni il glucosio nel sangue attuale",
@@ -236,10 +305,10 @@
             ]
           }
         },
-        "ja" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "ja": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName}での私の血糖値はどれくらいですか",
               "${applicationName}の血糖値はどれくらいですか",
               "${applicationName}で現在の血糖値を確認する",
@@ -247,10 +316,10 @@
             ]
           }
         },
-        "zh-Hans" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "zh-Hans": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "我的血糖值在 ${applicationName} 中是多少",
               "我的 ${applicationName} 血糖是多少",
               "我的血糖水平在 ${applicationName} 中是多少",
@@ -259,9 +328,63 @@
               "我的当前血糖值在 ${applicationName} 中是多少"
             ]
           }
+        },
+        "pl": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Jaki jest mój poziom glukozy w ${applicationName}",
+              "Jaki mam poziom glukozy w ${applicationName}",
+              "Jaki jest mój poziom glukozy w ${applicationName}",
+              "Jaki mam poziom glukozy w ${applicationName}",
+              "Jaki jest mój poziom glukozy w ${applicationName}",
+              "Jaki mam poziom glukozy w ${applicationName}",
+              "Jaki jest mój poziom glukozy w ${applicationName}",
+              "Jaki mam poziom glukozy w ${applicationName}",
+              "${applicationName} pokaż bieżący poziom glukozy we krwi",
+              "${applicationName} jaki jest mój bieżący poziom glukozy we krwi",
+              "Jaki jest mój bieżący poziom glukozy we krwi w ${applicationName}"
+            ]
+          }
+        },
+        "nl": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Wat is mijn glucose in ${applicationName}",
+              "Wat is mijn glucose in ${applicationName}",
+              "Wat is mijn glucosespiegel in ${applicationName}",
+              "Wat is mijn glucosespiegel in ${applicationName}",
+              "Wat is mijn ${applicationName} glucose",
+              "Wat is mijn ${applicationName} glucose",
+              "Wat is mijn ${applicationName} glucosespiegel",
+              "Wat is mijn ${applicationName} glucosespiegel",
+              "${applicationName} toon huidige bloedglucose",
+              "${applicationName} wat is mijn huidige bloedglucose",
+              "Wat is mijn huidige bloedglucose in ${applicationName}"
+            ]
+          }
+        },
+        "ru": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Какой у меня уровень глюкозы в ${applicationName}",
+              "Какой у меня уровень глюкозы в ${applicationName}",
+              "Какой у меня уровень глюкозы в ${applicationName}",
+              "Какой у меня уровень глюкозы в ${applicationName}",
+              "Какой у меня уровень глюкозы в ${applicationName}",
+              "Какой у меня уровень глюкозы в ${applicationName}",
+              "Какой у меня уровень глюкозы в ${applicationName}",
+              "Какой у меня уровень глюкозы в ${applicationName}",
+              "${applicationName} показать текущую глюкозу крови",
+              "${applicationName} какой у меня сейчас уровень глюкозы в крови",
+              "Какой у меня сейчас уровень глюкозы в крови в ${applicationName}"
+            ]
+          }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

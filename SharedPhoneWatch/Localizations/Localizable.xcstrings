@@ -36,6 +36,24 @@
             "value" : "\nインスリンの歴史："
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\nInsulinegeschiedenis:"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\nHistoria insuliny:"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\nИстория инсулина:"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -74,6 +92,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "!! 治療決定には使用しないでください !!  \n\n自己責任で使用してください！  \n\nこのアプリおよびその拡張機能に表示される情報は、治療や投与量の決定には使用しないでください。血糖モニターシステムおよび/または医療従事者に相談してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "!! Niet gebruiken voor behandelbeslissingen !!\n\nGebruik op eigen risico!\n\nDe informatie in deze app en de extensies ervan mag niet worden gebruikt voor behandel- of doseringsbeslissingen. Raadpleeg het glucosemonitoringsysteem en/of een zorgverlener."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "!! Nie używać do podejmowania decyzji terapeutycznych !!\n\nUżywasz na własne ryzyko!\n\nInformacje prezentowane w tej aplikacji i jej rozszerzeniach nie mogą być używane do podejmowania decyzji terapeutycznych ani dotyczących dawkowania. Skonsultuj się z systemem monitorowania glukozy i/lub pracownikiem ochrony zdrowia."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "!! Не использовать для принятия решений о лечении !!\n\nИспользуйте на свой страх и риск!\n\nИнформация, представленная в этом приложении и его расширениях, не должна использоваться для принятия решений о лечении или дозировке. Обратитесь к системе мониторинга глюкозы и/или медицинскому специалисту."
           }
         },
         "zh-Hans" : {
@@ -119,6 +155,24 @@
             "value" : "**治療決定には使用しないでください。**  \n\nこのアプリおよびその拡張機能に表示される情報は、治療や投与量の決定には使用しないでください。血糖モニタリングシステムおよび/または医療従事者に相談してください。  "
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Niet voor behandelbeslissingen.**\n\nDe informatie in deze app en de extensies ervan mag niet worden gebruikt voor behandel- of doseringsbeslissingen. Raadpleeg het glucosemonitoringsysteem en/of een zorgverlener."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Nie do podejmowania decyzji terapeutycznych.**\n\nInformacje prezentowane w tej aplikacji i jej rozszerzeniach nie mogą być używane do podejmowania decyzji terapeutycznych ani dotyczących dawkowania. Skonsultuj się z systemem monitorowania glukozy i/lub pracownikiem ochrony zdrowia."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Не для принятия решений о лечении.**\n\nИнформация, представленная в этом приложении и его расширениях, не должна использоваться для принятия решений о лечении или дозировке. Обратитесь к системе мониторинга глюкозы и/или медицинскому специалисту."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -157,6 +211,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**ウォッチアプリがインストールされていない/検出されていない**  \n資格情報はウォッチに転送されません。ウォッチアプリをインストールし、再度「接続」をタップして資格情報をウォッチに再送信してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Watch-app niet geïnstalleerd / gedetecteerd**\nInloggegevens worden niet naar het horloge verzonden. Installeer de watch-app en druk opnieuw op \"Connect\" om de inloggegevens opnieuw naar het horloge te sturen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Aplikacja na zegarek nie jest zainstalowana / wykryta**\nDane logowania nie zostaną przesłane na zegarek. Zainstaluj aplikację na zegarek i naciśnij ponownie „Connect”, aby wysłać dane logowania jeszcze raz."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Приложение для часов не установлено / не обнаружено**\nУчетные данные не будут переданы на часы. Установите приложение для часов и снова нажмите \"Connect\", чтобы повторно отправить учетные данные на часы."
           }
         },
         "zh-Hans" : {
@@ -643,6 +715,24 @@
             "value" : "承諾"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accepteren"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akceptuj"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Принять"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -675,6 +765,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Accesso temporaneamente bloccato."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toegang tijdelijk vergrendeld."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dostęp tymczasowo zablokowany."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ временно заблокирован."
           }
         }
       }
@@ -709,6 +817,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "アカウントが一時的にロックされました。ログイン試行が複数回失敗しました。5分後に再試行してください。認証情報を確認してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account tijdelijk vergrendeld. Te veel mislukte inlogpogingen. Probeer het over 5 minuten opnieuw. Controleer de inloggegevens."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konto zostało tymczasowo zablokowane. Zbyt wiele nieudanych prób logowania. Spróbuj ponownie za 5 minut. Sprawdź dane logowania."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Учетная запись временно заблокирована. Слишком много неудачных попыток входа. Попробуйте снова через 5 минут. Проверьте учетные данные."
           }
         },
         "zh-Hans" : {
@@ -751,6 +877,24 @@
             "value" : "活動"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activiteit"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktywność"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активность"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -791,6 +935,24 @@
             "value" : "インスリンを追加する"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insuline toevoegen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj insulinę"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить инсулин"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -829,6 +991,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "インスリンを追加する（記載）"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insuline toevoegen (geschreven)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj insulinę (tekstowo)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить инсулин (вручную)"
           }
         },
         "zh-Hans" : {
@@ -874,6 +1054,24 @@
             "value" : "Apple Health への書き出しは許可されています。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export naar Apple Health is geautoriseerd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksport do Apple Health jest autoryzowany."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспорт в Apple Health разрешен."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -912,6 +1110,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "このデバイスでは Apple Health を利用できません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health is niet beschikbaar op dit apparaat."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health nie jest dostępne na tym urządzeniu."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health недоступен на этом устройстве."
           }
         },
         "zh-Hans" : {
@@ -954,6 +1170,24 @@
             "value" : "Apple Health への書き込みアクセスは許可されていません。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schrijftoegang tot Apple Health is niet verleend."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie przyznano dostępu do zapisu w Apple Health."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ на запись в Apple Health не предоставлен."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -992,6 +1226,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "システムに、IOB計算のためのインスリン単位を記録するように指示してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vraag het systeem om insuline-eenheden te registreren voor de IOB-berekening."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poproś system o zapisanie jednostek insuliny do obliczania IOB."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попросите систему записать единицы инсулина для расчета IOB."
           }
         },
         "zh-Hans" : {
@@ -1037,6 +1289,24 @@
             "value" : "血糖値"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloedglucose"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poziom glukozy we krwi"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Глюкоза крови"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1075,6 +1345,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ボラスインスリン"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bolusinsuline"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulina bolusowa"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Болюсный инсулин"
           }
         },
         "zh-Hans" : {
@@ -1117,6 +1405,24 @@
             "value" : "開発者用に高品質のコーヒー豆を購入しましょう！\n🤝☕️"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koop koffiebonen van ontwikkelaarskwaliteit!\n🤝☕️"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kup ziarna kawy jakości deweloperskiej!\n🤝☕️"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Купите кофейные зерна разработческого качества!\n🤝☕️"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1155,6 +1461,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "キャンセル"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuleren"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anuluj"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отмена"
           }
         },
         "zh-Hans" : {
@@ -1197,6 +1521,24 @@
             "value" : "炭水化物計算機"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koolhydraatcalculator"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalkulator węglowodanów"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Калькулятор углеводов"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1235,6 +1577,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "炭水化物 → 貯蔵"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koolhydraten → reserve"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Węglowodany → magazyn"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Углеводы → запас"
           }
         },
         "zh-Hans" : {
@@ -1277,6 +1637,24 @@
             "value" : "100gあたりの炭水化物"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koolhydraten per 100 g"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Węglowodany na 100 g"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Углеводы на 100 г"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1315,6 +1693,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "炭水化物貯蔵庫"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koolhydraatreserve"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magazyn węglowodanów"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запас углеводов"
           }
         },
         "zh-Hans" : {
@@ -1357,6 +1753,24 @@
             "value" : "Libre アプリが起動していることを確認してください。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleer of de Libre-app actief is."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprawdź, czy aplikacja Libre jest uruchomiona."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убедитесь, что приложение Libre запущено."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1395,6 +1809,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "クリア"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wissen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyczyść"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить"
           }
         },
         "zh-Hans" : {
@@ -1437,6 +1869,24 @@
             "value" : "クリアストア"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reserve wissen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyczyść magazyn"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить запас"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1475,6 +1925,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "確認する"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevestigen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potwierdź"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтвердить"
           }
         },
         "zh-Hans" : {
@@ -1517,6 +1985,24 @@
             "value" : "接続"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Połącz"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключить"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1555,6 +2041,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "接続済み。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbonden."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Połączono."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключено."
           }
         },
         "zh-Hans" : {
@@ -1597,6 +2101,24 @@
             "value" : "接続中..."
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezig met verbinden..."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Łączenie..."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключение..."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1635,6 +2157,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "接続に失敗しました。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinding mislukt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Połączenie nie powiodło się."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось подключиться."
           }
         },
         "zh-Hans" : {
@@ -1677,6 +2217,24 @@
             "value" : "便利計算機のみ。ケアプランに従ってください。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen een hulprekenmachine. Volg je behandelplan."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To tylko kalkulator pomocniczy. Stosuj się do swojego planu leczenia."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Это только вспомогательный калькулятор. Следуйте своему плану лечения."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1715,6 +2273,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "計算済みコピー → インスリンピッカー"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer berekend → insulinekiezer"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skopiuj obliczone → do wyboru insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировать рассчитанное → в выбор инсулина"
           }
         },
         "zh-Hans" : {
@@ -1757,6 +2333,24 @@
             "value" : "インスリン単位の値を決定できませんでした。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon de waarde van de insuline-eenheden niet bepalen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się określić liczby jednostek insuliny."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось определить значение единиц инсулина."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1795,6 +2389,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "資格証明書"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inloggegevens"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dane logowania"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Учетные данные"
           }
         },
         "zh-Hans" : {
@@ -1843,6 +2455,24 @@
             "value" : "現在の血糖値: %1$@. 傾向: %2$@"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huidige glucose: %@. Trend: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualny poziom glukozy: %@. Trend: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текущая глюкоза: %@. Тренд: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1870,6 +2500,24 @@
             "state" : "translated",
             "value" : "Curva"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Curve"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Krzywa"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кривая"
+          }
         }
       }
     },
@@ -1885,6 +2533,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Informazioni di debug"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debuginfo"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informacje debugowania"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отладочная информация"
           }
         }
       }
@@ -1902,6 +2568,24 @@
             "state" : "translated",
             "value" : "Informazioni di debug:"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debuginfo:"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informacje debugowania:"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отладочная информация:"
+          }
         }
       }
     },
@@ -1911,6 +2595,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "predefinito"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "standaard"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "domyślne"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "по умолчанию"
           }
         }
       }
@@ -1945,6 +2647,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "デフォルト動作: FLwatch アプリを開きます。watchOS 11+"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standaardgedrag: opent de FLwatch-app. Alleen watchOS 11 en hoger."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domyślne zachowanie: otwiera aplikację FLwatch. Tylko watchOS 11 i nowszy."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поведение по умолчанию: открывает приложение FLwatch. Только для watchOS 11 и новее."
           }
         },
         "zh-Hans" : {
@@ -1987,6 +2707,24 @@
             "value" : "接続が切断されました"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbroken"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rozłączono"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отключено"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2025,6 +2763,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "却下する"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sluiten"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zamknij"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрыть"
           }
         },
         "zh-Hans" : {
@@ -2067,6 +2823,24 @@
             "value" : "%.1f 単位を追加しますか？"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wil je %.1f eenheden toevoegen?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czy chcesz dodać %.1f jednostki?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хотите добавить %.1f единицы?"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2105,6 +2879,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "インスリン履歴を Watch に再送信しますか？"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wil je de insulinegeschiedenis opnieuw naar het horloge sturen?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czy chcesz ponownie wysłać historię insuliny na zegarek?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хотите снова отправить историю инсулина на часы?"
           }
         },
         "zh-Hans" : {
@@ -2147,6 +2939,24 @@
             "value" : "インスリンの履歴をリセットしますか？"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wil je de insulinegeschiedenis resetten?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czy chcesz zresetować historię insuliny?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хотите сбросить историю инсулина?"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2185,6 +2995,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "完了"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gereed"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gotowe"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово"
           }
         },
         "zh-Hans" : {
@@ -2227,6 +3055,24 @@
             "value" : "ライブアクティビティを有効にする"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Activities inschakelen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Włącz Live Activities"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включить Live Activities"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2265,6 +3111,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "FLwatchを楽しんでいますか？"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevalt FLwatch?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podoba Ci się FLwatch?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нравится FLwatch?"
           }
         },
         "zh-Hans" : {
@@ -2307,6 +3171,24 @@
             "value" : "1Uあたりのグラム数を入力してください（例：10 ≙ 1U/10g）。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer gram per 1U in (bijv. 10 ≙ 1U/10g)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podaj gramy na 1U (np. 10 ≙ 1U/10g)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите граммы на 1 Ед. (например, 10 ≙ 1 Ед./10 г)."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2315,42 +3197,62 @@
         }
       }
     },
-    "Enter the credentials for your [LLU follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://poml88.github.io/FLwatch/)" : {
+    "Enter the credentials for your [LibreLinkUp follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://flwatch.app/)" : {
+      "comment" : "A section in the \"Connect\" view that explains how to connect to the LibreLinkUp follower account and that includes a link to help.",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geben Sie die Zugangsdaten für Ihr [LLU Follower Konto](https://www.librelinkup.com/) ein und drücken Sie \"Verbinden\". Zugangsdaten werden automatisch an die Watch App gesendet, falls diese installiert ist.\n[PROBLEME? TIPPEN UM HILFE ZU ÖFFNEN](https://poml88.github.io/FLwatch/)"
+            "value" : "Geben Sie die Zugangsdaten für Ihr [LibreLinkUp Follower Konto](https://www.librelinkup.com/) ein und drücken Sie \"Verbinden\". Zugangsdaten werden automatisch an die Watch App gesendet, falls diese installiert ist.\n[PROBLEME? TIPPEN UM HILFE ZU ÖFFNEN](https://flwatch.app/)"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Introduzca las credenciales de su [cuenta de seguidor de LLU](https://www.librelinkup.com/) y pulse el botón Conectar. Las credenciales se enviarán automáticamente a la aplicación del reloj si está instalada.\n[¿PROBLEMAS? PULSE PARA ABRIR LA AYUDA](https://poml88.github.io/FLwatch/)"
+            "value" : "Introduzca las credenciales de su [cuenta de seguidor de LibreLinkUp](https://www.librelinkup.com/) y pulse el botón Conectar. Las credenciales se enviarán automáticamente a la aplicación del reloj si está instalada.\n[¿PROBLEMAS? PULSE PARA ABRIR LA AYUDA](https://flwatch.app/)"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Saisissez les identifiants de votre [compte LLU follower](https://www.librelinkup.com/) et appuyez sur le bouton Connecter. Les identifiants seront automatiquement envoyés à l'application Watch si elle est installée.\n[PROBLÈME ? APPUYEZ POUR OUVRIR L'AIDE](https://poml88.github.io/FLwatch/)"
+            "value" : "Saisissez les identifiants de votre [compte LibreLinkUp follower](https://www.librelinkup.com/) et appuyez sur le bouton Connecter. Les identifiants seront automatiquement envoyés à l'application Watch si elle est installée.\n[PROBLÈME ? APPUYEZ POUR OUVRIR L'AIDE](https://flwatch.app/)"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inserisci le credenziali del tuo [account LLU follower](https://www.librelinkup.com/) e premi il pulsante Connetti. Le credenziali saranno inviate automaticamente all'app dell'orologio, se installata.\n[PROBLEMI? TOCCA PER APRIRE LA GUIDA](https://poml88.github.io/FLwatch/)"
+            "value" : "Inserisci le credenziali del tuo [account LibreLinkUp follower](https://www.librelinkup.com/) e premi il pulsante Connetti. Le credenziali saranno inviate automaticamente all'app dell'orologio, se installata.\n[PROBLEMI? TOCCA PER APRIRE LA GUIDA](https://flwatch.app/)"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "[LLUフォロワーアカウント](https://www.librelinkup.com/)の認証情報を入力し、接続ボタンを押してください。アプリがインストールされている場合、認証情報は自動的にウォッチアプリに送信されます。\n[トラブル？タップしてヘルプを開く](https://poml88.github.io/FLwatch/)"
+            "value" : "[LibreLinkUpフォロワーアカウント](https://www.librelinkup.com/)の認証情報を入力し、接続ボタンを押してください。アプリがインストールされている場合、認証情報は自動的にウォッチアプリに送信されます。\n[トラブル？タップしてヘルプを開く](https://flwatch.app/)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer de inloggegevens van je [LibreLinkUp-volgeraccount](https://www.librelinkup.com/) in en druk op de knop Connect. De inloggegevens worden automatisch naar de watch-app verzonden als deze is geïnstalleerd.\n[PROBLEMEN? TIK OM DE HULP TE OPENEN](https://flwatch.app/)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wpisz dane logowania do swojego [konta obserwatora LibreLinkUp](https://www.librelinkup.com/) i naciśnij przycisk Connect. Dane logowania zostaną automatycznie wysłane do aplikacji na zegarku, jeśli jest zainstalowana.\n[POTRZEBUJESZ POMOCY? STUKNIJ, ABY OTWORZYĆ POMOC](https://flwatch.app/)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите учетные данные для своей [учетной записи наблюдателя LibreLinkUp](https://www.librelinkup.com/) и нажмите кнопку Connect. Учетные данные будут автоматически отправлены в приложение на часах, если оно установлено.\n[ПРОБЛЕМЫ? НАЖМИТЕ, ЧТОБЫ ОТКРЫТЬ СПРАВКУ](https://flwatch.app/)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "输入您的 [LLU 追踪账户](https://www.librelinkup.com/) 凭据并点击“连接”按钮。若已安装手表应用，凭据将自动发送至该应用。\n[遇到问题？点击打开帮助](https://poml88.github.io/FLwatch/)"
+            "value" : "输入您的 [LibreLinkUp 追踪账户](https://www.librelinkup.com/) 凭据并点击“连接”按钮。若已安装手表应用，凭据将自动发送至该应用。\n[遇到问题？点击打开帮助](https://flwatch.app/)"
           }
         }
       }
@@ -2385,6 +3287,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "エラーメッセージ: %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foutmelding: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komunikat błędu: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщение об ошибке: %@"
           }
         },
         "zh-Hans" : {
@@ -2427,6 +3347,24 @@
             "value" : "血糖値とインスリンのデータをApple Healthに書き出す"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporteer glucose- en insulinegegevens naar Apple Health"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksportuj dane glukozy i insuliny do Apple Health"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспортировать данные о глюкозе и инсулине в Apple Health"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2465,6 +3403,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "落下する"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dalend"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "spada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "снижается"
           }
         },
         "zh-Hans" : {
@@ -2507,6 +3463,24 @@
             "value" : "急速に下落している"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "snel dalend"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "szybko spada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "быстро снижается"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2547,6 +3521,24 @@
             "value" : "超速効型"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeer snelwerkend"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bardzo szybko działająca"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сверхбыстрого действия"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2585,6 +3577,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "超速効型（フィアスプ、リュムジェブ、...）"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeer snelwerkend (Fiasp, Lyumjev, ...)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bardzo szybko działająca (Fiasp, Lyumjev, ...)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сверхбыстрого действия (Fiasp, Lyumjev, ...)"
           }
         },
         "zh-Hans" : {
@@ -2628,6 +3638,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "フォロワーが患者と接続されていません。Libreアプリで招待し、LibreLinkUpアプリで承認してください。設定と使用方法のガイドを参照してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volger is niet verbonden met de patiënt. Nodig uit in de Libre-app en accepteer in de LibreLinkUp-app. Zie de handleiding voor installatie en gebruik."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obserwator nie jest połączony z pacjentem. Wyślij zaproszenie w aplikacji Libre i zaakceptuj je w aplikacji LibreLinkUp. Zobacz instrukcję konfiguracji i użytkowania."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наблюдатель не подключен к пациенту. Отправьте приглашение в приложении Libre и примите его в приложении LibreLinkUp. См. руководство по настройке и использованию."
           }
         },
         "zh-Hans" : {
@@ -2676,6 +3704,24 @@
             "value" : "現在の血糖値を測定する"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huidige bloedglucose ophalen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobierz bieżący poziom glukozy we krwi"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Получить текущий уровень глюкозы в крови"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2714,6 +3760,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "現在の血糖値を測定してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haal de huidige bloedglucose op."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobierz bieżący poziom glukozy we krwi."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Получить текущий уровень глюкозы в крови."
           }
         },
         "zh-Hans" : {
@@ -2756,6 +3820,24 @@
             "value" : "グルコース"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucose"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glukoza"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Глюкоза"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2796,6 +3878,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "血糖値フルグラフウィジェット"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widget met volledige glucosegrafiek"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widżet pełnego wykresu glukozy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виджет полного графика глюкозы"
           }
         },
         "zh-Hans" : {
@@ -2850,6 +3950,24 @@
             "value" : "グルコース ウィジェット"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucosewidget"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widżet glukozy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виджет глюкозы"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2896,6 +4014,24 @@
             "value" : "こんにちは、\n\n*** ここにメッセージを入力してください ***\n\n\n\n敬具\n\n\n\n--\nデバッグ情報:\nアプリバージョン: %1$@ ビルド: %2$@\nデバイス情報: %3$@ %4$@ on %5$@\nセンサー: %6$@\nエラーメッセージ: %7$@"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hallo,\n\n*** schrijf hier je bericht ***\n\n\n\nMet vriendelijke groet\n\n\n\n--\nDebuginfo:\nApp-versie: %@ Build: %@\nApparaatinformatie: %@ %@ op %@\nSensor: %@\nFoutmelding: %@\n\n"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dzień dobry,\n\n*** wpisz tutaj swoją wiadomość ***\n\n\n\nPozdrawiam\n\n\n\n--\nInformacje debugowania:\nWersja aplikacji: %@ Kompilacja: %@\nInformacje o urządzeniu: %@ %@ na %@\nSensor: %@\nKomunikat błędu: %@\n\n"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Здравствуйте,\n\n*** напишите здесь свое сообщение ***\n\n\n\nС уважением\n\n\n\n--\nОтладочная информация:\nВерсия приложения: %@ Сборка: %@\nИнформация об устройстве: %@ %@ на %@\nСенсор: %@\nСообщение об ошибке: %@\n\n"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2939,6 +4075,24 @@
             "value" : "時間"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uur"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Godzina"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Час"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2979,6 +4133,24 @@
             "value" : "インスリンの単位数は何単位ですか？"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoeveel insuline-eenheden?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ile jednostek insuliny?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сколько единиц инсулина?"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3017,6 +4189,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "インスリンはどれくらいですか？"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoeveel insuline?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ile insuliny?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сколько инсулина?"
           }
         },
         "zh-Hans" : {
@@ -3062,6 +4252,24 @@
             "value" : "このアプリが気に入ったら、開発者に高品質のコーヒー豆をプレゼントしてください！\n🤝☕️"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als je deze app leuk vindt, koop dan koffiebonen van ontwikkelaarskwaliteit!\n🤝☕️"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeśli podoba Ci się ta aplikacja, kup ziarna kawy jakości deweloperskiej!\n🤝☕️"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если вам нравится это приложение, купите кофейные зерна разработческого качества!\n🤝☕️"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3094,6 +4302,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "インスリン"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insuline"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulina"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Инсулин"
           }
         },
         "zh-Hans" : {
@@ -3136,6 +4362,24 @@
             "value" : "インスリン（丸め）"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insuline (afgerond)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulina (zaokrąglona)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Инсулин (округлено)"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3174,6 +4418,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "インスリン投与履歴"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschiedenis van insulinetoediening"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historia podań insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История введения инсулина"
           }
         },
         "zh-Hans" : {
@@ -3216,6 +4478,24 @@
             "value" : "インスリンの測定値とグラフ"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulinemarkeringen en grafieken"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Znaczniki i wykresy insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Метки и графики инсулина"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3254,6 +4534,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "インスリンの種類"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulinetype"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Typ insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тип инсулина"
           }
         },
         "zh-Hans" : {
@@ -3298,6 +4596,24 @@
             "value" : "インスリンの種類: %@"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulinetype: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Typ insuliny: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тип инсулина: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3336,6 +4652,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "インスリン単位"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insuline-eenheden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jednostki insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Единицы инсулина"
           }
         },
         "zh-Hans" : {
@@ -3378,6 +4712,24 @@
             "value" : "インスリン単位"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insuline-eenheden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jednostki insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Единицы инсулина"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3418,6 +4770,24 @@
             "value" : "インスリン単位（記載）"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insuline-eenheden (geschreven)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jednostki insuliny (tekstowo)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Единицы инсулина (вручную)"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3456,6 +4826,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "記録されたインスリン単位：%@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geregistreerde insuline-eenheden: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisane jednostki insuliny: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записанные единицы инсулина: %@"
           }
         },
         "zh-Hans" : {
@@ -3500,6 +4888,24 @@
             "value" : "認証セッションが無効です。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldige authenticatiesessie."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowa sesja uwierzytelniania."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недействительная сессия авторизации."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3530,6 +4936,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Errore di decodifica JSON."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fout bij JSON-decodering."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Błąd dekodowania JSON."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ошибка декодирования JSON."
           }
         },
         "zh-Hans" : {
@@ -3572,6 +4996,24 @@
             "value" : "電話の画面を常に表示したままにしておく"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefoonscherm altijd ingeschakeld houden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pozostaw ekran telefonu zawsze włączony"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Всегда держать экран телефона включенным"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3610,6 +5052,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "LibreLinkUpのプライバシーポリシーが更新されました。LibreLinkUpアプリを開き、ログインしてプライバシーポリシーに同意してください。（ヒント：ログアウトして再ログインしてみてください）"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het privacybeleid van LibreLinkUp is bijgewerkt. Open de LibreLinkUp-app, log in en accepteer het privacybeleid. (tip: probeer uit te loggen en opnieuw in te loggen)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polityka prywatności LibreLinkUp została zaktualizowana. Otwórz aplikację LibreLinkUp, zaloguj się i zaakceptuj politykę prywatności. (wskazówka: spróbuj się wylogować i zalogować ponownie)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Политика конфиденциальности LibreLinkUp была обновлена. Откройте приложение LibreLinkUp, войдите в систему и примите политику конфиденциальности. (совет: попробуйте выйти и войти снова)"
           }
         },
         "zh-Hans" : {
@@ -3652,6 +5112,24 @@
             "value" : "LibreLinkUpの利用規約が更新されました。LibreLinkUpアプリを開き、ログインして利用規約に同意してください。（ヒント：ログアウトして再ログインしてみてください）"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De gebruiksvoorwaarden van LibreLinkUp zijn bijgewerkt. Open de LibreLinkUp-app, log in en accepteer de gebruiksvoorwaarden. (tip: probeer uit te loggen en opnieuw in te loggen)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warunki korzystania LibreLinkUp zostały zaktualizowane. Otwórz aplikację LibreLinkUp, zaloguj się i zaakceptuj warunki korzystania. (wskazówka: spróbuj się wylogować i zalogować ponownie)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Условия использования LibreLinkUp были обновлены. Откройте приложение LibreLinkUp, войдите в систему и примите условия использования. (совет: попробуйте выйти и войти снова)"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3692,6 +5170,24 @@
             "value" : "LLUのメールアドレスはまだ確認されていません。LibreLinkUpアプリを使用して確認してください。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LLU-e-mailadres is nog niet geverifieerd. Verifieer het via de LibreLinkUp-app."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adres e-mail LLU nie został jeszcze zweryfikowany. Zweryfikuj go w aplikacji LibreLinkUp."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Адрес электронной почты LLU еще не подтвержден. Подтвердите его в приложении LibreLinkUp."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3718,6 +5214,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Limite inferiore"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ondergrens"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dolny limit"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нижний предел"
           }
         },
         "zh-Hans" : {
@@ -3760,6 +5274,24 @@
             "value" : "後でね"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Misschien later"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Może później"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Возможно, позже"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3786,6 +5318,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "分"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minuut"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minuta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Минута"
           }
         },
         "zh-Hans" : {
@@ -3828,6 +5378,24 @@
             "value" : "接続できません。ネットワークは大丈夫ですか？"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen verbinding. Netwerk?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak połączenia. Sieć?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет соединения. Сеть?"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3868,6 +5436,24 @@
             "value" : "接続できません。ログイン中に不明なエラーが発生しました。ネットワークに問題がありますか？"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen verbinding. Onbekende fout tijdens inloggen. Netwerk?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak połączenia. Nieznany błąd podczas logowania. Sieć?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет соединения. Неизвестная ошибка при входе. Сеть?"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3906,6 +5492,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "電話から資格情報がまだ受信されていません。電話で「接続」をタップしてウォッチに再送信し、1分間お待ちください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nog geen inloggegevens van de telefoon ontvangen. Probeer op de telefoon op 'Connect' te tikken om ze opnieuw naar het horloge te sturen en wacht een minuut."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie odebrano jeszcze danych logowania z telefonu. Spróbuj stuknąć „Connect” na telefonie, aby wysłać je ponownie do zegarka, i odczekaj minutę."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Учетные данные еще не получены с телефона. Попробуйте нажать 'Connect' на телефоне, чтобы повторно отправить их на часы, и подождите минуту."
           }
         },
         "zh-Hans" : {
@@ -3954,6 +5558,24 @@
             "value" : "%1$lld分間、データを受信していません。\n\n%2$@"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen gegevens ontvangen sinds %lld min.\n\n%@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie odebrano danych od %lld min.\n\n%@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет данных уже %lld мин.\n\n%@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3992,6 +5614,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld分間データを受信していません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen gegevens sinds %lld min."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak danych od %lld min."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет данных уже %lld мин."
           }
         },
         "zh-Hans" : {
@@ -4034,6 +5674,24 @@
             "value" : "結構です"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nee bedankt"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie, dziękuję"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет, спасибо"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4072,6 +5730,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "認証されていません。認証情報を確認してください。LibreLinkUp アプリを開き、ログアウトしてから再度ログインして、すべてが正常に動作しているか確認してください。その後、FLwatch でも同じ認証情報を使用してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet geauthenticeerd. Controleer de inloggegevens. Open de LibreLinkUp-app, log uit en log opnieuw in om te controleren of alles werkt. Gebruik daarna dezelfde inloggegevens voor FLwatch."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak uwierzytelnienia. Sprawdź dane logowania. Otwórz aplikację LibreLinkUp, wyloguj się i zaloguj ponownie, aby upewnić się, że wszystko działa. Następnie użyj tych samych danych logowania w FLwatch."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не выполнена аутентификация. Проверьте учетные данные. Откройте приложение LibreLinkUp, выйдите из системы и войдите снова, чтобы убедиться, что все работает. Затем используйте те же учетные данные для FLwatch."
           }
         },
         "zh-Hans" : {
@@ -4114,6 +5790,24 @@
             "value" : "未決定"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "niet bepaald"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nie określono"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не определено"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4152,6 +5846,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "不満ですか？ご提案は？"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet tevreden? Suggesties?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie jesteś zadowolony? Masz sugestie?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что-то не так? Есть предложения?"
           }
         },
         "zh-Hans" : {
@@ -4194,6 +5906,24 @@
             "value" : "Appの設定を開く"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open app-instellingen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwórz ustawienia aplikacji"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть настройки приложения"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4234,6 +5964,24 @@
             "value" : "GitHub で問題報"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open een issue op GitHub"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwórz zgłoszenie na GitHubie"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть issue на GitHub"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4272,6 +6020,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "または：注射からの経過時間"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "of: Tijd sinds injectie"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "lub: Czas od wstrzyknięcia"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "или: Время с момента инъекции"
           }
         },
         "zh-Hans" : {
@@ -4348,6 +6114,24 @@
             "value" : "まだ許可は求められていません。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toestemming is nog niet aangevraagd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uprawnienie nie zostało jeszcze wymagane."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешение еще не запрашивалось."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4386,6 +6170,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "この設定をオンにしたときにのみ許可が求められます。FLwatch はインスリン注射と血糖値を Apple Health に書き出し、重複を避けるためにサンプルへ HealthKit の同期識別子を付与します。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toestemming wordt pas gevraagd wanneer je dit inschakelt. FLwatch exporteert insuline-injecties en glucosewaarden en voorziet monsters van HealthKit-synchronisatie-id's om duplicaten te voorkomen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uprawnienie jest wymagane dopiero po włączeniu tej opcji. FLwatch eksportuje wstrzyknięcia insuliny i wartości glukozy oraz oznacza próbki identyfikatorami synchronizacji HealthKit, aby uniknąć duplikatów."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешение запрашивается только при включении этой функции. FLwatch экспортирует инъекции инсулина и значения глюкозы, а также помечает образцы идентификаторами синхронизации HealthKit, чтобы избежать дубликатов."
           }
         },
         "zh-Hans" : {
@@ -4428,6 +6230,24 @@
             "value" : "電話：インスリンの作用グラフを表示する"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefoon: toon insulineactiviteitsgrafiek"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefon: pokaż wykres aktywności insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Телефон: показать график активности инсулина"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4466,6 +6286,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "電話：インスリン投与のマークを表示する"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefoon: toon markeringen voor insulinetoediening"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefon: pokaż znaczniki podań insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Телефон: показать метки введения инсулина"
           }
         },
         "zh-Hans" : {
@@ -4508,6 +6346,24 @@
             "value" : "電話：IOBグラフを表示"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefoon: toon IOB-grafiek"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefon: pokaż wykres IOB"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Телефон: показать график IOB"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4534,6 +6390,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Se i widget non funzionano, riavvia il telefono e guarda una volta!"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start telefoon en horloge één keer opnieuw op als widgets niet werken!"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeśli widżety nie działają, uruchom ponownie telefon i zegarek."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если виджеты не работают, один раз перезагрузите телефон и часы!"
           }
         }
       }
@@ -4568,6 +6442,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "分量"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Portiegrootte"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wielkość porcji"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер порции"
           }
         },
         "zh-Hans" : {
@@ -4610,6 +6502,24 @@
             "value" : "接続ボタンをもう一度押して、視聴するための認証情報を再送信してください。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Druk opnieuw op \"Connect\" om de inloggegevens opnieuw naar het horloge te sturen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naciśnij ponownie „Connect”, aby ponownie wysłać dane logowania do zegarka."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите \"Connect\" еще раз, чтобы повторно отправить учетные данные на часы."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4648,6 +6558,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "速効型"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snelwerkend"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szybko działająca"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Быстрого действия"
           }
         },
         "zh-Hans" : {
@@ -4690,6 +6618,24 @@
             "value" : "速効型（ノボログ、...）"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snelwerkend (Novolog, ...)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szybko działająca (Novolog, ...)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Быстрого действия (Novolog, ...)"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4728,6 +6674,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "生"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruw"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surowe"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сырое"
           }
         },
         "zh-Hans" : {
@@ -4770,6 +6734,24 @@
             "value" : "インスリン ${insulinUnitsRaw} 単位を記録する"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registreer ${insulinUnitsRaw} eenheden insuline"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz ${insulinUnitsRaw} jednostek insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записать ${insulinUnitsRaw} единиц инсулина"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4808,6 +6790,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "インスリン ${unitsDoubleWritten} 単位を記録（記入）"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registreer ${unitsDoubleWritten} eenheden insuline (geschreven)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz ${unitsDoubleWritten} jednostek insuliny (tekstowo)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записать ${unitsDoubleWritten} единиц инсулина (вручную)"
           }
         },
         "zh-Hans" : {
@@ -4850,6 +6850,24 @@
             "value" : "インスリン注射の記録"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insuline-injectie registreren"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz wstrzyknięcie insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записать инъекцию инсулина"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4888,6 +6906,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "インスリン注射の記録（書面）"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insuline-injectie registreren (geschreven)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz wstrzyknięcie insuliny (tekstowo)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записать инъекцию инсулина (вручную)"
           }
         },
         "zh-Hans" : {
@@ -4930,6 +6966,24 @@
             "value" : "インスリン単位を記録"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insuline-eenheden registreren"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz jednostki insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записать единицы инсулина"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4968,6 +7022,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "インスリンを%@単位分投与しました。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geregistreerd: %@ eenheden insuline."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisano %@ jednostek insuliny."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записано %@ единиц инсулина."
           }
         },
         "zh-Hans" : {
@@ -5017,6 +7089,24 @@
             "state" : "translated",
             "value" : "Ricarica widget"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widget vernieuwen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odśwież widżet"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезагрузить виджет"
+          }
         }
       }
     },
@@ -5038,6 +7128,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ricarica widget."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widget vernieuwen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odśwież widżet."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезагрузить виджет."
           }
         }
       }
@@ -5072,6 +7180,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "再送信"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnieuw verzenden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij ponownie"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить снова"
           }
         },
         "zh-Hans" : {
@@ -5114,6 +7240,24 @@
             "value" : "履歴を Watch に再送信"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschiedenis opnieuw naar horloge sturen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij historię ponownie na zegarek"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторно отправить историю на часы"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5152,6 +7296,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "リセット"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resetten"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resetuj"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить"
           }
         },
         "zh-Hans" : {
@@ -5194,6 +7356,24 @@
             "value" : "IOBをリセットする"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IOB resetten"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyzeruj IOB"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить IOB"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5232,6 +7412,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "結果としての炭水化物"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resulterende koolhydraten"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wynikowe węglowodany"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Итоговые углеводы"
           }
         },
         "zh-Hans" : {
@@ -5274,6 +7472,24 @@
             "value" : "現在の血糖値を表示します。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geef de huidige bloedglucose terug."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwróć bieżący poziom glukozy we krwi."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернуть текущий уровень глюкозы в крови."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5312,6 +7528,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "上昇する"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "stijgend"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rośnie"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "растет"
           }
         },
         "zh-Hans" : {
@@ -5354,6 +7588,24 @@
             "value" : "急速に上昇している"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "snel stijgend"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "szybko rośnie"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "быстро растет"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5392,6 +7644,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "丸め"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afronden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaokrąglanie"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Округление"
           }
         },
         "zh-Hans" : {
@@ -5434,6 +7704,24 @@
             "value" : "IOB計算用のボラスインスリンを選択してください。現在対応しているのは：\n- 速効型（ノボログ、ノボラピッドなど（ピーク活動時間75分））\n- 超速効型（フィアスプ、リュムジェブなど（ピーク活動時間55分））"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecteer de bolusinsuline voor de IOB-berekeningen. Momenteel ondersteund:\n- Snelwerkend (Novolog, Novorapid, ... (piekactiviteit 75 min))\n- Zeer snelwerkend (Fiasp, Lyumjev, ... (piekactiviteit 55 min))"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz insulinę bolusową do obliczeń IOB. Obecnie obsługiwane są:\n- Szybko działająca (Novolog, Novorapid, ... (szczyt aktywności 75 min))\n- Bardzo szybko działająca (Fiasp, Lyumjev, ... (szczyt aktywności 55 min))"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите болюсный инсулин для расчетов IOB. Сейчас поддерживаются:\n- Быстрого действия (Novolog, Novorapid, ... (пик активности 75 мин))\n- Сверхбыстрого действия (Fiasp, Lyumjev, ... (пик активности 55 мин))"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5472,6 +7760,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "サポートにメールを送信"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-mail naar support sturen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij e-mail do pomocy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить письмо в поддержку"
           }
         },
         "zh-Hans" : {
@@ -5516,6 +7822,24 @@
             "value" : "サーバーメンテナンス中。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveronderhoud."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przerwa techniczna serwera."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Техническое обслуживание сервера."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5554,6 +7878,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "設定"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instellingen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ustawienia"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки"
           }
         },
         "zh-Hans" : {
@@ -5596,6 +7938,24 @@
             "value" : "セットアップと使用ガイド"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handleiding voor installatie en gebruik"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instrukcja konfiguracji i użytkowania"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Руководство по настройке и использованию"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5634,6 +7994,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Siri統合"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siri-integratie"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integracja z Siri"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Интеграция с Siri"
           }
         },
         "zh-Hans" : {
@@ -5676,6 +8054,24 @@
             "value" : "Siriの統合機能は現在開発中です！  \n\n適切な有用なフレーズを見つけるのは難しいです。アイデアがあれば、ご連絡ください。  \n\nSiriは次のように言って、あなたの血糖値と傾向を教えてくれます：「Siri、FLwatchの血糖値は？」または「FLwatchの血糖値は？」\n\nSiriは「FLwatch」という言葉を理解できないことがあります（ただし「Apple Watch」は常に理解します）。そのため、アプリ名の同義語として「血糖値計」を使用することもできます：「Siri、血糖値計の血糖値は？」または「血糖値計の血糖値は？」と尋ねることができます。\n\nショートカットアプリでは、このアクション用のショートカットを任意のカスタム名（例：「現在の血糖値」）で作成し、「Apple Watchに表示」を選択すると、ウォッチでもコマンドが機能します。その後「Hey Siri、現在の血糖値」と尋ねると、Siriが値と傾向を読み上げてくれます。\n\nSiriはIOB計算のためのインスリン単位の記録も可能です。\n\nショートカットアプリの設定オプションを調べてみてください。  \n\n以下のフレーズのリストです：  \n\nFLwatchでの血糖値はどれくらいですか  \nFLwatchでの血糖値はどれくらいですか  \nFLwatchでの血糖値はどれくらいですか  \nFLwatchでの血糖値はどれくらいですか  \nFLwatchの血糖値はどれくらいですか  \nFLwatchの血糖値はどれくらいですか  \nFLwatchの血糖値はどれくらいですか  \nFLwatchの血糖値はどれくらいですか\nFLwatchで現在の血糖値を取得\nFLwatchで私の現在の血糖値は？\nFLwatchで私の現在の血糖値は？\n\nFLwatchでインスリンを記録\nFLwatchでインスリンをメモ\nFLwatchでインスリンを追加\nFLwatchでXX単位のインスリン\nFLwatchでXX単位\nFLwatchでXX単位\nFLwatchでXX単位\nFLwatchでXX単位"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Siri-integratie is nog volop in ontwikkeling!\n\nHet is lastig om de juiste, bruikbare zinnen te vinden. Stuur me gerust een bericht als je ideeën hebt.\n\nSiri kan je je bloedglucose en trend vertellen als je zegt: \"Siri, wat is mijn glucose in FLwatch\" of \"Wat is mijn FLwatch-glucosespiegel\".\n\nOmdat Siri soms moeite heeft met \"FLwatch\" (maar \"Apple Watch\" altijd begrijpt), kun je ook \"glucosemeter\" gebruiken als synoniem voor de appnaam: \"Siri, wat is mijn glucose in glucosemeter\" of \"Wat is mijn glucosemeter-glucosespiegel\".\n\nIn de Opdrachten-app kun je voor deze actie een opdracht aanmaken met een eigen naam, zoals \"Huidige glucosespiegel\", en \"Toon op Apple Watch\" selecteren zodat de opdracht ook op het horloge werkt. Als je daarna zegt: \"Hé Siri, huidige glucosespiegel\", leest Siri de waarde en trend voor.\n\nSiri kan ook insuline-eenheden registreren voor de IOB-berekening.\n\nBekijk de opties in de Opdrachten-app.\n\nHier is de volledige lijst met zinnen:\n\nWat is mijn glucose in FLwatch\nWat is mijn glucose in FLwatch\nWat is mijn glucosespiegel in FLwatch\nWat is mijn glucosespiegel in FLwatch\nWat is mijn FLwatch glucose\nWat is mijn FLwatch glucose\nWat is mijn FLwatch glucosespiegel\nWat is mijn FLwatch glucosespiegel\nFLwatch toon huidige bloedglucose\nFLwatch wat is mijn huidige bloedglucose\nWat is mijn huidige bloedglucose in FLwatch\n\nFLwatch registreer insuline\nFLwatch noteer insuline\nFLwatch voeg insuline toe\nXX eenheden insuline in FLwatch\nFLwatch XX eenheid\nFLwatch XX eenheden\nXX eenheid FLwatch\nXX eenheden FLwatch"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integracja z Siri jest nadal w fazie rozwoju!\n\nTrudno znaleźć poprawne i użyteczne frazy. Napisz do mnie, jeśli masz jakieś pomysły.\n\nSiri może powiedzieć Ci poziom glukozy i trend, gdy powiesz: „Siri, jaki jest mój poziom glukozy w FLwatch” albo „Jaki jest mój poziom glukozy FLwatch”.\n\nPonieważ Siri czasami ma problem ze zrozumieniem „FLwatch” (za to zawsze rozumie „Apple Watch”), możesz też użyć „monitor glukozy” jako synonimu nazwy aplikacji: „Siri, jaki jest mój poziom glukozy w monitorze glukozy” albo „Jaki jest mój poziom glukozy monitora glukozy”.\n\nW aplikacji Skróty możesz utworzyć skrót dla tej akcji z dowolną własną nazwą, na przykład „Aktualny poziom glukozy”, i wybrać „Pokaż na Apple Watch”, aby polecenie działało również na zegarku. Jeśli potem powiesz: „Hej Siri, aktualny poziom glukozy”, Siri odczyta Ci wartość i trend.\n\nSiri potrafi też zapisywać jednostki insuliny do obliczania IOB.\n\nSprawdź opcje w aplikacji Skróty.\n\nOto pełna lista fraz:\n\nJaki jest mój poziom glukozy w FLwatch\nJaki mam poziom glukozy w FLwatch\nJaki jest mój poziom glukozy w FLwatch\nJaki mam poziom glukozy w FLwatch\nJaki jest mój poziom glukozy FLwatch\nJaki mam poziom glukozy FLwatch\nJaki jest mój poziom glukozy FLwatch\nJaki mam poziom glukozy FLwatch\nFLwatch pokaż bieżący poziom glukozy we krwi\nFLwatch jaki jest mój bieżący poziom glukozy we krwi\nJaki jest mój bieżący poziom glukozy we krwi w FLwatch\n\nFLwatch zapisz insulinę\nFLwatch zanotuj insulinę\nFLwatch dodaj insulinę\nXX jednostek insuliny w FLwatch\nFLwatch XX jednostka\nFLwatch XX jednostki\nXX jednostka FLwatch\nXX jednostki FLwatch"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Интеграция с Siri все еще находится в разработке!\n\nТрудно подобрать правильные и полезные фразы. Напишите мне, если у вас есть идеи.\n\nSiri может сообщить вам уровень глюкозы и тренд, если сказать: \"Siri, какой у меня уровень глюкозы в FLwatch\" или \"Какой у меня уровень глюкозы FLwatch\".\n\nПоскольку Siri иногда плохо понимает \"FLwatch\" (зато всегда понимает \"Apple Watch\"), вы также можете использовать \"монитор глюкозы\" как синоним названия приложения: \"Siri, какой у меня уровень глюкозы в мониторе глюкозы\" или \"Какой у меня уровень глюкозы монитора глюкозы\".\n\nВ приложении Shortcuts вы можете создать команду для этого действия с любым собственным названием, например \"Текущий уровень глюкозы\", и выбрать \"Show on Apple Watch\", чтобы команда работала и на часах. После этого, если сказать: \"Привет, Siri, текущий уровень глюкозы\", Siri озвучит значение и тренд.\n\nSiri также может записывать единицы инсулина для расчета IOB.\n\nИзучите параметры в приложении Shortcuts.\n\nВот полный список фраз:\n\nКакой у меня уровень глюкозы в FLwatch\nКакой у меня уровень глюкозы в FLwatch\nКакой у меня уровень глюкозы в FLwatch\nКакой у меня уровень глюкозы в FLwatch\nКакой у меня уровень глюкозы в FLwatch\nКакой у меня уровень глюкозы в FLwatch\nКакой у меня уровень глюкозы в FLwatch\nКакой у меня уровень глюкозы в FLwatch\nFLwatch показать текущую глюкозу крови\nFLwatch какой у меня сейчас уровень глюкозы в крови\nКакой у меня сейчас уровень глюкозы в крови в FLwatch\n\nFLwatch записать инсулин\nFLwatch отметить инсулин\nFLwatch добавить инсулин\nXX единиц инсулина в FLwatch\nFLwatch XX единица\nFLwatch XX единицы\nXX единица FLwatch\nXX единицы FLwatch"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5702,6 +8098,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Qualcosa è andato storto..."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er is iets misgegaan..."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coś poszło nie tak..."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что-то пошло не так..."
           }
         }
       }
@@ -5736,6 +8150,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "申し訳ありませんが、最近の血糖値のデータはありません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorry, er zijn geen recente bloedglucosewaarden."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przepraszamy, brak ostatnich wartości glukozy we krwi."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Извините, недавних значений глюкозы в крови нет."
           }
         },
         "zh-Hans" : {
@@ -5778,6 +8210,24 @@
             "value" : "安定"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "stabiel"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "stabilny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "стабильно"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5810,6 +8260,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "開始"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начать"
           }
         },
         "zh-Hans" : {
@@ -5852,6 +8320,24 @@
             "value" : "提出する"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versturen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5884,6 +8370,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "サポート"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomoc"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поддержка"
           }
         },
         "zh-Hans" : {
@@ -5926,6 +8430,24 @@
             "value" : "円形の時計のコンプリケーションをタップ：血糖値を更新します"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tik op de ronde watch-complicatie: werkt glucosewaarde bij"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuknij okrągłą komplikację zegarka: aktualizuje wartość glukozy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите на круглое усложнение часов: обновляет значение глюкозы"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5964,6 +8486,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "タップしてAppの設定を開く。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tik om de app-instellingen te openen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuknij, aby otworzyć ustawienia aplikacji."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите, чтобы открыть настройки приложения."
           }
         },
         "zh-Hans" : {
@@ -6006,6 +8546,24 @@
             "value" : "FLwatchをダウンロードいただきありがとうございます。役立つことを願っています。\n\n開始するには、セットアップと使用ガイドをお読みください。質問がある場合はサポートまでご連絡ください。詳細情報は設定タブをご覧ください。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedankt voor het downloaden van FLwatch. Ik hoop dat het nuttig voor je zal zijn.\n\nLees om te beginnen de HANDLEIDING VOOR INSTALLATIE EN GEBRUIK. Neem bij vragen contact op met support. Meer informatie vind je op het tabblad Instellingen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dziękujemy za pobranie FLwatch. Mam nadzieję, że okaże się przydatny.\n\nAby rozpocząć, przeczytaj INSTRUKCJĘ KONFIGURACJI I UŻYTKOWANIA. W razie pytań skontaktuj się z pomocą. Więcej informacji znajdziesz na karcie Ustawienia."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спасибо за загрузку FLwatch. Надеюсь, он окажется полезным.\n\nДля начала прочитайте РУКОВОДСТВО ПО НАСТРОЙКЕ И ИСПОЛЬЗОВАНИЮ. Если возникнут вопросы, обратитесь в поддержку. Больше информации на вкладке Настройки."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6044,6 +8602,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "デフォルトは5分です。注意：OSは24時間あたり最大40～70回のウィジェット（コンプリケーション）の更新を許可しています。この制限に達すると、それ以上の更新は行われません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De standaardwaarde is 5 min. Houd er rekening mee dat het besturingssysteem maximaal ongeveer 40 tot 70 widget- (complicatie-)updates per 24 uur toestaat. Zodra dit budget op is, volgen er geen verdere updates meer."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domyślnie jest to 5 min. Pamiętaj, że system pozwala maksymalnie na około 40 do 70 aktualizacji widżetu (komplikacji) na 24 godziny. Po wyczerpaniu tego limitu kolejne aktualizacje nie będą wykonywane."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Значение по умолчанию - 5 мин. Обратите внимание, что ОС позволяет максимум около 40-70 обновлений виджета (усложнения) за 24 часа. Когда этот лимит исчерпан, обновлений больше не будет."
           }
         },
         "zh-Hans" : {
@@ -6092,6 +8668,24 @@
             "value" : "このウィジェットは、完全な血糖値グラフと最新の血糖値を表示します。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze widget toont de volledige glucosegrafiek en de nieuwste bloedglucosewaarde."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten widżet wyświetla pełny wykres glukozy i najnowszą wartość glukozy we krwi."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот виджет показывает полный график глюкозы и последнее значение глюкозы в крови."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6134,6 +8728,24 @@
             "value" : "このウィジェットは、血糖値グラフと最新の血糖値を表示します。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze widget toont de glucosegrafiek en de nieuwste bloedglucosewaarde."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten widżet wyświetla wykres glukozy i najnowszą wartość glukozy we krwi."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот виджет показывает график глюкозы и последнее значение глюкозы в крови."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6172,6 +8784,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "このウィジェットは最新の血糖値を表示します。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze widget toont de nieuwste bloedglucosewaarde."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten widżet wyświetla najnowszą wartość glukozy we krwi."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот виджет показывает последнее значение глюкозы в крови."
           }
         },
         "zh-Hans" : {
@@ -6214,6 +8844,24 @@
             "value" : "時間"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tijd"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6252,6 +8900,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "時間:"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tijd: "
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czas: "
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время: "
           }
         },
         "zh-Hans" : {
@@ -6300,6 +8966,24 @@
             "value" : "時間: %1$@  (%2$@ 時間)      単位: %3$.1f"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tijd: %@  (%@ h)      Eenheden: %.1f"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czas: %@  (%@ h)      Jednostki: %.1f"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время: %@  (%@ ч)      Единицы: %.1f"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6342,6 +9026,24 @@
             "value" : "ネットワークリクエストが多すぎます。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Te veel netwerkverzoeken."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zbyt wiele żądań sieciowych."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Слишком много сетевых запросов."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6380,6 +9082,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "間違った地域サーバーにログインしようとしています。サポートまでご連絡ください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er wordt geprobeerd in te loggen op de verkeerde regionale server. Neem contact op met support."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próba logowania do niewłaściwego serwera regionalnego. Skontaktuj się z pomocą."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попытка входа на неправильный региональный сервер. Обратитесь в поддержку."
           }
         },
         "zh-Hans" : {
@@ -6425,6 +9145,24 @@
             "value" : "了解しました  "
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begrepen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rozumiem"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Понятно"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6463,6 +9201,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "記録された単位: %@."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geregistreerde eenheden: %@."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisane jednostki: %@."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записанные единицы: %@."
           }
         },
         "zh-Hans" : {
@@ -6505,6 +9261,24 @@
             "value" : "グラフ取得中に不明なエラーが発生しました。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onbekende fout tijdens het opvragen van de grafiek."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieznany błąd podczas pobierania wykresu."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неизвестная ошибка при запросе графика."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6545,6 +9319,24 @@
             "value" : "不明なステータス4エラーです。設定タブのエラーメッセージを確認し、サポートに送信してください。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onbekende status 4-fout. Controleer de foutmelding op het tabblad Instellingen en stuur die naar support."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieznany błąd statusu 4. Sprawdź komunikat błędu na karcie Ustawienia i wyślij go do pomocy."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неизвестная ошибка статуса 4. Проверьте сообщение об ошибке на вкладке Настройки и отправьте его в поддержку."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6569,6 +9361,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nota di aggiornamento"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notitie bijwerken"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaktualizuj notatkę"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновить заметку"
           }
         }
       }
@@ -6603,6 +9413,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "このライブアクティビティの更新は保証されません。私の iPhone ではおよそ 8 分ごとです。\nライブアクティビティの Watch のスマートスタックへのミラーリングを有効または無効にするには、iPhone の「Watch」アプリを使用してください。\nライブアクティビティはアプリの設定でも有効にする必要があります。現在の状態: %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates van deze live-activiteit zijn niet gegarandeerd. Op mijn telefoon ongeveer elke 8 minuten.\nOm het spiegelen van de live-activiteit naar de slimme stapel van het horloge in of uit te schakelen, gebruik je de \"Watch\"-app op de telefoon.\nLive Activity moet ook in de app-instellingen zijn ingeschakeld. Huidige status: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualizacje tej aktywności na żywo nie są gwarantowane. Na moim telefonie pojawiają się mniej więcej co 8 minut.\nAby włączyć lub wyłączyć mirroring aktywności na żywo do Smart Stack na zegarku, użyj aplikacji „Watch” na telefonie.\nLive Activity musi być także włączone w ustawieniach aplikacji. Bieżący status: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновления этой Live Activity не гарантируются. На моем телефоне - примерно каждые 8 минут.\nЧтобы включить или отключить зеркалирование Live Activity в Smart Stack часов, используйте приложение \"Watch\" на телефоне.\nLive Activity также должна быть включена в настройках приложения. Текущий статус: %@"
           }
         },
         "zh-Hans" : {
@@ -6645,6 +9473,24 @@
             "value" : "ユーザー名"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruikersnaam"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nazwa użytkownika"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Имя пользователя"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6683,6 +9529,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ユーザー名（メールアドレス）"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruikersnaam (e-mailadres)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nazwa użytkownika (adres e-mail)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Имя пользователя (адрес электронной почты)"
           }
         },
         "zh-Hans" : {
@@ -6735,6 +9599,24 @@
             "value" : "警告"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waarschuwing"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostrzeżenie"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предупреждение"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6773,6 +9655,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "表示：インスリンの作用グラフを表示する"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horloge: toon insulineactiviteitsgrafiek"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zegarek: pokaż wykres aktywności insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Часы: показать график активности инсулина"
           }
         },
         "zh-Hans" : {
@@ -6815,6 +9715,24 @@
             "value" : "表示：インスリン投与のマークを表示する"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horloge: toon markeringen voor insulinetoediening"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zegarek: pokaż znaczniki podań insuliny"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Часы: показать метки введения инсулина"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6853,6 +9771,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "表示：IOBグラフを表示する"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horloge: toon IOB-grafiek"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zegarek: pokaż wykres IOB"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Часы: показать график IOB"
           }
         },
         "zh-Hans" : {
@@ -6895,6 +9831,24 @@
             "value" : "ようこそ"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welkom"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Witamy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добро пожаловать"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6935,6 +9889,24 @@
             "value" : "ウィジェットの更新頻度"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frequentie van widget-updates"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Częstotliwość aktualizacji widżetu"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Частота обновления виджета"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6955,6 +9927,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ウィジェット / コンプリケーション"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widgets / complicaties"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widżety / komplikacje"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виджеты / усложнения"
           }
         },
         "zh-Hans" : {
@@ -6995,6 +9985,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "はい、今すぐ評価してください"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ja, beoordeel nu"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tak, oceń teraz"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Да, оценить сейчас"
           }
         },
         "zh-Hans" : {
@@ -7043,6 +10051,24 @@
             "value" : "現在の血糖値は%1$@と%2$@です。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bloedglucose is momenteel %@ en %@."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twój poziom glukozy we krwi wynosi obecnie %@ i %@."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сейчас ваш уровень глюкозы в крови %@ и %@."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7083,6 +10109,24 @@
             "value" : "現在のところ、あなたの血糖値は確認できません。"
           }
         },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bloedglucosewaarde is momenteel niet beschikbaar."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twoja wartość glukozy we krwi jest obecnie niedostępna."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваше значение глюкозы в крови сейчас недоступно."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7121,6 +10165,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "皆様からのフィードバックはアプリの改善に役立ち、糖尿病の方々がアプリを見つけやすくします。そして開発を続ける原動力にもなります。😊\n簡単なレビューを投稿していただけませんか？"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jouw feedback helpt ons verbeteren en maakt het makkelijker voor anderen met diabetes om de app te ontdekken. En het motiveert om door te gaan met het werk. 😊\nWil je een korte beoordeling achterlaten?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twoja opinia pomaga nam się rozwijać i ułatwia innym osobom z cukrzycą odkrycie aplikacji. To także motywuje do dalszej pracy. 😊\nCzy chcesz zostawić krótką ocenę?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш отзыв помогает нам становиться лучше и облегчает другим людям с диабетом поиск приложения. И это мотивирует продолжать работу. 😊\nХотите оставить короткий отзыв?"
           }
         },
         "zh-Hans" : {

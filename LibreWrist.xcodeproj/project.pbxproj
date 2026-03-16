@@ -295,6 +295,9 @@
 		7B299A162C90B089002A15C8 /* LibreLinkUpGlucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreLinkUpGlucose.swift; sourceTree = "<group>"; };
 		7B299A192C90B0A1002A15C8 /* LibreLinkUpAlarm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreLinkUpAlarm.swift; sourceTree = "<group>"; };
 		7B299A1C2C90DC43002A15C8 /* LibreLinkUpHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreLinkUpHistory.swift; sourceTree = "<group>"; };
+		7B2DCA2D2F685415001709B0 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		7B2DCA2E2F685418001709B0 /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		7B2DCA2F2F68541B001709B0 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7B2E7EAC2CB59C9300A3473B /* FlwatchWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FlwatchWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B2E7EB02CB59C9300A3473B /* LibreWristWatchWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreWristWatchWidget.swift; sourceTree = "<group>"; };
 		7B2E7EB22CB59C9500A3473B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -1199,6 +1202,9 @@
 				7B7790BB2E599BA200DE6B01 /* fr */,
 				7B7790BC2E599BA300DE6B01 /* zh-Hans */,
 				7B7F221C2E82D036005E3A72 /* it */,
+				7B2DCA2D2F685415001709B0 /* ru */,
+				7B2DCA2E2F685418001709B0 /* pl */,
+				7B2DCA2F2F68541B001709B0 /* nl */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";

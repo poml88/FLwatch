@@ -46,7 +46,7 @@ struct PhoneAppSettingsView: View {
                     spacing: 12
                 ) {
                     Button {
-                        if let url = URL(string: "https://poml88.github.io/FLwatch/") {
+                        if let url = URL(string: "https://flwatch.app/") {
                             openURL(url)
                         }
                     } label: {
