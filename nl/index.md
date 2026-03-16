@@ -42,6 +42,7 @@ Hetzelfde werkt ook op de telefoon.
 * Widget voor de stand-bymodus
 * watchOS-widgets / complicaties
 * CarPlay-ondersteuning via widgets en Live Activities
+* Exporteer insulinedoses en glucosegegevens naar Apple Health
 
 ### Nog te doen
 - Trainingsactiviteit implementeren

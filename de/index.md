@@ -44,6 +44,7 @@ Das Gleiche funktioniert auch auf dem Telefon.
 * Widget für den Standby-Modus
 * watchOS-Widgets / Komplikationen
 * CarPlay-Unterstützung über Widgets und Live Activities
+* Export von Insulindosen und Glukosedaten nach Apple Health
 
 ### ToDo
 - Trainingsaktivitaet implementieren

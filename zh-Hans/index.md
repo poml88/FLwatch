@@ -43,6 +43,7 @@ hero_title: "FLwatch：血糖传感器图表"
 * 待机模式小组件
 * watchOS 小组件/并发功能
 * 通过小组件和 Live Activities 支持 CarPlay
+* 将胰岛素剂量和葡萄糖数据导出到 Apple Health
 
 ### 待办事项
 - 实现锻炼活动

@@ -43,6 +43,7 @@ Cela fonctionne de la même manière sur le téléphone.
 * Widget en mode veille
 * Widgets watchOS / complications
 * Prise en charge de CarPlay via les widgets et Live Activities
+* Exportation des doses d'insuline et des données de glucose vers Apple Health
 
 ### À faire
 - Implémenter l'activité d'entraînement

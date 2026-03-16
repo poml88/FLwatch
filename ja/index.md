@@ -44,6 +44,7 @@ hero_title: "FLwatch：血糖値センサーグラフ"
 * スタンバイモードウィジェット
 * watchOSウィジェット / コンプリケーション
 * ウィジェットおよびLive ActivitiesによるCarPlay対応
+* インスリン投与量とグルコースデータをApple Healthへ書き出し
 
 ### 開発予定
 - ワークアウトアクティビティを実装

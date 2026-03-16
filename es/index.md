@@ -44,6 +44,7 @@ Lo mismo funciona en el teléfono.
 * Widget de modo de espera
 * Widgets/complicaciones de watchOS
 * Compatibilidad con CarPlay mediante widgets y Live Activities
+* Exportación de dosis de insulina y datos de glucosa a Apple Health
 
 ### Tareas pendientes
 - Implementar actividad de entrenamiento

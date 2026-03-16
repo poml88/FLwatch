@@ -42,6 +42,7 @@ To samo działa również na telefonie.
 * Widget trybu czuwania
 * Widgety / komplikacje watchOS
 * Obsluga CarPlay przez widgety i Live Activities
+* Eksport dawek insuliny i danych glukozy do Apple Health
 
 ### ToDo
 - Wdrożyć aktywność treningową

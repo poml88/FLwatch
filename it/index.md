@@ -43,6 +43,7 @@ Lo stesso funziona sul telefono.
 * widget in modalità standby
 * widget watchOS / complicazioni
 * supporto CarPlay tramite widget e Live Activities
+* esportazione delle dosi di insulina e dei dati del glucosio in Apple Health
 
 ### Da fare
 - Implementare l'attività di allenamento
