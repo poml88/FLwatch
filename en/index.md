@@ -33,18 +33,19 @@ This software is free and open source. It is being developed out of personal nee
 Same works on the phone.
 
 ### Features {#features}
-* blood glucose graph on phone and watch
-* interactive chart on phone to display individual values on tap
-* phone screen always on mode
-* supports rapid acting and fast rapid acting bolus insulins
-* insulin on board calculation (IOB)
-* insulin on board graph
-* insulin activity graph
+* Blood glucose graph on phone and watch
+* Interactive chart on phone to display individual values on tap
+* Phone screen always on mode
+* Supports rapid acting and fast rapid acting bolus insulins
+* Insulin on board calculation (IOB)
+* Insulin on board graph
+* Insulin activity graph
 * iOS widgets and lock screen widgets with and without graph(s)
 * Live Activities
-* stand by mode widget
+* Stand by mode widget
 * watchOS widgets / complications
 * CarPlay support via widgets and Live Activities
+* Export insulin doses and glucose data to Apple Health
 
 ### ToDo
 - Implement workout activity
