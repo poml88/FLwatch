@@ -6,6 +6,7 @@ final class LiveActivityManager {
     static let shared = LiveActivityManager()
     private static let maxGraphPoints = 72
     private static let maxMinutePoints = 48
+    private static let foregroundRestartThreshold: TimeInterval = 60 * 60
 
     private init() {}
 
@@ -24,6 +25,11 @@ final class LiveActivityManager {
         }
     }
 
+    private func shouldRestart(_ activity: Activity<FLWatchAttributes>, ifOlderThan threshold: TimeInterval?) -> Bool {
+        guard let threshold else { return false }
+        return Date.now.timeIntervalSince(activity.attributes.startedAt) >= threshold
+    }
+
     private func dismissEndedActivitiesOfThisType() async {
         for activity in Activity<FLWatchAttributes>.activities {
             guard activity.attributes.activityIdentifier == FLWatchAttributes.glucoseActivityIdentifier else { continue }
@@ -40,7 +46,11 @@ final class LiveActivityManager {
         }
     }
 
-    func refreshFromCurrentHistory(useLiveActivities: Bool, reloadFailed: Bool = false) async {
+    func refreshFromCurrentHistory(
+        useLiveActivities: Bool,
+        reloadFailed: Bool = false,
+        restartIfOlderThan threshold: TimeInterval? = nil
+    ) async {
         guard useLiveActivities else {
             await endAllActivities()
             return
@@ -157,6 +167,23 @@ final class LiveActivityManager {
         )
 
         if let existing = reusableActivity() {
+            if shouldRestart(existing, ifOlderThan: threshold) {
+                let ageInMinutes = Int(Date.now.timeIntervalSince(existing.attributes.startedAt) / 60)
+                Logger.liveActivity.info("Restarting aged Live Activity \(existing.id, privacy: .public) after \(ageInMinutes, privacy: .public) minutes in foreground.")
+                do {
+                    let attrs = FLWatchAttributes()
+                    let activity = try Activity.request(attributes: attrs, content: content, pushType: nil)
+                    Logger.liveActivity.log("Started replacement Live Activity \(activity.id, privacy: .public) from foreground refresh.")
+                    await existing.end(nil, dismissalPolicy: .immediate)
+                    Logger.liveActivity.info("Ended previous Live Activity \(existing.id, privacy: .public) after successful replacement.")
+                    await dismissEndedActivitiesOfThisType()
+                } catch {
+                    Logger.liveActivity.error("Failed to restart Live Activity: \(error.localizedDescription)")
+                    await existing.update(content)
+                    Logger.liveActivity.log("Kept existing Live Activity \(existing.id, privacy: .public) after replacement failed.")
+                }
+                return
+            }
             await existing.update(content)
             Logger.liveActivity.log("Updated Live Activity \(existing.id, privacy: .public) from BG refresh/history.")
         } else {
@@ -178,6 +205,10 @@ final class LiveActivityManager {
         } else {
             await endAllActivities()
         }
+    }
+
+    var foregroundRestartAgeThreshold: TimeInterval {
+        Self.foregroundRestartThreshold
     }
 
     func endAllActivities() async {

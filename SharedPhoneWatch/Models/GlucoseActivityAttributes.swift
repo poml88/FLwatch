@@ -316,8 +316,31 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
 
     // static attributes provided when the local activity is created
     public var activityIdentifier: String
+    public var startedAt: Date
 
-    public init(activityIdentifier: String = FLWatchAttributes.glucoseActivityIdentifier) {
+    private enum CodingKeys: String, CodingKey {
+        case activityIdentifier
+        case startedAt
+    }
+
+    public init(
+        activityIdentifier: String = FLWatchAttributes.glucoseActivityIdentifier,
+        startedAt: Date = .now
+    ) {
         self.activityIdentifier = activityIdentifier
+        self.startedAt = startedAt
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        activityIdentifier = try container.decodeIfPresent(String.self, forKey: .activityIdentifier)
+            ?? FLWatchAttributes.glucoseActivityIdentifier
+        startedAt = try container.decodeIfPresent(Date.self, forKey: .startedAt) ?? .now
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(activityIdentifier, forKey: .activityIdentifier)
+        try container.encode(startedAt, forKey: .startedAt)
     }
 }

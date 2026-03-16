@@ -113,7 +113,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             let insulinUnits = message["units"] as? Double ?? 0.0
             let insulinType = message["insulinType"] as? Int ?? UserDefaults.group.insulinTypeSelected.rawValue
             Task { @MainActor in
-                idhs.recordDelivery(
+                await idhs.recordDeliveryAndAwaitExport(
                     id: deliveryID,
                     timestamp: Date(timeIntervalSince1970: timeStamp),
                     insulinUnits: insulinUnits,

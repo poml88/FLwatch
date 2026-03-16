@@ -122,11 +122,17 @@ struct InsulinTypePresets: Codable, Identifiable {
     func saveAndUpdateIOB() {
         mergePersistedHistoryIntoMemory()
         persistCurrentHistory()
-        CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+        Task { @MainActor in
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+        }
     }
 
-    @discardableResult
-    func recordDelivery(id: UUID = UUID(), timestamp: Date, insulinUnits: Double, insulinType: Int) -> InsulinDelivery {
+    private func recordDeliveryLocally(
+        id: UUID,
+        timestamp: Date,
+        insulinUnits: Double,
+        insulinType: Int
+    ) -> InsulinDelivery {
         mergePersistedHistoryIntoMemory()
         if let existingDelivery = insulinDeliveryHistory.first(where: { $0.id == id }) {
             return existingDelivery
@@ -140,9 +146,37 @@ struct InsulinTypePresets: Codable, Identifiable {
         )
         insulinDeliveryHistory.append(delivery)
         saveAndUpdateIOB()
+        return delivery
+    }
+
+    @discardableResult
+    func recordDelivery(id: UUID = UUID(), timestamp: Date, insulinUnits: Double, insulinType: Int) -> InsulinDelivery {
+        let delivery = recordDeliveryLocally(
+            id: id,
+            timestamp: timestamp,
+            insulinUnits: insulinUnits,
+            insulinType: insulinType
+        )
         Task {
             await AppleHealthExportManager.shared.exportInsulinDeliveriesIfNeeded([delivery])
         }
+        return delivery
+    }
+
+    @discardableResult
+    func recordDeliveryAndAwaitExport(
+        id: UUID = UUID(),
+        timestamp: Date,
+        insulinUnits: Double,
+        insulinType: Int
+    ) async -> InsulinDelivery {
+        let delivery = recordDeliveryLocally(
+            id: id,
+            timestamp: timestamp,
+            insulinUnits: insulinUnits,
+            insulinType: insulinType
+        )
+        await AppleHealthExportManager.shared.exportInsulinDeliveriesIfNeeded([delivery])
         return delivery
     }
 
@@ -181,7 +215,7 @@ struct InsulinTypePresets: Codable, Identifiable {
     }
 }
 
-@Observable class CurrentIOBSingleton {
+@MainActor @Observable class CurrentIOBSingleton {
     
     var currentIOB: Double = 0.0
     var insulinOnBoardCurve: [ActivityCurveDataPoint] = []
@@ -196,7 +230,7 @@ struct InsulinTypePresets: Codable, Identifiable {
     
     private init() {}
     
-    func getCurrentIOB() -> Double {
+    nonisolated func getCurrentIOB() -> Double {
         let idhs = InsulinDeliveryHistorySingleton.shared
         idhs.read()
         let timeIntervalSince1970 = Date().timeIntervalSince1970
@@ -220,7 +254,7 @@ struct InsulinTypePresets: Codable, Identifiable {
         return currentIOB
     }
     
-    private func updateIOB(timeStamp timeInterval: Double, insulinType type: InsulinType.RawValue) -> Double {
+    private nonisolated func updateIOB(timeStamp timeInterval: Double, insulinType type: InsulinType.RawValue) -> Double {
         let insulin: InsulinType = InsulinType(rawValue: type) ?? .rapidActing
         let preset: InsulinTypePresets = insulin.presets
         let model = ExponentialInsulinModel(actionDuration: preset.actionDuration, peakActivityTime: preset.peakActivityTime, delay: preset.delay)

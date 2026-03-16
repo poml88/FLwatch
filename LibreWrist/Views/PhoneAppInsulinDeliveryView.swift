@@ -78,6 +78,7 @@ struct PhoneAppInsulinDeliveryView: View {
     @FocusState private var focused: Field?
     
     private let keyboardToolbarClearance: CGFloat = 56
+    private let manualEntryTopID = "manualEntryTop"
 
     
     var body: some View {
@@ -87,62 +88,64 @@ struct PhoneAppInsulinDeliveryView: View {
                     .buttonStyle(.borderedProminent)
                     .padding()
                 
-                Form {
-                    // MARK: Manual entry (existing)
-                    Section {
-                        Picker(selection: $insulinTypeSelected) {
-                            ForEach(InsulinType.allCases, id: \.self) {
-                                Text($0.description)
+                ScrollViewReader { proxy in
+                    Form {
+                        // MARK: Manual entry (existing)
+                        Section {
+                            Picker(selection: $insulinTypeSelected) {
+                                ForEach(InsulinType.allCases, id: \.self) {
+                                    Text($0.description)
+                                }
+                            } label: {
+                                Text("Bolus insulin")
                             }
-                        } label: {
-                            Text("Bolus insulin")
-                        }
-                        //                .labelsHidden()
-                        //                                    .pickerStyle(.navigationLink)
-                        .onChange(of: insulinTypeSelected) {oldValue, newValue in
-                            UserDefaults.group.insulinTypeSelected = newValue
-                            let messageToWatch: [String: Any] = ["content": "updateInsulinTypeSelected",
-                                                                 "insulinTypeSelected": newValue.rawValue]
-                            sendMessagetoOther(message: messageToWatch)
-                        }
-                        
-                        Picker("Insulin units", selection: $insulinSelected) {
-                            ForEach(insulinDoses, id: \.self) {
-                                Text("\($0, specifier: "%.1f")")
+                            //                .labelsHidden()
+                            //                                    .pickerStyle(.navigationLink)
+                            .onChange(of: insulinTypeSelected) {oldValue, newValue in
+                                UserDefaults.group.insulinTypeSelected = newValue
+                                let messageToWatch: [String: Any] = ["content": "updateInsulinTypeSelected",
+                                                                     "insulinTypeSelected": newValue.rawValue]
+                                sendMessagetoOther(message: messageToWatch)
                             }
+                            
+                            Picker("Insulin units", selection: $insulinSelected) {
+                                ForEach(insulinDoses, id: \.self) {
+                                    Text("\($0, specifier: "%.1f")")
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            
+                            DatePicker(selection: $pickerTimeStamp) { Text("Time: ") }
+                            
+                            Button {
+                                isShowingDifferenceTimePickerSheet = true
+                            } label: {
+                                Text("or: Time since injection")
+                            }
+                            .buttonStyle(.bordered)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .sheet(isPresented: $isShowingDifferenceTimePickerSheet) {
+                                TimeDifferencePicker(pickerTimeStamp: $pickerTimeStamp)
+                            }
+                            
+                            Button {
+                                isShowingInsulinDeliverySubmitAlert = true
+                            } label: {
+                                Text("Add insulin")
+                            }
+                            .buttonStyle(.borderedProminent)
+                            // Enable if EITHER manual OR calculated dose is > 0
+                            .disabled(insulinSelected == 0.0 && !hasValidCalculatedDose)
+                            
+                        } header: {
+                            Text("Record insulin units")
                         }
-                        .pickerStyle(.menu)
-                        
-                        DatePicker(selection: $pickerTimeStamp) { Text("Time: ") }
-                        
-                        Button {
-                            isShowingDifferenceTimePickerSheet = true
-                        } label: {
-                            Text("or: Time since injection")
-                        }
-                        .buttonStyle(.bordered)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .sheet(isPresented: $isShowingDifferenceTimePickerSheet) {
-                            TimeDifferencePicker(pickerTimeStamp: $pickerTimeStamp)
-                        }
-                        
-                        Button {
-                            isShowingInsulinDeliverySubmitAlert = true
-                        } label: {
-                            Text("Add insulin")
-                        }
-                        .buttonStyle(.borderedProminent)
-                        // Enable if EITHER manual OR calculated dose is > 0
-                        .disabled(insulinSelected == 0.0 && !hasValidCalculatedDose)
-                        
-                    } header: {
-                        Text("Record insulin units")
-                    }
+                        .id(manualEntryTopID)
                     
                     
                     
-                    // MARK: Carb calculator (NEW)
-                    Section {
+                        // MARK: Carb calculator (NEW)
+                        Section {
                         HStack {
                             Text("Carbs per 100 g")
                                 .lineLimit(1)
@@ -303,10 +306,15 @@ struct PhoneAppInsulinDeliveryView: View {
                         if hasValidCalculatedDose {
                             
                             Button {
+                                focused = nil
+                                pickerTimeStamp = .now
                                 if roundingStep > 0 {
                                     insulinSelected = insulinUnitsRounded
                                 } else {
                                     roundingStep = 0.5 ; insulinSelected = insulinUnitsRounded ; roundingStep = 0
+                                }
+                                withAnimation {
+                                    proxy.scrollTo(manualEntryTopID, anchor: .top)
                                 }
                             } label: {
                                 Label("Copy calculated → insulin picker", systemImage: "arrow.down.doc")
@@ -317,77 +325,77 @@ struct PhoneAppInsulinDeliveryView: View {
                         
                         
                         
-                    } header: {
-                        Text("Carb Calculator")
-                    } footer: {
-                        Text("Convenience calculator only. Follow your care plan.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
+                        } header: {
+                            Text("Carb Calculator")
+                        } footer: {
+                            Text("Convenience calculator only. Follow your care plan.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
                     
-                    // MARK: Existing history list
-                    if !insulinDeliveryHistorySingleton.insulinDeliveryHistory.isEmpty {
-                        
-                        Section(header: Text("Insulin Delivery History")) {
-                            Button {
-                                isShowingInsulinDeliveryResetAlert.toggle()
-                            } label: {
-                                Text("Reset IOB")
+                        // MARK: Existing history list
+                        if !insulinDeliveryHistorySingleton.insulinDeliveryHistory.isEmpty {
+                            
+                            Section(header: Text("Insulin Delivery History")) {
+                                Button {
+                                    isShowingInsulinDeliveryResetAlert.toggle()
+                                } label: {
+                                    Text("Reset IOB")
+                                }
+                                .buttonStyle(.borderedProminent)
+                                ForEach(insulinDeliveryHistorySingleton.insulinDeliveryHistory, id: \.id) { item in
+                                    let timeInterval = Date(timeIntervalSince1970: item.timeStamp).timeIntervalSinceNow
+                                    let timeSinceInjection = Duration(
+                                        secondsComponent: Int64(-timeInterval),
+                                        attosecondsComponent: 0
+                                    ).formatted(.time(pattern: .hourMinute))
+                                    
+                                    Text("Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())  (\(timeSinceInjection) h)      Units: \(item.insulinUnits, specifier: "%.1f")")
+                                }
+                                .onDelete(perform: deleteHistory)
+                                Button {
+                                    isShowingInsulinDeliveryResendToWatchAlert.toggle()
+                                } label: {
+                                    Text("Resend history to watch")
+                                }
+                                .buttonStyle(.borderedProminent)
                             }
-                            .buttonStyle(.borderedProminent)
-                            ForEach(insulinDeliveryHistorySingleton.insulinDeliveryHistory, id: \.id) { item in
-                                let timeInterval = Date(timeIntervalSince1970: item.timeStamp).timeIntervalSinceNow
-                                let timeSinceInjection = Duration(
-                                    secondsComponent: Int64(-timeInterval),
-                                    attosecondsComponent: 0
-                                ).formatted(.time(pattern: .hourMinute))
-                                
-                                Text("Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())  (\(timeSinceInjection) h)      Units: \(item.insulinUnits, specifier: "%.1f")")
-                            }
-                            .onDelete(perform: deleteHistory)
-                            Button {
-                                isShowingInsulinDeliveryResendToWatchAlert.toggle()
-                            } label: {
-                                Text("Resend history to watch")
-                            }
-                            .buttonStyle(.borderedProminent)
                         }
                     }
-                }
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    Color.clear
-                        .frame(height: focused == nil ? 0 : keyboardToolbarClearance)
-                        .allowsHitTesting(false)
-                }
-                .toolbar {
-                    ToolbarItemGroup(placement: .keyboard) {
-                        Button(action: focusPrevious) {
-                            Image(systemName: "chevron.left")
-                        }
-                        .disabled(focused == nil || focused == .carbsPer100g)
-                        .opacity(focused == nil ? 0.35 : 1)
-
-                        Button(action: focusNext) {
-                            Image(systemName: "chevron.right")
-                        }
-                        .disabled(focused == nil || focused == .icrGramsPerUnit)
-                        .opacity(focused == nil ? 0.35 : 1)
-
-                        Spacer()
-
-                        Button("Clear") { clearFocused() }
-                            .disabled(focused == nil)
+                    .safeAreaInset(edge: .bottom, spacing: 0) {
+                        Color.clear
+                            .frame(height: focused == nil ? 0 : keyboardToolbarClearance)
+                            .allowsHitTesting(false)
+                    }
+                    .toolbar {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Button(action: focusPrevious) {
+                                Image(systemName: "chevron.left")
+                            }
+                            .disabled(focused == nil || focused == .carbsPer100g)
                             .opacity(focused == nil ? 0.35 : 1)
 
-                        Spacer()
+                            Button(action: focusNext) {
+                                Image(systemName: "chevron.right")
+                            }
+                            .disabled(focused == nil || focused == .icrGramsPerUnit)
+                            .opacity(focused == nil ? 0.35 : 1)
 
-                        Button("Done") {
-                            focused = nil
+                            Spacer()
+
+                            Button("Clear") { clearFocused() }
+                                .disabled(focused == nil)
+                                .opacity(focused == nil ? 0.35 : 1)
+
+                            Spacer()
+
+                            Button("Done") {
+                                focused = nil
+                            }
+                            .disabled(focused == nil)
+                            .opacity(focused == nil ? 0.35 : 1)
                         }
-                        .disabled(focused == nil)
-                        .opacity(focused == nil ? 0.35 : 1)
                     }
-                }
 //                .toolbar {
 //                    ToolbarItemGroup(placement: .keyboard) {
 //                        
@@ -407,29 +415,32 @@ struct PhoneAppInsulinDeliveryView: View {
 //                        
 //                    }
 //                }
-                .scrollDismissesKeyboard(.interactively)
+                    .scrollDismissesKeyboard(.interactively)
+                }
                 
                 // MARK: - Alerts
                 .alert ("Confirm", isPresented: $isShowingInsulinDeliverySubmitAlert) {
                     Button("Submit", action: {
                         let insulinDeliveryTimeStamp = pickerTimeStamp
                         let insulinDeliveryUnits = insulinSelected
-                        let delivery = insulinDeliveryHistorySingleton.recordDelivery(
-                            timestamp: insulinDeliveryTimeStamp,
-                            insulinUnits: insulinDeliveryUnits,
-                            insulinType: UserDefaults.group.insulinTypeSelected.rawValue
-                        )
-                        
-                        let messageToWatch: [String: Any] = ["content": "insulinDelivery", // The insulinTypeSelected is taken from UserDefaults, so does not need to be sent.
-                                                             "id": delivery.id.uuidString,
-                                                             "timeStamp": insulinDeliveryTimeStamp.timeIntervalSince1970,
-                                                             "units": insulinDeliveryUnits,
-                                                             "insulinType": delivery.insulinType]
-                        sendMessagetoOther(message: messageToWatch)
-                        
-                        CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-                        refreshLiveActivityIfNeeded()
-                        dismiss()
+                        Task {
+                            let delivery = await insulinDeliveryHistorySingleton.recordDeliveryAndAwaitExport(
+                                timestamp: insulinDeliveryTimeStamp,
+                                insulinUnits: insulinDeliveryUnits,
+                                insulinType: UserDefaults.group.insulinTypeSelected.rawValue
+                            )
+
+                            let messageToWatch: [String: Any] = ["content": "insulinDelivery", // The insulinTypeSelected is taken from UserDefaults, so does not need to be sent.
+                                                                 "id": delivery.id.uuidString,
+                                                                 "timeStamp": insulinDeliveryTimeStamp.timeIntervalSince1970,
+                                                                 "units": insulinDeliveryUnits,
+                                                                 "insulinType": delivery.insulinType]
+                            sendMessagetoOther(message: messageToWatch)
+
+                            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                            refreshLiveActivityIfNeeded()
+                            dismiss()
+                        }
                         //                        selectedTab = "Home"
                     })
                     Button("Cancel", role: .cancel, action: {})
@@ -485,12 +496,12 @@ struct PhoneAppInsulinDeliveryView: View {
     }
     
     // MARK: - Submit helper (shared path, unchanged logic)
-    private func submitInsulinXXX(units: Double, timestamp: Date, source: String) {
+    private func submitInsulinXXX(units: Double, timestamp: Date, source: String) async {
         let insulinDeliveryUnits = units
 
         _ = source
 
-        let delivery = insulinDeliveryHistorySingleton.recordDelivery(
+        let delivery = await insulinDeliveryHistorySingleton.recordDeliveryAndAwaitExport(
             timestamp: timestamp,
             insulinUnits: insulinDeliveryUnits,
             insulinType: UserDefaults.group.insulinTypeSelected.rawValue

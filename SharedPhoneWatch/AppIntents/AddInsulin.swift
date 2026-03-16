@@ -139,7 +139,7 @@ struct AddInsulin: AppIntent {
         
         //        var insulinDeliveryHistory: [InsulinDelivery] = UserDefaults.group.insulinDeliveryHistory ?? []
         let insulinDeliveryTimeStamp = Date.now.timeIntervalSince1970
-        let delivery = InsulinDeliveryHistorySingleton.shared.recordDelivery(
+        let delivery = await InsulinDeliveryHistorySingleton.shared.recordDeliveryAndAwaitExport(
             timestamp: Date(timeIntervalSince1970: insulinDeliveryTimeStamp),
             insulinUnits: insulinDeliveryUnits,
             insulinType: UserDefaults.group.insulinTypeSelected.rawValue

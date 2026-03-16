@@ -143,24 +143,10 @@ struct PhoneAppHomeView: View {
         .onReceive(timer) { time in
             print("Timer") // Timer fires as well when on a different tab, for example settings tab
             
-//            connected = UserDefaults.group.connected
-//            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-//            if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
-//                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-//                Task {
-//                    
-//                    isReloading = true
-//                    await libreLinkUp.reloadLibreLinkUp()
-//                    if libreLinkUp.libreLinkUpErrorBool == true {
-//                        print(libreLinkUp.libreLinkUpResponse)
-//                        isShowingReloadFailed = true
-//                    }
-//                    minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-//                    isReloading = false
-////                    WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
-//                }
+
+            
 //                scrollPosition = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date.now
-//            }
+
             
             reloadAndUpdateMinutes(refreshLiveActivity: true, trigger: "timer")
         }
@@ -202,7 +188,7 @@ struct PhoneAppHomeView: View {
                 calculateUserdefaultsSize()
                 
                 FLwatchShortcuts.updateAppShortcutParameters() // this was in the app init first, but it seems this was too early... So I moved it here.
-//      TODO: 1 lines commented out          LiveActivityManager.shared.startIfAllowed(useLiveActivities: useLiveActivities)
+
                 LiveActivityManager.shared.startIfAllowed(useLiveActivities: useLiveActivities)
                 onAppearNotToDoFirstStart = false
             }
@@ -213,24 +199,8 @@ struct PhoneAppHomeView: View {
             // ----------------------------------------
             
             //MARK: Do the following .onAppear
-//            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-//            connected = UserDefaults.group.connected
-//            if isReloading == false && minutesSinceLastReading >= 1 && connected == .newlyConnected {
-//                Task {
-//                    isReloading = true
-//                    await libreLinkUp.reloadLibreLinkUp()
-//                    if libreLinkUp.libreLinkUpErrorBool == true {
-//                        print(libreLinkUp.libreLinkUpResponse)
-//                        isShowingReloadFailed = true
-//                    }
-//                    isReloading = false
-//                    connected = .connected
-//                    UserDefaults.group.connected = .connected
-//                    minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-////                    WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
-//                }
-//            }
-//            reloadAndUpdateMinutes()
+
+            
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active {
@@ -248,22 +218,13 @@ struct PhoneAppHomeView: View {
                 if scenePhaseNotToDoFirstStart == true { scenePhaseNotToDoFirstStart = false } // to do only on first start
                 
                 //MARK: Do the following .onChange(of: scenePhase) == .active
-                reloadAndUpdateMinutes(refreshLiveActivity: true, trigger: "scenePhase.active")
-//                connected = UserDefaults.group.connected
-//                minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-//                if isReloading == false && minutesSinceLastReading >= 1 && (connected == .connected || connected == .newlyConnected) {
-//                    Task {
-//                        isReloading = true
-//                        await libreLinkUp.reloadLibreLinkUp()
-//                        if libreLinkUp.libreLinkUpErrorBool == true {
-//                            print(libreLinkUp.libreLinkUpResponse)
-//                            isShowingReloadFailed = true
-//                        }
-//                        minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-//                        isReloading = false
-////                        WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
-//                        }
-//                    }
+                reloadAndUpdateMinutes(
+                    refreshLiveActivity: true,
+                    trigger: "scenePhase.active",
+                    liveActivityRestartThreshold: LiveActivityManager.shared.foregroundRestartAgeThreshold
+                )
+
+                
             } else if newPhase == .inactive {
                 print("Scene Phase Inactive")
             } else if newPhase == .background {
@@ -400,14 +361,19 @@ struct PhoneAppHomeView: View {
 
     }
    
-    private func reloadAndUpdateMinutes(refreshLiveActivity: Bool = false, trigger: String) {
+    private func reloadAndUpdateMinutes(
+        refreshLiveActivity: Bool = false,
+        trigger: String,
+        liveActivityRestartThreshold: TimeInterval? = nil
+    ) {
         print("reloadAndUpdateMinutes() [\(trigger)]")
         Task {
             await lluService.requestReloadIfNeeded()
             if refreshLiveActivity {
                 await LiveActivityManager.shared.refreshFromCurrentHistory(
                     useLiveActivities: useLiveActivities,
-                    reloadFailed: lluService.didLastReloadFail
+                    reloadFailed: lluService.didLastReloadFail,
+                    restartIfOlderThan: liveActivityRestartThreshold
                 )
             }
             isShowingReloadFailed = shouldShowReloadFailedAlert

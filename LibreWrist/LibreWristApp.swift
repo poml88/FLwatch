@@ -133,6 +133,8 @@ final class BGAppRefreshScheduler {
         let refreshTask = Task {
             Logger.bgTaskScheduler.info("Calling requestReloadIfNeeded()")
             await LibreLinkUpService.shared.requestReloadIfNeeded()
+            Logger.bgTaskScheduler.info("Running Apple Health catch-up export from BG refresh")
+            await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
             await LiveActivityManager.shared.refreshFromCurrentHistory(
                 useLiveActivities: SharedData.useLiveActivities,
                 reloadFailed: LibreLinkUpService.shared.didLastReloadFail
