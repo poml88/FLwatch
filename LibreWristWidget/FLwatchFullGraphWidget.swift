@@ -213,6 +213,8 @@ private struct FullGraphWidgetChart: View {
     
     private var IOBMarksLineColor: Color { entry.lastGlucoseMeasurement.color.color == .orange ? Color(red: 0.90, green: 0.52, blue: 0.12) : .orange }
     
+    private var rangeColorIfGlucoseGreen: Color { entry.lastGlucoseMeasurement.color.color == .green && colorScheme == .light ? Color(red: 0.90, green: 0.52, blue: 0.12) : .green }
+    
     private let date: Date = Date.now
     
     private var chartXScaleMin: Date {
@@ -314,7 +316,7 @@ private struct FullGraphWidgetChart: View {
                 yEnd: .value("Rect End Height", targetHigh)
             )
             .opacity(0.2)
-            .foregroundStyle(.green)
+            .foregroundStyle(rangeColorIfGlucoseGreen)
             
             RuleMark(y: .value("Lower limit", alarmLow))
                 .foregroundStyle(.red)
