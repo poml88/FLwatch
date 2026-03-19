@@ -17,6 +17,8 @@ struct WatchAppNightView: View {
         
     var body: some View {
         if libreLinkUpHistory.libreLinkUpGlucose.count > 0 {
+            let readingDate = libreLinkUpHistory.libreLinkUpGlucose[0].glucose.date
+
             VStack (spacing: -15) {
     //                if minutesSinceLastReading >= 3 {
     //                    Text("---")
@@ -42,9 +44,22 @@ struct WatchAppNightView: View {
                             .minimumScaleFactor(0.7)
     //                        .foregroundStyle(libreLinkUpHistory[0].color.color)
                     
+                if currentIOBSingleton.currentIOB > 0 {
                     Text("\(currentIOBSingleton.currentIOB, specifier: "%.2f")u")
                         .font(.largeTitle)
                         .padding(.bottom, 20)
+                }
+                
+//                TimelineView(.periodic(from: readingDate, by: 1)) { context in
+//                    Text(elapsedTimeString(since: readingDate, now: context.date))
+////                    .bold()
+//                        .monospacedDigit()
+//                        .lineLimit(1)
+////                    .truncationMode(.head)
+//                        .allowsTightening(true)
+//                        .minimumScaleFactor(0.7)
+//                        .frame(width: 50, alignment: .trailing)
+//                }
                 
 //                Text(Date(), style: .timer)
 //                    .padding(.top, 20)
@@ -88,6 +103,14 @@ struct WatchAppNightView: View {
 
     }
  
+}
+
+private func elapsedTimeString(since startDate: Date, now currentDate: Date) -> String {
+    let elapsedSeconds = max(0, Int(currentDate.timeIntervalSince(startDate)))
+    let minutes = elapsedSeconds / 60
+    let seconds = elapsedSeconds % 60
+
+    return "\(minutes):\(String(format: "%02d", seconds))"
 }
 
 
