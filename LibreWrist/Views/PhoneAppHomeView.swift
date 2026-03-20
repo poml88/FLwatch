@@ -301,6 +301,9 @@ struct PhoneAppHomeView: View {
 
     private var shouldShowReloadFailedAlert: Bool {
         guard lluService.didLastReloadFail else { return false }
+        guard DebugMessageSingleton.shared.libreLinkUpOverlayError.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return false
+        }
         return lluService.libreLinkUpResponse != LibreLinkUpError.noConnectionGraph.localizedDescription
     }
     
