@@ -21,9 +21,7 @@ Deze software is gratis en open source. Ze is ontwikkeld vanuit een persoonlijke
 - Gebruikt de inloggegevens van een LibreLinkUp-volgeraccount, niet die van LibreView
 
 ### Snel starten {#usage}
-1. Installeer FLwatch vanuit de [App Store]({{ site.appstore_url }}).
-
-   {% include appstore_badge.html %}
+1. Installeer FLwatch vanuit de [App Store]({{ site.appstore_url }}). {% include appstore_badge.html %}
 2. Zorg ervoor dat de watchOS-app op je Apple Watch is geïnstalleerd, idealiter voordat je de iOS-app opent.
 3. Maak een LibreLinkUp-volgerverbinding voor jezelf aan en controleer of die werkt.
 4. Voer in FLwatch op het tabblad `Connect` de inloggegevens van het LibreLinkUp-volgeraccount in.

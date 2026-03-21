@@ -21,9 +21,7 @@ hero_title: "FLwatch - График сенсора глюкозы"
 - Используются данные входа учетной записи подписчика LibreLinkUp, а не данные LibreView
 
 ### Быстрый старт {#usage}
-1. Установите FLwatch из [App Store]({{ site.appstore_url }}).
-
-   {% include appstore_badge.html %}
+1. Установите FLwatch из [App Store]({{ site.appstore_url }}). {% include appstore_badge.html %}
 2. Убедитесь, что приложение для watchOS установлено на Apple Watch, желательно до запуска приложения для iOS.
 3. Создайте и проверьте подключение LibreLinkUp, где вы подписаны сами на себя.
 4. Введите в FLwatch данные учетной записи подписчика LibreLinkUp на вкладке `Connect`.

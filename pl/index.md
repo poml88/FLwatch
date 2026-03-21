@@ -21,9 +21,7 @@ To darmowe oprogramowanie open source. Powstało z osobistej potrzeby, ale powin
 - Korzysta z danych logowania konta obserwatora LibreLinkUp, a nie z danych LibreView
 
 ### Szybki start {#usage}
-1. Zainstaluj FLwatch z [App Store]({{ site.appstore_url }}).
-
-   {% include appstore_badge.html %}
+1. Zainstaluj FLwatch z [App Store]({{ site.appstore_url }}). {% include appstore_badge.html %}
 2. Upewnij się, że aplikacja watchOS jest zainstalowana na Apple Watch, najlepiej jeszcze przed uruchomieniem aplikacji iOS.
 3. Utwórz i sprawdź połączenie LibreLinkUp, w którym obserwujesz samego siebie.
 4. Wprowadź w FLwatch dane logowania konta obserwatora LibreLinkUp na karcie `Connect`.

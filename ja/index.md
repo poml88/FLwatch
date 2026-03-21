@@ -21,9 +21,7 @@ hero_title: "FLwatch - グルコースセンサーグラフ"
 - LibreView の認証情報ではなく、LibreLinkUp のフォロワーアカウントの認証情報を使用します
 
 ### クイックスタート {#usage}
-1. [App Store]({{ site.appstore_url }}) から FLwatch をインストールします。
-
-   {% include appstore_badge.html %}
+1. [App Store]({{ site.appstore_url }}) から FLwatch をインストールします。 {% include appstore_badge.html %}
 2. Apple Watch に watchOS アプリがインストールされていることを確認します。できれば iOS アプリを起動する前に済ませてください。
 3. 自分自身をフォロワーとして設定し、LibreLinkUp 接続が機能することを確認します。
 4. FLwatch の `Connect` タブで、LibreLinkUp フォロワーアカウントの認証情報を入力します。
