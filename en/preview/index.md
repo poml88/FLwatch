@@ -14,7 +14,8 @@ FLwatch is free and open source. It is being developed out of personal needs, bu
 
 ### At a Glance
 - Shows glucose, insulin-on-board, and activity graphs on iPhone and Apple Watch
-- Includes widgets, complications, Live Activities, and Apple Health export
+- Includes widgets, complications, Live Activities, Watch Smart Stack mirroring, and Apple Health export
+- Supports manual insulin logging and a built-in carb-to-insulin calculator
 - Requires iOS 18 and watchOS 10.5
 - Available on TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
 - Uses LibreLinkUp follower account credentials, not LibreView credentials
@@ -64,11 +65,16 @@ Currently supported insulin types:
 - Rapid-acting insulin, such as Novolog and Novorapid
 - Fast rapid-acting insulin, such as Fiasp and Lyumjev
 
+FLwatch also supports manual insulin logging and includes a built-in carb-to-insulin calculator.
+
 More insulin types can be added on request.
 
 ### Watch and Siri Tips
 - To keep the glucose graph visible on the watch for one hour, open the watch settings or the iPhone `Watch` app, then go to `Settings > General > Return to Clock`, scroll down to FLwatch, and choose `After 1 hour`. This lets FLwatch stay in the foreground longer and receive a reasonable number of updates, for example about once per minute.
 - The easiest way to start the phone or watch app is to place a widget or complication on your Home Screen, Lock Screen, watch face, or similar location and tap it.
+- Live Activities on iPhone can also be mirrored into the watch Smart Stack for quick access.
+- Siri and Shortcuts can be used to read out or display the current blood glucose value.
+- Siri and Shortcuts can also be used for voice recording of insulin doses or for quick insulin dose recording on the watch.
 - To open the app hands-free with Siri, create a shortcut on the phone that simply opens FLwatch. For example, you could name it `glucose graph` or `blood sugar`. Enable the option to show the shortcut on the watch. Then saying that phrase to Siri can open FLwatch directly. The same also works on the phone.
 
 ### Features {#features}
@@ -82,14 +88,17 @@ More insulin types can be added on request.
 * Insulin on board calculation (IOB)
 * Insulin on board graph
 * Insulin activity graph
+* Manual insulin logging
+* Built-in carb-to-insulin calculator
 
 #### System Integration
 * iOS widgets and lock screen widgets with and without graph(s)
-* Live Activities
+* Live Activities on iPhone, including Watch Smart Stack mirroring
 * StandBy mode widget
 * watchOS widgets and complications
 * CarPlay support via widgets and Live Activities
 * Export insulin doses and glucose data to Apple Health
+* Siri and Shortcuts support for glucose display, glucose readout, and quick insulin dose recording
 
 ### Technical Notes
 FLwatch uses the exponential insulin model from LoopKit. The model uses three parameters: `actionDuration`, `peakActivityTime`, and `delay`.
