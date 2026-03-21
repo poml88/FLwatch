@@ -6,6 +6,7 @@ lang: en
 permalink: /en/preview/
 image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch - Glucose Sensor Graph"
+sitemap: false
 ---
 
 ***Warning: FLwatch is a highly experimental project. Use it with caution and extreme care. Do not make medical decisions based on this software. It comes with no warranty and is used at your own risk.***
