@@ -8,60 +8,123 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch：血糖传感器图表"
 ---
 
+***警告：FLwatch 是一个高度实验性的项目。使用本应用时请务必谨慎小心。请勿基于本软件做出医疗决策。本软件不提供任何保证，使用风险由您自行承担。***
 
-***警告：本项目具有高度实验性！使用本应用时请务必谨慎小心。切勿基于软件做出草率决定。如有疑虑请勿使用。本应用不可用于医疗决策。完全不提供任何形式的担保。使用风险自负！***
+本软件为免费开源项目。它源于个人需求开发，但希望能够让更多人受益。
 
-本软件为免费开源项目。虽源于个人需求开发，但旨在惠及所有用户。
+### 快速了解
+- 可在 iPhone 和 Apple Watch 上显示血糖、体内胰岛素残留量（IOB）和活动图表
+- 支持小组件、复杂功能、Live Activities、Apple Watch 智能叠放镜像，以及导出到 Apple Health
+- 支持手动记录胰岛素，并内置碳水化合物换算胰岛素计算器
+- 需要 iOS 18 和 watchOS 10.5
+- 可通过 TestFlight 安装：[https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
+- 使用 LibreLinkUp 关注者账户凭据，而不是 LibreView 凭据
 
-### 使用指南 {#usage}
-***安装说明：***请确保已安装watchOS应用程序，建议在启动iOS应用前完成安装。根据设备配置，watchOS应用可能自动安装，或需通过手机端“Watch”应用手动安装。
-- @TypeOneCallum 制作了一段非常棒的 [安装教程视频](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB)（感谢！）。观看后，设置过程会变得容易得多。
-- 需iOS 18及watchOS 10.5系统
-- TestFlight测试版：[https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
-- 设置在iOS应用中完成后会同步至watchOS应用。此功能仅在手表已安装watchOS应用时生效。
-- ***建立应用间连接：*** 需先邀请自己成为自己的关注者。*LibreView凭证无法使用*。操作步骤：在LibreLink/Libre 3应用的“共享/关联应用”菜单中，选择“连接/管理LibreLinkUp”项。点击“添加连接”，输入用于追踪者账户的邮箱地址，系统将向该地址发送邀请（邮箱可与LibreView账户相同）。随后需在手机上安装[LibreLinkUp应用](https://apps.apple.com/us/app/librelinkup/id1234323923)，使用刚邀请的邮箱地址按指引设置LibreLinkUp追踪者账户。您可参考[分步指南](https://www.librelinkup.com/articles/getting-started)。请确保在LibreLinkUp应用中能正常查看自身血糖曲线图。最后，打开FLwatch并输入追踪账户凭证（详见下文）。当前FLwatch仅支持每个追踪账户关联一名被追踪患者。
-- LibreLinkUp应用可关闭或卸载，但后续可能需要重新安装以接受新版《使用条款》和《隐私政策》，或验证账户/连接功能。
-- 连接LibreLinkUp追踪账户时，请在FLwatch的“连接”选项卡输入凭证。若已安装watchOS应用，凭证将同步至手表端。再次点击“连接”按钮可重新传输凭证。
-- 数据获取并显示可能需要一分钟时间。
-- 使用胰岛素计算功能时，请点击主界面上的IOB标签。当前支持的胰岛素类型为：速效胰岛素（诺和锐、诺和速等）和超速效胰岛素（菲斯普、利尤杰夫等）。可根据需求添加更多胰岛素类型。*如有需要请告知*
-- 本应用采用LoopKit的指数模型，该模型需三个参数：作用持续时间、峰值活性时间及延迟时间。速效胰岛素参数为360、75、10分钟；超速效胰岛素参数为360、55、10分钟。
-- 可设置手表持续显示血糖曲线一小时：在手表或手机“手表”应用中进入设置→通用→返回时钟界面，向下滚动点击FLwatch并选择“1小时后”。如此FLwatch将保持1小时前台运行并获得合理频率的更新（如每分钟一次）。
-- 最便捷的手机/手表应用启动方式：在主屏幕、锁屏界面、表盘或其他位置放置小部件/复杂功能图标，点击即可启动。
-- 通过Siri免提开启应用时，可在手机创建名为“血糖曲线”或“血糖值”的快捷指令。该指令仅需开启FLwatch应用。选择快捷指令选项中的“在手表上显示”。现在激活Siri时，只需说出“血糖曲线”，FLwatch应用及其图表便会立即显示。
-此方法同样适用于手机端。
+### 快速开始 {#usage}
+1. 通过 TestFlight 安装 iOS 应用。
+2. 请确保 Apple Watch 上已安装 watchOS 应用，最好在首次打开 iOS 应用之前完成。
+3. 创建并确认一个 LibreLinkUp 关注关系，使您成为自己的关注者。
+4. 在 FLwatch 的 `Connect` 标签页中输入 LibreLinkUp 关注者账户凭据。
+5. 等待最多约一分钟，数据即可显示出来。
 
-### 功能特色 
-* 手机与手表端血糖曲线图
-* 手机端交互式图表，轻点即可查看单次数值
+如果已安装 watchOS 应用，则在 iOS 应用中输入的设置和凭据会传输到手表应用中。
+
+- @TypeOneCallum 制作了一段非常有帮助的[设置教程视频](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB)。观看后会让设置过程容易很多。
+
+### 设置 LibreLinkUp
+要让 FLwatch 正常工作，您首先需要邀请自己成为自己的关注者。
+
+*LibreView 凭据无法使用。*
+
+1. 在 LibreLink 或 Libre 3 应用中，进入 Share / Connected Apps。
+2. 打开 Connect / Manage LibreLinkUp。
+3. 点击 `Add Connection`，输入您希望用于关注者账户的电子邮箱地址。
+4. 接受发送到该电子邮箱地址的邀请。
+5. 在 iPhone 上安装 [LibreLinkUp 应用](https://apps.apple.com/us/app/librelinkup/id1234323923)，并完成该受邀关注者账户的设置。
+6. 确认您可以在 LibreLinkUp 中看到自己的血糖图表。
+7. 打开 FLwatch，并在其中输入该关注者账户的凭据。
+
+关注者账户的邮箱地址可以与 LibreView 使用相同的地址。
+
+您也可以参考 [LibreLinkUp 的分步指南](https://www.librelinkup.com/articles/getting-started)。
+
+目前，FLwatch 每个关注者账户仅支持一个被关注患者。
+
+之后，LibreLinkUp 应用可以关闭，甚至卸载。不过，后续您可能仍需要它来接受新的使用条款或隐私政策，或者只是确认账户和连接仍然正常工作。
+
+### 连接 FLwatch
+- 在 FLwatch 的 `Connect` 标签页中输入您的 LibreLinkUp 关注者账户凭据。
+- 如果已安装 watchOS 应用，凭据会传输到手表应用。
+- 如有需要，您可以再次按下 `Connect` 按钮重新传输凭据。
+- 数据获取和显示可能需要最多约一分钟。
+
+### 胰岛素功能
+要使用胰岛素计算功能，请点击主界面上的 `IOB` 标签。
+
+当前支持的胰岛素类型：
+- 速效胰岛素，例如 Novolog 和 Novorapid
+- 超速效胰岛素，例如 Fiasp 和 Lyumjev
+
+FLwatch 还支持手动记录胰岛素，并内置碳水化合物换算胰岛素计算器。
+
+如有需要，也可以按请求添加更多胰岛素类型。
+
+### Apple Watch 与 Siri 提示
+- 如果希望血糖图表在手表上持续显示一小时，请在手表或 iPhone 上的 `Watch` 应用中打开 `设置 > 通用 > 返回时钟`，向下滚动到 FLwatch，并选择 `1 小时后`。这样 FLwatch 会更长时间保持在前台，并获得合理数量的更新，例如大约每分钟一次。
+- 在手机或手表上启动应用的最简单方式，是将小组件或复杂功能放在主屏幕、锁屏界面、表盘或其他方便的位置，然后轻点启动。
+- iPhone 上的 Live Activities 也可以镜像到 Apple Watch 的智能叠放中，便于快速访问。
+- Siri 和快捷指令可用于朗读或显示当前血糖值。
+- Siri 和快捷指令也可用于通过语音记录胰岛素剂量，或在手表上快速记录胰岛素剂量。
+- 如果想通过 Siri 免提打开应用，您可以在 iPhone 上创建一个仅用于打开 FLwatch 的快捷指令，例如命名为 `血糖图表` 或 `血糖值`。启用该快捷指令在手表上显示的选项后，只需对 Siri 说出这句话即可直接打开 FLwatch。iPhone 上也同样适用。
+
+### 功能 {#features}
+#### 监测
+* 手机和手表端血糖图表
+* 手机端交互式图表，轻点即可查看单个数值
 * 手机屏幕常亮模式
-* 支持速效与超速效胰岛素剂型
-* 体内胰岛素计算（IOB）
-* 体内胰岛素曲线图
-* 胰岛素活性曲线图
+
+#### 胰岛素
+* 支持速效和超速效餐时胰岛素
+* 体内胰岛素残留量（IOB）计算
+* IOB 图表
+* 胰岛素活性图表
+* 手动记录胰岛素
+* 内置碳水化合物换算胰岛素计算器
+
+#### 系统集成
 * 带图表和不带图表的 iOS 小组件与锁屏小组件
-* Live Activities
-* 待机模式小组件
-* watchOS 小组件/并发功能
+* iPhone 上的 Live Activities，包括镜像到 Apple Watch 智能叠放
+* StandBy 模式小组件
+* watchOS 小组件和复杂功能
 * 通过小组件和 Live Activities 支持 CarPlay
-* 将胰岛素剂量和葡萄糖数据导出到 Apple Health
+* 将胰岛素剂量和血糖数据导出到 Apple Health
+* 支持 Siri 和快捷指令，用于显示血糖、朗读血糖，以及快速记录胰岛素剂量
+
+### 技术说明
+FLwatch 使用 LoopKit 的指数型胰岛素模型。该模型使用三个参数：`actionDuration`、`peakActivityTime` 和 `delay`。
+
+- 对于速效胰岛素，参数分别为 360、75 和 10 分钟。
+- 对于超速效胰岛素，参数分别为 360、55 和 10 分钟。
 
 ### 待办事项
 - 实现锻炼活动
 
 ### 支持与反馈 {#support}
-如需技术支持，请提交问题、发起讨论或发送邮件至 **flwatch [ a t ] cmdline [ d o t ] net**。我们非常欢迎反馈，请通过上述支持渠道提交。
+如果需要帮助，请提交 [GitHub issue](https://github.com/poml88/FLwatch/issues)、发起 [GitHub discussion](https://github.com/poml88/FLwatch/discussions)，或发送邮件至 **flwatch [at] cmdline [dot] net**。
 
-### 捐赠... 
-...永远欢迎！
-- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40">   [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
-- <img src="/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40">   [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
+我们也非常欢迎反馈，您可以通过相同渠道提交。
 
+### 捐赠
+我们始终欢迎捐赠支持。
+
+- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40"> [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
+- <img src="/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40"> [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
 
 {% include screenshots.html %}
 
-同时欢迎关注以下项目：
+### 鸣谢
+也欢迎查看以下项目：
 
-### 鸣谢： 
-[DiaBLE](https://github.com/gui-dos/DiaBLE)、[LoopKit](https://github.com/LoopKit)、[GlucoseDirect](https://github.com/creepymonster/GlucoseDirect)、[Nightguard]( https://github.com/nightscout/nightguard)、 [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
+[DiaBLE](https://github.com/gui-dos/DiaBLE)、[LoopKit](https://github.com/LoopKit)、[GlucoseDirect](https://github.com/creepymonster/GlucoseDirect)、[Nightguard](https://github.com/nightscout/nightguard)、[Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
-所有产品及公司名称、商标、服务标记、注册商标及注册服务标记均为其各自所有者的财产。此处使用仅为信息目的，不暗示与之存在任何关联或获得其认可。请注意：本应用与雅培糖尿病护理公司无关，亦未获得其认可。
+所有产品及公司名称、商标、服务标记、注册商标及注册服务标记均为其各自所有者的财产。此处使用仅为信息目的，不暗示与之存在任何关联或获得其认可。请注意：本应用与 Abbott Diabetes Care Inc. 无关，亦未获得其认可。

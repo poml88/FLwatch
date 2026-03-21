@@ -8,60 +8,123 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch: Graphique glycémie"
 ---
 
-
-***Attention, ce projet est hautement expérimental ! Veuillez utiliser cette application avec prudence et extrême précaution. Ne prenez pas de décisions irréfléchies sur la base du logiciel. N'utilisez pas ce logiciel si vous n'êtes pas sûr. N'utilisez pas cette application pour prendre des décisions médicales. Elle est fournie sans aucune garantie. Utilisez-la à vos propres risques !***
+***Attention : FLwatch est un projet hautement expérimental. Utilisez cette application avec prudence et une extrême précaution. Ne prenez pas de décisions médicales sur la base de ce logiciel. Il est fourni sans aucune garantie et s’utilise à vos propres risques.***
 
 Ce logiciel est gratuit et open source. Il est développé pour répondre à des besoins personnels, mais tout le monde devrait pouvoir en bénéficier.
 
-### Utilisation {#usage}
-***Installation :*** Assurez-vous que l'application watchOS est installée, idéalement avant de lancer l'application iOS. Selon votre configuration, l'application watchOS est soit installée automatiquement, soit doit être installée via l'application « Watch » sur le téléphone.
-- @TypeOneCallum a réalisé une excellente [vidéo tutorielle d’installation](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB) (Merci !). Regardez-la et la configuration sera beaucoup plus simple.
-- L'application nécessite iOS 18 et watchOS 10.5
-- TestFlight : [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
-- Les paramètres sont définis dans l'application iOS, puis transférés vers l'application watchOS. Cela ne fonctionne que si l'application watchOS est installée sur la montre.
-- ***Établissement de la connexion entre les applications :*** Pour que cela fonctionne, vous devez d'abord vous inviter à devenir votre propre abonné. *Les identifiants LibreView ne fonctionnent pas.* Pour ce faire, dans l'application LibreLink / Libre 3, sous Partager / Applications connectées, vous trouverez un élément Connecter / Gérer LibreLinkUp. Appuyez sur « Ajouter une connexion » et saisissez l'adresse e-mail que vous souhaitez utiliser pour le compte de suiveur. Une invitation sera envoyée à cette adresse (l'adresse e-mail peut être la même que celle utilisée pour LibreView). Ensuite, pour configurer le compte de suiveur LibreLinkUp, installez l'application [LibreLinkUp](https://apps.apple.com/us/app/librelinkup/id1234323923) sur votre téléphone et suivez les instructions en utilisant l'adresse e-mail que vous venez d'inviter. Vous trouverez peut-être utile le [guide étape par étape](https://www.librelinkup.com/articles/getting-started). Assurez-vous que vous pouvez voir votre propre graphique de glycémie dans l'application LibreLinkUp. Enfin, ouvrez FLwatch et entrez les identifiants du compte suiveur, voir ci-dessous. FLwatch ne prend actuellement en charge qu'un seul patient suivi par compte suiveur.
-- L'application LibreLinkUp peut ensuite être fermée ou désinstallée, mais elle pourra être nécessaire ultérieurement pour accepter les nouvelles conditions d'utilisation, les politiques de confidentialité ou simplement pour vérifier que le compte/la connexion fonctionne.
-- Pour vous connecter à votre compte suiveur LibreLinkUp, saisissez vos identifiants dans FLwatch dans l'onglet « Connect ». Si l'application watchOS est installée, les identifiants sont transférés vers l'application de la montre. Il est possible de retransférer les identifiants en appuyant à nouveau sur le bouton « connecter ».
-- Le téléchargement et l'affichage des données peuvent prendre jusqu'à une minute.
-- Pour utiliser le calcul de l'insuline, appuyez sur l'étiquette IOB sur l'écran d'accueil. Les types d'insuline actuellement pris en charge sont : à action rapide (Novolog, Novorapid, ...) et à action ultra-rapide (Fiasp, Lyumjev, ...). D'autres insulines peuvent être ajoutées sur demande. *N'hésitez pas à me le faire savoir.*
-  - L'application utilise le modèle exponentiel de LoopKit. Le modèle prend en compte trois paramètres : actionDuration, peakActivityTime et delay. Pour l'insuline à action rapide, les paramètres sont 360, 75 et 10 minutes, pour l'insuline à action ultra-rapide, les paramètres sont 360, 55 et 10 minutes.
-- Il existe un paramètre permettant de conserver le graphique de glycémie pendant une heure sur la montre : sur la montre ou dans l'application « Watch » du téléphone, allez dans Paramètres — Général — Retour à l'horloge, faites défiler vers le bas et appuyez sur FLwatch, puis choisissez « Après 1 heure ». Ainsi, FLwatch reste pendant 1 heure au premier plan et reçoit un nombre raisonnable de mises à jour (par exemple toutes les minutes).
-- Le moyen le plus simple de lancer l'application sur le téléphone ou la montre est de placer un widget/une complication sur votre écran d'accueil, votre écran de verrouillage, votre cadran de montre ou n'importe où ailleurs, puis d'appuyer dessus.
-- Pour utiliser Siri afin d'ouvrir l'application en mode mains libres, vous pouvez créer un raccourci sur le téléphone appelé, par exemple, « graphique de glucose » ou « glycémie ». Ce raccourci ouvre simplement FLwatch. Sélectionnez l'option de raccourci « afficher sur la montre ». Désormais, si vous activez Siri, il vous suffit de dire « graphique de glucose » et, voilà, l'application FLwatch et son graphique s'affichent.
-Cela fonctionne de la même manière sur le téléphone.
+### En bref
+- Affiche des graphiques de glucose, d’insuline active et d’activité sur iPhone et Apple Watch
+- Inclut des widgets, des complications, les Live Activities, la recopie dans la pile intelligente de l’Apple Watch et l’export vers Apple Health
+- Prend en charge la saisie manuelle des doses d’insuline et un calculateur intégré glucides-vers-insuline
+- Nécessite iOS 18 et watchOS 10.5
+- Disponible sur TestFlight : [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
+- Utilise les identifiants d’un compte suiveur LibreLinkUp, et non les identifiants LibreView
 
-### Fonctionnalités 
+### Démarrage rapide {#usage}
+1. Installez l’application iOS via TestFlight.
+2. Assurez-vous que l’application watchOS est installée sur votre Apple Watch, idéalement avant de lancer l’application iOS.
+3. Créez et vérifiez une connexion LibreLinkUp où vous êtes votre propre suiveur.
+4. Saisissez dans FLwatch les identifiants du compte suiveur LibreLinkUp dans l’onglet `Connect`.
+5. Attendez jusqu’à une minute pour que les données s’affichent.
+
+Si l’application watchOS est installée, les réglages et les identifiants saisis dans l’application iOS sont transférés vers l’application de la montre.
+
+- @TypeOneCallum a réalisé une très utile [vidéo tutorielle d’installation](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB). La regarder peut rendre la configuration beaucoup plus simple.
+
+### Configurer LibreLinkUp
+Pour que FLwatch fonctionne, vous devez d’abord vous inviter vous-même pour devenir votre propre suiveur.
+
+*Les identifiants LibreView ne fonctionnent pas.*
+
+1. Dans l’application LibreLink ou Libre 3, allez dans Share / Connected Apps.
+2. Ouvrez Connect / Manage LibreLinkUp.
+3. Appuyez sur `Add Connection` et saisissez l’adresse e-mail que vous souhaitez utiliser pour le compte suiveur.
+4. Acceptez l’invitation envoyée à cette adresse e-mail.
+5. Installez l’application [LibreLinkUp](https://apps.apple.com/us/app/librelinkup/id1234323923) sur votre iPhone et terminez la configuration de ce compte suiveur invité.
+6. Vérifiez que vous pouvez voir votre propre courbe de glycémie dans LibreLinkUp.
+7. Ouvrez FLwatch et saisissez-y les identifiants du compte suiveur.
+
+L’adresse e-mail du compte suiveur peut être la même que celle utilisée pour LibreView.
+
+Vous pouvez aussi consulter le [guide pas à pas de LibreLinkUp](https://www.librelinkup.com/articles/getting-started), qui peut s’avérer utile.
+
+FLwatch ne prend actuellement en charge qu’un seul patient suivi par compte suiveur.
+
+L’application LibreLinkUp peut ensuite être fermée ou même désinstallée. Il est toutefois possible qu’elle soit à nouveau nécessaire plus tard pour accepter de nouvelles conditions d’utilisation, de nouvelles politiques de confidentialité, ou simplement pour vérifier que le compte et la connexion fonctionnent toujours.
+
+### Connecter FLwatch
+- Saisissez les identifiants de votre compte suiveur LibreLinkUp dans l’onglet `Connect` de FLwatch.
+- Si l’application watchOS est installée, les identifiants sont transférés vers l’application de la montre.
+- Si nécessaire, vous pouvez transférer à nouveau les identifiants en appuyant encore une fois sur le bouton `Connect`.
+- Le chargement et l’affichage des données peuvent prendre jusqu’à une minute.
+
+### Fonctions liées à l’insuline
+Pour utiliser le calcul de l’insuline, appuyez sur l’étiquette `IOB` sur l’écran d’accueil.
+
+Types d’insuline actuellement pris en charge :
+- Insuline à action rapide, comme Novolog et Novorapid
+- Insuline à action ultra-rapide, comme Fiasp et Lyumjev
+
+FLwatch prend aussi en charge la saisie manuelle des doses d’insuline et inclut un calculateur intégré glucides-vers-insuline.
+
+D’autres types d’insuline peuvent être ajoutés sur demande.
+
+### Conseils Apple Watch et Siri
+- Pour garder le graphique de glycémie visible sur la montre pendant une heure, ouvrez sur la montre ou dans l’application `Watch` de l’iPhone le chemin `Réglages > Général > Retour à l’horloge`, faites défiler jusqu’à FLwatch et choisissez `Après 1 heure`. Ainsi, FLwatch reste plus longtemps au premier plan et reçoit un nombre raisonnable de mises à jour, par exemple environ une fois par minute.
+- Le moyen le plus simple de lancer l’application sur le téléphone ou la montre est de placer un widget ou une complication sur l’écran d’accueil, l’écran verrouillé, le cadran de montre ou un autre emplacement pratique, puis d’appuyer dessus.
+- Les Live Activities sur iPhone peuvent aussi être recopiées dans la pile intelligente de l’Apple Watch pour un accès rapide.
+- Siri et Raccourcis peuvent être utilisés pour lire à voix haute ou afficher la glycémie actuelle.
+- Siri et Raccourcis peuvent aussi servir à enregistrer vocalement des doses d’insuline ou à enregistrer rapidement une dose d’insuline sur la montre.
+- Pour ouvrir l’application en mains libres avec Siri, vous pouvez créer sur l’iPhone un raccourci qui ouvre simplement FLwatch. Vous pouvez par exemple l’appeler `graphique de glucose` ou `glycémie`. Activez l’option permettant d’afficher ce raccourci aussi sur la montre. Ensuite, il suffit de prononcer cette phrase à Siri pour ouvrir FLwatch directement. Cela fonctionne aussi sur l’iPhone.
+
+### Fonctionnalités {#features}
+#### Suivi
 * Graphique de glycémie sur le téléphone et la montre
-* Graphique interactif sur le téléphone pour afficher les valeurs individuelles d'un simple toucher
+* Graphique interactif sur le téléphone pour afficher les valeurs individuelles d’un simple toucher
 * Mode écran toujours allumé sur le téléphone
-* Prise en charge des insulines à action rapide et à action ultra-rapide
-* Calcul de l'insuline à bord (IOB)
-* Graphique de l'insuline à bord
-* Graphique de l'activité de l'insuline
-* Widgets iOS et widgets d'écran de verrouillage avec et sans graphique(s)
-* Live Activities
-* Widget en mode veille
-* Widgets watchOS / complications
-* Prise en charge de CarPlay via les widgets et Live Activities
-* Exportation des doses d'insuline et des données de glucose vers Apple Health
+
+#### Insuline
+* Prise en charge des insulines bolus à action rapide et à action ultra-rapide
+* Calcul de l’insuline à bord (IOB)
+* Graphique de l’insuline à bord
+* Graphique de l’activité de l’insuline
+* Saisie manuelle des doses d’insuline
+* Calculateur intégré glucides-vers-insuline
+
+#### Intégration au système
+* Widgets iOS et widgets d’écran verrouillé avec et sans graphique(s)
+* Live Activities sur iPhone, y compris la recopie dans la pile intelligente de l’Apple Watch
+* Widget du mode veille
+* Widgets et complications watchOS
+* Prise en charge de CarPlay via les widgets et les Live Activities
+* Exportation des doses d’insuline et des données de glucose vers Apple Health
+* Prise en charge de Siri et Raccourcis pour afficher la glycémie, la lire à voix haute et enregistrer rapidement des doses d’insuline
+
+### Notes techniques
+FLwatch utilise le modèle exponentiel d’insuline de LoopKit. Le modèle utilise trois paramètres : `actionDuration`, `peakActivityTime` et `delay`.
+
+- Pour l’insuline à action rapide, les paramètres sont 360, 75 et 10 minutes.
+- Pour l’insuline à action ultra-rapide, les paramètres sont 360, 55 et 10 minutes.
 
 ### À faire
-- Implémenter l'activité d'entraînement
+- Implémenter l’activité d’entraînement
 
 ### Assistance et commentaires {#support}
-Pour obtenir de l'aide, veuillez ouvrir un ticket, lancer une discussion ou envoyer un e-mail à **flwatch [ a t ] cmdline [ d o t ] net**. Vos commentaires sont les bienvenus, veuillez utiliser les mêmes méthodes que pour l'assistance.
+Pour obtenir de l’aide, veuillez ouvrir une [issue GitHub](https://github.com/poml88/FLwatch/issues), lancer une [discussion GitHub](https://github.com/poml88/FLwatch/discussions) ou envoyer un e-mail à **flwatch [at] cmdline [dot] net**.
 
-### Dons... 
-...sont toujours les bienvenus !
-- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40">   [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
-- <img src="/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40">   [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
+Vos commentaires sont les bienvenus et peuvent être envoyés par les mêmes canaux.
 
+### Dons
+Les dons sont toujours les bienvenus.
+
+- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40"> [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
+- <img src="/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40"> [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
 
 {% include screenshots.html %}
 
-N'hésitez pas à consulter également ces projets :
+### Crédits
+N’hésitez pas à consulter également ces projets :
 
-### Crédits : 
-[DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard]( https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
+[DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard](https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
-Tous les noms de produits et de sociétés, marques commerciales, marques de service, marques déposées et marques de service déposées sont la propriété de leurs détenteurs respectifs. Leur utilisation est à titre informatif et n'implique aucune affiliation ou recommandation de leur part. Remarque : cette application n'a aucun lien avec Abbott Diabetes Care Inc. et n'est pas recommandée par cette société.
+Tous les noms de produits et de sociétés, marques commerciales, marques de service, marques déposées et marques de service déposées sont la propriété de leurs détenteurs respectifs. Leur utilisation est à titre informatif et n’implique aucune affiliation ou recommandation de leur part. Remarque : cette application n’a aucun lien avec Abbott Diabetes Care Inc. et n’est pas recommandée par cette société.

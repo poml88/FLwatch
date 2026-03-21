@@ -1,68 +1,130 @@
 ---
 layout: landing
-title: "FLwatch – iPhoneとApple Watch向けの血糖値・インスリングラフ"
-description: "FLwatchは、LibreLinkUpのデータを使用して、血糖値、インスリン残量（Insulin-on-Board）、インスリン作用のグラフとウィジェットをiPhoneとApple Watchに表示する無料のオープンソースアプリです。"
+title: "FLwatch – iPhone と Apple Watch 向けの血糖値・インスリングラフ"
+description: "FLwatch は、LibreLinkUp のデータを使って iPhone と Apple Watch に血糖値、insulin-on-board、活動グラフをウィジェット付きで表示する無料のオープンソースアプリです。"
 lang: ja
 permalink: /ja/
 image: /assets/images/app-preview-optimized.png
-hero_title: "FLwatch：血糖値センサーグラフ"
+hero_title: "FLwatch - グルコースセンサーグラフ"
 ---
 
+***警告: FLwatch は非常に実験的なプロジェクトです。十分に注意してご利用ください。このソフトウェアに基づいて医療上の判断を行わないでください。いかなる保証もなく提供されており、使用はすべて自己責任です。***
 
+このソフトウェアは無料のオープンソースです。個人的な必要性から開発されていますが、誰でも利用できるようにすることを目指しています。
 
-***警告：本プロジェクトは高度に実験的なものです！本アプリは細心の注意を払ってご利用ください。ソフトウェアに基づいて軽率な判断を下さないでください。確信が持てない場合は本ソフトウェアを使用しないでください。医療判断のために本アプリを使用しないでください。一切の保証はありません。ご自身の責任においてご利用ください！***
-
-本ソフトウェアは無料かつオープンソースです。個人的な必要性から開発されていますが、誰もがその恩恵を受けられるべきです。
-
-### 使用方法 {#usage}
-***インストール方法:*** watchOSアプリがインストールされていることを確認してください（iOSアプリ起動前に実施が望ましい）。環境設定により、watchOSアプリは自動インストールされるか、スマートフォン上の「Watch」アプリ経由で手動インストールが必要です。
-- @TypeOneCallum さんがとても分かりやすい [セットアップのチュートリアル動画](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB) を作ってくれました（ありがとうございます！）。これを見るとセットアップがずっと簡単になります。
-- 動作環境: iOS 18 以上、watchOS 10.5 以上
+### 概要
+- iPhone と Apple Watch で血糖値、insulin-on-board、活動グラフを表示します
+- ウィジェット、コンプリケーション、Live Activities、Apple Watch の Smart Stack へのミラーリング、Apple Health への書き出しに対応しています
+- 手動でのインスリン記録と、内蔵の炭水化物対インスリン計算機をサポートしています
+- iOS 18 と watchOS 10.5 が必要です
 - TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
-- 設定はiOSアプリで行い、その後watchOSアプリに転送されます。これはwatchOSアプリが時計にインストールされている場合にのみ機能します。
-- ***アプリ間の接続確立:*** 機能させるには、まず自分自身をフォロワーとして招待する必要があります。*LibreViewの認証情報は使用できません。* 操作手順：LibreLink / Libre 3アプリの「共有」＞「接続済みアプリ」内に「接続 / LibreLinkUpを管理」項目があります。「接続を追加」をタップし、フォロワーアカウントに使用するメールアドレスを入力すると、そのアドレスに招待状が送信されます（メールアドレスはLibreViewと同じでも構いません）。次に、LibreLinkUpフォロワーアカウントを設定するには、スマートフォンに[LibreLinkUpアプリ](https://apps.apple.com/us/app/librelinkup/id1234323923)をインストールし、先ほど招待したメールアドレスを使用して指示に従ってください。参考になるかもしれない[ステップバイステップガイド](https://www.librelinkup.com/articles/getting-started)があります。LibreLinkUpアプリで自身の血糖値グラフが表示できることを確認してください。最後に、FLwatchを開き、フォロワーアカウントの認証情報を入力します（下記参照）。現在FLwatchでは、1つのフォロワーアカウントにつき1人のフォロー対象患者のみサポートされています。
-- LibreLinkUpアプリは閉じて削除しても構いませんが、新しい利用規約やプライバシーポリシーの承諾、またはアカウント/接続の確認が必要な場合に後で必要になる可能性があります。
-- LibreLinkUpフォロワーアカウントに接続するには、FLwatchの「接続」タブで認証情報を入力してください。watchOSアプリがインストールされている場合、認証情報はウォッチアプリに転送されます。「接続」ボタンを再度押すことで認証情報を再転送できます。
-- データの取得と表示には最大1分かかる場合があります。
-- インスリン計算を使用するには、ホーム画面の「IOB」ラベルをタップしてください。現在対応しているインスリンの種類は：速効型（ノボログ、ノボラピッドなど）および超速効型（フィアースプ、リュムジェブなど）です。追加のインスリンはリクエストに応じて追加可能です。*お知らせください。*
-  - 本アプリはLoopKitの指数モデルを採用しています。このモデルは3つのパラメータ（actionDuration、peakActivityTime、delay）を必要とします。速効型インスリンの場合のパラメータは360、75、10分、超速効型インスリンの場合は360、55、10分です。
-- 血糖値グラフを1時間表示し続ける設定があります：  時計本体またはスマートフォンの「Watch」アプリで、設定 → 一般 → 時計に戻る を選択し、下にスクロールしてFLwatchをタップし、「1時間後」を選択してください。これにより、FLwatchは1時間フォアグラウンドに表示され、適切な頻度（例えば毎分）で更新されます。
-- スマートフォンまたはウォッチアプリを起動する最も簡単な方法は、ホーム画面、ロック画面、ウォッチフェイスなどにウィジェット／コンプリケーションを配置し、それをタップすることです。
-- Siriでハンズフリー操作する場合、スマートフォンに「血糖値グラフ」や「血糖値」といったショートカットを作成します。このショートカットはFLwatchを起動するだけです。「ウォッチに表示」オプションを選択してください。Siriを起動し「血糖値グラフ」と発声すると、FLwatchアプリとそのグラフが表示されます。
-スマートフォンでも同様の操作が可能です。
+- LibreView の認証情報ではなく、LibreLinkUp のフォロワーアカウントの認証情報を使用します
 
-### 機能 
-* スマートフォンとウォッチでの血糖値グラフ表示
-* スマートフォン上のインタラクティブチャート（タップで個別値を表示）
-* スマートフォン画面常時表示モード
-* 速効型および超速効型ボラスインスリン対応
-* インスリンオンボード計算（IOB）
-* インスリンオンボードグラフ
+### クイックスタート {#usage}
+1. TestFlight から iOS アプリをインストールします。
+2. Apple Watch に watchOS アプリがインストールされていることを確認します。できれば iOS アプリを起動する前に済ませてください。
+3. 自分自身をフォロワーとして設定し、LibreLinkUp 接続が機能することを確認します。
+4. FLwatch の `Connect` タブで、LibreLinkUp フォロワーアカウントの認証情報を入力します。
+5. データが表示されるまで最大 1 分ほど待ちます。
+
+watchOS アプリがインストールされている場合、iOS アプリで入力した設定や認証情報は watch アプリへ転送されます。
+
+- @TypeOneCallum によるとても分かりやすい[設定チュートリアル動画](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB)があります。視聴すると設定がかなり簡単になります。
+
+### LibreLinkUp の設定
+FLwatch を動作させるには、まず自分自身を自分のフォロワーとして招待する必要があります。
+
+*LibreView の認証情報は使えません。*
+
+1. LibreLink または Libre 3 アプリで Share / Connected Apps を開きます。
+2. Connect / Manage LibreLinkUp を開きます。
+3. `Add Connection` をタップし、フォロワーアカウントに使いたいメールアドレスを入力します。
+4. そのメールアドレスに届いた招待を承認します。
+5. iPhone に [LibreLinkUp アプリ](https://apps.apple.com/us/app/librelinkup/id1234323923) をインストールし、招待したフォロワーアカウントの設定を完了します。
+6. LibreLinkUp で自分自身の血糖値グラフが見えることを確認します。
+7. FLwatch を開き、そこにフォロワーアカウントの認証情報を入力します。
+
+フォロワーアカウントのメールアドレスは LibreView と同じでも構いません。
+
+[LibreLinkUp のステップバイステップガイド](https://www.librelinkup.com/articles/getting-started) も参考になります。
+
+現在、FLwatch は 1 つのフォロワーアカウントにつき 1 人の被フォロー患者のみをサポートしています。
+
+その後、LibreLinkUp アプリは閉じたりアンインストールしたりできます。ただし、後で新しい利用規約やプライバシーポリシーへの同意、またはアカウントや接続の確認のために再び必要になることがあります。
+
+### FLwatch の接続
+- FLwatch の `Connect` タブで、LibreLinkUp フォロワーアカウントの認証情報を入力します。
+- watchOS アプリがインストールされていれば、認証情報は watch アプリへ転送されます。
+- 必要であれば、`Connect` ボタンをもう一度押すことで認証情報を再転送できます。
+- データの取得と表示には最大 1 分ほどかかることがあります。
+
+### インスリン機能
+インスリン計算を使うには、ホーム画面の `IOB` ラベルをタップしてください。
+
+現在サポートされているインスリンの種類:
+- 速効型インスリン: Novolog、Novorapid など
+- 超速効型インスリン: Fiasp、Lyumjev など
+
+FLwatch は手動でのインスリン記録にも対応しており、炭水化物対インスリン計算機も内蔵しています。
+
+他のインスリン種類も要望に応じて追加できます。
+
+### Watch と Siri のヒント
+- Apple Watch で血糖値グラフを 1 時間表示し続けるには、Watch 本体または iPhone の `Watch` アプリで `設定 > 一般 > 時計に戻る` を開き、FLwatch を選んで `1 時間後` を選択してください。こうすると FLwatch がより長く前面に残り、たとえば約 1 分ごとなど、適切な回数の更新を受けられます。
+- iPhone または Watch でアプリを最も簡単に起動する方法は、ホーム画面、ロック画面、文字盤などの使いやすい場所にウィジェットやコンプリケーションを置いてタップすることです。
+- iPhone の Live Activities は Apple Watch の Smart Stack にもミラーリングでき、すばやく確認できます。
+- Siri とショートカットを使って、現在の血糖値を読み上げたり表示したりできます。
+- Siri とショートカットは、インスリン量の音声記録や、Watch での素早いインスリン量記録にも使えます。
+- Siri でハンズフリー起動したい場合は、FLwatch を開くだけのショートカットを iPhone に作成できます。たとえば `血糖グラフ` や `血糖値` のような名前にできます。そのショートカットを Watch にも表示する設定を有効にしてください。そうすれば、そのフレーズを Siri に話しかけるだけで FLwatch を直接開けます。iPhone でも同様に使えます。
+
+### 機能 {#features}
+#### モニタリング
+* iPhone と Apple Watch の血糖値グラフ
+* タップで個別の値を確認できる iPhone 上のインタラクティブグラフ
+* iPhone の常時表示モード
+
+#### インスリン
+* 速効型および超速効型ボーラスインスリンに対応
+* insulin on board (IOB) の計算
+* IOB グラフ
 * インスリン活性グラフ
-* グラフあり・なしのiOSウィジェットおよびロック画面ウィジェット
-* Live Activities
-* スタンバイモードウィジェット
-* watchOSウィジェット / コンプリケーション
-* ウィジェットおよびLive ActivitiesによるCarPlay対応
-* インスリン投与量とグルコースデータをApple Healthへ書き出し
+* 手動インスリン記録
+* 内蔵の炭水化物対インスリン計算機
 
-### 開発予定
-- ワークアウトアクティビティを実装
+#### システム連携
+* グラフあり・なしの iOS ウィジェットとロック画面ウィジェット
+* iPhone の Live Activities と、Apple Watch Smart Stack へのミラーリング
+* StandBy モード用ウィジェット
+* watchOS ウィジェットとコンプリケーション
+* ウィジェットと Live Activities を通じた CarPlay 対応
+* インスリン量と血糖値データの Apple Health への書き出し
+* 血糖値の表示、読み上げ、インスリン量の素早い記録に対応する Siri とショートカットのサポート
+
+### 技術メモ
+FLwatch は LoopKit の指数インスリンモデルを使用しています。このモデルでは `actionDuration`、`peakActivityTime`、`delay` の 3 つのパラメータを使います。
+
+- 速効型インスリンのパラメータは 360、75、10 分です。
+- 超速効型インスリンのパラメータは 360、55、10 分です。
+
+### ToDo
+- ワークアウトアクティビティを実装する
 
 ### サポートとフィードバック {#support}
-サポートが必要な場合は、イシューを開く、ディスカッションを開始する、または **flwatch [ a t ] cmdline [ d o t ] net** までメールをお送りください。フィードバックは大歓迎です。サポートと同様の方法でお寄せください。
+サポートが必要な場合は、[GitHub issue](https://github.com/poml88/FLwatch/issues) を開くか、[GitHub Discussions](https://github.com/poml88/FLwatch/discussions) を始めるか、**flwatch [at] cmdline [dot] net** までメールしてください。
 
-### 寄付について... 
-...いつでも大歓迎です！
-- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40">   [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
-- <img src="/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40">   [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
+フィードバックも歓迎しており、同じ連絡手段をご利用いただけます。
 
+### 寄付
+ご寄付はいつでも歓迎しています。
+
+- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40"> [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
+- <img src="/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40"> [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
 
 {% include screenshots.html %}
 
-以下のプロジェクトもぜひご覧ください：
+### クレジット
+こちらのプロジェクトもぜひご覧ください:
 
-### クレジット: 
-[DiaBLE](https://github.com/gui-dos/DiaBLE)、[LoopKit](https://github.com/LoopKit)、[GlucoseDirect](https://github.com/creepymonster/GlucoseDirect)、[Nightguard]( https://github.com/nightscout/nightguard)、 [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
+[DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard](https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
-すべての製品名、会社名、商標、サービスマーク、登録商標、登録サービスマークは、それぞれの所有者に帰属します。それらの使用は情報提供を目的としたものであり、いかなる提携や推奨を意味するものではありません。ご注意：本アプリはアボット・ダイアベティス・ケア社とは一切関係がなく、同社の推奨を受けていません。
+すべての製品名、会社名、商標、サービスマーク、登録商標、登録サービスマークは、それぞれの所有者に帰属します。ここでの使用は情報提供のみを目的としており、提携や承認を意味するものではありません。ご注意ください: このアプリは Abbott Diabetes Care Inc. とは一切関係がなく、同社の承認も受けていません。

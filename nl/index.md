@@ -1,6 +1,6 @@
 ---
 layout: landing
-title: "FLwatch – Glucose- en insulinegrafieken voor iPhone en Apple Watch"
+title: "FLwatch – glucose- en insulinegrafieken voor iPhone en Apple Watch"
 description: "FLwatch is een gratis open-source-app die glucose-, insulin-on-board- en activiteitsgrafieken met widgets op iPhone en Apple Watch toont met LibreLinkUp-gegevens."
 lang: nl
 permalink: /nl/
@@ -8,58 +8,123 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch - Glucosesensorgrafiek"
 ---
 
-***Waarschuwing: dit project is zeer experimenteel. Gebruik deze app met voorzichtigheid en uiterste zorg. Neem geen ondoordachte beslissingen op basis van software. Gebruik deze software niet als je twijfelt. Gebruik deze app niet voor medische beslissingen. Er is absoluut geen garantie. Gebruik is volledig op eigen risico.***
+***Waarschuwing: FLwatch is een sterk experimenteel project. Gebruik deze app met voorzichtigheid en uiterste zorg. Neem geen medische beslissingen op basis van deze software. De software wordt zonder enige garantie geleverd en gebruik is volledig op eigen risico.***
 
-Deze software is gratis en open source. Ze is ontwikkeld vanuit persoonlijke behoeften, maar iedereen zou er baat bij moeten kunnen hebben.
+Deze software is gratis en open source. Ze is ontwikkeld vanuit een persoonlijke behoefte, maar iedereen zou er baat bij moeten kunnen hebben.
 
-### Gebruik {#usage}
-***Installatie:*** Zorg ervoor dat de watchOS-app is geïnstalleerd, idealiter voordat je de iOS-app start. Afhankelijk van je configuratie wordt de watchOS-app automatisch geïnstalleerd of moet die via de app `Watch` op de telefoon worden geïnstalleerd.
-- @TypeOneCallum heeft een erg goede [video-handleiding voor de setup](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB) gemaakt (dank je). Als je die bekijkt, wordt de installatie een stuk eenvoudiger.
-- De app vereist iOS 18 en watchOS 10.5.
-- TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
-- De instellingen worden in de iOS-app gedaan en daarna naar de watchOS-app overgezet. Dit werkt alleen als de watchOS-app op het horloge is geïnstalleerd.
-- ***De verbinding tussen de apps opzetten:*** Om alles te laten werken, moet je jezelf eerst uitnodigen als je eigen volger. *LibreView-inloggegevens werken niet.* In de LibreLink- of Libre 3-app vind je onder Delen / Verbonden apps de optie om LibreLinkUp te verbinden of te beheren. Tik op `Verbinding toevoegen` en vul het e-mailadres in dat je voor het volgeraccount wilt gebruiken. Naar dat adres wordt vervolgens een uitnodiging gestuurd. Dat e-mailadres mag hetzelfde zijn als voor LibreView. Om het LibreLinkUp-volgeraccount in te stellen, installeer je daarna de [LibreLinkUp-app](https://apps.apple.com/us/app/librelinkup/id1234323923) op je telefoon en volg je de stappen met het e-mailadres dat je net hebt uitgenodigd. Mogelijk helpt ook deze [stap-voor-stap-handleiding](https://www.librelinkup.com/articles/getting-started). Zorg ervoor dat je je eigen bloedglucosegrafiek in de LibreLinkUp-app kunt zien. Open daarna FLwatch en vul de gegevens van het volgeraccount in, zoals hieronder beschreven. Momenteel ondersteunt FLwatch slechts een gevolgde patiënt per volgeraccount.
-- Daarna kan de LibreLinkUp-app worden gesloten of verwijderd, maar mogelijk heb je die later nog nodig om nieuwe gebruiksvoorwaarden of privacyvoorwaarden te accepteren, of gewoon om te controleren of het account en de verbinding nog werken.
-- Om verbinding te maken met je LibreLinkUp-volgeraccount voer je je inloggegevens in FLwatch in op het tabblad `Verbinden`. Als de watchOS-app is geïnstalleerd, worden de gegevens doorgestuurd naar de Watch-app. Je kunt de gegevens opnieuw overzetten door nogmaals op de knop `Verbinden` te tikken.
-- Het kan tot een minuut duren voordat de gegevens zijn opgehaald en weergegeven.
-- Om de insulineberekening te gebruiken, tik je op het IOB-label op het startscherm. Ondersteunde insulinetypen zijn momenteel snelwerkend (Novolog, Novorapid, ...) en ultrasnelwerkend (Fiasp, Lyumjev, ...). Meer insulines kunnen op verzoek worden toegevoegd. *Laat het gerust weten.*
-  - De app gebruikt het exponentiële model van LoopKit. Dat model heeft drie parameters: `actionDuration`, `peakActivityTime` en `delay`. Voor snelwerkende insuline zijn die waarden 360, 75 en 10 minuten; voor ultrasnelwerkende insuline 360, 55 en 10 minuten.
-- Er is een instelling om de glucosegrafiek een uur lang op het horloge zichtbaar te houden: ga op het horloge of in de telefoon-app `Watch` naar Instellingen -> Algemeen -> Terug naar klok, scrol omlaag, tik op `FLwatch` en kies `Na 1 uur`. Zo blijft FLwatch een uur op de voorgrond en krijgt het een redelijk aantal updates, bijvoorbeeld elke minuut.
-- De makkelijkste manier om de telefoon- of horloge-app te starten is door een widget of complicatie op je beginscherm, vergrendelscherm, wijzerplaat of een andere plek te zetten en daarop te tikken.
-- Om de app handsfree met Siri te openen kun je op de telefoon een opdracht aanmaken met bijvoorbeeld de naam `glucosegrafiek` of `bloedsuiker`. Die opdracht opent simpelweg FLwatch. Kies daarbij de optie `toon op Apple Watch`. Als je daarna Siri activeert en `glucosegrafiek` zegt, wordt FLwatch met de grafiek geopend.
-Hetzelfde werkt ook op de telefoon.
+### In het kort
+- Toont glucose-, insulin-on-board- en activiteitsgrafieken op iPhone en Apple Watch
+- Bevat widgets, complicaties, Live Activities, mirroring naar de Smart Stack van Apple Watch en export naar Apple Health
+- Ondersteunt handmatige insulineregistratie en een ingebouwde koolhydraten-naar-insulinecalculator
+- Vereist iOS 18 en watchOS 10.5
+- Beschikbaar via TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
+- Gebruikt de inloggegevens van een LibreLinkUp-volgeraccount, niet die van LibreView
+
+### Snel starten {#usage}
+1. Installeer de iOS-app via TestFlight.
+2. Zorg ervoor dat de watchOS-app op je Apple Watch is geïnstalleerd, idealiter voordat je de iOS-app opent.
+3. Maak een LibreLinkUp-volgerverbinding voor jezelf aan en controleer of die werkt.
+4. Voer in FLwatch op het tabblad `Connect` de inloggegevens van het LibreLinkUp-volgeraccount in.
+5. Wacht maximaal een minuut totdat de gegevens verschijnen.
+
+Als de watchOS-app is geïnstalleerd, worden instellingen en inloggegevens uit de iOS-app overgezet naar de watch-app.
+
+- @TypeOneCallum heeft een erg nuttige [video-uitleg voor de installatie](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB) gemaakt. Die maakt het instellen een stuk eenvoudiger.
+
+### LibreLinkUp instellen
+Om FLwatch te laten werken, moet je jezelf eerst uitnodigen om je eigen volger te worden.
+
+*LibreView-inloggegevens werken niet.*
+
+1. Ga in de LibreLink- of Libre 3-app naar Share / Connected Apps.
+2. Open Connect / Manage LibreLinkUp.
+3. Tik op `Add Connection` en voer het e-mailadres in dat je voor het volgeraccount wilt gebruiken.
+4. Accepteer de uitnodiging die naar dat e-mailadres is gestuurd.
+5. Installeer de [LibreLinkUp-app](https://apps.apple.com/us/app/librelinkup/id1234323923) op je iPhone en rond daar de configuratie van het uitgenodigde volgeraccount af.
+6. Controleer of je in LibreLinkUp je eigen glucosegrafiek kunt zien.
+7. Open FLwatch en voer daar de inloggegevens van het volgeraccount in.
+
+Het e-mailadres van het volgeraccount mag hetzelfde zijn als dat van LibreView.
+
+Ook de [stapsgewijze gids van LibreLinkUp](https://www.librelinkup.com/articles/getting-started) kan nuttig zijn.
+
+Op dit moment ondersteunt FLwatch slechts één gevolgde patiënt per volgeraccount.
+
+De LibreLinkUp-app kan daarna worden gesloten of zelfs verwijderd. Mogelijk heb je die later toch weer nodig om nieuwe gebruiksvoorwaarden of privacyvoorwaarden te accepteren, of gewoon om te controleren of het account en de verbinding nog werken.
+
+### FLwatch verbinden
+- Voer op het tabblad `Connect` in FLwatch de inloggegevens van je LibreLinkUp-volgeraccount in.
+- Als de watchOS-app is geïnstalleerd, worden de inloggegevens overgezet naar de watch-app.
+- Indien nodig kun je de inloggegevens opnieuw overzetten door nogmaals op de knop `Connect` te drukken.
+- Het ophalen en tonen van gegevens kan tot een minuut duren.
+
+### Insulinefuncties
+Tik op het startscherm op het label `IOB` om de insulineberekening te gebruiken.
+
+Momenteel ondersteunde insulinetypen:
+- Snelwerkende insuline, zoals Novolog en Novorapid
+- Ultrasnelwerkende insuline, zoals Fiasp en Lyumjev
+
+FLwatch ondersteunt ook handmatige insulineregistratie en bevat een ingebouwde koolhydraten-naar-insulinecalculator.
+
+Meer insulinetypen kunnen op verzoek worden toegevoegd.
+
+### Tips voor Watch en Siri
+- Om de glucosegrafiek een uur lang zichtbaar te houden op de watch, open je op de watch of in de `Watch`-app op de iPhone `Instellingen > Algemeen > Keer terug naar klok`, scroll je naar FLwatch en kies je `Na 1 uur`. Zo blijft FLwatch langer op de voorgrond en krijgt het een redelijk aantal updates, bijvoorbeeld ongeveer elke minuut.
+- De eenvoudigste manier om de app op de telefoon of watch te starten, is door een widget of complicatie op je beginscherm, vergrendelscherm, wijzerplaat of een andere handige plek te zetten en daarop te tikken.
+- Live Activities op de iPhone kunnen ook worden gespiegeld naar de Smart Stack van Apple Watch voor snelle toegang.
+- Siri en Opdrachten kunnen worden gebruikt om de huidige glucosewaarde te laten voorlezen of weer te geven.
+- Siri en Opdrachten kunnen ook worden gebruikt voor spraakgestuurde registratie van insulinedoses of voor het snel registreren van insulinedoses op de watch.
+- Om de app handsfree met Siri te openen, kun je op de iPhone een opdracht maken die simpelweg FLwatch opent. Je kunt die bijvoorbeeld `glucosegrafiek` of `bloedsuiker` noemen. Zet de optie aan om de opdracht ook op de watch te tonen. Daarna kun je die zin tegen Siri zeggen en wordt FLwatch direct geopend. Hetzelfde werkt ook op de iPhone.
 
 ### Functies {#features}
-* Bloedglucosegrafiek op telefoon en horloge
-* Interactieve grafiek op de telefoon om individuele waarden via tikken te bekijken
-* Altijd-aan-modus op het telefoonscherm
+#### Monitoring
+* Glucosegrafiek op telefoon en watch
+* Interactieve grafiek op de telefoon om afzonderlijke waarden met een tik te bekijken
+* Altijd-aan-schermmodus op de telefoon
+
+#### Insuline
 * Ondersteuning voor snelwerkende en ultrasnelwerkende bolusinsulines
 * Berekening van insulin on board (IOB)
 * IOB-grafiek
 * Grafiek van insulineactiviteit
-* iOS-widgets en lockscreen-widgets met en zonder grafiek(en)
-* Live Activities
-* Widget voor de stand-bymodus
-* watchOS-widgets / complicaties
-* CarPlay-ondersteuning via widgets en Live Activities
-* Exporteer insulinedoses en glucosegegevens naar Apple Health
+* Handmatige insulineregistratie
+* Ingebouwde koolhydraten-naar-insulinecalculator
 
-### Nog te doen
-- Trainingsactiviteit implementeren
+#### Systeemintegratie
+* iOS-widgets en widgets voor het vergrendelscherm met en zonder grafiek(en)
+* Live Activities op iPhone, inclusief mirroring naar de Smart Stack van Apple Watch
+* Widget voor StandBy-modus
+* watchOS-widgets en complicaties
+* CarPlay-ondersteuning via widgets en Live Activities
+* Export van insulinedoses en glucosegegevens naar Apple Health
+* Ondersteuning voor Siri en Opdrachten om glucose weer te geven, voor te lezen en insulinedoses snel vast te leggen
+
+### Technische notities
+FLwatch gebruikt het exponentiële insulinemodel van LoopKit. Dat model gebruikt drie parameters: `actionDuration`, `peakActivityTime` en `delay`.
+
+- Voor snelwerkende insuline zijn de parameters 360, 75 en 10 minuten.
+- Voor ultrasnelwerkende insuline zijn de parameters 360, 55 en 10 minuten.
+
+### ToDo
+- Workout-activiteit implementeren
 
 ### Ondersteuning en feedback {#support}
-Voor ondersteuning kun je een issue openen, een discussie starten of een e-mail sturen naar **flwatch [ a t ] cmdline [ d o t ] net**. Feedback is zeer welkom; gebruik daarvoor gerust dezelfde contactmogelijkheden.
+Voor ondersteuning kun je een [GitHub-issue](https://github.com/poml88/FLwatch/issues) openen, een [GitHub-discussie](https://github.com/poml88/FLwatch/discussions) starten of een e-mail sturen naar **flwatch [at] cmdline [dot] net**.
 
-### Donaties...
-...zijn altijd welkom.
-- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40">   [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
-- <img src="/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40">   [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
+Feedback is zeer welkom en kan via dezelfde kanalen worden gestuurd.
+
+### Donaties
+Donaties zijn altijd welkom.
+
+- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40"> [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
+- <img src="/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40"> [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
 
 {% include screenshots.html %}
 
+### Credits
 Bekijk ook deze projecten:
 
-### Met dank aan
-[DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard]( https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
+[DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard](https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
-Alle product- en bedrijfsnamen, handelsmerken, servicemerken, geregistreerde handelsmerken en geregistreerde servicemerken zijn eigendom van hun respectieve houders. Gebruik daarvan is uitsluitend informatief en impliceert geen verbondenheid met of goedkeuring door die partijen. Let op: deze app heeft geen enkele band met Abbott Diabetes Care Inc. en wordt niet door dat bedrijf ondersteund.
+Alle product- en bedrijfsnamen, handelsmerken, servicemerken, geregistreerde handelsmerken en geregistreerde servicemerken zijn eigendom van hun respectieve houders. Het gebruik ervan is uitsluitend informatief en impliceert geen verbondenheid of goedkeuring. Let op: deze app heeft geen enkele band met Abbott Diabetes Care Inc. en wordt niet door dat bedrijf ondersteund.

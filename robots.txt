@@ -12,6 +12,7 @@ Disallow: /impressum/index-neu.de
 Disallow: /*/impressum/
 Disallow: /*/privacy/
 Disallow: /*/terms/
+Disallow: /en/preview/
 Disallow: /agb/
 
 Sitemap: {{ 'sitemap.xml' | absolute_url }}
