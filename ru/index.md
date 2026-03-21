@@ -17,11 +17,13 @@ hero_title: "FLwatch - График сенсора глюкозы"
 - Поддерживает виджеты, осложнения, Live Activities, зеркалирование в Smart Stack на Apple Watch и экспорт в Apple Health
 - Поддерживает ручной ввод доз инсулина и встроенный калькулятор соотношения углеводов к инсулину
 - Требуются iOS 18 и watchOS 10.5
-- Доступно через TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
+- Для бета-тестирования FLwatch также доступен в TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
 - Используются данные входа учетной записи подписчика LibreLinkUp, а не данные LibreView
 
 ### Быстрый старт {#usage}
-1. Установите приложение для iOS через TestFlight.
+1. Установите FLwatch из [App Store]({{ site.appstore_url }}).
+
+   {% include appstore_badge.html %}
 2. Убедитесь, что приложение для watchOS установлено на Apple Watch, желательно до запуска приложения для iOS.
 3. Создайте и проверьте подключение LibreLinkUp, где вы подписаны сами на себя.
 4. Введите в FLwatch данные учетной записи подписчика LibreLinkUp на вкладке `Connect`.

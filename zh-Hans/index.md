@@ -17,11 +17,13 @@ hero_title: "FLwatch：血糖传感器图表"
 - 支持小组件、复杂功能、Live Activities、Apple Watch 智能叠放镜像，以及导出到 Apple Health
 - 支持手动记录胰岛素，并内置碳水化合物换算胰岛素计算器
 - 需要 iOS 18 和 watchOS 10.5
-- 可通过 TestFlight 安装：[https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
+- 如需参与 Beta 测试，FLwatch 也提供 TestFlight 版本：[https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
 - 使用 LibreLinkUp 关注者账户凭据，而不是 LibreView 凭据
 
 ### 快速开始 {#usage}
-1. 通过 TestFlight 安装 iOS 应用。
+1. 通过 [App Store]({{ site.appstore_url }}) 安装 FLwatch。
+
+   {% include appstore_badge.html %}
 2. 请确保 Apple Watch 上已安装 watchOS 应用，最好在首次打开 iOS 应用之前完成。
 3. 创建并确认一个 LibreLinkUp 关注关系，使您成为自己的关注者。
 4. 在 FLwatch 的 `Connect` 标签页中输入 LibreLinkUp 关注者账户凭据。

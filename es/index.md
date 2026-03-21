@@ -17,11 +17,13 @@ Este software es gratuito y de código abierto. Se ha desarrollado a partir de n
 - Incluye widgets, complicaciones, Live Activities, reflejo en la pila inteligente del Apple Watch y exportación a Apple Health
 - Admite registro manual de insulina y una calculadora integrada de carbohidratos a insulina
 - Requiere iOS 18 y watchOS 10.5
-- Disponible en TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
+- Para pruebas beta, FLwatch también está disponible en TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
 - Utiliza credenciales de una cuenta seguidora de LibreLinkUp, no credenciales de LibreView
 
 ### Inicio rápido {#usage}
-1. Instale la aplicación para iOS desde TestFlight.
+1. Instale FLwatch desde la [App Store]({{ site.appstore_url }}).
+
+   {% include appstore_badge.html %}
 2. Asegúrese de que la aplicación para watchOS esté instalada en su Apple Watch, idealmente antes de abrir la aplicación para iOS.
 3. Cree y verifique una conexión de LibreLinkUp como su propio seguidor.
 4. Introduzca en FLwatch las credenciales de la cuenta seguidora de LibreLinkUp en la pestaña `Connect`.

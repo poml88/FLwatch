@@ -17,11 +17,13 @@ hero_title: "FLwatch - グルコースセンサーグラフ"
 - ウィジェット、コンプリケーション、Live Activities、Apple Watch の Smart Stack へのミラーリング、Apple Health への書き出しに対応しています
 - 手動でのインスリン記録と、内蔵の炭水化物対インスリン計算機をサポートしています
 - iOS 18 と watchOS 10.5 が必要です
-- TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
+- ベータテスト用に、FLwatch は TestFlight でも利用できます: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
 - LibreView の認証情報ではなく、LibreLinkUp のフォロワーアカウントの認証情報を使用します
 
 ### クイックスタート {#usage}
-1. TestFlight から iOS アプリをインストールします。
+1. [App Store]({{ site.appstore_url }}) から FLwatch をインストールします。
+
+   {% include appstore_badge.html %}
 2. Apple Watch に watchOS アプリがインストールされていることを確認します。できれば iOS アプリを起動する前に済ませてください。
 3. 自分自身をフォロワーとして設定し、LibreLinkUp 接続が機能することを確認します。
 4. FLwatch の `Connect` タブで、LibreLinkUp フォロワーアカウントの認証情報を入力します。

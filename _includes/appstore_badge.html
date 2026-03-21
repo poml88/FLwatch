@@ -1,0 +1,24 @@
+{% assign badge_locale = "en-us" %}
+{% case page.lang %}
+  {% when "de" %}
+    {% assign badge_locale = "de-de" %}
+  {% when "es" %}
+    {% assign badge_locale = "es-es" %}
+  {% when "fr" %}
+    {% assign badge_locale = "fr-fr" %}
+  {% when "it" %}
+    {% assign badge_locale = "it-it" %}
+  {% when "ja" %}
+    {% assign badge_locale = "ja-jp" %}
+  {% when "nl" %}
+    {% assign badge_locale = "nl-nl" %}
+  {% when "pl" %}
+    {% assign badge_locale = "pl-pl" %}
+  {% when "ru" %}
+    {% assign badge_locale = "ru-ru" %}
+  {% when "zh-Hans" %}
+    {% assign badge_locale = "zh-cn" %}
+{% endcase %}
+<a href="{{ site.appstore_badge_url }}" style="display: inline-block;">
+  <img src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/{{ badge_locale }}?releaseDate=1727308800" alt="Download on the App Store" style="width: 245px; height: 82px; vertical-align: middle; object-fit: contain;" />
+</a>

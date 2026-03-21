@@ -18,7 +18,8 @@ github:
 
 # SEO & App
 appstore_id: "6670172928"  # Apple App Store ID
-appstore_url: "https://apps.apple.com/app/id6670172928"
+appstore_url: "https://apps.apple.com/us/app/flwatch-glucose-sensor-graph/id6670172928?itscg=30200&itsct=apps_box_link&mttnsubad=6670172928"
+appstore_badge_url: "https://apps.apple.com/us/app/flwatch-glucose-sensor-graph/id6670172928?itscg=30200&itsct=apps_box_badge&mttnsubad=6670172928"
 github_repo: "https://github.com/poml88/FLwatch"
 
 # Build settings

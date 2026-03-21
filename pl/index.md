@@ -17,11 +17,13 @@ To darmowe oprogramowanie open source. Powstało z osobistej potrzeby, ale powin
 - Oferuje widgety, komplikacje, Live Activities, odzwierciedlenie w Smart Stack na Apple Watch i eksport do Apple Health
 - Obsługuje ręczne rejestrowanie insuliny oraz wbudowany kalkulator węglowodanów do insuliny
 - Wymaga iOS 18 oraz watchOS 10.5
-- Dostępna przez TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
+- Do testów beta FLwatch jest dostępny także przez TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
 - Korzysta z danych logowania konta obserwatora LibreLinkUp, a nie z danych LibreView
 
 ### Szybki start {#usage}
-1. Zainstaluj aplikację iOS z TestFlight.
+1. Zainstaluj FLwatch z [App Store]({{ site.appstore_url }}).
+
+   {% include appstore_badge.html %}
 2. Upewnij się, że aplikacja watchOS jest zainstalowana na Apple Watch, najlepiej jeszcze przed uruchomieniem aplikacji iOS.
 3. Utwórz i sprawdź połączenie LibreLinkUp, w którym obserwujesz samego siebie.
 4. Wprowadź w FLwatch dane logowania konta obserwatora LibreLinkUp na karcie `Connect`.
