@@ -62,7 +62,7 @@ To use insulin calculation, tap the `IOB` label on the home screen.
 
 Currently supported insulin types:
 - Rapid-acting insulin, such as Novolog and Novorapid
-- Faster rapid-acting insulin, such as Fiasp and Lyumjev
+- Fast rapid-acting insulin, such as Fiasp and Lyumjev
 
 More insulin types can be added on request.
 
@@ -78,7 +78,7 @@ More insulin types can be added on request.
 * Phone screen always-on mode
 
 #### Insulin
-* Supports rapid-acting and faster rapid-acting bolus insulins
+* Supports rapid-acting and fast rapid-acting bolus insulins
 * Insulin on board calculation (IOB)
 * Insulin on board graph
 * Insulin activity graph
@@ -95,13 +95,13 @@ More insulin types can be added on request.
 FLwatch uses the exponential insulin model from LoopKit. The model uses three parameters: `actionDuration`, `peakActivityTime`, and `delay`.
 
 - For rapid-acting insulin, the parameters are 360, 75, and 10 minutes.
-- For faster rapid-acting insulin, the parameters are 360, 55, and 10 minutes.
+- For fast rapid-acting insulin, the parameters are 360, 55, and 10 minutes.
 
 ### ToDo
 - Implement workout activity
 
 ### Support and Feedback {#support}
-For support, please open an issue, start a discussion, or email **flwatch [ a t ] cmdline [ d o t ] net**.
+For support, please open a [GitHub issue](https://github.com/poml88/FLwatch/issues), start a [GitHub discussion](https://github.com/poml88/FLwatch/discussions), or email **flwatch [ a t ] cmdline [ d o t ] net**.
 
 Feedback is very welcome and can be sent through the same channels.
 
