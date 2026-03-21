@@ -1,0 +1,121 @@
+---
+layout: landing
+title: "FLwatch Preview - Glucose & Insulin Graphs for iPhone & Apple Watch"
+description: "Preview rewrite of the FLwatch landing page with the same information organized for easier reading."
+lang: en
+permalink: /en/preview/
+image: /assets/images/app-preview-optimized.png
+hero_title: "FLwatch - Glucose Sensor Graph"
+---
+
+***Warning: FLwatch is a highly experimental project. Use it with caution and extreme care. Do not make medical decisions based on this software. It comes with no warranty and is used at your own risk.***
+
+FLwatch is free and open source. It is being developed out of personal needs, but everyone should be able to benefit from it.
+
+### At a Glance
+- Shows glucose, insulin-on-board, and activity graphs on iPhone and Apple Watch
+- Includes widgets, complications, Live Activities, and Apple Health export
+- Requires iOS 18 and watchOS 10.5
+- Available on TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
+- Uses LibreLinkUp follower account credentials, not LibreView credentials
+
+### Quick Start {#usage}
+1. Install the iOS app from TestFlight.
+2. Make sure the watchOS app is installed on your Apple Watch, ideally before starting the iOS app.
+3. Create and verify a LibreLinkUp follower connection for yourself.
+4. Enter the LibreLinkUp follower credentials in FLwatch on the Connect tab.
+5. Wait up to a minute for data to appear.
+
+If the watchOS app is installed, settings and credentials entered in the iOS app are transferred to the watch app.
+
+- @TypeOneCallum made a very helpful [setup tutorial video](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB). Watching it can make setup much easier.
+
+### Set Up LibreLinkUp
+To make FLwatch work, you need to invite yourself to become your own follower.
+
+*LibreView credentials do not work.*
+
+1. In the LibreLink or Libre 3 app, go to Share / Connected Apps.
+2. Open Connect / Manage LibreLinkUp.
+3. Tap `Add Connection` and enter the email address you want to use for the follower account.
+4. Accept the invitation sent to that email address.
+5. Install the [LibreLinkUp app](https://apps.apple.com/us/app/librelinkup/id1234323923) on your phone and complete the setup for that invited follower account.
+6. Confirm that you can see your own blood glucose graph in LibreLinkUp.
+7. Open FLwatch and enter the follower account credentials there.
+
+The email address for the follower account can be the same as the one used for LibreView.
+
+There is also a [step-by-step guide from LibreLinkUp](https://www.librelinkup.com/articles/getting-started) that may be useful.
+
+Only one followed patient per follower account is currently supported by FLwatch.
+
+The LibreLinkUp app can then be closed or even uninstalled. You may still need it later to accept updated Terms of Use or Privacy Policies, or to check that the account and connection still work.
+
+### Connect FLwatch
+- Enter your LibreLinkUp follower credentials in FLwatch on the `Connect` tab.
+- If the watchOS app is installed, the credentials are transferred to the watch app.
+- If needed, you can transfer the credentials again by pressing the `Connect` button once more.
+- Data may take up to one minute to be fetched and displayed.
+
+### Insulin Features
+To use insulin calculation, tap the `IOB` label on the home screen.
+
+Currently supported insulin types:
+- Rapid-acting insulin, such as Novolog and Novorapid
+- Faster rapid-acting insulin, such as Fiasp and Lyumjev
+
+More insulin types can be added on request.
+
+### Watch and Siri Tips
+- To keep the glucose graph visible on the watch for one hour, open the watch settings or the iPhone `Watch` app, then go to `Settings > General > Return to Clock`, scroll down to FLwatch, and choose `After 1 hour`. This lets FLwatch stay in the foreground longer and receive a reasonable number of updates, for example about once per minute.
+- The easiest way to start the phone or watch app is to place a widget or complication on your Home Screen, Lock Screen, watch face, or similar location and tap it.
+- To open the app hands-free with Siri, create a shortcut on the phone that simply opens FLwatch. For example, you could name it `glucose graph` or `blood sugar`. Enable the option to show the shortcut on the watch. Then saying that phrase to Siri can open FLwatch directly. The same also works on the phone.
+
+### Features {#features}
+#### Monitoring
+* Blood glucose graph on phone and watch
+* Interactive chart on phone to display individual values on tap
+* Phone screen always-on mode
+
+#### Insulin
+* Supports rapid-acting and faster rapid-acting bolus insulins
+* Insulin on board calculation (IOB)
+* Insulin on board graph
+* Insulin activity graph
+
+#### System Integration
+* iOS widgets and lock screen widgets with and without graph(s)
+* Live Activities
+* StandBy mode widget
+* watchOS widgets and complications
+* CarPlay support via widgets and Live Activities
+* Export insulin doses and glucose data to Apple Health
+
+### Technical Notes
+FLwatch uses the exponential insulin model from LoopKit. The model uses three parameters: `actionDuration`, `peakActivityTime`, and `delay`.
+
+- For rapid-acting insulin, the parameters are 360, 75, and 10 minutes.
+- For faster rapid-acting insulin, the parameters are 360, 55, and 10 minutes.
+
+### ToDo
+- Implement workout activity
+
+### Support and Feedback {#support}
+For support, please open an issue, start a discussion, or email **flwatch [ a t ] cmdline [ d o t ] net**.
+
+Feedback is very welcome and can be sent through the same channels.
+
+### Donations
+Donations are always very welcome.
+
+- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40"> [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
+- <img src="/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40"> [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
+
+{% include screenshots.html %}
+
+### Credits
+Please have a look at these projects as well:
+
+[DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard](https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
+
+All product and company names, trademarks, service marks, registered trademarks, and registered service marks are the property of their respective holders. Their use is for information purposes and does not imply any affiliation with or endorsement by them. Please note: this app has no connection with and is not endorsed by Abbott Diabetes Care Inc.
