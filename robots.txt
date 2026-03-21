@@ -8,7 +8,7 @@ Allow: /
 Disallow: /impressum/
 Disallow: /privacy/
 Disallow: /terms/
-Disallow: /*/index/
+Disallow: /*/impressum/
 Disallow: /*/privacy/
 Disallow: /*/terms/
 
