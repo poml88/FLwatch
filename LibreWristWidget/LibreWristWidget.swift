@@ -26,13 +26,10 @@ struct LibreWristWidgetEntryView : View {
     }
     
     var glucose: String {
-        if entry.glucoseMeasurement.value <= 0 {
+        if entry.glucoseMeasurement.valueInMgPerDl <= 0 {
             return "--"
-        } else if entry.glucoseMeasurement.glucoseUnits == 1 {
-            return "\(Int(entry.glucoseMeasurement.value))"
-        } else {
-            return String(format: "%.1f", entry.glucoseMeasurement.value)
         }
+        return entry.glucoseMeasurement.valueInMgPerDl.asGlucose(glucoseUnitValue: entry.glucoseMeasurement.glucoseUnits)
     }
     
     var currentIOB: String {

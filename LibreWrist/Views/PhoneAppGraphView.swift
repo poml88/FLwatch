@@ -68,7 +68,6 @@ struct PhoneAppGraphView: View {
         let rectXStop: Date = date
         
         //Configuration
-        // 0 = mmoll  1 = mgdl  0.0555
         var chartYScaleMin: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 2.75 : 50 }
         
         
@@ -101,13 +100,13 @@ struct PhoneAppGraphView: View {
         let safeMaxIOB = max(currentIOBSingleton.maxIOB, 0.01)
         let safeMaxActivity = max(currentIOBSingleton.maxActivity, 0.01)
         let glucoseChartPoints: [ChartPoint] = graphData.compactMap { item in
-            let yValue = sensorSettingsStore.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value)
+            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)
             guard yValue.isFinite else { return nil }
             return ChartPoint(id: item.id, date: item.glucose.date, value: yValue)
         }
 
         let minuteGlucoseChartPoints: [ChartPoint] = minuteGlucose.compactMap { item in
-            let yValue = sensorSettingsStore.sensorSettings.uom == 0 ? item.glucose.value.toMmolL() : Double(item.glucose.value)
+            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)
             guard yValue.isFinite else { return nil }
             return ChartPoint(id: item.id, date: item.glucose.date, value: yValue)
         }
@@ -230,7 +229,7 @@ struct PhoneAppGraphView: View {
                             VStack(alignment: .leading, spacing: 6){
                                 Text("\(selectedlibreLinkHistoryPoint.glucose.date.toLocalTime())")
                                 
-                                Text("\(selectedlibreLinkHistoryPoint.glucose.value.units) \(unitString)")
+                                Text("\(selectedlibreLinkHistoryPoint.glucose.value.asGlucose(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)) \(unitString)")
                                     .font(.title3.bold())
                             }
                             .padding(.horizontal,10)

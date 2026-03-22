@@ -29,11 +29,8 @@ struct FLwatchGraphWidgetEntryView : View {
     var glucose: String {
         if entry.lastGlucoseMeasurement.glucose.value <= 0 {
             return "--"
-        } else if entry.uom == 1 {
-            return "\(Int(entry.lastGlucoseMeasurement.glucose.value))"
-        } else {
-            return String(format: "%.1f", Double(entry.lastGlucoseMeasurement.glucose.value) * 0.0555)
         }
+        return entry.lastGlucoseMeasurement.glucose.value.asGlucose(glucoseUnitValue: entry.uom)
     }
     
     var currentIOB: String {
@@ -212,7 +209,6 @@ struct FLwatchGraphWidgetEntryView : View {
 //        let rectXStop: Date = date
         
         //Configuration
-        // 0 = mmoll  1 = mgdl  0.0555
         var chartYScaleMin: Double { entry.uom == 0 ? 2.75 : 50 }
         let maxBG = entry.maxBG
         
@@ -241,7 +237,7 @@ struct FLwatchGraphWidgetEntryView : View {
                     //                        )
                     //                        .foregroundStyle(item.color.color)
                     //                        .symbolSize(12)
-                    var itemValue: Double { entry.uom == 0 ? Double(item.glucose.value) * 0.0555 : Double(item.glucose.value) }
+                    let itemValue = item.glucose.value.displayedGlucoseValue(glucoseUnitValue: entry.uom)
                     LineMark(x: .value("Time", item.glucose.date),
                              y: .value("Glucose", itemValue),
                              series: .value("Curve", "Glucose")
@@ -324,4 +320,3 @@ struct FLwatchGraphWidget: Widget {
     //    SimpleEntry(date: .now, emoji: "🤩")
     GraphGlucoseMeasurementIOBEntry.sampleEntry
 }
-

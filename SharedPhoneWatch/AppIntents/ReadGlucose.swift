@@ -43,11 +43,8 @@ struct ReadGlucose: AppIntent {
         var glucose: String {
             if glucoseValue <= 0 {
                 return "not available"
-            } else if uom == 1 {
-                return "\(glucoseValue)"
-            } else {
-                return String(format: "%.1f", glucoseValue.toMmolL())
             }
+            return glucoseValue.asGlucose(glucoseUnitValue: uom)
         }
         let trend = latest.trendArrow?.descriptionSiri ?? "not determined"
         if glucose == "not available" {

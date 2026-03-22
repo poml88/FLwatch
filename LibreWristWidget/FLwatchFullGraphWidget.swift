@@ -28,11 +28,8 @@ struct FLwatchFullGraphWidgetEntryView: View {
     var glucose: String {
         if entry.lastGlucoseMeasurement.glucose.value <= 0 {
             return "--"
-        } else if entry.uom == 1 {
-            return "\(Int(entry.lastGlucoseMeasurement.glucose.value))"
-        } else {
-            return String(format: "%.1f", Double(entry.lastGlucoseMeasurement.glucose.value) * 0.0555)
         }
+        return entry.lastGlucoseMeasurement.glucose.value.asGlucose(glucoseUnitValue: entry.uom)
     }
     
     var currentIOB: String {
@@ -405,10 +402,7 @@ private struct FullGraphWidgetChart: View {
     }
     
     private func scaledValue(_ valueInMgPerDl: Int) -> Double {
-        if entry.uom == 0 {
-            return Double(valueInMgPerDl).toMmolL()
-        }
-        return Double(valueInMgPerDl)
+        valueInMgPerDl.displayedGlucoseValue(glucoseUnitValue: entry.uom)
     }
     
     private func scaledIOBValue(_ value: Double) -> Double {

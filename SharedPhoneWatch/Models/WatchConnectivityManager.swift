@@ -102,9 +102,19 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             UserDefaults.group.username = message["username"] as? String ?? ""
             let password = message["password"] as? String ?? ""
             try? PasswordKeychain.save(password)
+            if let patientId = message["patientId"] as? String, !patientId.isEmpty {
+                SharedData.libreLinkUpPatientId = patientId
+            }
             SharedData.libreLinkUpToken = ""
             UserDefaults.group.connected = .newlyConnected
             UserDefaults.group.connected = .connected
+        }
+
+        if message["content"] as? String == "updateLibreLinkUpPatient" {
+            let patientId = message["patientId"] as? String ?? ""
+            if !patientId.isEmpty {
+                SharedData.libreLinkUpPatientId = patientId
+            }
         }
         
         if message["content"] as? String == "insulinDelivery" {

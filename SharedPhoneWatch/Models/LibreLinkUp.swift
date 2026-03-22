@@ -19,6 +19,19 @@ struct LibreLinkUpLastGlucoseEntry {
     var currentIOB: Double
 }
 
+struct LibreLinkUpPatient: Codable, Identifiable, Hashable {
+    let patientId: String
+    let firstName: String
+    let lastName: String
+
+    var id: String { patientId }
+
+    var displayName: String {
+        let fullName = "\(firstName) \(lastName)".trimmingCharacters(in: .whitespacesAndNewlines)
+        return fullName.isEmpty ? patientId : fullName
+    }
+}
+
 class LibreLinkUp  {
     //    class LibreLinkUp: Logging {
     
@@ -72,6 +85,53 @@ class LibreLinkUp  {
 
         let nsError = error as NSError
         return nsError.domain == NSURLErrorDomain
+    }
+
+    static let libreLinkUpUTCTimestampFormatter: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return dateFormatter
+    }()
+
+    static let libreLinkUpLocalTimestampFormatter: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
+        dateFormatter.timeZone = TimeZone.current
+        return dateFormatter
+    }()
+
+    static let libreLinkUpISO8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    static let libreLinkUpISO8601FormatterWithoutFractionalSeconds: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    static func parseMeasurementDate(factoryTimestamp: String?, timestamp: String) -> Date? {
+        if let factoryTimestamp, !factoryTimestamp.isEmpty {
+            if let date = libreLinkUpUTCTimestampFormatter.date(from: factoryTimestamp) {
+                return date
+            }
+        }
+
+        if timestamp.contains("T") {
+            if let date = libreLinkUpISO8601Formatter.date(from: timestamp) {
+                return date
+            }
+            if let date = libreLinkUpISO8601FormatterWithoutFractionalSeconds.date(from: timestamp) {
+                return date
+            }
+        }
+
+        return libreLinkUpLocalTimestampFormatter.date(from: timestamp)
     }
     
     
@@ -446,15 +506,30 @@ class LibreLinkUp  {
                                 Logger.libreLinkUp.debug("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
                                 if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                                    let data = json["data"] as? [[String: Any]] {
-                                    if data.count > 0 {
-                                        let connection = data[0]
-                                        let patientId = connection["patientId"] as! String
-                                        Logger.libreLinkUp.debug("LibreLinkUp: first patient Id: \(patientId)")
-                                        await MainActor.run {
-                                            SharedData.libreLinkUpPatientId = patientId
+                                    let patients = data.compactMap { connection -> LibreLinkUpPatient? in
+                                        guard let patientId = connection["patientId"] as? String else {
+                                            return nil
                                         }
+                                        let firstName = connection["firstName"] as? String ?? ""
+                                        let lastName = connection["lastName"] as? String ?? ""
+                                        return LibreLinkUpPatient(
+                                            patientId: patientId,
+                                            firstName: firstName,
+                                            lastName: lastName
+                                        )
+                                    }
+                                    SharedData.libreLinkUpPatients = patients
+                                    if let firstPatient = patients.first {
+                                        Logger.libreLinkUp.debug("LibreLinkUp: default patient: \(firstPatient.displayName), id: \(firstPatient.patientId)")
+                                        await MainActor.run {
+                                            SharedData.libreLinkUpPatientId = firstPatient.patientId
+                                        }
+                                    } else {
+                                        SharedData.libreLinkUpPatients = []
                                     }
                                 }
+                            } else {
+                                SharedData.libreLinkUpPatients = []
                             }
                         }
                     }
@@ -523,10 +598,6 @@ class LibreLinkUp  {
         var logbookAlarms: [LibreLinkUpAlarm] = []
         var sensorSettingsRead: SensorSettings = SensorSettings(uom: 1, targetLow: 70, targetHigh: 180, alarmLow: 80, alarmHigh: 300)
         var sensorType: SensorType = .unknown
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
         
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -713,7 +784,7 @@ class LibreLinkUp  {
                            let measurementData = try? JSONSerialization.data(withJSONObject: lastGlucoseMeasurement),
                            let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData)
                         {
-                            let date = dateFormatter.date(from: measurement.timestamp)!
+                            let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp)!
                             let lifeCount = Int(round(date.timeIntervalSince(activationDate) / 60))
                             let lastGlucose = LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow)
                             
@@ -734,7 +805,7 @@ class LibreLinkUp  {
                                     if let measurementData = try? JSONSerialization.data(withJSONObject: glucoseMeasurement),
                                        let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
                                         i += 1
-                                        let date = dateFormatter.date(from: measurement.timestamp)!
+                                        let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp)!
                                         var lifeCount = Int(date.timeIntervalSince(activationDate)) / 60
                                         // FIXME: lifeCount not always multiple of 5
                                         if lifeCount % 5 == 1 { lifeCount -= 1 }
@@ -818,7 +889,7 @@ class LibreLinkUp  {
                                             if let measurementData = try? JSONSerialization.data(withJSONObject: entry),
                                                let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
                                                 i += 1
-                                                let date = dateFormatter.date(from: measurement.timestamp)!
+                                                let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp)!
                                                 logbookHistory.append(LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: i, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow))
                                                 let measurementString = "\(measurement)"
                                                 Logger.libreLinkUp.debug("LibreLinkUp: logbook measurement # \(i - history.count) of \(data.count): \(measurementString) (JSON: \(entry))")
@@ -827,7 +898,7 @@ class LibreLinkUp  {
                                         } else if type == 2 {  // alarm
                                             if let alarmData = try? JSONSerialization.data(withJSONObject: entry),
                                                var alarm = try? JSONDecoder().decode(LibreLinkUpAlarm.self, from: alarmData) {
-                                                alarm.date = dateFormatter.date(from: alarm.timestamp)!
+                                                alarm.date = Self.parseMeasurementDate(factoryTimestamp: alarm.factoryTimestamp, timestamp: alarm.timestamp)!
                                                 logbookAlarms.append(alarm)
                                                 Logger.libreLinkUp.debug("LibreLinkUp: logbook alarm: \(alarm) (JSON: \(entry))")
                                             }
@@ -878,9 +949,6 @@ class LibreLinkUp  {
     }
     
     func getLastGlucoseDataZZZ() async throws {
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
         Logger.libreLinkUp.info("LibreLinkUp: getting last glucose data")
         var request = URLRequest(url: URL(string: "\(regionalSiteURL)/\(connectionsEndpoint)")!)
         var authenticatedHeaders = headers
@@ -899,7 +967,7 @@ class LibreLinkUp  {
                 if let lastGlucoseMeasurement = connection["glucoseMeasurement"] as? [String: Any],
                    let measurementData = try? JSONSerialization.data(withJSONObject: lastGlucoseMeasurement),
                    let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
-                    let date = dateFormatter.date(from: measurement.timestamp)!
+                    let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp)!
                     let lifeCount = 0 // Int(round(date.timeIntervalSince(activationDate) / 60))
                     let lastGlucose = LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow)
                     
@@ -916,9 +984,6 @@ class LibreLinkUp  {
     func getLastGlucoseDataXXX(completion: @escaping (LibreLinkUpLastGlucoseEntry?, Any?) -> ()) {
         if !(SharedData.libreLinkUpUserId.isEmpty ||
              SharedData.libreLinkUpToken.isEmpty) {
-            let dateFormatter = DateFormatter()
-            dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-            dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
             var request = URLRequest(url: URL(string: "\(regionalSiteURL)/llu/connections")!)
             request.timeoutInterval = 15
             request.httpMethod = "GET"
@@ -941,7 +1006,7 @@ class LibreLinkUp  {
                                 if let lastGlucoseMeasurement = connection["glucoseMeasurement"] as? [String: Any],
                                    let measurementData = try? JSONSerialization.data(withJSONObject: lastGlucoseMeasurement),
                                    let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
-                                    let date = dateFormatter.date(from: measurement.timestamp)!
+                                    let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp)!
                                     let currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
                                     let glucoseMeasurementEntry = LibreLinkUpLastGlucoseEntry(date: date, glucoseMeasurement: measurement, currentIOB: currentIOB)
                                     let lifeCount = 0 // Int(round(date.timeIntervalSince(activationDate) / 60))
@@ -968,9 +1033,6 @@ class LibreLinkUp  {
     func getLastGlucoseData() async throws -> LibreLinkUpLastGlucoseEntry { // for AppIntent
         if !(SharedData.libreLinkUpUserId.isEmpty ||
              SharedData.libreLinkUpToken.isEmpty) {
-            let dateFormatter = DateFormatter()
-            dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-            dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
             var request = URLRequest(url: URL(string: "\(regionalSiteURL)/llu/connections")!)
             request.timeoutInterval = 15
             request.httpMethod = "GET"
@@ -993,7 +1055,7 @@ class LibreLinkUp  {
                                 if let lastGlucoseMeasurement = connection["glucoseMeasurement"] as? [String: Any],
                                    let measurementData = try? JSONSerialization.data(withJSONObject: lastGlucoseMeasurement),
                                    let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
-                                    let date = dateFormatter.date(from: measurement.timestamp)!
+                                    let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp)!
                                     let currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
                                     let glucoseMeasurementEntry = LibreLinkUpLastGlucoseEntry(date: date, glucoseMeasurement: measurement, currentIOB: currentIOB)
                                     return glucoseMeasurementEntry

@@ -20,6 +20,7 @@ struct PhoneAppConnectView: View {
     @State private var connected = UserDefaults.group.connected
     @State private var libreLinkUpResponse: String = "[...]"
     @State private var isShowingConnectionFailed = false
+    @State private var libreLinkUpPatients: [LibreLinkUpPatient] = SharedData.libreLinkUpPatients
     private var watchConnector = WatchConnectivityManager.shared
     
     let libreLinkUp = LibreLinkUp()
@@ -53,6 +54,13 @@ struct PhoneAppConnectView: View {
         case .locked: return .black
         }
     }
+
+    private var selectedPatientName: String {
+        if let selectedPatient = libreLinkUpPatients.first(where: { $0.patientId == SharedData.libreLinkUpPatientId }) {
+            return selectedPatient.displayName
+        }
+        return libreLinkUpPatients.first?.displayName ?? "No patient selected"
+    }
     
     
     var body: some View {
@@ -77,6 +85,8 @@ struct PhoneAppConnectView: View {
                         .onChange(of: username) {
                             UserDefaults.group.connected = .disconnected
                             SharedData.libreLinkUpToken = ""
+                            SharedData.libreLinkUpPatients = []
+                            libreLinkUpPatients = []
                         }
                     SecureField(text: $password, prompt: Text("Password")) {
                         Text("Password")
@@ -84,6 +94,8 @@ struct PhoneAppConnectView: View {
                     .onChange(of: password) { 
                         UserDefaults.group.connected = .disconnected
                         SharedData.libreLinkUpToken = ""
+                        SharedData.libreLinkUpPatients = []
+                        libreLinkUpPatients = []
                     }
                 }
                 Section {
@@ -93,6 +105,29 @@ struct PhoneAppConnectView: View {
                     
                 }
                 .disabled(username.isBlank || password.isBlank)
+
+                if !libreLinkUpPatients.isEmpty {
+                    Section("Patient") {
+                        Menu {
+                            ForEach(libreLinkUpPatients) { patient in
+                                Button(patient.displayName) {
+                                    selectPatient(patient)
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Text("Selected patient")
+                                Spacer()
+                                Text(selectedPatientName)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.trailing)
+                                Image(systemName: "chevron.up.chevron.down")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
                 
 //                Section {
 //                    Link(destination: URL(string: "https://github.com/poml88/FLwatch?tab=readme-ov-file#usage")!) {
@@ -147,18 +182,33 @@ struct PhoneAppConnectView: View {
         .onReceive(timer) { time in
             // TODO: synchronize by common method
             connected = UserDefaults.group.connected
+            libreLinkUpPatients = SharedData.libreLinkUpPatients
             //    UserDefaults.group.connected.connected = .disconnected
         }
         .task {
             if let existing = try? PasswordKeychain.read(){
                 password = existing
             }
+            libreLinkUpPatients = SharedData.libreLinkUpPatients
         }
     }
         
+    private func selectPatient(_ patient: LibreLinkUpPatient) {
+        SharedData.libreLinkUpPatientId = patient.patientId
+        libreLinkUpPatients = SharedData.libreLinkUpPatients
+        WidgetCenter.shared.reloadAllTimelines()
+        let messageToWatch: [String: Any] = [
+            "content": "updateLibreLinkUpPatient",
+            "patientId": patient.patientId
+        ]
+        watchConnector.sendMessageToPairedDevice(messageToWatch)
+    }
+    
     
     private func tryToConnect() {
         SharedData.libreLinkUpToken = ""
+        SharedData.libreLinkUpPatients = []
+        libreLinkUpPatients = []
         UserDefaults.group.username = username
         try? PasswordKeychain.save(password)
         UserDefaults.group.connected = .connecting
@@ -169,7 +219,8 @@ struct PhoneAppConnectView: View {
                 UserDefaults.group.connected = .newlyConnected
                 let messageToWatch: [String: Any] = ["content": "credentials",
                                                      "username": username,
-                                                     "password": password]
+                                                     "password": password,
+                                                     "patientId": SharedData.libreLinkUpPatientId]
                 sendMessagetoOther(message: messageToWatch)
                 WidgetCenter.shared.reloadAllTimelines()
                 print("WidgetCenter.shared.reloadAllTimelines()")

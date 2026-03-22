@@ -535,10 +535,7 @@ private struct GlucoseLiveActivityChart: View {
     }
 
     private func scaledValue(_ valueInMgPerDl: Int) -> Double {
-        if contentState.glucoseUnit == 0 {
-            return Double(valueInMgPerDl).toMmolL()
-        }
-        return Double(valueInMgPerDl)
+        valueInMgPerDl.displayedGlucoseValue(glucoseUnitValue: contentState.glucoseUnit)
     }
 
     private func scaledIOBValue(_ value: Double) -> Double {
@@ -619,10 +616,7 @@ private extension FLWatchAttributes.InsulinMarker {
 
 private extension Int {
     func units(for glucoseUnit: Int) -> String {
-        if glucoseUnit == 0 {
-            return String(format: "%.1f", Double(self) / 18.0182)
-        }
-        return String(self)
+        asGlucose(glucoseUnitValue: glucoseUnit)
     }
 }
 

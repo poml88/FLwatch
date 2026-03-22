@@ -34,7 +34,7 @@ struct GlucoseFormatters {
     static var mmolLFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = 0
+        formatter.minimumFractionDigits = 1
         formatter.maximumFractionDigits = 1
 
         return formatter

@@ -56,4 +56,26 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
+    func testLibreLinkUpParsesFactoryTimestampAsUTC() throws {
+        let parsedDate = try XCTUnwrap(
+            LibreLinkUp.parseMeasurementDate(
+                factoryTimestamp: "3/22/2026 8:05:43 PM",
+                timestamp: "3/22/2026 9:05:43 PM"
+            )
+        )
+
+        XCTAssertEqual(Int(parsedDate.timeIntervalSince1970), 1_774_209_943)
+    }
+
+    func testLibreLinkUpFallsBackToOffsetTimestamp() throws {
+        let parsedDate = try XCTUnwrap(
+            LibreLinkUp.parseMeasurementDate(
+                factoryTimestamp: nil,
+                timestamp: "2026-03-22T21:05:43+01:00"
+            )
+        )
+
+        XCTAssertEqual(Int(parsedDate.timeIntervalSince1970), 1_774_209_943)
+    }
+
 }
