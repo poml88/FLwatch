@@ -87,51 +87,45 @@ class LibreLinkUp  {
         return nsError.domain == NSURLErrorDomain
     }
 
-    static let libreLinkUpUTCTimestampFormatter: DateFormatter = {
+    private static func makeUTCTimestampFormatter() -> DateFormatter {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         return dateFormatter
-    }()
+    }
 
-    static let libreLinkUpLocalTimestampFormatter: DateFormatter = {
+    private static func makeLocalTimestampFormatter() -> DateFormatter {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "M/d/yyyy h:mm:ss a"
         dateFormatter.timeZone = TimeZone.current
         return dateFormatter
-    }()
+    }
 
-    static let libreLinkUpISO8601Formatter: ISO8601DateFormatter = {
+    private static func makeISO8601Formatter(withFractionalSeconds: Bool) -> ISO8601DateFormatter {
         let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        formatter.formatOptions = withFractionalSeconds ? [.withInternetDateTime, .withFractionalSeconds] : [.withInternetDateTime]
         return formatter
-    }()
-
-    static let libreLinkUpISO8601FormatterWithoutFractionalSeconds: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
-        return formatter
-    }()
+    }
 
     static func parseMeasurementDate(factoryTimestamp: String?, timestamp: String) -> Date? {
         if let factoryTimestamp, !factoryTimestamp.isEmpty {
-            if let date = libreLinkUpUTCTimestampFormatter.date(from: factoryTimestamp) {
+            if let date = makeUTCTimestampFormatter().date(from: factoryTimestamp) {
                 return date
             }
         }
 
         if timestamp.contains("T") {
-            if let date = libreLinkUpISO8601Formatter.date(from: timestamp) {
+            if let date = makeISO8601Formatter(withFractionalSeconds: true).date(from: timestamp) {
                 return date
             }
-            if let date = libreLinkUpISO8601FormatterWithoutFractionalSeconds.date(from: timestamp) {
+            if let date = makeISO8601Formatter(withFractionalSeconds: false).date(from: timestamp) {
                 return date
             }
         }
 
-        return libreLinkUpLocalTimestampFormatter.date(from: timestamp)
+        return makeLocalTimestampFormatter().date(from: timestamp)
     }
     
     
@@ -784,7 +778,10 @@ class LibreLinkUp  {
                            let measurementData = try? JSONSerialization.data(withJSONObject: lastGlucoseMeasurement),
                            let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData)
                         {
-                            let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp)!
+                            guard let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp) else {
+                                Logger.libreLinkUp.error("LibreLinkUp: could not parse latest glucose timestamp. FactoryTimestamp: \(measurement.factoryTimestamp, privacy: .public), Timestamp: \(measurement.timestamp, privacy: .public)")
+                                throw LibreLinkUpError.jsonDecoding
+                            }
                             let lifeCount = Int(round(date.timeIntervalSince(activationDate) / 60))
                             let lastGlucose = LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow)
                             
@@ -805,7 +802,10 @@ class LibreLinkUp  {
                                     if let measurementData = try? JSONSerialization.data(withJSONObject: glucoseMeasurement),
                                        let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
                                         i += 1
-                                        let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp)!
+                                        guard let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp) else {
+                                            Logger.libreLinkUp.error("LibreLinkUp: skipping graph value with unparsable timestamp. FactoryTimestamp: \(measurement.factoryTimestamp, privacy: .public), Timestamp: \(measurement.timestamp, privacy: .public)")
+                                            continue
+                                        }
                                         var lifeCount = Int(date.timeIntervalSince(activationDate)) / 60
                                         // FIXME: lifeCount not always multiple of 5
                                         if lifeCount % 5 == 1 { lifeCount -= 1 }
@@ -889,7 +889,10 @@ class LibreLinkUp  {
                                             if let measurementData = try? JSONSerialization.data(withJSONObject: entry),
                                                let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
                                                 i += 1
-                                                let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp)!
+                                                guard let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp) else {
+                                                    Logger.libreLinkUp.error("LibreLinkUp: skipping logbook value with unparsable timestamp. FactoryTimestamp: \(measurement.factoryTimestamp, privacy: .public), Timestamp: \(measurement.timestamp, privacy: .public)")
+                                                    continue
+                                                }
                                                 logbookHistory.append(LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: i, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow))
                                                 let measurementString = "\(measurement)"
                                                 Logger.libreLinkUp.debug("LibreLinkUp: logbook measurement # \(i - history.count) of \(data.count): \(measurementString) (JSON: \(entry))")
@@ -898,7 +901,11 @@ class LibreLinkUp  {
                                         } else if type == 2 {  // alarm
                                             if let alarmData = try? JSONSerialization.data(withJSONObject: entry),
                                                var alarm = try? JSONDecoder().decode(LibreLinkUpAlarm.self, from: alarmData) {
-                                                alarm.date = Self.parseMeasurementDate(factoryTimestamp: alarm.factoryTimestamp, timestamp: alarm.timestamp)!
+                                                guard let date = Self.parseMeasurementDate(factoryTimestamp: alarm.factoryTimestamp, timestamp: alarm.timestamp) else {
+                                                    Logger.libreLinkUp.error("LibreLinkUp: skipping alarm with unparsable timestamp. FactoryTimestamp: \(alarm.factoryTimestamp, privacy: .public), Timestamp: \(alarm.timestamp, privacy: .public)")
+                                                    continue
+                                                }
+                                                alarm.date = date
                                                 logbookAlarms.append(alarm)
                                                 Logger.libreLinkUp.debug("LibreLinkUp: logbook alarm: \(alarm) (JSON: \(entry))")
                                             }
@@ -966,8 +973,8 @@ class LibreLinkUp  {
                 let connection = data[0]
                 if let lastGlucoseMeasurement = connection["glucoseMeasurement"] as? [String: Any],
                    let measurementData = try? JSONSerialization.data(withJSONObject: lastGlucoseMeasurement),
-                   let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
-                    let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp)!
+                   let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData),
+                   let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp) {
                     let lifeCount = 0 // Int(round(date.timeIntervalSince(activationDate) / 60))
                     let lastGlucose = LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow)
                     
@@ -1005,8 +1012,8 @@ class LibreLinkUp  {
                                 let connection = data[0]
                                 if let lastGlucoseMeasurement = connection["glucoseMeasurement"] as? [String: Any],
                                    let measurementData = try? JSONSerialization.data(withJSONObject: lastGlucoseMeasurement),
-                                   let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
-                                    let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp)!
+                                   let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData),
+                                   let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp) {
                                     let currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
                                     let glucoseMeasurementEntry = LibreLinkUpLastGlucoseEntry(date: date, glucoseMeasurement: measurement, currentIOB: currentIOB)
                                     let lifeCount = 0 // Int(round(date.timeIntervalSince(activationDate) / 60))
@@ -1054,8 +1061,8 @@ class LibreLinkUp  {
                                 let connection = data[0]
                                 if let lastGlucoseMeasurement = connection["glucoseMeasurement"] as? [String: Any],
                                    let measurementData = try? JSONSerialization.data(withJSONObject: lastGlucoseMeasurement),
-                                   let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData) {
-                                    let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp)!
+                                   let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData),
+                                   let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp) {
                                     let currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
                                     let glucoseMeasurementEntry = LibreLinkUpLastGlucoseEntry(date: date, glucoseMeasurement: measurement, currentIOB: currentIOB)
                                     return glucoseMeasurementEntry
