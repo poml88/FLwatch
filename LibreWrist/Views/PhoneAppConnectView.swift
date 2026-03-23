@@ -85,6 +85,7 @@ struct PhoneAppConnectView: View {
                         .onChange(of: username) {
                             UserDefaults.group.connected = .disconnected
                             SharedData.libreLinkUpToken = ""
+                            SharedData.libreLinkUpPatientId = ""
                             SharedData.libreLinkUpPatients = []
                             libreLinkUpPatients = []
                         }
@@ -94,6 +95,7 @@ struct PhoneAppConnectView: View {
                     .onChange(of: password) { 
                         UserDefaults.group.connected = .disconnected
                         SharedData.libreLinkUpToken = ""
+                        SharedData.libreLinkUpPatientId = ""
                         SharedData.libreLinkUpPatients = []
                         libreLinkUpPatients = []
                     }
@@ -195,6 +197,7 @@ struct PhoneAppConnectView: View {
         
     private func selectPatient(_ patient: LibreLinkUpPatient) {
         SharedData.libreLinkUpPatientId = patient.patientId
+        SharedData.libreLinkUpLastUsedPatientId = patient.patientId
         libreLinkUpPatients = SharedData.libreLinkUpPatients
         WidgetCenter.shared.reloadAllTimelines()
         let messageToWatch: [String: Any] = [
@@ -207,6 +210,7 @@ struct PhoneAppConnectView: View {
     
     private func tryToConnect() {
         SharedData.libreLinkUpToken = ""
+        SharedData.libreLinkUpPatientId = ""
         SharedData.libreLinkUpPatients = []
         libreLinkUpPatients = []
         UserDefaults.group.username = username
@@ -228,6 +232,7 @@ struct PhoneAppConnectView: View {
                 print("catch tryToConnect")
                 isShowingConnectionFailed = true
                 libreLinkUpResponse = error.localizedDescription
+                SharedData.libreLinkUpPatientId = ""
                 UserDefaults.group.connected = .disconnected
             }
         }

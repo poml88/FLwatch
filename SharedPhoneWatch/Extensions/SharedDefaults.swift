@@ -56,6 +56,7 @@ enum DefaultsKey: String {
     case libreLinkUpPassword = "libreLinkUpPassword"
     case libreLinkUpUserId = "libreLinkUpUserId"
     case libreLinkUpPatientId = "libreLinkUpPatientId"
+    case libreLinkUpLastUsedPatientId = "libreLinkUpLastUsedPatientId"
     case libreLinkUpPatients = "libreLinkUpPatients"
     case libreLinkUpCountry = "libreLinkUpCountry"
     case libreLinkUpRegion = "libreLinkUpRegion"
@@ -294,6 +295,11 @@ enum SharedData {
     static var libreLinkUpPatientId: String {
         get { store.getString(.libreLinkUpPatientId, defaultValue: "") }
         set { store.setString(newValue, forKey: .libreLinkUpPatientId) }
+    }
+
+    static var libreLinkUpLastUsedPatientId: String {
+        get { store.getString(.libreLinkUpLastUsedPatientId, defaultValue: "") }
+        set { store.setString(newValue, forKey: .libreLinkUpLastUsedPatientId) }
     }
 
     static var libreLinkUpPatients: [LibreLinkUpPatient] {

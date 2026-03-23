@@ -513,10 +513,13 @@ class LibreLinkUp  {
                                         )
                                     }
                                     SharedData.libreLinkUpPatients = patients
-                                    if let firstPatient = patients.first {
-                                        Logger.libreLinkUp.debug("LibreLinkUp: default patient: \(firstPatient.displayName), id: \(firstPatient.patientId)")
+                                    if let selectedPatient =
+                                        patients.first(where: { $0.patientId == SharedData.libreLinkUpLastUsedPatientId }) ??
+                                        patients.first {
+                                        Logger.libreLinkUp.debug("LibreLinkUp: selected patient after login: \(selectedPatient.displayName), id: \(selectedPatient.patientId)")
                                         await MainActor.run {
-                                            SharedData.libreLinkUpPatientId = firstPatient.patientId
+                                            SharedData.libreLinkUpPatientId = selectedPatient.patientId
+                                            SharedData.libreLinkUpLastUsedPatientId = selectedPatient.patientId
                                         }
                                     } else {
                                         SharedData.libreLinkUpPatients = []
