@@ -18,7 +18,7 @@ struct RefreshLiveActivityIntent: LiveActivityIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult {
-        _ = await LibreLinkUpService.shared.requestReloadIfNeeded(force: true)
+        _ = await LibreLinkUpService.shared.requestReloadIfNeeded()
         await LiveActivityManager.shared.refreshFromCurrentHistory(
             useLiveActivities: SharedData.useLiveActivities,
             reloadFailed: LibreLinkUpService.shared.didLastReloadFail

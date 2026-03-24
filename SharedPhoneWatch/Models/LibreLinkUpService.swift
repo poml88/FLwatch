@@ -40,8 +40,8 @@ final class LibreLinkUpService: ObservableObject {
         }
     }
 
-    func hasRecentOnlineCall(maxAgeMinutes: Int = 1, now: Date = Date()) -> Bool {
-        now.timeIntervalSince(LibreLinkUpHistory.shared.lastOnlineDate) < Double(maxAgeMinutes * 60)
+    func hasRecentReloadAttempt(maxAgeMinutes: Int = 1, now: Date = Date()) -> Bool {
+        now.timeIntervalSince(LibreLinkUpHistory.shared.lastReloadAttemptDate) < Double(maxAgeMinutes * 60)
     }
 
     func hasFreshReading(maxAgeMinutes: Int = 1, now: Date = Date()) -> Bool {
@@ -69,21 +69,23 @@ final class LibreLinkUpService: ObservableObject {
             op: { [weak self] in
             guard let self else { return false }
             
-            let secondsSinceLastOnline = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastOnlineDate)
-            Logger.libreLinkUpService.info("requestReloadIfNeeded refreshed persisted snapshot before checks (secondsSinceLastOnline: \(String(format: "%.1f", secondsSinceLastOnline)))")
+            let secondsSinceLastAttempt = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReloadAttemptDate)
+            let secondsSinceLastSuccessfulAPICall = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastSuccessfulLibreLinkUpAPICall)
+            Logger.libreLinkUpService.info("requestReloadIfNeeded refreshed persisted snapshot before checks (secondsSinceLastAttempt: \(String(format: "%.1f", secondsSinceLastAttempt)), secondsSinceLastSuccessfulAPICall: \(String(format: "%.1f", secondsSinceLastSuccessfulAPICall)))")
 
             guard self.canReload() else {
                 Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: not connected (state: \(UserDefaults.group.connected.rawValue))")
                 return false
             }
-            guard force || !self.hasFreshReading(maxAgeMinutes: maxAgeMinutes) else {
-                let age = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate)
-                Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: current reading age \(String(format: "%.1f", age))s is within freshness window (throttle: \(maxAgeMinutes * 60)s)")
+            guard force || !self.hasRecentReloadAttempt(maxAgeMinutes: maxAgeMinutes) else {
+                let age = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReloadAttemptDate)
+                Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: last API attempt was \(String(format: "%.1f", age))s ago (throttle: \(maxAgeMinutes * 60)s)")
                 return false
             }
             self.isReloading = true
             defer { self.isReloading = false }
 
+            LibreLinkUpHistory.shared.updateLastReloadAttemptDate()
             Logger.libreLinkUpService.info("requestReloadIfNeeded starting network reload")
             await self.libreLinkUp.reloadLibreLinkUp()
             self.libreLinkUpResponse = self.libreLinkUp.libreLinkUpResponse
@@ -91,7 +93,7 @@ final class LibreLinkUpService: ObservableObject {
             if self.didLastReloadFail {
                 Logger.libreLinkUpService.error("requestReloadIfNeeded completed with failure")
             } else {
-                LibreLinkUpHistory.shared.updateLastOnlineDate()
+                LibreLinkUpHistory.shared.updateLastSuccessfulLibreLinkUpAPICall()
                 Logger.libreLinkUpService.info("requestReloadIfNeeded completed successfully")
             }
 #if os(iOS)
