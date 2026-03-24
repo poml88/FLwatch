@@ -145,7 +145,7 @@ extension UserDefaults {
 
 // MARK: - High-level properties (kept from your original UserDefaults extension)
 enum Connection: Int {
-    case disconnected = 0, connected = 1, connecting = 2, newlyConnected = 3, failed = -1, locked = -2
+    case disconnected = 0, connected = 1, connecting = 2, failed = -1, locked = -2
 }
 
 extension UserDefaults {
@@ -168,6 +168,9 @@ extension UserDefaults {
     var connected: Connection {
         get {
             let raw = Self.group.getInt(.keyConnection, defaultValue: Connection.disconnected.rawValue)
+            if raw == 3 {
+                return .connected
+            }
             let value = Connection(rawValue: raw) ?? .disconnected
             if value == .locked, lockTime.addingTimeInterval(5 * 60) < Date() {
                 return .disconnected

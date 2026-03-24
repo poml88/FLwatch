@@ -36,7 +36,6 @@ struct PhoneAppConnectView: View {
     func statusMessage() -> LocalizedStringResource {
         switch connected {
         case .connected: return "Connected."
-        case .newlyConnected: return "Connected."
         case .connecting: return "Connecting..."
         case .disconnected: return "Disconnected"
         case .failed: return "Connection failed."
@@ -47,7 +46,6 @@ struct PhoneAppConnectView: View {
     func statusColor() -> Color {
         switch connected {
         case .connected: return .green
-        case .newlyConnected: return .green
         case .connecting: return .orange
         case .disconnected: return .gray
         case .failed: return .red
@@ -144,7 +142,7 @@ struct PhoneAppConnectView: View {
                     Text("Press \"Connect\" again to resend credentials to watch.")
                         .font(.system(size: 16))
                 }
-                if connected == .connected || connected == .newlyConnected {
+                if connected == .connected {
                     Text("**Not for treatment decisions.**\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.")
                         .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                         .font(.system(size: 16))
@@ -220,7 +218,7 @@ struct PhoneAppConnectView: View {
             do {
                 print("do tryToConnect")
                 try await libreLinkUp.login()
-                UserDefaults.group.connected = .newlyConnected
+                UserDefaults.group.connected = .connected
                 let messageToWatch: [String: Any] = ["content": "credentials",
                                                      "username": username,
                                                      "password": password,

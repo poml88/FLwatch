@@ -50,7 +50,7 @@ final class LibreLinkUpService: ObservableObject {
 
     private func canReload() -> Bool {
         let connected = UserDefaults.group.connected
-        return connected == .connected || connected == .newlyConnected
+        return connected == .connected
     }
 
     /// Awaitable: returns when either (a) no reload was needed, or (b) the reload finished.

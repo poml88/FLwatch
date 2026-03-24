@@ -340,6 +340,7 @@ class LibreLinkUp  {
                                 regionIsChina = false
                                 throw LibreLinkUpError.notAuthenticated
                             }
+                            throw LibreLinkUpError.notAuthenticated
                         }
                         
                         if status == 429 {

@@ -106,8 +106,10 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
                 SharedData.libreLinkUpPatientId = patientId
             }
             SharedData.libreLinkUpToken = ""
-            UserDefaults.group.connected = .newlyConnected
             UserDefaults.group.connected = .connected
+            Task { @MainActor in
+                await LibreLinkUpService.shared.requestReloadIfNeeded(force: true)
+            }
         }
 
         if message["content"] as? String == "updateLibreLinkUpPatient" {
