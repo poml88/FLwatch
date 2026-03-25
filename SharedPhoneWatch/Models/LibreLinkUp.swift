@@ -266,6 +266,7 @@ class LibreLinkUp  {
     
     @discardableResult
     func login() async throws -> (Any, URLResponse) {
+        responseData = ""
         var request = URLRequest(url: URL(string: "\(siteURL)/\(loginEndpoint)")!)
         request.timeoutInterval = 20
         
@@ -339,16 +340,13 @@ class LibreLinkUp  {
                                 // {"status":2,"error":{"message":"incorrect username/password"}}, status: 200
                                 regionIsRussia = false
                                 regionIsChina = false
-                                DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: status 2 notAuthenticated"
                                 throw LibreLinkUpError.notAuthenticated
                             }
-                            DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: status 2 notAuthenticated storefront unavailable"
                             throw LibreLinkUpError.notAuthenticated
                         }
                         
                         if status == 429 {
                             // {"status":429,"data":{"code":60,"data":{"failures":3,"interval":60,"lockout":300},"message":"locked"}}
-                            DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: status 429 lockedAccount"
                             if let data, let message = data["message"] as? String {
                                 if message == "locked" {
                                     if let data = data["data"] as? [String: Any],
@@ -363,7 +361,6 @@ class LibreLinkUp  {
                         }
                         if status == 911 {
                             // {"status":911} when logging in at a stranger regional server
-                            DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: status 911 wrong regional server"
                             throw LibreLinkUpError.loggingIntoWrongRegionalServer
                         }
                         
@@ -374,7 +371,6 @@ class LibreLinkUp  {
                                 if type == "verifyEmail" {
                                     print("verifyemail")
                                     Logger.libreLinkUp.error("LibreLinkUp: User has not yet verified his LLU email (tip: log out and re-login)")
-                                    DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: status 4 verifyEmail"
                                     throw LibreLinkUpError.verifyEmail
                                     
                                     //                        LibreLinkUp: response data: {"status":4,"data":{"step":{"type":"verifyEmail","componentName":"VerifyEmail","props":{"email":"xxxxxxxx@cmdline.net"}},"user":{"accountType":"pat","country":"DE","uiLanguage":"de-DE"},"authTicket":{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQ5OGY3YTAwLTFhZjctMTFmMC05NGViLTVhMzc4MGRlMDYzNiIsImZpcnN0TmFtZSI6IkZMIiwibGFzdE5hbWUiOiJ3YXRjaCAiLCJjb3VudHJ5IjoiREUiLCJyZWdpb24iOiJkZSIsInJvbGUiOiJwYXRpZW50IiwiZW1haWwiOiJmbHdhdGNoQGNtZGxpbmUubmV0IiwicyI6ImxsdS5pb3MiLCJzaWQiOiJiYzMwNzI3MS03ODdjLTQ3NjEtOTIyNy0yMjQwMzliZGQ2MWYiLCJleHAiOjE3NDQ4MzQ4NDEsImlhdCI6MTc0NDgzMTI0MSwianRpIjoiYTk4NTNmZmMtMTYzMC00MDcwLTgyZmUtZjlhOTc2MTUyNzIzIn0.M7nsO65mDx5lFq9IDBFf6OG419Qkaa2avjL1SYoT1tg","expires":1744834841,"duration":3600000}}}, status: 200
@@ -383,7 +379,6 @@ class LibreLinkUp  {
                                 } else if type == "tou" {
                                     print("tou")
                                     Logger.libreLinkUp.error("LibreLinkUp: Terms of Use have been updated and must be accepted by running LibreLink (tip: log out and re-login)")
-                                    DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: status 4 touNotAccepted"
                                     if                                    let user = data["user"] as? [String: Any],
                                                                           let country = user["country"] as? String,
                                                                           let authTicketDict = data["authTicket"] as? [String: Any],
@@ -404,7 +399,6 @@ class LibreLinkUp  {
                                 } else if type == "pp" {
                                     print("pp")
                                     Logger.libreLinkUp.error("LibreLinkUp: Privacy policy has been updated and must be accepted by running LibreLink (tip: log out and re-login)")
-                                    DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: status 4 ppNotAccepted"
                                     if                                    let user = data["user"] as? [String: Any],
                                                                           let country = user["country"] as? String,
                                                                           let authTicketDict = data["authTicket"] as? [String: Any],
@@ -422,7 +416,6 @@ class LibreLinkUp  {
 
                                     
                                 } else {
-                                    DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: status 4 unknown step"
                                     throw LibreLinkUpError.unknownStatus4
                                 }
                             }
@@ -543,7 +536,7 @@ class LibreLinkUp  {
                         }
                         if status == 0 && !didEstablishAuthSession {
                             Logger.libreLinkUp.error("LibreLinkUp: login succeeded without establishing an auth session")
-                            DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: status 0 missing user/authTicket"
+                            DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: \(responseData)"
                             throw LibreLinkUpError.jsonDecoding
                         }
                     }
@@ -583,7 +576,11 @@ class LibreLinkUp  {
             Logger.libreLinkUp.error("LibreLinkUp: server error: \(error.localizedDescription)")
             DebugMessageSingleton.shared.libreLinkUpOverlayError = error.localizedDescription
             let errorAsString = "\(error)"
-            DebugMessageSingleton.shared.libreLinkUpResponseError = "Login" + errorAsString
+            if responseData.isEmpty {
+                DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: \(errorAsString)"
+            } else {
+                DebugMessageSingleton.shared.libreLinkUpResponseError = "Login: \(responseData) | error: \(errorAsString)"
+            }
             throw LibreLinkUpError.noConnectionLogin
         }
     }
@@ -591,6 +588,7 @@ class LibreLinkUp  {
     
     /// - Returns: (data, response, history, logbookData, logbookHistory, logbookAlarms)
     func getPatientGraph() async throws -> (Any, URLResponse, [LibreLinkUpGlucose], Any, [LibreLinkUpGlucose], [LibreLinkUpAlarm], SensorSettings, SensorType) {
+        responseData = ""
         
         let patientId = SharedData.libreLinkUpPatientId
         let token = SharedData.libreLinkUpToken
@@ -622,13 +620,11 @@ class LibreLinkUp  {
             if status == 401 {
                 Logger.general.error("LibreLinkUp: error: Invalid auth session")
                 SharedData.libreLinkUpToken = ""
-                DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph: HTTP 401 invalidAuthSession"
                 throw LibreLinkUpError.invalidAuthSession
             }
 
             if status == 429 {
                 Logger.general.error("LibreLinkUp: error: Too many requests")
-                DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph: 429 Too many requests"
                 throw LibreLinkUpError.tooManyRequests
             }
             // LibreLinkUp: response data: {"status":4,"error":{"message":"followerNotConnectToPatient"}}, status: 200
@@ -651,7 +647,6 @@ class LibreLinkUp  {
                 if status == 401 {
                     Logger.general.error("LibreLinkUp: error: Invalid auth session")
                     SharedData.libreLinkUpToken = ""
-                    DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph: status 401 invalidAuthSession"
                     throw LibreLinkUpError.invalidAuthSession
                 }
 
@@ -666,7 +661,6 @@ class LibreLinkUp  {
                         Logger.general.error("LibreLinkUp: error: \(message)")
                         if message == "followerNotConnectToPatient" || message == "follower not connect to patient" {
                             SharedData.libreLinkUpToken = ""
-                            DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph: status 4 followerNotConnectToPatient"
                             throw LibreLinkUpError.followerNotConnectToPatient
                         }
                     }
@@ -896,6 +890,7 @@ class LibreLinkUp  {
                             //                            }
                             
                             //TODO: Dead code. Remove in the future.
+#if FALSE
                             if SharedData.libreLinkUpScrapingLogbook, // currently this block is not used
                                let ticketDict = json["ticket"] as? [String: Any],
                                let token = ticketDict["token"] as? String {
@@ -944,6 +939,7 @@ class LibreLinkUp  {
                                     Logger.libreLinkUp.debug("LibreLinkUp: logbook values: \(logbookHistory.map { ($0.glucose.id, $0.glucose.value, $0.glucose.date.shortDateTime, $0.color, $0.trendArrow!.symbol) }), alarms: \(logbookAlarms.map(\.description))")
                                 }
                             }
+#endif
                         }
                     }
                 }
@@ -951,7 +947,11 @@ class LibreLinkUp  {
             }  catch {
                 Logger.libreLinkUp.error("LibreLinkUp: error while decoding response: \(error.localizedDescription)")
                 let errorAsString = "\(error)"
-                DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph" + errorAsString
+                if responseData.isEmpty {
+                    DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph: \(errorAsString)"
+                } else {
+                    DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph: \(responseData) | error: \(errorAsString)"
+                }
                 DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
                 throw LibreLinkUpError.jsonDecoding
             }
@@ -975,7 +975,11 @@ class LibreLinkUp  {
             Logger.libreLinkUp.error("LibreLinkUp: server error: \(error.localizedDescription)")
             DebugMessageSingleton.shared.libreLinkUpOverlayError = error.localizedDescription
             let errorAsString = "\(error)"
-            DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph" + errorAsString
+            if responseData.isEmpty {
+                DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph: \(errorAsString)"
+            } else {
+                DebugMessageSingleton.shared.libreLinkUpResponseError = "getPatientGraph: \(responseData) | error: \(errorAsString)"
+            }
             if isNetworkError(error) {
                 throw LibreLinkUpError.noConnectionGraph
             } else {
