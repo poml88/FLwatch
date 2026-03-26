@@ -38,6 +38,15 @@ enum DefaultsKey: String {
     case tapComplicationReloads = "tapComplicationReloadsKey"
     case useLiveActivities = "useLiveActivitiesKey"
     case appleHealthExportEnabled = "appleHealthExportEnabledKey"
+    case bluetoothHeartbeatEnabled = "bluetoothHeartbeatEnabledKey"
+    case bluetoothHeartbeatDeviceName = "bluetoothHeartbeatDeviceNameKey"
+    case bluetoothHeartbeatPeripheralUUID = "bluetoothHeartbeatPeripheralUUIDKey"
+    case bluetoothHeartbeatCharacteristicUUID = "bluetoothHeartbeatCharacteristicUUIDKey"
+    case bluetoothHeartbeatLastEventDate = "bluetoothHeartbeatLastEventDateKey"
+    case bluetoothHeartbeatLastRefreshDate = "bluetoothHeartbeatLastRefreshDateKey"
+    case lowGlucoseNotificationsEnabled = "lowGlucoseNotificationsEnabledKey"
+    case lowGlucoseNotificationThreshold = "lowGlucoseNotificationThresholdKey"
+    case lowGlucoseNotificationLastSentDate = "lowGlucoseNotificationLastSentDateKey"
     case icrGramsPerUnit = "icrGramsPerUnitKey"
     case roundingStep = "roundingStepKey"
     case carbsPer100g = "carbsPer100gKey"
@@ -263,6 +272,51 @@ enum SharedData {
     static var appleHealthExportEnabled: Bool {
         get { store.getBool(.appleHealthExportEnabled, defaultValue: false) }
         set { store.setBool(newValue, forKey: .appleHealthExportEnabled) }
+    }
+
+    static var bluetoothHeartbeatEnabled: Bool {
+        get { store.getBool(.bluetoothHeartbeatEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .bluetoothHeartbeatEnabled) }
+    }
+
+    static var bluetoothHeartbeatDeviceName: String {
+        get { store.getString(.bluetoothHeartbeatDeviceName, defaultValue: "") }
+        set { store.setString(newValue, forKey: .bluetoothHeartbeatDeviceName) }
+    }
+
+    static var bluetoothHeartbeatPeripheralUUID: String {
+        get { store.getString(.bluetoothHeartbeatPeripheralUUID, defaultValue: "") }
+        set { store.setString(newValue, forKey: .bluetoothHeartbeatPeripheralUUID) }
+    }
+
+    static var bluetoothHeartbeatCharacteristicUUID: String {
+        get { store.getString(.bluetoothHeartbeatCharacteristicUUID, defaultValue: "") }
+        set { store.setString(newValue, forKey: .bluetoothHeartbeatCharacteristicUUID) }
+    }
+
+    static var bluetoothHeartbeatLastEventDate: Date {
+        get { store.getDate(.bluetoothHeartbeatLastEventDate, defaultValue: Date(timeIntervalSince1970: 0)) }
+        set { store.setDate(newValue, forKey: .bluetoothHeartbeatLastEventDate) }
+    }
+
+    static var bluetoothHeartbeatLastRefreshDate: Date {
+        get { store.getDate(.bluetoothHeartbeatLastRefreshDate, defaultValue: Date(timeIntervalSince1970: 0)) }
+        set { store.setDate(newValue, forKey: .bluetoothHeartbeatLastRefreshDate) }
+    }
+
+    static var lowGlucoseNotificationsEnabled: Bool {
+        get { store.getBool(.lowGlucoseNotificationsEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .lowGlucoseNotificationsEnabled) }
+    }
+
+    static var lowGlucoseNotificationThreshold: Int {
+        get { store.getInt(.lowGlucoseNotificationThreshold, defaultValue: 70) }
+        set { store.setInt(newValue, forKey: .lowGlucoseNotificationThreshold) }
+    }
+
+    static var lowGlucoseNotificationLastSentDate: Date {
+        get { store.getDate(.lowGlucoseNotificationLastSentDate, defaultValue: .distantPast) }
+        set { store.setDate(newValue, forKey: .lowGlucoseNotificationLastSentDate) }
     }
     
     static var libreLinkUpScrapingLogbook: Bool {

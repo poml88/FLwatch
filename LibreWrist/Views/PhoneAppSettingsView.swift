@@ -22,6 +22,8 @@ struct PhoneAppSettingsView: View {
     @AppStorage(DefaultsKey.widgetUpdateFrequency.rawValue, store: UserDefaults.group) private var widgetUpdateFrequency: Int = 5
     @AppStorage(DefaultsKey.tapComplicationReloads.rawValue, store: UserDefaults.group) private var tapComplicationReloads: Bool = false
     @AppStorage(DefaultsKey.useLiveActivities.rawValue, store: UserDefaults.group) private var useLiveActivities: Bool = true
+    @AppStorage(DefaultsKey.lowGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationsEnabled: Bool = false
+    @AppStorage(DefaultsKey.lowGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationThreshold: Int = 70
     
     
     @State private var isScreenAlwaysOn = false
@@ -31,8 +33,10 @@ struct PhoneAppSettingsView: View {
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
     @State private var appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
     @State private var appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
+    @StateObject private var bluetoothHeartbeatManager = BluetoothHeartbeatManager.shared
     private var watchConnector = WatchConnectivityManager.shared
     let updateFrequencyOptions: [Int] = [1, 5, 10, 15, 20]
+    let lowGlucoseThresholdOptions: [Int] = Array(stride(from: 60, through: 200, by: 5))
     private var bgAppRefreshExecutionTimestamps: [Date] {
         (UserDefaults.group.array(forKey: "bgAppRefreshExecutionTimestamps") as? [TimeInterval] ?? [])
             .map(Date.init(timeIntervalSince1970:))
@@ -160,6 +164,116 @@ struct PhoneAppSettingsView: View {
                 Text("Apple Health")
             } footer: {
                 Text("Permission is requested only when you turn this on. FLwatch exports insulin injections and glucose values, and tags samples with HealthKit sync identifiers to avoid duplicates.")
+            }
+
+            Section {
+                Toggle(
+                    "Activate Bluetooth heartbeat",
+                    isOn: Binding(
+                        get: { bluetoothHeartbeatManager.isEnabled },
+                        set: { bluetoothHeartbeatManager.setEnabled($0) }
+                    )
+                )
+
+                Text("Nearby devices are discovered by Bluetooth scan and filtered to 12-character hexadecimal names such as 3746BF23512A.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+
+                HStack {
+                    Button(bluetoothHeartbeatManager.isScanning ? "Stop scan" : "Scan devices") {
+                        if bluetoothHeartbeatManager.isScanning {
+                            bluetoothHeartbeatManager.stopScanning()
+                        } else {
+                            bluetoothHeartbeatManager.startScanning()
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(!bluetoothHeartbeatManager.isEnabled)
+
+                    if !bluetoothHeartbeatManager.selectedDeviceName.isEmpty {
+                        Button("Clear device") {
+                            bluetoothHeartbeatManager.clearSelection()
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(!bluetoothHeartbeatManager.isEnabled)
+                    }
+                }
+
+                Text("Status: \(bluetoothHeartbeatManager.status.description)")
+
+                if !bluetoothHeartbeatManager.selectedDeviceName.isEmpty {
+                    Text("Selected device: \(bluetoothHeartbeatManager.selectedDeviceName)")
+                }
+
+                if !bluetoothHeartbeatManager.selectedPeripheralUUID.isEmpty {
+                    Text("Peripheral UUID: \(bluetoothHeartbeatManager.selectedPeripheralUUID)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Toggle("Low glucose notifications", isOn: $lowGlucoseNotificationsEnabled)
+                    .onChange(of: lowGlucoseNotificationsEnabled) { _, isEnabled in
+                        Task {
+                            if isEnabled {
+                                let granted = await LowGlucoseNotificationManager.shared.requestAuthorizationIfNeeded()
+                                if granted {
+                                    await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
+                                } else {
+                                    await MainActor.run {
+                                        lowGlucoseNotificationsEnabled = false
+                                    }
+                                }
+                            } else {
+                                await LowGlucoseNotificationManager.shared.disableNotifications()
+                            }
+                        }
+                    }
+
+                Picker("Low glucose alert limit", selection: $lowGlucoseNotificationThreshold) {
+                    ForEach(lowGlucoseThresholdOptions, id: \.self) { threshold in
+                        Text(lowGlucoseThresholdText(for: threshold))
+                            .tag(threshold)
+                    }
+                }
+                .disabled(!lowGlucoseNotificationsEnabled)
+
+                Text("Alerts are checked when the Bluetooth heartbeat refresh cycle pulls glucose data. If readings stay below \(lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold)), FLwatch sends a local notification at most every 5 minutes.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+
+                if let lastHeartbeatDate = bluetoothHeartbeatManager.lastHeartbeatDate {
+                    Text("Last heartbeat: \(lastHeartbeatDate.formatted(date: .abbreviated, time: .standard))")
+                }
+
+                if bluetoothHeartbeatManager.discoveredDevices.isEmpty {
+                    Text("No matching nearby devices found yet.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(bluetoothHeartbeatManager.discoveredDevices) { device in
+                        Button {
+                            bluetoothHeartbeatManager.selectDevice(device)
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(device.name)
+                                    Text("RSSI \(device.rssi) • \(device.lastSeen.formatted(date: .omitted, time: .standard))")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                if device.id.uuidString == bluetoothHeartbeatManager.selectedPeripheralUUID {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.tint)
+                                }
+                            }
+                        }
+                        .disabled(!bluetoothHeartbeatManager.isEnabled)
+                    }
+                }
+            } header: {
+                Text("Bluetooth Heartbeat")
+            } footer: {
+                Text("CoreBluetooth can only show nearby discoverable peripherals, not every system-connected Bluetooth accessory. FLwatch scans for a selected device, reconnects to it, stores heartbeat timestamps, and uses heartbeat activity to trigger glucose reloads, widget refreshes, Live Activity refreshes, and the existing background refresh path.")
             }
             
             
@@ -292,6 +406,7 @@ struct PhoneAppSettingsView: View {
         }
         .onAppear {
             refreshAppleHealthStatus()
+            bluetoothHeartbeatManager.startIfNeeded()
         }
         
     }
@@ -302,6 +417,11 @@ struct PhoneAppSettingsView: View {
     private func refreshAppleHealthStatus() {
         appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
         appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
+    }
+
+    private func lowGlucoseThresholdText(for value: Int) -> String {
+        let glucoseUnit = GlucoseUnit(uom: SensorSettingsStore.shared.sensorSettings.uom)
+        return value.asGlucose(glucoseUnit: glucoseUnit, withUnit: true)
     }
     
 }

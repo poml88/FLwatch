@@ -59,6 +59,7 @@
 		7B435CCC2C6D46DF006F6E53 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CCB2C6D46DF006F6E53 /* Logger.swift */; };
 		7B435CD02C6D5103006F6E53 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CCF2C6D5103006F6E53 /* Date.swift */; };
 		7B435CD42C6D57F5006F6E53 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CD32C6D57F5006F6E53 /* String.swift */; };
+		7B45C5392F756BC000203B4C /* BluetoothHeartbeatManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B45C5382F756BC000203B4C /* BluetoothHeartbeatManager.swift */; };
 		7B462BFD2C7FBAC8003FEDC3 /* MeasurementColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */; };
 		7B462BFE2C7FC46A003FEDC3 /* MeasurementColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */; };
 		7B4855DF2DB58DC90089409E /* TimeDifferencePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */; };
@@ -310,6 +311,7 @@
 		7B435CCF2C6D5103006F6E53 /* Date.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Date.swift; sourceTree = "<group>"; };
 		7B435CD32C6D57F5006F6E53 /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		7B435CD52C6D5C1D006F6E53 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7B45C5382F756BC000203B4C /* BluetoothHeartbeatManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothHeartbeatManager.swift; sourceTree = "<group>"; };
 		7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasurementColor.swift; sourceTree = "<group>"; };
 		7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeDifferencePicker.swift; sourceTree = "<group>"; };
 		7B5A9CD12E704F200076716A /* PasswordKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordKeychain.swift; sourceTree = "<group>"; };
@@ -591,6 +593,7 @@
 				7BA0AE302C582F64004226FE /* Assets.xcassets */,
 				7BA0AE322C582F64004226FE /* Preview Content */,
 				7BD2C65B2DC3BE6D0079EE4A /* InfoPlist.strings */,
+				7B45C5382F756BC000203B4C /* BluetoothHeartbeatManager.swift */,
 			);
 			path = LibreWrist;
 			sourceTree = "<group>";
@@ -1046,6 +1049,7 @@
 				7BA0AE572C5834F6004226FE /* PhoneAppConnectView.swift in Sources */,
 				7BA304152F5E30B0005384BF /* SensorSettings.swift in Sources */,
 				7BA304162F5E30B0005384BF /* PasswordKeychain.swift in Sources */,
+				7B45C5392F756BC000203B4C /* BluetoothHeartbeatManager.swift in Sources */,
 				7B096C9B2E33F2CA00B6744C /* PhoneAppGraphView.swift in Sources */,
 				7BF0A0022F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */,
 				7BA304172F5E30B0005384BF /* SensorType.swift in Sources */,

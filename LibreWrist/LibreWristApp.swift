@@ -31,6 +31,10 @@ struct LibreWristApp: App {
         SensorSettingsStore.shared.refreshFromPersistence(force: true)
         
         WatchConnectivityManager.shared.startSession()
+        BluetoothHeartbeatManager.shared.startIfNeeded()
+        if SharedData.bluetoothHeartbeatEnabled {
+            BluetoothHeartbeatManager.shared.startScanning()
+        }
         // alternatively the session could be started in AppDelegate see https://developer.apple.com/documentation/swiftui/migrating-to-the-swiftui-life-cycle
         appRefreshScheduler.register()
         appRefreshScheduler.scheduleNextRefresh()
@@ -58,6 +62,9 @@ struct LibreWristApp: App {
                     scheduleAppleHealthCatchUpExport()
                     Logger.bgTaskScheduler.info("Scene active: scheduling next BG refresh")
                     appRefreshScheduler.scheduleNextRefresh()
+                    if SharedData.bluetoothHeartbeatEnabled {
+                        BluetoothHeartbeatManager.shared.startScanning()
+                    }
                 }
 //                .environment(\.openURL, OpenURLAction { url in
 //                    print("openURL asked to open:", url)
