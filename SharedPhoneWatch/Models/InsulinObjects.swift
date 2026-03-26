@@ -109,6 +109,14 @@ struct InsulinTypePresets: Codable, Identifiable {
         insulinDeliveryHistory = Self.canonicalized(insulinDeliveryHistory)
         UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
     }
+
+    func historySnapshot() -> [InsulinDelivery] {
+        Self.canonicalized(insulinDeliveryHistory)
+    }
+
+    static func persistedHistorySnapshot() -> [InsulinDelivery] {
+        canonicalized(UserDefaults.group.insulinDeliveryHistory ?? [])
+    }
     
     func save() {
         mergePersistedHistoryIntoMemory()
@@ -223,38 +231,46 @@ struct InsulinTypePresets: Codable, Identifiable {
     var maxIOB: Double = 1
     var maxActivity: Double = 1
     
-    static let shared: CurrentIOBSingleton = {
+    nonisolated static let shared: CurrentIOBSingleton = {
         let instance = CurrentIOBSingleton()
         return instance
     }()
+
+    private nonisolated static let historyRetentionInterval: Double = 12 * 60 * 60
     
-    private init() {}
+    private nonisolated init() {}
     
     nonisolated func getCurrentIOB() -> Double {
-        let idhs = InsulinDeliveryHistorySingleton.shared
-        idhs.read()
-        let timeIntervalSince1970 = Date().timeIntervalSince1970
-        var sumIOB: Double = 0
-
-        let activeHistory = idhs.insulinDeliveryHistory.filter {
-            timeIntervalSince1970 - $0.timeStamp <= 12 * 60 * 60
-        }
-
-        for item in activeHistory {
-            let timeIntervalBetweenDeliveryAndNow = timeIntervalSince1970 - item.timeStamp
-            let IOB = updateIOB(timeStamp: timeIntervalBetweenDeliveryAndNow, insulinType: item.insulinType) * item.insulinUnits
-            sumIOB += IOB
-        }
-
-        if activeHistory.count != idhs.insulinDeliveryHistory.count {
-            idhs.replaceHistory(activeHistory)
-        }
-
-        let currentIOB: Double = sumIOB
-        return currentIOB
+        Self.currentIOB(from: InsulinDeliveryHistorySingleton.persistedHistorySnapshot())
     }
     
     private nonisolated func updateIOB(timeStamp timeInterval: Double, insulinType type: InsulinType.RawValue) -> Double {
+        Self.iobFractionRemaining(timeStamp: timeInterval, insulinType: type)
+    }
+
+    private nonisolated static func activeHistory(from history: [InsulinDelivery], now timeIntervalSince1970: Double) -> [InsulinDelivery] {
+        history.filter {
+            timeIntervalSince1970 - $0.timeStamp <= historyRetentionInterval
+        }
+    }
+
+    private nonisolated static func currentIOB(from history: [InsulinDelivery], now timeIntervalSince1970: Double = Date().timeIntervalSince1970) -> Double {
+        let activeHistory = activeHistory(from: history, now: timeIntervalSince1970)
+        var sumIOB: Double = 0
+
+        for item in activeHistory {
+            let timeIntervalBetweenDeliveryAndNow = timeIntervalSince1970 - item.timeStamp
+            let IOB = iobFractionRemaining(
+                timeStamp: timeIntervalBetweenDeliveryAndNow,
+                insulinType: item.insulinType
+            ) * item.insulinUnits
+            sumIOB += IOB
+        }
+
+        return sumIOB
+    }
+
+    private nonisolated static func iobFractionRemaining(timeStamp timeInterval: Double, insulinType type: InsulinType.RawValue) -> Double {
         let insulin: InsulinType = InsulinType(rawValue: type) ?? .rapidActing
         let preset: InsulinTypePresets = insulin.presets
         let model = ExponentialInsulinModel(actionDuration: preset.actionDuration, peakActivityTime: preset.peakActivityTime, delay: preset.delay)
@@ -313,10 +329,19 @@ struct InsulinTypePresets: Codable, Identifiable {
     }
     
     func updateCurrentIOBAndGraphs() {
-        InsulinDeliveryHistorySingleton.shared.read()
+        let insulinHistory = InsulinDeliveryHistorySingleton.shared
+        insulinHistory.read()
         print("Updating IOB graphs: \(Date.now)")
+        let now = Date().timeIntervalSince1970
+        let historySnapshot = insulinHistory.historySnapshot()
+        let activeHistory = Self.activeHistory(from: historySnapshot, now: now)
+
+        if activeHistory.count != historySnapshot.count {
+            insulinHistory.replaceHistory(activeHistory)
+        }
+
         //MARK: Update IOB
-        currentIOB = getCurrentIOB()
+        currentIOB = Self.currentIOB(from: activeHistory, now: now)
         
         //MARK: Update IOB graph
 #if os(iOS)
