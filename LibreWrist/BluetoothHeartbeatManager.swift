@@ -111,11 +111,6 @@ final class LowGlucoseNotificationManager: NSObject {
             Logger.connectivity.info("Low glucose notification skipped: alerts disabled in system settings")
             return
         }
-        guard settings.soundSetting == .enabled else {
-            Logger.connectivity.info("Low glucose notification sound disabled in system settings")
-            return
-        }
-
         let history = LibreLinkUpHistory.shared
         let threshold = SharedData.lowGlucoseNotificationThreshold
 
@@ -148,7 +143,11 @@ final class LowGlucoseNotificationManager: NSObject {
         let content = UNMutableNotificationContent()
         content.title = "Low glucose"
         content.body = "Current glucose is \(currentValue) \(trendArrow), below your alert limit of \(thresholdValue)."
-        content.sound = .default
+        if settings.soundSetting == .enabled {
+            content.sound = .default
+        } else {
+            Logger.connectivity.info("Low glucose notification scheduled without sound because sounds are disabled in system settings")
+        }
         content.interruptionLevel = .timeSensitive
         content.relevanceScore = 1
         content.categoryIdentifier = Self.categoryIdentifier

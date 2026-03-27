@@ -42,7 +42,10 @@ struct LibreWristApp: App {
         scheduleAppleHealthCatchUpExport()
         if SharedData.lowGlucoseNotificationsEnabled {
             Task {
-                _ = await LowGlucoseNotificationManager.shared.requestAuthorizationIfNeeded()
+                let granted = await LowGlucoseNotificationManager.shared.requestAuthorizationIfNeeded()
+                if !granted {
+                    SharedData.lowGlucoseNotificationsEnabled = false
+                }
             }
         }
     }
