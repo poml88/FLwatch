@@ -29,6 +29,7 @@ struct LibreWristApp: App {
 
         LibreLinkUpHistory.shared.refreshFromPersistence(force: true)
         SensorSettingsStore.shared.refreshFromPersistence(force: true)
+        LowGlucoseNotificationManager.shared.configureForegroundPresentation()
         
         WatchConnectivityManager.shared.startSession()
         BluetoothHeartbeatManager.shared.startIfNeeded()
@@ -39,6 +40,11 @@ struct LibreWristApp: App {
         appRefreshScheduler.register()
         appRefreshScheduler.scheduleNextRefresh()
         scheduleAppleHealthCatchUpExport()
+        if SharedData.lowGlucoseNotificationsEnabled {
+            Task {
+                _ = await LowGlucoseNotificationManager.shared.requestAuthorizationIfNeeded()
+            }
+        }
     }
     
 //    @State private var history = History()

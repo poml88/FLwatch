@@ -55,30 +55,44 @@ final class PhoneHeartbeatRefreshCoordinator {
 }
 
 @MainActor
-final class LowGlucoseNotificationManager {
+final class LowGlucoseNotificationManager: NSObject {
     static let shared = LowGlucoseNotificationManager()
 
-    private static let notificationIdentifier = "low-glucose-alert"
+    private static let notificationIdentifierPrefix = "low-glucose-alert"
+    private static let categoryIdentifier = "LOW_GLUCOSE_ALERT"
+    private static let maxReadingAge: TimeInterval = 3 * 60
     private static let repeatInterval: TimeInterval = 5 * 60
+    private static let deliveryDelay: TimeInterval = 1
     private let notificationCenter = UNUserNotificationCenter.current()
 
-    private init() {}
+    private override init() {
+        super.init()
+    }
+
+    func configureForegroundPresentation() {
+        notificationCenter.delegate = self
+        notificationCenter.setNotificationCategories([
+            UNNotificationCategory(
+                identifier: Self.categoryIdentifier,
+                actions: [],
+                intentIdentifiers: [],
+                options: [.allowInCarPlay]
+            )
+        ])
+    }
 
     func requestAuthorizationIfNeeded() async -> Bool {
         let settings = await notificationCenter.notificationSettings()
-        switch settings.authorizationStatus {
-        case .authorized, .provisional, .ephemeral:
-            return true
-        case .notDetermined:
-            do {
-                return try await notificationCenter.requestAuthorization(options: [.alert, .badge, .sound])
-            } catch {
-                Logger.connectivity.error("Low glucose notification authorization failed: \(error.localizedDescription, privacy: .public)")
-                return false
-            }
-        case .denied:
+        guard settings.authorizationStatus != .denied else {
             return false
-        @unknown default:
+        }
+
+        let options: UNAuthorizationOptions = [.alert, .badge, .sound, .carPlay]
+
+        do {
+            return try await notificationCenter.requestAuthorization(options: options)
+        } catch {
+            Logger.connectivity.error("Low glucose notification authorization failed: \(error.localizedDescription, privacy: .public)")
             return false
         }
     }
@@ -93,12 +107,25 @@ final class LowGlucoseNotificationManager {
         guard [.authorized, .provisional, .ephemeral].contains(settings.authorizationStatus) else {
             return
         }
+        guard settings.alertSetting == .enabled || settings.notificationCenterSetting == .enabled else {
+            Logger.connectivity.info("Low glucose notification skipped: alerts disabled in system settings")
+            return
+        }
+        guard settings.soundSetting == .enabled else {
+            Logger.connectivity.info("Low glucose notification sound disabled in system settings")
+            return
+        }
 
         let history = LibreLinkUpHistory.shared
         let threshold = SharedData.lowGlucoseNotificationThreshold
 
         guard history.currentGlucose > 0,
               history.lastReadingDate > .distantPast else {
+            await clearPendingNotifications(resetCooldown: true)
+            return
+        }
+        guard now.timeIntervalSince(history.lastReadingDate) <= Self.maxReadingAge else {
+            Logger.connectivity.info("Low glucose notification skipped: glucose value is stale")
             await clearPendingNotifications(resetCooldown: true)
             return
         }
@@ -116,17 +143,21 @@ final class LowGlucoseNotificationManager {
         let glucoseUnit = GlucoseUnit(uom: SensorSettingsStore.shared.sensorSettings.uom)
         let currentValue = formattedGlucoseValue(history.currentGlucose, glucoseUnit: glucoseUnit)
         let thresholdValue = formattedGlucoseValue(threshold, glucoseUnit: glucoseUnit)
+        let trendArrow = history.currentTrendArrow == "---" ? "-" : history.currentTrendArrow
 
         let content = UNMutableNotificationContent()
         content.title = "Low glucose"
-        content.body = "Current glucose is \(currentValue), below your alert limit of \(thresholdValue)."
+        content.body = "Current glucose is \(currentValue) \(trendArrow), below your alert limit of \(thresholdValue)."
         content.sound = .default
         content.interruptionLevel = .timeSensitive
+        content.relevanceScore = 1
+        content.categoryIdentifier = Self.categoryIdentifier
 
+        let requestIdentifier = "\(Self.notificationIdentifierPrefix)-\(Int(now.timeIntervalSince1970))"
         let request = UNNotificationRequest(
-            identifier: Self.notificationIdentifier,
+            identifier: requestIdentifier,
             content: content,
-            trigger: nil
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: Self.deliveryDelay, repeats: false)
         )
 
         do {
@@ -142,8 +173,22 @@ final class LowGlucoseNotificationManager {
     }
 
     private func clearPendingNotifications(resetCooldown: Bool) async {
-        notificationCenter.removePendingNotificationRequests(withIdentifiers: [Self.notificationIdentifier])
-        notificationCenter.removeDeliveredNotifications(withIdentifiers: [Self.notificationIdentifier])
+        let pendingRequests = await notificationCenter.pendingNotificationRequests()
+        let matchingPendingIdentifiers = pendingRequests
+            .map(\.identifier)
+            .filter { $0.hasPrefix(Self.notificationIdentifierPrefix) }
+        if !matchingPendingIdentifiers.isEmpty {
+            notificationCenter.removePendingNotificationRequests(withIdentifiers: matchingPendingIdentifiers)
+        }
+
+        let deliveredNotifications = await notificationCenter.deliveredNotifications()
+        let matchingDeliveredIdentifiers = deliveredNotifications
+            .map(\.request.identifier)
+            .filter { $0.hasPrefix(Self.notificationIdentifierPrefix) }
+        if !matchingDeliveredIdentifiers.isEmpty {
+            notificationCenter.removeDeliveredNotifications(withIdentifiers: matchingDeliveredIdentifiers)
+        }
+
         if resetCooldown {
             SharedData.lowGlucoseNotificationLastSentDate = .distantPast
         }
@@ -158,6 +203,18 @@ final class LowGlucoseNotificationManager {
             let formatted = GlucoseFormatters.mmolLFormatter.string(from: mmolValue as NSNumber) ?? String(format: "%.1f", mmolValue)
             return "\(formatted) \(glucoseUnit.description)"
         }
+    }
+}
+
+extension LowGlucoseNotificationManager: UNUserNotificationCenterDelegate {
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification
+    ) async -> UNNotificationPresentationOptions {
+        guard notification.request.identifier.hasPrefix("low-glucose-alert") else {
+            return []
+        }
+        return [.banner, .list, .sound]
     }
 }
 
