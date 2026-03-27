@@ -47,6 +47,7 @@ enum DefaultsKey: String {
     case lowGlucoseNotificationsEnabled = "lowGlucoseNotificationsEnabledKey"
     case lowGlucoseNotificationThreshold = "lowGlucoseNotificationThresholdKey"
     case lowGlucoseNotificationLastSentDate = "lowGlucoseNotificationLastSentDateKey"
+    case lowGlucoseNotificationPendingRepeat = "lowGlucoseNotificationPendingRepeatKey"
     case icrGramsPerUnit = "icrGramsPerUnitKey"
     case roundingStep = "roundingStepKey"
     case carbsPer100g = "carbsPer100gKey"
@@ -317,6 +318,11 @@ enum SharedData {
     static var lowGlucoseNotificationLastSentDate: Date {
         get { store.getDate(.lowGlucoseNotificationLastSentDate, defaultValue: .distantPast) }
         set { store.setDate(newValue, forKey: .lowGlucoseNotificationLastSentDate) }
+    }
+
+    static var lowGlucoseNotificationPendingRepeat: Bool {
+        get { store.getBool(.lowGlucoseNotificationPendingRepeat, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .lowGlucoseNotificationPendingRepeat) }
     }
     
     static var libreLinkUpScrapingLogbook: Bool {

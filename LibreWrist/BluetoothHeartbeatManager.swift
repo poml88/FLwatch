@@ -113,15 +113,18 @@ final class LowGlucoseNotificationManager: NSObject {
         }
         let history = LibreLinkUpHistory.shared
         let threshold = SharedData.lowGlucoseNotificationThreshold
+        let notificationIsDue = now.timeIntervalSince(SharedData.lowGlucoseNotificationLastSentDate) >= Self.repeatInterval
 
         guard history.currentGlucose > 0,
               history.lastReadingDate > .distantPast else {
-            await clearPendingNotifications(resetCooldown: true)
+            markPendingRepeatIfNeeded(notificationIsDue)
+            await clearPendingNotifications(resetCooldown: false)
             return
         }
         guard now.timeIntervalSince(history.lastReadingDate) <= Self.maxReadingAge else {
             Logger.connectivity.info("Low glucose notification skipped: glucose value is stale")
-            await clearPendingNotifications(resetCooldown: true)
+            markPendingRepeatIfNeeded(notificationIsDue)
+            await clearPendingNotifications(resetCooldown: false)
             return
         }
 
@@ -130,8 +133,7 @@ final class LowGlucoseNotificationManager: NSObject {
             return
         }
 
-        let secondsSinceLastNotification = now.timeIntervalSince(SharedData.lowGlucoseNotificationLastSentDate)
-        guard secondsSinceLastNotification >= Self.repeatInterval else {
+        guard SharedData.lowGlucoseNotificationPendingRepeat || notificationIsDue else {
             return
         }
 
@@ -162,6 +164,7 @@ final class LowGlucoseNotificationManager: NSObject {
         do {
             try await notificationCenter.add(request)
             SharedData.lowGlucoseNotificationLastSentDate = now
+            SharedData.lowGlucoseNotificationPendingRepeat = false
         } catch {
             Logger.connectivity.error("Low glucose notification scheduling failed: \(error.localizedDescription, privacy: .public)")
         }
@@ -190,7 +193,13 @@ final class LowGlucoseNotificationManager: NSObject {
 
         if resetCooldown {
             SharedData.lowGlucoseNotificationLastSentDate = .distantPast
+            SharedData.lowGlucoseNotificationPendingRepeat = false
         }
+    }
+
+    private func markPendingRepeatIfNeeded(_ notificationIsDue: Bool) {
+        guard notificationIsDue, SharedData.lowGlucoseNotificationLastSentDate > .distantPast else { return }
+        SharedData.lowGlucoseNotificationPendingRepeat = true
     }
 
     private func formattedGlucoseValue(_ valueInMgDl: Int, glucoseUnit: GlucoseUnit) -> String {
