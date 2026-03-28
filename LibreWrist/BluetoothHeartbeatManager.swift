@@ -416,6 +416,7 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
     private func matchesHeartbeatName(_ name: String) -> Bool {
         let range = NSRange(location: 0, length: name.utf16.count)
         return heartbeatNameRegex?.firstMatch(in: name, options: [], range: range) != nil
+            || name.contains("ABBOTT")
     }
 
     private func updateDiscoveredDevice(peripheral: CBPeripheral, name: String, rssi: Int) {
