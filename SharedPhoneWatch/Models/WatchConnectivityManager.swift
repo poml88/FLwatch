@@ -229,7 +229,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
                         return
                     }
 
-                    CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+//                    CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs() // Seems to be totally unnecessary here.
                     Logger.connectivity.info("Applied fresh LibreLinkUp snapshot from WatchConnectivity")
                 }
             } catch {
