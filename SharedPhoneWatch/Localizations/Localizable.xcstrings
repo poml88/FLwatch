@@ -6739,6 +6739,9 @@
         }
       }
     },
+    "Re-send all settings to watch" : {
+
+    },
     "Record ${insulinUnitsRaw} units of insulin" : {
       "localizations" : {
         "de" : {
@@ -9504,6 +9507,9 @@
         }
       }
     },
+    "Use this if the watch app was reinstalled or its settings appear out of sync." : {
+
+    },
     "Username" : {
       "localizations" : {
         "de" : {
@@ -9687,6 +9693,9 @@
           }
         }
       }
+    },
+    "Watch Sync" : {
+
     },
     "Watch: show insulin activity graph" : {
       "localizations" : {
