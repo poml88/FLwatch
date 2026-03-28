@@ -17,6 +17,9 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
     
     private static let libreLinkUpSnapshotContent = "libreLinkUpSnapshot"
     private static let libreLinkUpSnapshotDataKey = "snapshotData"
+    private static let settingsSnapshotContent = "settingsSnapshot"
+    private static let settingsSnapshotDataKey = "settingsSnapshotData"
+    private static let requestSettingsSnapshotContent = "requestSettingsSnapshot"
 
     private struct LibreLinkUpSnapshotPayload: Codable {
         let libreLinkUpGlucose: [LibreLinkUpGlucose]
@@ -26,6 +29,20 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         let currentGlucose: Int
         let currentTrendArrow: String
         let maxBG: Int
+    }
+
+    private struct SettingsSnapshotPayload: Codable {
+        let insulinTypeSelected: Int
+        let showInsulinDeliveryMarksWatch: Bool
+        let showIOBCurveWatch: Bool
+        let showActivityCurveWatch: Bool
+        let widgetUpdateFrequency: Int
+        let tapComplicationReloads: Bool
+        let hasValidCredentials: Bool
+        let username: String?
+        let password: String?
+        let patientId: String?
+        let updatedAt: Date
     }
 
     @MainActor
@@ -67,6 +84,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
     
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: (any Error)?) {
         Logger.connectivity.info("Session activation complete: \(activationState.rawValue)")
+#if os(watchOS)
+        if activationState == .activated {
+            requestSettingsSnapshotFromPhone()
+        }
+#endif
     }
     
 #if os(iOS)
@@ -195,6 +217,27 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             SharedData.tapComplicationReloads = valueBool
         }
 
+        if message["content"] as? String == Self.requestSettingsSnapshotContent {
+#if os(iOS)
+            sendSettingsSnapshotToWatch()
+#endif
+        }
+
+        if message["content"] as? String == Self.settingsSnapshotContent {
+            guard let settingsData = message[Self.settingsSnapshotDataKey] as? Data else {
+                Logger.connectivity.error("Missing settings snapshot data in message")
+                return
+            }
+
+            do {
+                let snapshot = try JSONDecoder().decode(SettingsSnapshotPayload.self, from: settingsData)
+                applySettingsSnapshot(snapshot)
+                Logger.connectivity.info("Applied settings snapshot from WatchConnectivity dated \(snapshot.updatedAt.formatted())")
+            } catch {
+                Logger.connectivity.error("Failed to decode settings snapshot: \(error.localizedDescription)")
+            }
+        }
+
         if message["content"] as? String == Self.libreLinkUpSnapshotContent {
             guard let snapshotData = message[Self.libreLinkUpSnapshotDataKey] as? Data else {
                 Logger.connectivity.error("Missing LibreLinkUp snapshot data in message")
@@ -298,6 +341,40 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
     }
 
 #if os(iOS)
+    func sendSettingsSnapshotToWatch() {
+        let username = UserDefaults.group.username
+        let password = try? PasswordKeychain.read()
+        let hasValidCredentials = UserDefaults.group.connected == .connected
+            && !username.isEmpty
+            && !(password ?? "").isEmpty
+
+        let snapshot = SettingsSnapshotPayload(
+            insulinTypeSelected: UserDefaults.group.insulinTypeSelected.rawValue,
+            showInsulinDeliveryMarksWatch: SharedData.showInsulinDeliveryMarksWatch,
+            showIOBCurveWatch: SharedData.showIOBCurveWatch,
+            showActivityCurveWatch: SharedData.showActivityCurveWatch,
+            widgetUpdateFrequency: SharedData.widgetUpdateFrequency,
+            tapComplicationReloads: SharedData.tapComplicationReloads,
+            hasValidCredentials: hasValidCredentials,
+            username: hasValidCredentials ? username : nil,
+            password: hasValidCredentials ? password : nil,
+            patientId: hasValidCredentials && !SharedData.libreLinkUpPatientId.isEmpty ? SharedData.libreLinkUpPatientId : nil,
+            updatedAt: Date()
+        )
+
+        do {
+            let settingsData = try JSONEncoder().encode(snapshot)
+            let messageToWatch: [String: Any] = [
+                "content": Self.settingsSnapshotContent,
+                Self.settingsSnapshotDataKey: settingsData,
+                "useApplicationContext": true
+            ]
+            sendMessageToPairedDevice(messageToWatch)
+        } catch {
+            Logger.connectivity.error("Failed to encode settings snapshot: \(error.localizedDescription)")
+        }
+    }
+
     func sendLibreLinkUpSnapshotToWatch() {
         Task { @MainActor in
             let history = LibreLinkUpHistory.shared
@@ -373,6 +450,42 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
     
     private override init(){
         super.init()
+    }
+
+    private func applySettingsSnapshot(_ snapshot: SettingsSnapshotPayload) {
+        UserDefaults.group.insulinTypeSelected = InsulinType(rawValue: snapshot.insulinTypeSelected) ?? .rapidActing
+        SharedData.showInsulinDeliveryMarksWatch = snapshot.showInsulinDeliveryMarksWatch
+        SharedData.showIOBCurveWatch = snapshot.showIOBCurveWatch
+        SharedData.showActivityCurveWatch = snapshot.showActivityCurveWatch
+        SharedData.widgetUpdateFrequency = snapshot.widgetUpdateFrequency
+        SharedData.tapComplicationReloads = snapshot.tapComplicationReloads
+        if snapshot.hasValidCredentials,
+           let username = snapshot.username, !username.isEmpty,
+           let password = snapshot.password, !password.isEmpty {
+            UserDefaults.group.username = username
+            try? PasswordKeychain.save(password)
+            if let patientId = snapshot.patientId, !patientId.isEmpty {
+                SharedData.libreLinkUpPatientId = patientId
+            }
+            SharedData.libreLinkUpToken = ""
+            UserDefaults.group.connected = .connected
+            Task { @MainActor in
+                await LibreLinkUpService.shared.requestReloadIfNeeded(force: true)
+            }
+        }
+        Task { @MainActor in
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+        }
+    }
+
+    func requestSettingsSnapshotFromPhone() {
+#if os(watchOS)
+        let message: [String: Any] = [
+            "content": Self.requestSettingsSnapshotContent,
+            "useApplicationContext": false
+        ]
+        sendMessageToPairedDevice(message)
+#endif
     }
     
     func startSession() {

@@ -262,6 +262,16 @@ struct PhoneAppSettingsView: View {
             
             
             Section {
+                Button("Re-send all settings to watch") {
+                    watchConnector.sendSettingsSnapshotToWatch()
+                }
+            } header: {
+                Text("Watch Sync")
+            } footer: {
+                Text("Use this if the watch app was reinstalled or its settings appear out of sync.")
+            }
+
+            Section {
                 
                 
                 let versionNumber: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
