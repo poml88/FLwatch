@@ -68,7 +68,7 @@ struct WatchAppDonateView: View {
             
             let systemVersion = WKInterfaceDevice.current().systemVersion
             let systemName = WKInterfaceDevice.current().systemName
-            let model = WKInterfaceDevice.current().model
+//            let model = WKInterfaceDevice.current().model
             let name = WKInterfaceDevice.current().name
             Text("\(systemName) \(systemVersion) on \(name)")
             Text("Insulin type: \(insulinTypeSelected.description)")

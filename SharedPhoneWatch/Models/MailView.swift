@@ -41,7 +41,7 @@ struct MailView: UIViewControllerRepresentable {
         
         let systemVersion = UIDevice.current.systemVersion
         let systemName = UIDevice.current.systemName
-        let model = UIDevice.current.model
+//        let model = UIDevice.current.model
         let name = UIDevice.current.name
         
         let sensorType = SensorSettingsStore.shared.sensorType.description

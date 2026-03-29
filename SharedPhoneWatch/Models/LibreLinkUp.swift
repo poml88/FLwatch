@@ -163,7 +163,7 @@ class LibreLinkUp  {
             }
             if !(SharedData.libreLinkUpUserId.isEmpty ||
                  SharedData.libreLinkUpToken.isEmpty) {
-                let (data, _, graphHistory, logbookData, logbookHistory, _, sensorSettingsRead, sensorType) = try await getPatientGraph()
+                let (data, _, graphHistory, logbookData, _, _, sensorSettingsRead, sensorType) = try await getPatientGraph()
                 dataString = (data as! Data).string
                 libreLinkUpResponse = dataString + (logbookData as! Data).string
                 DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
@@ -380,7 +380,7 @@ class LibreLinkUp  {
                                     print("tou")
                                     Logger.libreLinkUp.error("LibreLinkUp: Terms of Use have been updated and must be accepted by running LibreLink (tip: log out and re-login)")
                                     if                                    let user = data["user"] as? [String: Any],
-                                                                          let country = user["country"] as? String,
+                                                                          let _ = user["country"] as? String,
                                                                           let authTicketDict = data["authTicket"] as? [String: Any],
                                                                           let authTicketData = try? JSONSerialization.data(withJSONObject: authTicketDict),
                                                                           let authTicket = try? JSONDecoder().decode(AuthTicket.self, from: authTicketData) {
@@ -400,7 +400,7 @@ class LibreLinkUp  {
                                     print("pp")
                                     Logger.libreLinkUp.error("LibreLinkUp: Privacy policy has been updated and must be accepted by running LibreLink (tip: log out and re-login)")
                                     if                                    let user = data["user"] as? [String: Any],
-                                                                          let country = user["country"] as? String,
+                                                                          let _ = user["country"] as? String,
                                                                           let authTicketDict = data["authTicket"] as? [String: Any],
                                                                           let authTicketData = try? JSONSerialization.data(withJSONObject: authTicketDict),
                                                                           let authTicket = try? JSONDecoder().decode(AuthTicket.self, from: authTicketData) {
@@ -1009,7 +1009,7 @@ class LibreLinkUp  {
                    let measurement = try? JSONDecoder().decode(GlucoseMeasurement.self, from: measurementData),
                    let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp) {
                     let lifeCount = 0 // Int(round(date.timeIntervalSince(activationDate) / 60))
-                    let lastGlucose = LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow)
+                    let _ = LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow)
                     
                     let measurementString = "\(measurement)"
                     Logger.libreLinkUp.info("LibreLinkUp: last glucose measurement: \(measurementString) (JSON: \(lastGlucoseMeasurement))")
@@ -1049,7 +1049,7 @@ class LibreLinkUp  {
                                    let date = Self.parseMeasurementDate(factoryTimestamp: measurement.factoryTimestamp, timestamp: measurement.timestamp) {
                                     let currentIOB = CurrentIOBSingleton.shared.getCurrentIOB()
                                     let glucoseMeasurementEntry = LibreLinkUpLastGlucoseEntry(date: date, glucoseMeasurement: measurement, currentIOB: currentIOB)
-                                    let lifeCount = 0 // Int(round(date.timeIntervalSince(activationDate) / 60))
+//                                    let lifeCount = 0 // Int(round(date.timeIntervalSince(activationDate) / 60))
 //                                    let lastGlucose = LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow)
 //
 //                                    let measurementString = "\(measurement)"

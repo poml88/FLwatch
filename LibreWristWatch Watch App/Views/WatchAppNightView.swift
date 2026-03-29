@@ -17,7 +17,7 @@ struct WatchAppNightView: View {
         
     var body: some View {
         if libreLinkUpHistory.libreLinkUpGlucose.count > 0 {
-            let readingDate = libreLinkUpHistory.libreLinkUpGlucose[0].glucose.date
+//            let readingDate = libreLinkUpHistory.libreLinkUpGlucose[0].glucose.date
 
             VStack (spacing: -15) {
     //                if minutesSinceLastReading >= 3 {
