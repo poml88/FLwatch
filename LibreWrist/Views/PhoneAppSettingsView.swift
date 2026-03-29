@@ -380,7 +380,7 @@ struct PhoneAppSettingsView: View {
                     watchConnector.sendSettingsSnapshotToWatch()
                 }
             } header: {
-                Text("Watch Sync")
+                Text("Watch Settings")
             } footer: {
                 Text("Use this if the watch app was reinstalled or its settings appear out of sync.")
             }
