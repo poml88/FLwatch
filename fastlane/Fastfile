@@ -1,0 +1,179 @@
+require "fileutils"
+require "dotenv"
+
+opt_out_usage
+
+default_platform(:ios)
+
+Dotenv.load(
+  File.expand_path("../.env.fastlane.local", __dir__),
+  File.expand_path("../.env", __dir__)
+)
+
+SUPPORTED_RELEASE_LOCALES = %w[
+  de-DE
+  en-US
+  es-ES
+  fr-FR
+  it
+  ja
+  nl-NL
+  pl
+  ru
+  zh-Hans
+].freeze
+
+SCHEME = ENV.fetch("FASTLANE_SCHEME", "FLwatch")
+EXPORT_METHOD = ENV.fetch("FASTLANE_EXPORT_METHOD", "app-store")
+WHATS_NEW_FILE = File.expand_path("whats_new/en-US.txt", __dir__)
+WHAT_TO_TEST_FILE = File.expand_path("what_to_test/en-US.txt", __dir__)
+METADATA_PATH = File.expand_path("metadata", __dir__)
+
+def ensure_full_xcode_selected!
+  developer_dir = Actions.sh("xcode-select -p", log: false).strip
+  return unless developer_dir == "/Library/Developer/CommandLineTools"
+
+  UI.user_error!(
+    "xcodebuild is pointing at Command Line Tools. Run " \
+    "`sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` first."
+  )
+end
+
+def app_store_connect_api_key_if_configured
+  required_values = %w[
+    APP_STORE_CONNECT_API_KEY_ID
+    APP_STORE_CONNECT_ISSUER_ID
+    APP_STORE_CONNECT_API_KEY_PATH
+  ]
+
+  return nil unless required_values.all? { |key| ENV[key].to_s != "" }
+
+  app_store_connect_api_key(
+    key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+    issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+    key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+  )
+end
+
+def whats_new_text
+  UI.user_error!("Missing release notes file at #{WHATS_NEW_FILE}") unless File.exist?(WHATS_NEW_FILE)
+
+  text = File.read(WHATS_NEW_FILE).strip
+  UI.user_error!("Release notes file is empty: #{WHATS_NEW_FILE}") if text.empty?
+
+  text
+end
+
+def what_to_test_text
+  UI.user_error!("Missing external testing notes file at #{WHAT_TO_TEST_FILE}") unless File.exist?(WHAT_TO_TEST_FILE)
+
+  text = File.read(WHAT_TO_TEST_FILE).strip
+  UI.user_error!("External testing notes file is empty: #{WHAT_TO_TEST_FILE}") if text.empty?
+
+  text
+end
+
+def prepare_release_notes!
+  text = whats_new_text
+
+  SUPPORTED_RELEASE_LOCALES.each do |locale|
+    locale_dir = File.join(METADATA_PATH, locale)
+    FileUtils.mkdir_p(locale_dir)
+    File.write(File.join(locale_dir, "release_notes.txt"), "#{text}\n")
+  end
+end
+
+def external_groups
+  groups = ENV.fetch("TESTFLIGHT_EXTERNAL_GROUPS", "External")
+              .split(",")
+              .map(&:strip)
+              .reject(&:empty?)
+
+  UI.user_error!("Set TESTFLIGHT_EXTERNAL_GROUPS before running external distribution") if groups.empty?
+
+  groups
+end
+
+platform :ios do
+  private_lane :build_archive do
+    ensure_full_xcode_selected!
+
+    build_app(
+      scheme: SCHEME,
+      clean: true,
+      export_method: EXPORT_METHOD,
+      export_options: {
+        manageAppVersionAndBuildNumber: false
+      }
+    )
+  end
+
+  desc "Build and upload a build for internal TestFlight testers"
+  lane :testflight_internal do
+    api_key = app_store_connect_api_key_if_configured
+
+    build_archive
+
+    upload_to_testflight(
+      api_key: api_key,
+      changelog: what_to_test_text,
+      distribute_external: false,
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Build and upload a build for external TestFlight testers"
+  lane :testflight_external do
+    api_key = app_store_connect_api_key_if_configured
+
+    build_archive
+
+    upload_to_testflight(
+      api_key: api_key,
+      changelog: what_to_test_text,
+      distribute_external: true,
+      groups: external_groups,
+      notify_external_testers: true,
+      skip_waiting_for_build_processing: false
+    )
+  end
+
+  desc "Build and upload an App Store release, copying English release notes to all locales"
+  lane :release do
+    api_key = app_store_connect_api_key_if_configured
+
+    build_archive
+    prepare_release_notes!
+
+    upload_to_app_store(
+      api_key: api_key,
+      metadata_path: METADATA_PATH,
+      force: true,
+      skip_screenshots: true,
+      submit_for_review: ENV["SUBMIT_FOR_REVIEW"] == "1",
+      automatic_release: ENV["AUTO_RELEASE"] == "1"
+    )
+  end
+
+  desc "Submit an already uploaded TestFlight build for App Store release"
+  lane :release_existing_build do
+    api_key = app_store_connect_api_key_if_configured
+
+    prepare_release_notes!
+
+    options = {
+      api_key: api_key,
+      metadata_path: METADATA_PATH,
+      force: true,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      submit_for_review: ENV["SUBMIT_FOR_REVIEW"] == "1",
+      automatic_release: ENV["AUTO_RELEASE"] == "1"
+    }
+
+    build_number = ENV["APP_STORE_BUILD_NUMBER"].to_s.strip
+    options[:build_number] = build_number unless build_number.empty?
+
+    upload_to_app_store(**options)
+  end
+end

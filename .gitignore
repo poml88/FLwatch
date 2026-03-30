@@ -1,3 +1,14 @@
 .DS_Store
 .deriveddata
 xcuserdata
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output
+fastlane/*.p8
+.env
+.env.*
+.env.fastlane.local
+.bundle/
+vendor/bundle/
+*.ipa
+*.dSYM.zip
