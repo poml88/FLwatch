@@ -1,0 +1,12 @@
+require "dotenv"
+
+Dotenv.load(
+  File.expand_path("../.env.fastlane.local", __dir__),
+  File.expand_path("../.env", __dir__)
+)
+
+app_identifier(ENV.fetch("FASTLANE_APP_IDENTIFIER", "de.poeml.philipp.LibreWrist"))
+team_id(ENV.fetch("FASTLANE_TEAM_ID", "49Z678ZK52"))
+
+apple_id(ENV["FASTLANE_APPLE_ID"]) if ENV["FASTLANE_APPLE_ID"].to_s != ""
+itc_team_id(ENV["FASTLANE_ITC_TEAM_ID"]) if ENV["FASTLANE_ITC_TEAM_ID"].to_s != ""
