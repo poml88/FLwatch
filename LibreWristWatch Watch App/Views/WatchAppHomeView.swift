@@ -52,6 +52,10 @@ struct WatchAppHomeView: View {
         minutesSinceLastReading >= 3
     }
 
+    private var isMissingCredentials: Bool {
+        UserDefaults.group.username.isEmpty
+    }
+
   
     
     var body: some View {
@@ -172,26 +176,33 @@ struct WatchAppHomeView: View {
                 }
                 .ignoresSafeArea()
             }
-            
-            if isReadingStale && lluService.isReloading == false {
+
+            if isMissingCredentials && lluService.isReloading == false {
                 ZStack {
                     Color(white: 0, opacity: 0.5)
-                    
+
+                    VStack {
+                        Image(systemName: "iphone.slash")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 40)
+                        Text("No credentials (yet) received from phone. Try tapping 'Connect' on phone to resend to watch and wait a minute.")
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .ignoresSafeArea()
+            } else if isReadingStale && lluService.isReloading == false {
+                ZStack {
+                    Color(white: 0, opacity: 0.5)
+
                     VStack {
                         Image(systemName: "hourglass.circle")
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 40)
-                        if UserDefaults.group.username == "" {
-                            Text("No credentials (yet) received from phone. Try tapping 'Connect' on phone to resend to watch and wait a minute.")
-                                .multilineTextAlignment(.center)
-                        } else {
-                            Text("No data since \(minutesSinceLastReading) min.")
-                                .multilineTextAlignment(.center)
-                        }
+                        Text("No data since \(minutesSinceLastReading) min.")
+                            .multilineTextAlignment(.center)
                     }
-                    
-                    
                 }
                 .ignoresSafeArea()
             }
@@ -231,5 +242,4 @@ struct WatchAppHomeView: View {
     WatchAppHomeView()
     //        .environment(History.test)
 }
-
 

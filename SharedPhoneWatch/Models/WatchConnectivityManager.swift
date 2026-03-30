@@ -52,7 +52,8 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
 
     private static func mergeMinuteGlucose(
         existing: [LibreLinkUpGlucose],
-        received: [LibreLinkUpGlucose]
+        received: [LibreLinkUpGlucose],
+        libreLinkUpGlucose: [LibreLinkUpGlucose]
     ) -> [LibreLinkUpGlucose] {
         var mergedByID: [Int: LibreLinkUpGlucose] = [:]
 
@@ -71,12 +72,19 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             }
         }
 
-        return mergedByID.values.sorted {
+        let merged = mergedByID.values.sorted {
             if $0.id == $1.id {
                 return $0.glucose.date > $1.glucose.date
             }
             return $0.id > $1.id
         }
+
+        guard libreLinkUpGlucose.indices.contains(1) else {
+            return merged
+        }
+
+        let previousGraphPointDate = libreLinkUpGlucose[1].glucose.date
+        return merged.filter { $0.glucose.date > previousGraphPointDate }
     }
 
     private var messageHandlers: [WatchMessageHandler] = []
@@ -257,7 +265,8 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
                         libreLinkUpGlucose: snapshot.libreLinkUpGlucose,
                         libreLinkUpMinuteGlucose: Self.mergeMinuteGlucose(
                             existing: history.libreLinkUpMinuteGlucose,
-                            received: snapshot.libreLinkUpMinuteGlucose
+                            received: snapshot.libreLinkUpMinuteGlucose,
+                            libreLinkUpGlucose: snapshot.libreLinkUpGlucose
                         ),
                         latestLibreLinkUpGlucose: snapshot.latestLibreLinkUpGlucose,
                         lastReadingDate: snapshot.lastReadingDate,
