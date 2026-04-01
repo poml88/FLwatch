@@ -122,6 +122,8 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
     private var lastNotificationDate: Date?
     private var connectionTimeoutTask: Task<Void, Never>?
     private var watchdogTask: Task<Void, Never>?
+    private var hasReceivedCentralStateUpdate = false
+    private var restoredPeripheralAwaitingResume: CBPeripheral?
 
     private override init() {
         super.init()
@@ -136,6 +138,10 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
         return CBUUID(string: selectedCharacteristicUUID)
     }
 
+    private var isCentralPoweredOn: Bool {
+        hasReceivedCentralStateUpdate && centralManager?.state == .poweredOn
+    }
+
     var isEnabled: Bool {
         SharedData.bluetoothHeartbeatEnabled
     }
@@ -144,8 +150,10 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
         SharedData.bluetoothHeartbeatEnabled = isEnabled
         if isEnabled {
             startIfNeeded()
-            connectToSelectedDeviceIfAvailable()
-            startScanning()
+            if isCentralPoweredOn {
+                connectToSelectedDeviceIfAvailable()
+                startScanning()
+            }
             startWatchdogIfNeeded()
         } else {
             stopMonitoring()
@@ -154,6 +162,8 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
 
     func startIfNeeded() {
         guard centralManager == nil else { return }
+        hasReceivedCentralStateUpdate = false
+        Logger.connectivity.info("Creating CBCentralManager")
         centralManager = CBCentralManager(
             delegate: self,
             queue: nil,
@@ -170,25 +180,36 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
             return
         }
         startIfNeeded()
-        guard let centralManager else { return }
-
-        switch centralManager.state {
-        case .poweredOn:
-            centralManager.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
-            isScanning = true
-            status = .scanning
-        case .poweredOff:
-            status = .bluetoothOff
-        case .unsupported:
-            status = .unsupported
-        case .unauthorized:
-            status = .unauthorized
-        default:
-            status = .unavailable
+        guard let centralManager, isCentralPoweredOn else {
+            if let centralManager {
+                switch centralManager.state {
+                case .poweredOff:
+                    status = .bluetoothOff
+                case .unsupported:
+                    status = .unsupported
+                case .unauthorized:
+                    status = .unauthorized
+                default:
+                    status = .unavailable
+                }
+            }
+            return
         }
+
+        centralManager.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
+        isScanning = true
+        status = .scanning
     }
 
     func stopScanning() {
+        guard isCentralPoweredOn else {
+            isScanning = false
+            if isEnabled, status == .scanning {
+                status = connectedPeripheral == nil ? .idle : .connected
+            }
+            return
+        }
+
         centralManager?.stopScan()
         isScanning = false
         if isEnabled, status == .scanning {
@@ -217,7 +238,9 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
         connectionTimeoutTask?.cancel()
         connectionTimeoutTask = nil
         if let connectedPeripheral {
-            centralManager?.cancelPeripheralConnection(connectedPeripheral)
+            if isCentralPoweredOn {
+                centralManager?.cancelPeripheralConnection(connectedPeripheral)
+            }
         }
         connectedPeripheral = nil
         if isEnabled {
@@ -234,7 +257,9 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
         pendingReconnect = false
         pendingConnectionPeripheralID = nil
         if let connectedPeripheral {
-            centralManager?.cancelPeripheralConnection(connectedPeripheral)
+            if isCentralPoweredOn {
+                centralManager?.cancelPeripheralConnection(connectedPeripheral)
+            }
         }
         connectedPeripheral = nil
         status = .disabled
@@ -263,7 +288,7 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
         guard isEnabled else { return }
         guard !selectedDeviceName.isEmpty else { return }
         guard connectedPeripheral.map({ effectiveName(for: $0).uppercased() }) != selectedDeviceName else { return }
-        guard let centralManager else { return }
+        guard let centralManager, isCentralPoweredOn else { return }
 
         if let selectedPeripheralIdentifier {
             let restoredPeripherals = centralManager.retrievePeripherals(withIdentifiers: [selectedPeripheralIdentifier])
@@ -294,6 +319,7 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
     }
 
     private func connect(_ peripheral: CBPeripheral, using centralManager: CBCentralManager) {
+        guard isCentralPoweredOn else { return }
         guard peripheral.state != .connected, peripheral.state != .connecting else { return }
         pendingReconnect = true
         pendingConnectionPeripheralID = peripheral.identifier
@@ -320,6 +346,18 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
         lastHeartbeatDate = now
         SharedData.bluetoothHeartbeatLastEventDate = now
         PhoneHeartbeatRefreshCoordinator.shared.recordHeartbeat(source: source)
+    }
+
+    private func resumeRestoredPeripheralIfNeeded() {
+        guard let restoredPeripheralAwaitingResume else { return }
+        guard isCentralPoweredOn else { return }
+
+        Logger.connectivity.info("Resuming restored peripheral \(restoredPeripheralAwaitingResume.identifier.uuidString, privacy: .public) state=\(restoredPeripheralAwaitingResume.state.rawValue, privacy: .public)")
+        self.restoredPeripheralAwaitingResume = nil
+        subscribeToHeartbeatCharacteristics(for: restoredPeripheralAwaitingResume, rediscoverServices: true)
+        if restoredPeripheralAwaitingResume.state != .connected, let centralManager {
+            connect(restoredPeripheralAwaitingResume, using: centralManager)
+        }
     }
 
     private func subscribeToHeartbeatCharacteristics(for peripheral: CBPeripheral, rediscoverServices: Bool = false) {
@@ -387,7 +425,9 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
         pendingConnectionPeripheralID = nil
         connectionTimeoutTask?.cancel()
         connectionTimeoutTask = nil
-        centralManager?.cancelPeripheralConnection(peripheral)
+        if isCentralPoweredOn {
+            centralManager?.cancelPeripheralConnection(peripheral)
+        }
         status = .idle
         connectToSelectedDeviceIfAvailable()
         startScanning()
@@ -404,12 +444,16 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
 
         Logger.connectivity.warning("Bluetooth heartbeat watchdog fired after \(silenceInterval, privacy: .public)s without notifications")
         subscribeToHeartbeatCharacteristics(for: connectedPeripheral, rediscoverServices: true)
-        centralManager?.cancelPeripheralConnection(connectedPeripheral)
+        if isCentralPoweredOn {
+            centralManager?.cancelPeripheralConnection(connectedPeripheral)
+        }
     }
 }
 
 extension BluetoothHeartbeatManager: @preconcurrency CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        hasReceivedCentralStateUpdate = true
+
         guard isEnabled else {
             status = .disabled
             return
@@ -417,17 +461,19 @@ extension BluetoothHeartbeatManager: @preconcurrency CBCentralManagerDelegate {
 
         switch central.state {
         case .poweredOn:
+            resumeRestoredPeripheralIfNeeded()
             connectToSelectedDeviceIfAvailable()
             startScanning()
             startWatchdogIfNeeded()
         case .poweredOff:
             status = .bluetoothOff
-            stopScanning()
+            isScanning = false
         case .unsupported:
             status = .unsupported
         case .unauthorized:
             status = .unauthorized
         default:
+            isScanning = false
             status = .unavailable
         }
     }
@@ -436,6 +482,7 @@ extension BluetoothHeartbeatManager: @preconcurrency CBCentralManagerDelegate {
         _ central: CBCentralManager,
         willRestoreState dict: [String: Any]
     ) {
+        Logger.connectivity.info("centralManager willRestoreState")
         if let restoredPeripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] {
             for peripheral in restoredPeripherals {
                 peripheral.delegate = self
@@ -450,10 +497,8 @@ extension BluetoothHeartbeatManager: @preconcurrency CBCentralManagerDelegate {
                 status = restored.state == .connected ? .connected : .idle
                 lastNotificationDate = Date()
                 startWatchdogIfNeeded()
-                subscribeToHeartbeatCharacteristics(for: restored, rediscoverServices: true)
-                if restored.state != .connected, let centralManager {
-                    connect(restored, using: centralManager)
-                }
+                restoredPeripheralAwaitingResume = restored
+                Logger.connectivity.info("Queued restored peripheral for resume after poweredOn: \(restored.identifier.uuidString, privacy: .public) state=\(restored.state.rawValue, privacy: .public)")
             }
         }
     }

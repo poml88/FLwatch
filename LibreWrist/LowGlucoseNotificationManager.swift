@@ -114,8 +114,8 @@ final class LowGlucoseNotificationManager: NSObject {
         let trendArrow = history.currentTrendArrow == "---" ? "-" : history.currentTrendArrow
 
         let content = UNMutableNotificationContent()
-        content.title = "Low glucose"
-        content.body = "Current glucose is \(currentValue) \(trendArrow), below your alert limit of \(thresholdValue)."
+        content.title = "Glucose is low"
+        content.body = "Current reading is \(currentValue) \(trendArrow). Your alert level is \(thresholdValue)."
         if settings.soundSetting == .enabled {
             content.sound = .default
         } else {
@@ -140,6 +140,11 @@ final class LowGlucoseNotificationManager: NSObject {
         } catch {
             Logger.connectivity.error("Low glucose notification scheduling failed: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    func enableNotifications(now: Date = Date()) async {
+        await clearPendingNotifications(resetCooldown: true)
+        await evaluateCurrentReading(now: now)
     }
 
     func disableNotifications() async {

@@ -215,7 +215,8 @@ struct PhoneAppSettingsView: View {
                 )
 
                 Text("To discover your sensor transmitter, first fully close the LibreLink or Libre 3 app. After the transmitter connects in FLwatch, you can open the app again.")
-                    .font(.callout)
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.secondary)
 
                 HStack {
@@ -288,13 +289,13 @@ struct PhoneAppSettingsView: View {
                     .textCase(.uppercase)
                     .foregroundStyle(.secondary)
 
-                Toggle("Low glucose notifications", isOn: $lowGlucoseNotificationsEnabled)
+                Toggle("Low glucose alerts", isOn: $lowGlucoseNotificationsEnabled)
                     .onChange(of: lowGlucoseNotificationsEnabled) { _, isEnabled in
                         Task {
                             if isEnabled {
                                 let granted = await LowGlucoseNotificationManager.shared.requestAuthorizationIfNeeded()
                                 if granted {
-                                    await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
+                                    await LowGlucoseNotificationManager.shared.enableNotifications()
                                 } else {
                                     await MainActor.run {
                                         lowGlucoseNotificationsEnabled = false
@@ -306,16 +307,26 @@ struct PhoneAppSettingsView: View {
                         }
                     }
 
-                Picker("Low glucose alert limit", selection: $lowGlucoseNotificationThreshold) {
-                    ForEach(lowGlucoseThresholdOptions, id: \.self) { threshold in
-                        Text(lowGlucoseThresholdText(for: threshold))
-                            .tag(threshold)
+                if lowGlucoseNotificationsEnabled {
+                    Picker("Alert me below", selection: $lowGlucoseNotificationThreshold) {
+                        ForEach(lowGlucoseThresholdOptions, id: \.self) { threshold in
+                            Text(lowGlucoseThresholdText(for: threshold))
+                                .tag(threshold)
+                        }
                     }
+                    .onChange(of: lowGlucoseNotificationThreshold) { _, _ in
+                        Task {
+                            await LowGlucoseNotificationManager.shared.enableNotifications()
+                        }
+                    }
+                } else {
+                    LabeledContent("Alert me below", value: lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold))
+                        .foregroundStyle(.secondary)
                 }
-                .disabled(!lowGlucoseNotificationsEnabled)
 
-                Text("Alerts are checked when the Bluetooth heartbeat refresh cycle pulls glucose data. If readings stay below \(lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold)), FLwatch sends a local notification at most every 5 minutes.")
-                    .font(.callout)
+                Text("You’ll get a notification when a new reading is below \(lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold)). Alerts repeat at most every 5 minutes while glucose stays low. Alerts depend on a stable Bluetooth connection to your sensor and an internet connection. Always rely on the manufacturer's alerts first.")
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.secondary)
             } header: {
                 Text("Bluetooth Heartbeat and Notifications")

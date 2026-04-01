@@ -1019,7 +1019,7 @@
         }
       }
     },
-    "Alerts are checked when the Bluetooth heartbeat refresh cycle pulls glucose data. If readings stay below %@, FLwatch sends a local notification at most every 5 minutes." : {
+    "Alert me below" : {
 
     },
     "Apple Health" : {
@@ -5217,10 +5217,7 @@
         }
       }
     },
-    "Low glucose alert limit" : {
-
-    },
-    "Low glucose notifications" : {
+    "Low glucose alerts" : {
 
     },
     "Lower limit" : {
@@ -10373,6 +10370,9 @@
           }
         }
       }
+    },
+    "You’ll get a notification when a new reading is below %@. Alerts repeat at most every 5 minutes while glucose stays low. Alerts depend on a stable Bluetooth connection to your sensor and an internet connection. Always rely on the manufacturer's alerts first." : {
+
     },
     "Your blood glucose is currently %@ and %@." : {
       "localizations" : {
