@@ -30,11 +30,11 @@
 		</dict>
 	</array>
 	<key>NSHealthShareUsageDescription</key>
-	<string>LibreWrist can write glucose graph history and manual insulin injections to Apple Health when you enable export.</string>
+	<string>FLwatch can write glucose graph history and manual insulin injections to Apple Health when you enable export.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>LibreWrist writes glucose graph history and manual insulin injections to Apple Health after you grant permission.</string>
+	<string>FLwatch writes glucose graph history and manual insulin injections to Apple Health after you grant permission.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>LibreWrist scans for and connects to your selected Bluetooth heartbeat device so its activity can trigger glucose refreshes.</string>
+	<string>FLwatch connects to your sensor transmitter so its activity can trigger glucose refreshes.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>bluetooth-central</string>

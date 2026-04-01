@@ -41,6 +41,39 @@ struct PhoneAppSettingsView: View {
         (UserDefaults.group.array(forKey: "bgAppRefreshExecutionTimestamps") as? [TimeInterval] ?? [])
             .map(Date.init(timeIntervalSince1970:))
     }
+
+    private var hasSelectedHeartbeatDevice: Bool {
+        !bluetoothHeartbeatManager.selectedDeviceName.isEmpty
+    }
+
+    private var bluetoothHeartbeatActionTitle: String {
+        if bluetoothHeartbeatManager.isScanning {
+            return hasSelectedHeartbeatDevice ? "Pause heartbeat check" : "Stop search"
+        }
+
+        if hasSelectedHeartbeatDevice {
+            return "Check heartbeat now"
+        }
+
+        return "Scan devices"
+    }
+
+    private var bluetoothHeartbeatStatusText: String {
+        switch bluetoothHeartbeatManager.status {
+        case .disabled:
+            return "Bluetooth heartbeat off"
+        case .idle:
+            return hasSelectedHeartbeatDevice ? "Waiting for next heartbeat" : "Ready to search"
+        case .scanning:
+            return hasSelectedHeartbeatDevice
+                ? "Waiting for next heartbeat"
+                : "Looking for devices"
+        case .connected:
+            return "Heartbeat received"
+        default:
+            return bluetoothHeartbeatManager.status.description
+        }
+    }
     
     var body: some View {
         Form {
@@ -174,19 +207,19 @@ struct PhoneAppSettingsView: View {
                     .foregroundStyle(.secondary)
 
                 Toggle(
-                    "Activate Bluetooth heartbeat",
+                    "Enable Bluetooth heartbeat",
                     isOn: Binding(
                         get: { bluetoothHeartbeatManager.isEnabled },
                         set: { bluetoothHeartbeatManager.setEnabled($0) }
                     )
                 )
 
-                Text("Nearby devices are discovered by Bluetooth scan and filtered to 12-character hexadecimal names such as 3746BF23512A.")
+                Text("To discover your sensor transmitter, first fully close the LibreLink or Libre 3 app. After the transmitter connects in FLwatch, you can open the app again.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
 
                 HStack {
-                    Button(bluetoothHeartbeatManager.isScanning ? "Stop scan" : "Scan devices") {
+                    Button(bluetoothHeartbeatActionTitle) {
                         if bluetoothHeartbeatManager.isScanning {
                             bluetoothHeartbeatManager.stopScanning()
                         } else {
@@ -205,7 +238,7 @@ struct PhoneAppSettingsView: View {
                     }
                 }
 
-                Text("Status: \(bluetoothHeartbeatManager.status.description)")
+                Text("Status: \(bluetoothHeartbeatStatusText)")
 
                 if !bluetoothHeartbeatManager.selectedDeviceName.isEmpty {
                     Text("Selected device: \(bluetoothHeartbeatManager.selectedDeviceName)")
@@ -287,7 +320,7 @@ struct PhoneAppSettingsView: View {
             } header: {
                 Text("Bluetooth Heartbeat and Notifications")
             } footer: {
-                Text("CoreBluetooth can only show nearby discoverable peripherals, not every system-connected Bluetooth accessory. FLwatch scans for a selected device, reconnects to it, stores heartbeat timestamps, and uses heartbeat activity to trigger glucose reloads, widget refreshes, Live Activity refreshes, and the existing background refresh path.")
+                Text("FLwatch scans for devices nearby, reconnects to the selected device, and uses that Bluetooth activity to refresh glucose data, widgets, Live Activities, and background updates. Only nearby discoverable Bluetooth devices can appear here. This mode has very little impact on the battery.")
             }
             
             

@@ -845,9 +845,6 @@
         }
       }
     },
-    "Activate Bluetooth heartbeat" : {
-
-    },
     "Activity" : {
       "localizations" : {
         "de" : {
@@ -2316,9 +2313,6 @@
         }
       }
     },
-    "CoreBluetooth can only show nearby discoverable peripherals, not every system-connected Bluetooth accessory. FLwatch scans for a selected device, reconnects to it, stores heartbeat timestamps, and uses heartbeat activity to trigger glucose reloads, widget refreshes, Live Activity refreshes, and the existing background refresh path." : {
-
-    },
     "Could not determine insulin units value." : {
       "localizations" : {
         "de" : {
@@ -3041,6 +3035,9 @@
         }
       }
     },
+    "Enable Bluetooth heartbeat" : {
+
+    },
     "Enable Live Activities" : {
       "localizations" : {
         "de" : {
@@ -3624,6 +3621,9 @@
       }
     },
     "FLwatch" : {
+
+    },
+    "FLwatch scans for devices nearby, reconnects to the selected device, and uses that Bluetooth activity to refresh glucose data, widgets, Live Activities, and background updates. Only nearby discoverable Bluetooth devices can appear here. This mode has very little impact on the battery." : {
 
     },
     "Follower not connected to patient. Please invite in Libre app and accept in LibreLinkUp app. See Setup And Usage guide." : {
@@ -5372,9 +5372,6 @@
           }
         }
       }
-    },
-    "Nearby devices are discovered by Bluetooth scan and filtered to 12-character hexadecimal names such as 3746BF23512A." : {
-
     },
     "No connection. Network?" : {
       "localizations" : {
@@ -7839,9 +7836,6 @@
         }
       }
     },
-    "Scan devices" : {
-
-    },
     "Select the bolus insulin for the IOB calculations. Currently supported are:\n- Rapid acting (Novolog, Novorapid, ... (peak activity 75 mins))\n- Fast rapid acting (Fiasp, Lyumjev, ... (peak activity 55 mins))" : {
       "localizations" : {
         "de" : {
@@ -8534,9 +8528,6 @@
       }
     },
     "Status: %@" : {
-
-    },
-    "Stop scan" : {
 
     },
     "Submit" : {
@@ -9242,6 +9233,9 @@
           }
         }
       }
+    },
+    "To discover your sensor transmitter, first fully close the LibreLink or Libre 3 app. After the transmitter connects in FLwatch, you can open the app again." : {
+
     },
     "Too many network requests." : {
       "comment" : "Error message displayed when the app receives too many network requests in a short amount of time.",
