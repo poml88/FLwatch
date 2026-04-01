@@ -1321,7 +1321,10 @@
         }
       }
     },
-    "Bluetooth Heartbeat" : {
+    "Bluetooth heartbeat" : {
+
+    },
+    "Bluetooth Heartbeat and Notifications" : {
 
     },
     "Bolus insulin" : {
@@ -5903,6 +5906,9 @@
           }
         }
       }
+    },
+    "Notifications" : {
+
     },
     "Open app settings" : {
       "localizations" : {

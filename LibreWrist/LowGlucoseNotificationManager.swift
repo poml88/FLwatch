@@ -10,15 +10,19 @@ import Foundation
 import OSLog
 import UserNotifications
 
+private enum LowGlucoseNotificationConfig {
+    static let notificationIdentifierPrefix = "low-glucose-alert"
+    static let categoryIdentifier = "LOW_GLUCOSE_ALERT"
+    static let snoozeActionIdentifier = "LOW_GLUCOSE_ALERT_SNOOZE"
+    static let maxReadingAge: TimeInterval = 3 * 60
+    static let repeatInterval: TimeInterval = 5 * 60
+    static let snoozeInterval: TimeInterval = 15 * 60
+    static let deliveryDelay: TimeInterval = 1
+}
+
 @MainActor
 final class LowGlucoseNotificationManager: NSObject {
     static let shared = LowGlucoseNotificationManager()
-
-    private static let notificationIdentifierPrefix = "low-glucose-alert"
-    private static let categoryIdentifier = "LOW_GLUCOSE_ALERT"
-    private static let maxReadingAge: TimeInterval = 3 * 60
-    private static let repeatInterval: TimeInterval = 5 * 60
-    private static let deliveryDelay: TimeInterval = 1
     private let notificationCenter = UNUserNotificationCenter.current()
 
     private override init() {
@@ -29,10 +33,15 @@ final class LowGlucoseNotificationManager: NSObject {
         notificationCenter.delegate = self
         notificationCenter.setNotificationCategories([
             UNNotificationCategory(
-                identifier: Self.categoryIdentifier,
-                actions: [],
+                identifier: LowGlucoseNotificationConfig.categoryIdentifier,
+                actions: [
+                    UNNotificationAction(
+                        identifier: LowGlucoseNotificationConfig.snoozeActionIdentifier,
+                        title: "Snooze 15 min"
+                    )
+                ],
                 intentIdentifiers: [],
-                options: [.allowInCarPlay]
+                options: [.customDismissAction, .allowInCarPlay]
             )
         ])
     }
@@ -69,7 +78,8 @@ final class LowGlucoseNotificationManager: NSObject {
         }
         let history = LibreLinkUpHistory.shared
         let threshold = SharedData.lowGlucoseNotificationThreshold
-        let notificationIsDue = now.timeIntervalSince(SharedData.lowGlucoseNotificationLastSentDate) >= Self.repeatInterval
+        let notificationIsDue = now.timeIntervalSince(SharedData.lowGlucoseNotificationLastSentDate) >= LowGlucoseNotificationConfig.repeatInterval
+        let snoozeUntil = SharedData.lowGlucoseNotificationSnoozeUntilDate
 
         guard history.currentGlucose > 0,
               history.lastReadingDate > .distantPast else {
@@ -77,7 +87,7 @@ final class LowGlucoseNotificationManager: NSObject {
             await clearPendingNotifications(resetCooldown: false)
             return
         }
-        guard now.timeIntervalSince(history.lastReadingDate) <= Self.maxReadingAge else {
+        guard now.timeIntervalSince(history.lastReadingDate) <= LowGlucoseNotificationConfig.maxReadingAge else {
             Logger.connectivity.info("Low glucose notification skipped: glucose value is stale")
             markPendingRepeatIfNeeded(notificationIsDue)
             await clearPendingNotifications(resetCooldown: false)
@@ -86,6 +96,11 @@ final class LowGlucoseNotificationManager: NSObject {
 
         if history.currentGlucose >= threshold {
             await clearPendingNotifications(resetCooldown: true)
+            return
+        }
+
+        guard now >= snoozeUntil else {
+            Logger.connectivity.info("Low glucose notification skipped: snoozed until \(snoozeUntil.formatted(), privacy: .public)")
             return
         }
 
@@ -108,19 +123,20 @@ final class LowGlucoseNotificationManager: NSObject {
         }
         content.interruptionLevel = .timeSensitive
         content.relevanceScore = 1
-        content.categoryIdentifier = Self.categoryIdentifier
+        content.categoryIdentifier = LowGlucoseNotificationConfig.categoryIdentifier
 
-        let requestIdentifier = "\(Self.notificationIdentifierPrefix)-\(Int(now.timeIntervalSince1970))"
+        let requestIdentifier = "\(LowGlucoseNotificationConfig.notificationIdentifierPrefix)-\(Int(now.timeIntervalSince1970))"
         let request = UNNotificationRequest(
             identifier: requestIdentifier,
             content: content,
-            trigger: UNTimeIntervalNotificationTrigger(timeInterval: Self.deliveryDelay, repeats: false)
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: LowGlucoseNotificationConfig.deliveryDelay, repeats: false)
         )
 
         do {
             try await notificationCenter.add(request)
             SharedData.lowGlucoseNotificationLastSentDate = now
             SharedData.lowGlucoseNotificationPendingRepeat = false
+            SharedData.lowGlucoseNotificationSnoozeUntilDate = .distantPast
         } catch {
             Logger.connectivity.error("Low glucose notification scheduling failed: \(error.localizedDescription, privacy: .public)")
         }
@@ -134,7 +150,7 @@ final class LowGlucoseNotificationManager: NSObject {
         let pendingRequests = await notificationCenter.pendingNotificationRequests()
         let matchingPendingIdentifiers = pendingRequests
             .map(\.identifier)
-            .filter { $0.hasPrefix(Self.notificationIdentifierPrefix) }
+            .filter { $0.hasPrefix(LowGlucoseNotificationConfig.notificationIdentifierPrefix) }
         if !matchingPendingIdentifiers.isEmpty {
             notificationCenter.removePendingNotificationRequests(withIdentifiers: matchingPendingIdentifiers)
         }
@@ -142,7 +158,7 @@ final class LowGlucoseNotificationManager: NSObject {
         let deliveredNotifications = await notificationCenter.deliveredNotifications()
         let matchingDeliveredIdentifiers = deliveredNotifications
             .map(\.request.identifier)
-            .filter { $0.hasPrefix(Self.notificationIdentifierPrefix) }
+            .filter { $0.hasPrefix(LowGlucoseNotificationConfig.notificationIdentifierPrefix) }
         if !matchingDeliveredIdentifiers.isEmpty {
             notificationCenter.removeDeliveredNotifications(withIdentifiers: matchingDeliveredIdentifiers)
         }
@@ -150,12 +166,19 @@ final class LowGlucoseNotificationManager: NSObject {
         if resetCooldown {
             SharedData.lowGlucoseNotificationLastSentDate = .distantPast
             SharedData.lowGlucoseNotificationPendingRepeat = false
+            SharedData.lowGlucoseNotificationSnoozeUntilDate = .distantPast
         }
     }
 
     private func markPendingRepeatIfNeeded(_ notificationIsDue: Bool) {
         guard notificationIsDue, SharedData.lowGlucoseNotificationLastSentDate > .distantPast else { return }
         SharedData.lowGlucoseNotificationPendingRepeat = true
+    }
+
+    private func snoozeNotifications(until date: Date) async {
+        SharedData.lowGlucoseNotificationSnoozeUntilDate = date
+        SharedData.lowGlucoseNotificationPendingRepeat = false
+        await clearPendingNotifications(resetCooldown: false)
     }
 
     private func formattedGlucoseValue(_ valueInMgDl: Int, glucoseUnit: GlucoseUnit) -> String {
@@ -179,6 +202,22 @@ extension LowGlucoseNotificationManager: UNUserNotificationCenterDelegate {
             return []
         }
         return [.banner, .list, .sound]
+    }
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        guard response.notification.request.identifier.hasPrefix(LowGlucoseNotificationConfig.notificationIdentifierPrefix) else {
+            return
+        }
+
+        guard response.actionIdentifier == LowGlucoseNotificationConfig.snoozeActionIdentifier else {
+            return
+        }
+
+        let snoozeUntil = Date().addingTimeInterval(LowGlucoseNotificationConfig.snoozeInterval)
+        await LowGlucoseNotificationManager.shared.snoozeNotifications(until: snoozeUntil)
     }
 }
 #endif

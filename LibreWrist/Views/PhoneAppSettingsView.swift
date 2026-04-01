@@ -167,6 +167,12 @@ struct PhoneAppSettingsView: View {
             }
 
             Section {
+                Text("Bluetooth heartbeat")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .textCase(.uppercase)
+                    .foregroundStyle(.secondary)
+
                 Toggle(
                     "Activate Bluetooth heartbeat",
                     isOn: Binding(
@@ -211,36 +217,6 @@ struct PhoneAppSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Toggle("Low glucose notifications", isOn: $lowGlucoseNotificationsEnabled)
-                    .onChange(of: lowGlucoseNotificationsEnabled) { _, isEnabled in
-                        Task {
-                            if isEnabled {
-                                let granted = await LowGlucoseNotificationManager.shared.requestAuthorizationIfNeeded()
-                                if granted {
-                                    await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
-                                } else {
-                                    await MainActor.run {
-                                        lowGlucoseNotificationsEnabled = false
-                                    }
-                                }
-                            } else {
-                                await LowGlucoseNotificationManager.shared.disableNotifications()
-                            }
-                        }
-                    }
-
-                Picker("Low glucose alert limit", selection: $lowGlucoseNotificationThreshold) {
-                    ForEach(lowGlucoseThresholdOptions, id: \.self) { threshold in
-                        Text(lowGlucoseThresholdText(for: threshold))
-                            .tag(threshold)
-                    }
-                }
-                .disabled(!lowGlucoseNotificationsEnabled)
-
-                Text("Alerts are checked when the Bluetooth heartbeat refresh cycle pulls glucose data. If readings stay below \(lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold)), FLwatch sends a local notification at most every 5 minutes.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-
                 if let lastHeartbeatDate = bluetoothHeartbeatManager.lastHeartbeatDate {
                     Text("Last heartbeat: \(lastHeartbeatDate.formatted(date: .abbreviated, time: .standard))")
                 }
@@ -270,8 +246,46 @@ struct PhoneAppSettingsView: View {
                         .disabled(!bluetoothHeartbeatManager.isEnabled)
                     }
                 }
+
+                Divider()
+
+                Text("Notifications")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .textCase(.uppercase)
+                    .foregroundStyle(.secondary)
+
+                Toggle("Low glucose notifications", isOn: $lowGlucoseNotificationsEnabled)
+                    .onChange(of: lowGlucoseNotificationsEnabled) { _, isEnabled in
+                        Task {
+                            if isEnabled {
+                                let granted = await LowGlucoseNotificationManager.shared.requestAuthorizationIfNeeded()
+                                if granted {
+                                    await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
+                                } else {
+                                    await MainActor.run {
+                                        lowGlucoseNotificationsEnabled = false
+                                    }
+                                }
+                            } else {
+                                await LowGlucoseNotificationManager.shared.disableNotifications()
+                            }
+                        }
+                    }
+
+                Picker("Low glucose alert limit", selection: $lowGlucoseNotificationThreshold) {
+                    ForEach(lowGlucoseThresholdOptions, id: \.self) { threshold in
+                        Text(lowGlucoseThresholdText(for: threshold))
+                            .tag(threshold)
+                    }
+                }
+                .disabled(!lowGlucoseNotificationsEnabled)
+
+                Text("Alerts are checked when the Bluetooth heartbeat refresh cycle pulls glucose data. If readings stay below \(lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold)), FLwatch sends a local notification at most every 5 minutes.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             } header: {
-                Text("Bluetooth Heartbeat")
+                Text("Bluetooth Heartbeat and Notifications")
             } footer: {
                 Text("CoreBluetooth can only show nearby discoverable peripherals, not every system-connected Bluetooth accessory. FLwatch scans for a selected device, reconnects to it, stores heartbeat timestamps, and uses heartbeat activity to trigger glucose reloads, widget refreshes, Live Activity refreshes, and the existing background refresh path.")
             }
