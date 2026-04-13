@@ -180,12 +180,6 @@ final class LowGlucoseNotificationManager: NSObject {
         SharedData.lowGlucoseNotificationPendingRepeat = true
     }
 
-    private func snoozeNotifications(until date: Date) async {
-        SharedData.lowGlucoseNotificationSnoozeUntilDate = date
-        SharedData.lowGlucoseNotificationPendingRepeat = false
-        await clearPendingNotifications(resetCooldown: false)
-    }
-
     private func formattedGlucoseValue(_ valueInMgDl: Int, glucoseUnit: GlucoseUnit) -> String {
         switch glucoseUnit {
         case .mgdl:
@@ -201,18 +195,23 @@ final class LowGlucoseNotificationManager: NSObject {
 extension LowGlucoseNotificationManager: UNUserNotificationCenterDelegate {
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification
-    ) async -> UNNotificationPresentationOptions {
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
         guard notification.request.identifier.hasPrefix("low-glucose-alert") else {
-            return []
+            completionHandler([])
+            return
         }
-        return [.banner, .list, .sound]
+        completionHandler([.banner, .list, .sound])
     }
 
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
-    ) async {
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        defer { completionHandler() }
+
         guard response.notification.request.identifier.hasPrefix(LowGlucoseNotificationConfig.notificationIdentifierPrefix) else {
             return
         }
@@ -221,8 +220,10 @@ extension LowGlucoseNotificationManager: UNUserNotificationCenterDelegate {
             return
         }
 
-        let snoozeUntil = Date().addingTimeInterval(LowGlucoseNotificationConfig.snoozeInterval)
-        await LowGlucoseNotificationManager.shared.snoozeNotifications(until: snoozeUntil)
+        center.removeDeliveredNotifications(withIdentifiers: [response.notification.request.identifier])
+        center.removePendingNotificationRequests(withIdentifiers: [response.notification.request.identifier])
+        SharedData.lowGlucoseNotificationSnoozeUntilDate = Date().addingTimeInterval(LowGlucoseNotificationConfig.snoozeInterval)
+        SharedData.lowGlucoseNotificationPendingRepeat = true
     }
 }
 #endif

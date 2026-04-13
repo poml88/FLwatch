@@ -74,6 +74,23 @@ struct PhoneAppSettingsView: View {
             return bluetoothHeartbeatManager.status.description
         }
     }
+
+    private func handleLowGlucoseAlertsChanged(_ isEnabled: Bool) {
+        Task {
+            if isEnabled {
+                let granted = await LowGlucoseNotificationManager.shared.requestAuthorizationIfNeeded()
+                if granted {
+                    await LowGlucoseNotificationManager.shared.enableNotifications()
+                } else {
+                    await MainActor.run {
+                        lowGlucoseNotificationsEnabled = false
+                    }
+                }
+            } else {
+                await LowGlucoseNotificationManager.shared.disableNotifications()
+            }
+        }
+    }
     
     var body: some View {
         Form {
@@ -210,7 +227,12 @@ struct PhoneAppSettingsView: View {
                     "Enable Bluetooth heartbeat",
                     isOn: Binding(
                         get: { bluetoothHeartbeatManager.isEnabled },
-                        set: { bluetoothHeartbeatManager.setEnabled($0) }
+                        set: {
+                            bluetoothHeartbeatManager.setEnabled($0)
+                            guard !$0, lowGlucoseNotificationsEnabled else { return }
+                            lowGlucoseNotificationsEnabled = false
+                            handleLowGlucoseAlertsChanged(false)
+                        }
                     )
                 )
 
@@ -291,21 +313,13 @@ struct PhoneAppSettingsView: View {
 
                 Toggle("Low glucose alerts", isOn: $lowGlucoseNotificationsEnabled)
                     .onChange(of: lowGlucoseNotificationsEnabled) { _, isEnabled in
-                        Task {
-                            if isEnabled {
-                                let granted = await LowGlucoseNotificationManager.shared.requestAuthorizationIfNeeded()
-                                if granted {
-                                    await LowGlucoseNotificationManager.shared.enableNotifications()
-                                } else {
-                                    await MainActor.run {
-                                        lowGlucoseNotificationsEnabled = false
-                                    }
-                                }
-                            } else {
-                                await LowGlucoseNotificationManager.shared.disableNotifications()
-                            }
+                        guard bluetoothHeartbeatManager.isEnabled || !isEnabled else {
+                            lowGlucoseNotificationsEnabled = false
+                            return
                         }
+                        handleLowGlucoseAlertsChanged(isEnabled)
                     }
+                    .disabled(!bluetoothHeartbeatManager.isEnabled)
 
                 if lowGlucoseNotificationsEnabled {
                     Picker("Alert me below", selection: $lowGlucoseNotificationThreshold) {
