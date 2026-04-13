@@ -3,7 +3,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
-whats_new_file="$repo_root/fastlane/whats_new/en-US.txt"
+whats_new_file="$repo_root/fastlane/whats_new/en-GB.txt"
 
 submit="0"
 auto_release="0"

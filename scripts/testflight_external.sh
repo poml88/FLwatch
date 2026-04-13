@@ -3,7 +3,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
-what_to_test_file="$repo_root/fastlane/what_to_test/en-US.txt"
+what_to_test_file="$repo_root/fastlane/what_to_test/en-GB.txt"
 
 cd "$repo_root"
 

@@ -1,5 +1,7 @@
 require "fileutils"
 require "dotenv"
+require "json"
+require "tempfile"
 
 opt_out_usage
 
@@ -10,9 +12,25 @@ Dotenv.load(
   File.expand_path("../.env", __dir__)
 )
 
+legacy_key_id = ENV["APP_STORE_CONNECT_API_KEY_ID"].to_s
+legacy_issuer_id = ENV["APP_STORE_CONNECT_ISSUER_ID"].to_s
+legacy_key_path = ENV["APP_STORE_CONNECT_API_KEY_PATH"].to_s
+
+ENV["FASTLANE_APP_STORE_CONNECT_API_KEY_ID"] = legacy_key_id if ENV["FASTLANE_APP_STORE_CONNECT_API_KEY_ID"].to_s.empty? && !legacy_key_id.empty?
+ENV["FASTLANE_APP_STORE_CONNECT_API_KEY_ISSUER_ID"] = legacy_issuer_id if ENV["FASTLANE_APP_STORE_CONNECT_API_KEY_ISSUER_ID"].to_s.empty? && !legacy_issuer_id.empty?
+ENV["FASTLANE_APP_STORE_CONNECT_API_KEY_PATH"] = legacy_key_path if ENV["FASTLANE_APP_STORE_CONNECT_API_KEY_PATH"].to_s.empty? && !legacy_key_path.empty?
+
+# Prevent pilot/deliver from auto-reading legacy env vars as their own conflicting auth options.
+ENV.delete("APP_STORE_CONNECT_API_KEY")
+ENV.delete("APP_STORE_CONNECT_API_KEY_PATH")
+ENV.delete("DELIVER_API_KEY")
+ENV.delete("DELIVER_API_KEY_PATH")
+ENV.delete("PILOT_API_KEY")
+ENV.delete("PILOT_API_KEY_PATH")
+
 SUPPORTED_RELEASE_LOCALES = %w[
   de-DE
-  en-US
+  en-GB
   es-ES
   fr-FR
   it
@@ -25,8 +43,8 @@ SUPPORTED_RELEASE_LOCALES = %w[
 
 SCHEME = ENV.fetch("FASTLANE_SCHEME", "FLwatch")
 EXPORT_METHOD = ENV.fetch("FASTLANE_EXPORT_METHOD", "app-store")
-WHATS_NEW_FILE = File.expand_path("whats_new/en-US.txt", __dir__)
-WHAT_TO_TEST_FILE = File.expand_path("what_to_test/en-US.txt", __dir__)
+WHATS_NEW_FILE = File.expand_path("whats_new/en-GB.txt", __dir__)
+WHAT_TO_TEST_FILE = File.expand_path("what_to_test/en-GB.txt", __dir__)
 METADATA_PATH = File.expand_path("metadata", __dir__)
 
 def ensure_full_xcode_selected!
@@ -40,19 +58,87 @@ def ensure_full_xcode_selected!
 end
 
 def app_store_connect_api_key_if_configured
-  required_values = %w[
-    APP_STORE_CONNECT_API_KEY_ID
-    APP_STORE_CONNECT_ISSUER_ID
-    APP_STORE_CONNECT_API_KEY_PATH
-  ]
+  key_id = ENV["FASTLANE_APP_STORE_CONNECT_API_KEY_ID"].to_s
+  key_id = ENV["APP_STORE_CONNECT_API_KEY_ID"].to_s if key_id.empty?
 
-  return nil unless required_values.all? { |key| ENV[key].to_s != "" }
+  issuer_id = ENV["FASTLANE_APP_STORE_CONNECT_ISSUER_ID"].to_s
+  issuer_id = ENV["APP_STORE_CONNECT_ISSUER_ID"].to_s if issuer_id.empty?
+
+  key_filepath = ENV["FASTLANE_APP_STORE_CONNECT_API_KEY_PATH"].to_s
+  key_filepath = ENV["APP_STORE_CONNECT_API_KEY_PATH"].to_s if key_filepath.empty?
+
+  return nil if key_id.empty? || issuer_id.empty? || key_filepath.empty?
 
   app_store_connect_api_key(
-    key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-    issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
-    key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+    key_id: key_id,
+    issuer_id: issuer_id,
+    key_filepath: key_filepath
   )
+end
+
+def app_store_connect_key_values
+  key_id = ENV["FASTLANE_APP_STORE_CONNECT_API_KEY_ID"].to_s
+  key_id = ENV["APP_STORE_CONNECT_API_KEY_ID"].to_s if key_id.empty?
+
+  issuer_id = ENV["FASTLANE_APP_STORE_CONNECT_API_KEY_ISSUER_ID"].to_s
+  issuer_id = ENV["APP_STORE_CONNECT_ISSUER_ID"].to_s if issuer_id.empty?
+
+  key_filepath = ENV["FASTLANE_APP_STORE_CONNECT_API_KEY_PATH"].to_s
+  key_filepath = ENV["APP_STORE_CONNECT_API_KEY_PATH"].to_s if key_filepath.empty?
+
+  return nil if key_id.empty? || issuer_id.empty? || key_filepath.empty?
+
+  {
+    key_id: key_id,
+    issuer_id: issuer_id,
+    key_filepath: key_filepath
+  }
+end
+
+def with_deliver_api_key_json
+  key_values = app_store_connect_key_values
+  UI.user_error!("Missing App Store Connect API key configuration for release lane") if key_values.nil?
+
+  json_file = Tempfile.new(["app_store_connect_api_key", ".json"])
+  json_file.write(
+    JSON.generate(
+      key_id: key_values[:key_id],
+      issuer_id: key_values[:issuer_id],
+      key: File.binread(File.expand_path(key_values[:key_filepath]))
+    )
+  )
+  json_file.flush
+
+  yield json_file.path
+ensure
+  json_file.close! if json_file
+end
+
+def with_cleared_auth_env
+  keys = %w[
+    APP_STORE_CONNECT_API_KEY
+    APP_STORE_CONNECT_API_KEY_PATH
+    PILOT_API_KEY
+    PILOT_API_KEY_PATH
+    DELIVER_API_KEY
+    DELIVER_API_KEY_PATH
+  ]
+
+  previous_values = {}
+  keys.each do |key|
+    previous_values[key] = ENV.key?(key) ? ENV[key] : :__missing__
+    ENV.delete(key)
+  end
+
+  yield
+ensure
+  previous_values.each do |key, value|
+    if value == :__missing__
+      ENV.delete(key)
+    else
+      ENV[key] = value
+    end
+  end
 end
 
 def whats_new_text
@@ -75,6 +161,9 @@ end
 
 def prepare_release_notes!
   text = whats_new_text
+
+  # Prevent stale metadata from re-activating locales you don't use in App Store Connect.
+  FileUtils.rm_rf(File.join(METADATA_PATH, "en-US"))
 
   SUPPORTED_RELEASE_LOCALES.each do |locale|
     locale_dir = File.join(METADATA_PATH, locale)
@@ -110,63 +199,66 @@ platform :ios do
 
   desc "Build and upload a build for internal TestFlight testers"
   lane :testflight_internal do
-    api_key = app_store_connect_api_key_if_configured
-
     build_archive
 
-    upload_to_testflight(
-      api_key: api_key,
-      changelog: what_to_test_text,
-      distribute_external: false,
-      skip_waiting_for_build_processing: true
-    )
+    with_deliver_api_key_json do |api_key_json_path|
+      with_cleared_auth_env do
+        upload_to_testflight(
+          api_key_path: api_key_json_path,
+          changelog: what_to_test_text,
+          distribute_external: false,
+          skip_waiting_for_build_processing: true
+        )
+      end
+    end
   end
 
   desc "Build and upload a build for external TestFlight testers"
   lane :testflight_external do
-    api_key = app_store_connect_api_key_if_configured
-
     build_archive
 
-    upload_to_testflight(
-      api_key: api_key,
-      changelog: what_to_test_text,
-      distribute_external: true,
-      groups: external_groups,
-      notify_external_testers: true,
-      skip_waiting_for_build_processing: false
-    )
+    with_deliver_api_key_json do |api_key_json_path|
+      with_cleared_auth_env do
+        upload_to_testflight(
+          api_key_path: api_key_json_path,
+          changelog: what_to_test_text,
+          distribute_external: true,
+          groups: external_groups,
+          notify_external_testers: true,
+          skip_waiting_for_build_processing: false
+        )
+      end
+    end
   end
 
   desc "Build and upload an App Store release, copying English release notes to all locales"
   lane :release do
-    api_key = app_store_connect_api_key_if_configured
-
     build_archive
     prepare_release_notes!
 
-    upload_to_app_store(
-      api_key: api_key,
-      metadata_path: METADATA_PATH,
-      force: true,
-      skip_screenshots: true,
-      submit_for_review: ENV["SUBMIT_FOR_REVIEW"] == "1",
-      automatic_release: ENV["AUTO_RELEASE"] == "1"
-    )
+    with_deliver_api_key_json do |api_key_json_path|
+      with_cleared_auth_env do
+        upload_to_app_store(
+          api_key_path: api_key_json_path,
+          metadata_path: METADATA_PATH,
+          force: true,
+          precheck_include_in_app_purchases: false,
+          skip_screenshots: true,
+          submit_for_review: ENV["SUBMIT_FOR_REVIEW"] == "1",
+          automatic_release: ENV["AUTO_RELEASE"] == "1"
+        )
+      end
+    end
   end
 
   desc "Submit an already uploaded TestFlight build for App Store release"
   lane :release_existing_build do
-    api_key = app_store_connect_api_key_if_configured
-
-    prepare_release_notes!
-
     options = {
-      api_key: api_key,
-      metadata_path: METADATA_PATH,
-      force: true,
       skip_binary_upload: true,
+      skip_metadata: true,
       skip_screenshots: true,
+      force: true,
+      precheck_include_in_app_purchases: false,
       submit_for_review: ENV["SUBMIT_FOR_REVIEW"] == "1",
       automatic_release: ENV["AUTO_RELEASE"] == "1"
     }
@@ -174,6 +266,15 @@ platform :ios do
     build_number = ENV["APP_STORE_BUILD_NUMBER"].to_s.strip
     options[:build_number] = build_number unless build_number.empty?
 
-    upload_to_app_store(**options)
+    with_deliver_api_key_json do |api_key_json_path|
+      with_cleared_auth_env do
+        set_changelog(
+          api_key_path: api_key_json_path,
+          changelog: whats_new_text
+        )
+
+        upload_to_app_store(api_key_path: api_key_json_path, **options)
+      end
+    end
   end
 end

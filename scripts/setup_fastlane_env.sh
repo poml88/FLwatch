@@ -47,9 +47,9 @@ existing_key_path=""
 existing_groups="External"
 
 if [[ -f "$env_file" ]]; then
-  existing_key_id="$(sed -n 's/^APP_STORE_CONNECT_API_KEY_ID=//p' "$env_file" | tail -n 1)"
-  existing_issuer_id="$(sed -n 's/^APP_STORE_CONNECT_ISSUER_ID=//p' "$env_file" | tail -n 1)"
-  existing_key_path="$(sed -n 's/^APP_STORE_CONNECT_API_KEY_PATH=//p' "$env_file" | tail -n 1)"
+  existing_key_id="$(sed -n -e 's/^FASTLANE_APP_STORE_CONNECT_API_KEY_ID=//p' -e 's/^APP_STORE_CONNECT_API_KEY_ID=//p' "$env_file" | tail -n 1)"
+  existing_issuer_id="$(sed -n -e 's/^FASTLANE_APP_STORE_CONNECT_API_KEY_ISSUER_ID=//p' -e 's/^FASTLANE_APP_STORE_CONNECT_ISSUER_ID=//p' -e 's/^APP_STORE_CONNECT_ISSUER_ID=//p' "$env_file" | tail -n 1)"
+  existing_key_path="$(sed -n -e 's/^FASTLANE_APP_STORE_CONNECT_API_KEY_PATH=//p' -e 's/^APP_STORE_CONNECT_API_KEY_PATH=//p' "$env_file" | tail -n 1)"
   existing_groups="$(sed -n 's/^TESTFLIGHT_EXTERNAL_GROUPS=//p' "$env_file" | tail -n 1)"
 fi
 
@@ -74,9 +74,9 @@ if [[ ! -f "$key_path" ]]; then
 fi
 
 cat > "$env_file" <<EOF
-APP_STORE_CONNECT_API_KEY_ID='$(escape_env "$key_id")'
-APP_STORE_CONNECT_ISSUER_ID='$(escape_env "$issuer_id")'
-APP_STORE_CONNECT_API_KEY_PATH='$(escape_env "$key_path")'
+FASTLANE_APP_STORE_CONNECT_API_KEY_ID='$(escape_env "$key_id")'
+FASTLANE_APP_STORE_CONNECT_API_KEY_ISSUER_ID='$(escape_env "$issuer_id")'
+FASTLANE_APP_STORE_CONNECT_API_KEY_PATH='$(escape_env "$key_path")'
 TESTFLIGHT_EXTERNAL_GROUPS='$(escape_env "$groups")'
 EOF
 
