@@ -2,7 +2,7 @@
 //  BluetoothHeartbeatManager.swift
 //  LibreWrist
 //
-//  Created by Codex on 07.03.26.
+//  Created by Karl Meyer on 07.03.26.
 //
 
 #if os(iOS)
@@ -144,6 +144,25 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
 
     var isEnabled: Bool {
         SharedData.bluetoothHeartbeatEnabled
+    }
+
+    var settingsDisplayStatus: ConnectionStatus {
+        guard hasReceivedCentralStateUpdate, let centralManager else {
+            return isEnabled ? status : .disabled
+        }
+
+        switch centralManager.state {
+        case .poweredOff:
+            return .bluetoothOff
+        case .unsupported:
+            return .unsupported
+        case .unauthorized:
+            return .unauthorized
+        case .poweredOn:
+            return isEnabled ? status : .disabled
+        default:
+            return .unavailable
+        }
     }
 
     func setEnabled(_ isEnabled: Bool) {
