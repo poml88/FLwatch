@@ -327,16 +327,10 @@ struct InsulinTypePresets: Codable, Identifiable {
     }
     
     func updateCurrentIOBAndGraphs() {
-        let insulinHistory = InsulinDeliveryHistorySingleton.shared
-        insulinHistory.read()
         print("Updating IOB graphs: \(Date.now)")
         let now = Date().timeIntervalSince1970
-        let historySnapshot = insulinHistory.historySnapshot()
+        let historySnapshot = InsulinDeliveryHistorySingleton.persistedHistorySnapshot()
         let activeHistory = Self.activeHistory(from: historySnapshot, now: now)
-
-        if activeHistory.count != historySnapshot.count {
-            insulinHistory.replaceHistory(activeHistory)
-        }
 
         //MARK: Update IOB
         currentIOB = Self.currentIOB(from: activeHistory, now: now)
