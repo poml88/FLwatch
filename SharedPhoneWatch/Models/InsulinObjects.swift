@@ -278,19 +278,17 @@ struct InsulinTypePresets: Codable, Identifiable {
         return result
     }
     
-    func calculateInsulinOnBoardCurve() -> [ActivityCurveDataPoint] {
-        let idhs = InsulinDeliveryHistorySingleton.shared
+    private func calculateInsulinOnBoardCurve(from history: [InsulinDelivery]) -> [ActivityCurveDataPoint] {
         let timeIntervalSince1970: Double = Date().timeIntervalSince1970
-//        insulinDeliveryHistorySingleton.insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? [] // It is necessary to read in the UserDefaults value because widgets and app are individual programs with individual Singletons...
         
-        if idhs.insulinDeliveryHistory.count < 1 { return [] }
+        if history.isEmpty { return [] }
         
         var activityCurve: [ActivityCurveDataPoint] = []
         let minutes = 5 * 60
         let InternvalSixHoursAndTen: Double = 6 * 60 * 60 + 10 * 60
         for timeInterval in stride(from: 6 * 60 * 60, through: -2 * 60 * 60, by: -minutes) {
             var sumIOB: Double = 0
-            for item in idhs.insulinDeliveryHistory {
+            for item in history {
                 let timeIntervalBetweenDeliveryAndNow = timeIntervalSince1970 - item.timeStamp // e.g. 600 sec
                 if timeIntervalBetweenDeliveryAndNow < InternvalSixHoursAndTen {
                     let timeIntervalBetweenDeliveryAndTimeStampToBeCalculated = timeIntervalSince1970 - item.timeStamp - Double(timeInterval) // e.g. 600 sec - 300 sec
@@ -351,7 +349,7 @@ struct InsulinTypePresets: Codable, Identifiable {
         if SharedData.showIOBCurveWatch == false && SharedData.showActivityCurveWatch == false { insulinOnBoardCurve = []; insulinActivityCurve = []; maxIOB = 1000; return }
 #endif
         
-        insulinOnBoardCurve = calculateInsulinOnBoardCurve()
+        insulinOnBoardCurve = calculateInsulinOnBoardCurve(from: activeHistory)
         let indexOfMaxInsulinItem = insulinOnBoardCurve.indices.max(by:
                                                                         { insulinOnBoardCurve[$0].value < insulinOnBoardCurve[$1].value }
         ) ?? 0
