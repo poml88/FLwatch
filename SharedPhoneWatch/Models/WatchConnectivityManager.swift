@@ -124,8 +124,6 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
 //            receivedMessage = message["message"] as? String ?? "Not found"
 //        }
 
-        let idhs = InsulinDeliveryHistorySingleton.shared
-        
         Logger.connectivity.info("Message received: \(message)")
         
         if message["content"] as? String == "credentials" {
@@ -155,7 +153,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             let insulinUnits = message["units"] as? Double ?? 0.0
             let insulinType = message["insulinType"] as? Int ?? UserDefaults.group.insulinTypeSelected.rawValue
             Task { @MainActor in
-                await idhs.recordDeliveryAndAwaitExport(
+                await InsulinDeliveryHistorySingleton.shared.recordDeliveryAndAwaitExport(
                     id: deliveryID,
                     timestamp: Date(timeIntervalSince1970: timeStamp),
                     insulinUnits: insulinUnits,
@@ -166,7 +164,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         
         if message["content"] as? String == "clearInsulinHistory" {
             Task { @MainActor in
-                idhs.clearHistory()
+                InsulinDeliveryHistorySingleton.shared.clearHistory()
                 CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
             }
         }
@@ -175,10 +173,10 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             Task { @MainActor in
                 let didRemove: Bool
                 if let idString = message["id"] as? String, let deliveryID = UUID(uuidString: idString) {
-                    didRemove = idhs.removeDelivery(id: deliveryID)
+                    didRemove = InsulinDeliveryHistorySingleton.shared.removeDelivery(id: deliveryID)
                 } else {
                     let timeStamp = message["timestamp"] as? Double ?? Date().timeIntervalSince1970 - 12 * 3600
-                    didRemove = idhs.removeDeliveries(timestamp: timeStamp)
+                    didRemove = InsulinDeliveryHistorySingleton.shared.removeDeliveries(timestamp: timeStamp)
                 }
                 if didRemove {
                     CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()

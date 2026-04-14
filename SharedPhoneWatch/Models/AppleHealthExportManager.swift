@@ -106,15 +106,13 @@ final class AppleHealthExportManager {
             LibreLinkUpHistory.shared.fullLibreLinkUpGlucose
         }
         await exportGlucoseSamplesIfNeeded(glucoseReadings)
-        let insulinHistory = InsulinDeliveryHistorySingleton.shared
-        insulinHistory.read()
-        await exportInsulinDeliveriesIfNeeded(insulinHistory.insulinDeliveryHistory)
+        let insulinHistory = InsulinDeliveryHistorySingleton.persistedHistorySnapshot()
+        await exportInsulinDeliveriesIfNeeded(insulinHistory)
     }
 
     func exportInsulinCatchUpIfNeeded() async {
-        let insulinHistory = InsulinDeliveryHistorySingleton.shared
-        insulinHistory.read()
-        await exportInsulinDeliveriesIfNeeded(insulinHistory.insulinDeliveryHistory)
+        let insulinHistory = InsulinDeliveryHistorySingleton.persistedHistorySnapshot()
+        await exportInsulinDeliveriesIfNeeded(insulinHistory)
     }
 
     func exportGlucoseSamplesIfNeeded(_ readings: [LibreLinkUpGlucose]) async {

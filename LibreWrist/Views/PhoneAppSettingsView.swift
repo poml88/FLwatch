@@ -48,30 +48,42 @@ struct PhoneAppSettingsView: View {
 
     private var bluetoothHeartbeatActionTitle: String {
         if bluetoothHeartbeatManager.isScanning {
-            return hasSelectedHeartbeatDevice ? "Pause heartbeat check" : "Stop search"
+            return hasSelectedHeartbeatDevice
+                ? String(localized: "Pause heartbeat check")
+                : String(localized: "Stop search")
         }
 
         if hasSelectedHeartbeatDevice {
-            return "Check heartbeat now"
+            return String(localized: "Check heartbeat now")
         }
 
-        return "Scan devices"
+        return String(localized: "Scan devices")
     }
 
     private var bluetoothHeartbeatStatusText: String {
-        switch bluetoothHeartbeatManager.status {
+        switch bluetoothHeartbeatManager.settingsDisplayStatus {
         case .disabled:
-            return "Bluetooth heartbeat off"
+            return String(localized: "Bluetooth heartbeat off")
+        case .bluetoothOff:
+            return String(localized: "Bluetooth is off")
         case .idle:
-            return hasSelectedHeartbeatDevice ? "Waiting for next heartbeat" : "Ready to search"
+            return hasSelectedHeartbeatDevice
+                ? String(localized: "Waiting for next heartbeat")
+                : String(localized: "Ready to search")
         case .scanning:
             return hasSelectedHeartbeatDevice
-                ? "Waiting for next heartbeat"
-                : "Looking for devices"
+                ? String(localized: "Waiting for next heartbeat")
+                : String(localized: "Looking for devices")
+        case .connecting:
+            return String(localized: "Connecting to selected heartbeat device")
         case .connected:
-            return "Heartbeat received"
-        default:
-            return bluetoothHeartbeatManager.status.description
+            return String(localized: "Heartbeat received")
+        case .unauthorized:
+            return String(localized: "Bluetooth permission needed")
+        case .unsupported:
+            return String(localized: "Bluetooth not supported")
+        case .unavailable:
+            return String(localized: "Bluetooth unavailable")
         }
     }
 
