@@ -73,7 +73,7 @@ struct InsulinTypePresets: Codable, Identifiable {
     static let fastRapidActing = InsulinTypePresets(id: UUID(), actionDuration: 360 * 60, peakActivityTime: 55 * 60, delay: 10 * 60)
 }
 
-@Observable class InsulinDeliveryHistorySingleton {
+@MainActor @Observable class InsulinDeliveryHistorySingleton {
     
     var insulinDeliveryHistory: [InsulinDelivery] = []
     
@@ -88,7 +88,7 @@ struct InsulinTypePresets: Codable, Identifiable {
         insulinDeliveryHistory = Self.canonicalized(UserDefaults.group.insulinDeliveryHistory ?? [])
     }
 
-    private static func canonicalized(_ history: [InsulinDelivery]) -> [InsulinDelivery] {
+    private nonisolated static func canonicalized(_ history: [InsulinDelivery]) -> [InsulinDelivery] {
         var seen = Set<UUID>()
         return history
             .sorted {
@@ -114,7 +114,7 @@ struct InsulinTypePresets: Codable, Identifiable {
         Self.canonicalized(insulinDeliveryHistory)
     }
 
-    static func persistedHistorySnapshot() -> [InsulinDelivery] {
+    nonisolated static func persistedHistorySnapshot() -> [InsulinDelivery] {
         canonicalized(UserDefaults.group.insulinDeliveryHistory ?? [])
     }
     
