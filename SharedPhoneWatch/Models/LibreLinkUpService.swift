@@ -13,6 +13,7 @@ import OSLog
 final class LibreLinkUpService: ObservableObject {
     static let shared = LibreLinkUpService()
     private static let peerReloadWaitTimeout: TimeInterval = 15
+    private static let recentReloadWindowNanoseconds: UInt64 = 300_000_000
 
     private let gate = ReloadGate()
     private let libreLinkUp = LibreLinkUp()
@@ -40,10 +41,6 @@ final class LibreLinkUpService: ObservableObject {
         }
     }
 
-    func hasRecentReloadAttempt(maxAgeMinutes: Int = 1, now: Date = Date()) -> Bool {
-        now.timeIntervalSince(LibreLinkUpHistory.shared.lastReloadAttemptDate) < Double(maxAgeMinutes * 60)
-    }
-
     func hasFreshReading(maxAgeMinutes: Int = 1, now: Date = Date()) -> Bool {
         now.timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) < Double(maxAgeMinutes * 60)
     }
@@ -65,35 +62,46 @@ final class LibreLinkUpService: ObservableObject {
         _ = self.refreshSensorSettingsFromPersistence()
         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
 
+        if !force,
+           await self.consumeRecentSuccessfulPeerResultIfAvailable(maxAgeMinutes: maxAgeMinutes) {
+            return false
+        }
+
         return await gate.runOrJoin(
             op: { [weak self] in
             guard let self else { return false }
-            
-            let secondsSinceLastAttempt = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReloadAttemptDate)
             let secondsSinceLastSuccessfulAPICall = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastSuccessfulLibreLinkUpAPICall)
-            Logger.libreLinkUpService.info("requestReloadIfNeeded refreshed persisted snapshot before checks (secondsSinceLastAttempt: \(String(format: "%.1f", secondsSinceLastAttempt)), secondsSinceLastSuccessfulAPICall: \(String(format: "%.1f", secondsSinceLastSuccessfulAPICall)))")
+            Logger.libreLinkUpService.info("requestReloadIfNeeded refreshed persisted snapshot before checks (secondsSinceLastSuccessfulAPICall: \(String(format: "%.1f", secondsSinceLastSuccessfulAPICall)))")
 
             guard self.canReload() else {
                 Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: not connected (state: \(UserDefaults.group.connected.rawValue))")
                 return false
             }
-            guard force || !self.hasRecentReloadAttempt(maxAgeMinutes: maxAgeMinutes) else {
-                let age = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReloadAttemptDate)
-                Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: last API attempt was \(String(format: "%.1f", age))s ago (throttle: \(maxAgeMinutes * 60)s)")
+            if !force,
+               await self.consumeRecentSuccessfulPeerResultIfAvailable(maxAgeMinutes: maxAgeMinutes) {
                 return false
             }
             self.isReloading = true
             defer { self.isReloading = false }
 
-            LibreLinkUpHistory.shared.updateLastReloadAttemptDate()
             Logger.libreLinkUpService.info("requestReloadIfNeeded starting network reload")
             await self.libreLinkUp.reloadLibreLinkUp()
             self.libreLinkUpResponse = self.libreLinkUp.libreLinkUpResponse
             self.didLastReloadFail = self.libreLinkUp.libreLinkUpErrorBool
             if self.didLastReloadFail {
+                await self.gate.recordCompletion(
+                    succeeded: false,
+                    lastReadingDate: LibreLinkUpHistory.shared.lastReadingDate,
+                    historyUpdatedAt: LibreLinkUpHistory.shared.updatedAt
+                )
                 Logger.libreLinkUpService.error("requestReloadIfNeeded completed with failure")
             } else {
                 LibreLinkUpHistory.shared.updateLastSuccessfulLibreLinkUpAPICall()
+                await self.gate.recordCompletion(
+                    succeeded: true,
+                    lastReadingDate: LibreLinkUpHistory.shared.lastReadingDate,
+                    historyUpdatedAt: LibreLinkUpHistory.shared.updatedAt
+                )
                 Logger.libreLinkUpService.info("requestReloadIfNeeded completed successfully")
             }
 #if os(iOS)
@@ -110,6 +118,33 @@ final class LibreLinkUpService: ObservableObject {
                 )
             }
         )
+    }
+
+    private func consumeRecentSuccessfulPeerResultIfAvailable(maxAgeMinutes: Int) async -> Bool {
+        guard let recentStatus = await self.gate.recentSuccessfulCompletion(maxAgeMinutes: maxAgeMinutes) else {
+            return false
+        }
+
+        _ = self.refreshHistoryFromPersistence(force: true)
+        _ = self.refreshSensorSettingsFromPersistence(force: true)
+        let history = LibreLinkUpHistory.shared
+        if history.lastReadingDate >= recentStatus.lastReadingDate || history.updatedAt >= recentStatus.historyUpdatedAt {
+            let age = Date().timeIntervalSince(recentStatus.finishedAt ?? recentStatus.startedAt)
+            Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: peer reload completed \(String(format: "%.1f", age))s ago and newer data is already persisted")
+            return true
+        }
+
+        Logger.libreLinkUpService.info("requestReloadIfNeeded found recent successful reload status but persisted history has not advanced yet; waiting briefly before re-checking")
+        try? await Task.sleep(nanoseconds: Self.recentReloadWindowNanoseconds)
+        _ = self.refreshHistoryFromPersistence(force: true)
+        _ = self.refreshSensorSettingsFromPersistence(force: true)
+        if LibreLinkUpHistory.shared.lastReadingDate >= recentStatus.lastReadingDate
+            || LibreLinkUpHistory.shared.updatedAt >= recentStatus.historyUpdatedAt {
+            Logger.libreLinkUpService.info("requestReloadIfNeeded observed fresh persisted data after brief post-status wait")
+            return true
+        }
+
+        return false
     }
 
     private func waitForPeerReloadResult(
@@ -156,12 +191,25 @@ actor ReloadGate {
         let expiresAt: Date
     }
 
+    struct ReloadStatusSnapshot: Codable {
+        let startedAt: Date
+        let finishedAt: Date?
+        let succeeded: Bool?
+        let lastReadingDate: Date
+        let historyUpdatedAt: Date
+    }
+
     private enum LeaseClaimResult {
         case acquired(LeaseSnapshot)
         case heldByPeer
     }
 
     private let ownerID = UUID().uuidString
+
+    init() {
+        encoder.dateEncodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = .iso8601
+    }
 
     func runOrJoin(
         op: @escaping @MainActor @Sendable () async -> Bool,
@@ -230,10 +278,23 @@ actor ReloadGate {
         )
 
         guard let confirmedLease = try readLease(),
-              confirmedLease.ownerID == ownerID,
-              confirmedLease.acquiredAt == nextLease.acquiredAt else {
+              confirmedLease.ownerID == ownerID else {
             Logger.libreLinkUpService.info("ReloadGate: lease claim lost to peer process")
             return .heldByPeer
+        }
+
+        do {
+            try writeStatus(
+                ReloadStatusSnapshot(
+                    startedAt: now,
+                    finishedAt: nil,
+                    succeeded: nil,
+                    lastReadingDate: .distantPast,
+                    historyUpdatedAt: .distantPast
+                )
+            )
+        } catch {
+            Logger.libreLinkUpService.error("ReloadGate failed to persist in-flight reload status")
         }
 
         return .acquired(confirmedLease)
@@ -242,8 +303,7 @@ actor ReloadGate {
     private func releaseLeaseIfOwned(_ lease: LeaseSnapshot) {
         do {
             guard let currentLease = try readLease(),
-                  currentLease.ownerID == lease.ownerID,
-                  currentLease.acquiredAt == lease.acquiredAt else {
+                  currentLease.ownerID == lease.ownerID else {
                 return
             }
             try fileManager.removeItem(at: leaseFileURL())
@@ -261,9 +321,73 @@ actor ReloadGate {
         )
     }
 
+    func recordCompletion(
+        succeeded: Bool,
+        lastReadingDate: Date,
+        historyUpdatedAt: Date,
+        finishedAt: Date = Date()
+    ) {
+        do {
+            let existingStatus = try readStatus()
+            let startedAt = existingStatus?.startedAt ?? finishedAt
+            try writeStatus(
+                ReloadStatusSnapshot(
+                    startedAt: startedAt,
+                    finishedAt: finishedAt,
+                    succeeded: succeeded,
+                    lastReadingDate: lastReadingDate,
+                    historyUpdatedAt: historyUpdatedAt
+                )
+            )
+        } catch {
+            Logger.libreLinkUpService.error("ReloadGate failed to persist reload completion status")
+        }
+    }
+
+    func recentSuccessfulCompletion(maxAgeMinutes: Int, now: Date = Date()) -> ReloadStatusSnapshot? {
+        do {
+            guard let status = try readStatus(),
+                  status.succeeded == true,
+                  let finishedAt = status.finishedAt,
+                  now.timeIntervalSince(finishedAt) < Double(maxAgeMinutes * 60) else {
+                return nil
+            }
+            return status
+        } catch {
+            Logger.libreLinkUpService.error("ReloadGate failed to read reload status")
+            return nil
+        }
+    }
+
+    private func readStatus() throws -> ReloadStatusSnapshot? {
+        try FileStoreIO.readSnapshot(
+            ReloadStatusSnapshot.self,
+            from: statusFileURL(),
+            using: decoder,
+            fileManager: fileManager
+        )
+    }
+
+    private func writeStatus(_ status: ReloadStatusSnapshot) throws {
+        _ = try FileStoreIO.writeSnapshot(
+            status,
+            to: statusFileURL(),
+            using: encoder,
+            fileManager: fileManager
+        )
+    }
+
     private func leaseFileURL() -> URL {
         FileStoreIO.makeStoreURL(
             fileName: "librelinkup-reload-lease.json",
+            using: fileManager,
+            appGroupID: SharedDefaults.appGroupID
+        )
+    }
+
+    private func statusFileURL() -> URL {
+        FileStoreIO.makeStoreURL(
+            fileName: "librelinkup-reload-status.json",
             using: fileManager,
             appGroupID: SharedDefaults.appGroupID
         )

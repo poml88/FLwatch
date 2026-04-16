@@ -27,7 +27,6 @@ final class LibreLinkUpHistoryStore {
         var currentTrendArrow: String
         var maxBG: Int
         var lastSuccessfulLibreLinkUpAPICall: Date
-        var lastReloadAttemptDate: Date
         var updatedAt: Date
 
         private enum CodingKeys: String, CodingKey {
@@ -40,7 +39,6 @@ final class LibreLinkUpHistoryStore {
             case currentTrendArrow
             case maxBG
             case lastSuccessfulLibreLinkUpAPICall = "lastOnlineDate"
-            case lastReloadAttemptDate
             case updatedAt
         }
 
@@ -54,7 +52,6 @@ final class LibreLinkUpHistoryStore {
             currentTrendArrow: String,
             maxBG: Int,
             lastSuccessfulLibreLinkUpAPICall: Date,
-            lastReloadAttemptDate: Date,
             updatedAt: Date
         ) {
             self.fullLibreLinkUpGlucose = fullLibreLinkUpGlucose
@@ -66,7 +63,6 @@ final class LibreLinkUpHistoryStore {
             self.currentTrendArrow = currentTrendArrow
             self.maxBG = maxBG
             self.lastSuccessfulLibreLinkUpAPICall = lastSuccessfulLibreLinkUpAPICall
-            self.lastReloadAttemptDate = lastReloadAttemptDate
             self.updatedAt = updatedAt
         }
 
@@ -82,8 +78,6 @@ final class LibreLinkUpHistoryStore {
             self.currentTrendArrow = try container.decode(String.self, forKey: .currentTrendArrow)
             self.maxBG = try container.decode(Int.self, forKey: .maxBG)
             self.lastSuccessfulLibreLinkUpAPICall = try container.decode(Date.self, forKey: .lastSuccessfulLibreLinkUpAPICall)
-            self.lastReloadAttemptDate = try container.decodeIfPresent(Date.self, forKey: .lastReloadAttemptDate)
-                ?? .distantPast
             self.updatedAt = try container.decode(Date.self, forKey: .updatedAt)
         }
     }
@@ -112,7 +106,6 @@ final class LibreLinkUpHistoryStore {
     private(set) var currentTrendArrow: String
     private(set) var maxBG: Int
     private(set) var lastSuccessfulLibreLinkUpAPICall: Date
-    private(set) var lastReloadAttemptDate: Date
     private(set) var updatedAt: Date
 
     private let fileManager: FileManager
@@ -164,7 +157,6 @@ final class LibreLinkUpHistoryStore {
         self.currentTrendArrow = initial.currentTrendArrow
         self.maxBG = initial.maxBG
         self.lastSuccessfulLibreLinkUpAPICall = initial.lastSuccessfulLibreLinkUpAPICall
-        self.lastReloadAttemptDate = initial.lastReloadAttemptDate
         self.updatedAt = initial.updatedAt
 
         if fileManager.fileExists(atPath: storeURL.path) {
@@ -189,7 +181,6 @@ final class LibreLinkUpHistoryStore {
         currentTrendArrow: String,
         maxBG: Int,
         lastSuccessfulLibreLinkUpAPICall: Date,
-        lastReloadAttemptDate: Date,
         updatedAt: Date = Date()
     ) -> Bool {
         let normalizedLatest = latestLibreLinkUpGlucose
@@ -208,7 +199,6 @@ final class LibreLinkUpHistoryStore {
             currentTrendArrow: currentTrendArrow,
             maxBG: maxBG,
             lastSuccessfulLibreLinkUpAPICall: lastSuccessfulLibreLinkUpAPICall,
-            lastReloadAttemptDate: lastReloadAttemptDate,
             updatedAt: updatedAt
         )
 
@@ -246,24 +236,6 @@ final class LibreLinkUpHistoryStore {
             currentTrendArrow: currentTrendArrow,
             maxBG: maxBG,
             lastSuccessfulLibreLinkUpAPICall: lastSuccessfulLibreLinkUpAPICall,
-            lastReloadAttemptDate: lastReloadAttemptDate,
-            updatedAt: updatedAt
-        )
-    }
-
-    @discardableResult
-    func updateLastReloadAttemptDate(_ lastReloadAttemptDate: Date = Date(), updatedAt: Date = Date()) -> Bool {
-        replaceCacheAndPersist(
-            fullLibreLinkUpGlucose: fullLibreLinkUpGlucose,
-            libreLinkUpGlucose: libreLinkUpGlucose,
-            libreLinkUpMinuteGlucose: libreLinkUpMinuteGlucose,
-            latestLibreLinkUpGlucose: latestLibreLinkUpGlucose,
-            lastReadingDate: lastReadingDate,
-            currentGlucose: currentGlucose,
-            currentTrendArrow: currentTrendArrow,
-            maxBG: maxBG,
-            lastSuccessfulLibreLinkUpAPICall: lastSuccessfulLibreLinkUpAPICall,
-            lastReloadAttemptDate: lastReloadAttemptDate,
             updatedAt: updatedAt
         )
     }
@@ -326,7 +298,6 @@ final class LibreLinkUpHistoryStore {
             currentTrendArrow: currentTrendArrow,
             maxBG: maxBG,
             lastSuccessfulLibreLinkUpAPICall: lastSuccessfulLibreLinkUpAPICall,
-            lastReloadAttemptDate: lastReloadAttemptDate,
             updatedAt: updatedAt
         )
         let modificationDate: Date
@@ -357,7 +328,6 @@ final class LibreLinkUpHistoryStore {
         currentTrendArrow = snapshot.currentTrendArrow
         maxBG = snapshot.maxBG
         lastSuccessfulLibreLinkUpAPICall = snapshot.lastSuccessfulLibreLinkUpAPICall
-        lastReloadAttemptDate = snapshot.lastReloadAttemptDate
         updatedAt = snapshot.updatedAt
     }
 
@@ -374,7 +344,6 @@ final class LibreLinkUpHistoryStore {
             currentTrendArrow: "---",
             maxBG: 100,
             lastSuccessfulLibreLinkUpAPICall: now.addingTimeInterval(-1 * 60 * 60 * 24),
-            lastReloadAttemptDate: .distantPast,
             updatedAt: .distantPast
         )
     }
@@ -477,7 +446,6 @@ final class LibreLinkUpHistoryStore {
             currentTrendArrow: legacySnapshot.currentTrendArrow,
             maxBG: legacySnapshot.maxBG,
             lastSuccessfulLibreLinkUpAPICall: legacySnapshot.lastOnlineDate ?? Date(timeIntervalSinceNow: -1 * 60 * 60 * 24),
-            lastReloadAttemptDate: legacySnapshot.lastReloadAttemptDate ?? .distantPast,
             updatedAt: .distantPast
         )
     }

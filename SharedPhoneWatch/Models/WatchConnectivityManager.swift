@@ -271,8 +271,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
                         currentGlucose: snapshot.currentGlucose,
                         currentTrendArrow: snapshot.currentTrendArrow,
                         maxBG: snapshot.maxBG,
-                        lastSuccessfulLibreLinkUpAPICall: history.lastSuccessfulLibreLinkUpAPICall,
-                        lastReloadAttemptDate: history.lastReloadAttemptDate
+                        lastSuccessfulLibreLinkUpAPICall: history.lastSuccessfulLibreLinkUpAPICall
                     )
                     guard didApply else {
                         Logger.connectivity.error("Failed to persist LibreLinkUp snapshot from WatchConnectivity")
