@@ -89,6 +89,9 @@ struct WatchAppDonateView: View {
         //        .onAppear() {
         //            insulinDeliveryHistory = UserDefaults.group.insulinDeliveryHistory ?? []
         //        }
+        .onAppear {
+            insulinDeliveryHistorySingleton.read()
+        }
     }
 }
 
@@ -125,4 +128,3 @@ struct CustomProductStyle: ProductViewStyle {
 #Preview {
     WatchAppDonateView()
 }
-

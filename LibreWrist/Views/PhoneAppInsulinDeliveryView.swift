@@ -489,6 +489,7 @@ struct PhoneAppInsulinDeliveryView: View {
             //            }
             //        }
             .onAppear {
+                insulinDeliveryHistorySingleton.read()
                 if icrGramsPerUnit <= 0 { icrGramsPerUnit = 10 }
                 if roundingStep < 0 { roundingStep = 0.5 }
             }

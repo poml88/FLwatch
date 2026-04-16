@@ -76,6 +76,7 @@ struct InsulinTypePresets: Codable, Identifiable {
 @MainActor @Observable class InsulinDeliveryHistorySingleton {
     
     var insulinDeliveryHistory: [InsulinDelivery] = []
+    private nonisolated static let historyRetentionInterval: Double = 12 * 60 * 60
     
     static let shared: InsulinDeliveryHistorySingleton = {
         // nothing at the moment so can be used as well: static let shared: InsulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton()
@@ -98,6 +99,15 @@ struct InsulinTypePresets: Codable, Identifiable {
                 return $0.timeStamp < $1.timeStamp
             }
             .filter { seen.insert($0.id).inserted }
+    }
+
+    private nonisolated static func retainedHistory(
+        from history: [InsulinDelivery],
+        now timeIntervalSince1970: Double = Date().timeIntervalSince1970
+    ) -> [InsulinDelivery] {
+        canonicalized(history).filter {
+            timeIntervalSince1970 - $0.timeStamp <= historyRetentionInterval
+        }
     }
 
     private func mergePersistedHistoryIntoMemory() {
@@ -124,7 +134,14 @@ struct InsulinTypePresets: Codable, Identifiable {
     }
     
     func read() {
-        insulinDeliveryHistory = Self.canonicalized(UserDefaults.group.insulinDeliveryHistory ?? [])
+        let persistedHistory = UserDefaults.group.insulinDeliveryHistory ?? []
+        let canonicalizedHistory = Self.canonicalized(persistedHistory)
+        let retainedHistory = Self.retainedHistory(from: canonicalizedHistory)
+        insulinDeliveryHistory = retainedHistory
+
+        if retainedHistory.count != canonicalizedHistory.count {
+            UserDefaults.group.insulinDeliveryHistory = retainedHistory
+        }
     }
     
     func saveAndUpdateIOB() {

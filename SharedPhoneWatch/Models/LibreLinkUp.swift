@@ -241,8 +241,7 @@ class LibreLinkUp  {
                             currentGlucose: lastMeasurement.glucose.value, // always mg/dl
                             currentTrendArrow: lastMeasurement.trendArrow?.symbol ?? "---",
                             maxBG: maxBG,
-                            lastSuccessfulLibreLinkUpAPICall: now,
-                            lastReloadAttemptDate: historyStore.lastReloadAttemptDate
+                            lastSuccessfulLibreLinkUpAPICall: now
                         )
                         Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpMinuteGlucose: \(historyStore.libreLinkUpMinuteGlucose)")
                         // TODO: merge and update sensor history / trend
