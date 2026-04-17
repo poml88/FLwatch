@@ -37,6 +37,8 @@
 	<string>FLwatch connects to your sensor transmitter so its activity can trigger glucose refreshes.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<true/>
 		<key>UISceneConfigurations</key>
 		<dict>
 			<key>CPTemplateApplicationSceneSessionRoleApplication</key>

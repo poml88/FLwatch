@@ -15,12 +15,24 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     func templateApplicationScene(
         _ templateApplicationScene: CPTemplateApplicationScene,
+        didConnect interfaceController: CPInterfaceController
+    ) {
+        connect(interfaceController)
+    }
+
+    func templateApplicationScene(
+        _ templateApplicationScene: CPTemplateApplicationScene,
         didConnect interfaceController: CPInterfaceController,
         to window: CPWindow
     ) {
-        self.interfaceController = interfaceController
-        startObservingUpdates()
-        updateCarPlayUI(animated: false)
+        connect(interfaceController)
+    }
+
+    func templateApplicationScene(
+        _ templateApplicationScene: CPTemplateApplicationScene,
+        didDisconnect interfaceController: CPInterfaceController
+    ) {
+        disconnect()
     }
 
     func templateApplicationScene(
@@ -28,6 +40,16 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         didDisconnect interfaceController: CPInterfaceController,
         from window: CPWindow
     ) {
+        disconnect()
+    }
+
+    private func connect(_ interfaceController: CPInterfaceController) {
+        self.interfaceController = interfaceController
+        startObservingUpdates()
+        updateCarPlayUI(animated: false)
+    }
+
+    private func disconnect() {
         stopObservingUpdates()
         self.interfaceController = nil
     }
