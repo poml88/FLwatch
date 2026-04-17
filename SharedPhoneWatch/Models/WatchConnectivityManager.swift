@@ -6,10 +6,12 @@
 //
 
 //import Foundation
+import SwiftUI
+import UserNotifications
 import WatchConnectivity
 import OSLog
 
-class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObject is the old method, Swiftui now uses @Observable
+class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationCenterDelegate {  // ObservableObject is the old method, Swiftui now uses @Observable
     // https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app
     // https://developer.apple.com/documentation/swiftui/migrating-from-the-observable-object-protocol-to-the-observable-macro
     
@@ -20,6 +22,16 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
     private static let settingsSnapshotContent = "settingsSnapshot"
     private static let settingsSnapshotDataKey = "settingsSnapshotData"
     private static let requestSettingsSnapshotContent = "requestSettingsSnapshot"
+    private static let lowGlucoseAlertContent = "lowGlucoseAlert"
+    private static let lowGlucoseAlertDataKey = "lowGlucoseAlertData"
+#if os(watchOS)
+    private static let watchLowGlucoseNotificationIdentifierPrefix = "watch-low-glucose-alert"
+    private static let watchLowGlucoseAlertFreshness: TimeInterval = 3 * 60
+    private static let watchLowGlucoseAlertTriggerDelay: TimeInterval = 1
+    private static let watchLowGlucoseAlertCooldown: TimeInterval = 45
+#endif
+
+    private static let loggedDataPreviewByteCount = 20
 
     private struct LibreLinkUpSnapshotPayload: Codable {
         let libreLinkUpGlucose: [LibreLinkUpGlucose]
@@ -44,6 +56,24 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         let patientId: String?
         let updatedAt: Date
     }
+
+    private struct LowGlucoseAlertPayload: Codable {
+        let title: String
+        let body: String
+        let sentAt: Date
+    }
+
+#if os(watchOS)
+    private enum WatchAppVisibilityState {
+        case active
+        case inactive
+        case background
+
+        var isFrontmost: Bool {
+            self == .active || self == .inactive
+        }
+    }
+#endif
 
     @MainActor
     private static func shouldApplySnapshot(_ snapshot: LibreLinkUpSnapshotPayload, to history: LibreLinkUpHistoryStore) -> Bool {
@@ -87,8 +117,42 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         return merged.filter { $0.glucose.date > previousGraphPointDate }
     }
 
+    private static func summarizedLogValue(_ value: Any) -> String {
+        if let data = value as? Data {
+            let preview = data.prefix(loggedDataPreviewByteCount)
+                .map { String(format: "%02x", $0) }
+                .joined(separator: " ")
+            let suffix = data.count > loggedDataPreviewByteCount ? " ..." : ""
+            return "<Data \(data.count) bytes: \(preview)\(suffix)>"
+        }
+
+        if let dictionary = value as? [String: Any] {
+            let entries = dictionary.keys.sorted().map { key in
+                "\(key): \(summarizedLogValue(dictionary[key] as Any))"
+            }
+            return "[\(entries.joined(separator: ", "))]"
+        }
+
+        if let array = value as? [Any] {
+            let items = array.map(summarizedLogValue)
+            return "[\(items.joined(separator: ", "))]"
+        }
+
+        return String(describing: value)
+    }
+
+    private static func summarizedMessageForLogging(_ message: [String: Any]) -> String {
+        summarizedLogValue(message)
+    }
+
     private var messageHandlers: [WatchMessageHandler] = []
     private var requestHandlers: [WatchRequestHandler] = []
+#if os(watchOS)
+    private let watchNotificationCenter = UNUserNotificationCenter.current()
+    private var watchAppVisibilityState: WatchAppVisibilityState = .background
+    private var lastWatchLowGlucoseAlertAt: Date = .distantPast
+    private var lastScheduledWatchLowGlucoseSentAt: TimeInterval = 0
+#endif
     
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: (any Error)?) {
         Logger.connectivity.info("Session activation complete: \(activationState.rawValue)")
@@ -124,7 +188,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
 //            receivedMessage = message["message"] as? String ?? "Not found"
 //        }
 
-        Logger.connectivity.info("Message received: \(message)")
+        Logger.connectivity.info("Message received: \(Self.summarizedMessageForLogging(message))")
         
         if message["content"] as? String == "credentials" {
             UserDefaults.group.username = message["username"] as? String ?? ""
@@ -286,6 +350,24 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             }
         }
 
+        if message["content"] as? String == Self.lowGlucoseAlertContent {
+            guard let alertData = message[Self.lowGlucoseAlertDataKey] as? Data else {
+                Logger.connectivity.error("Missing low glucose alert data in message")
+                return
+            }
+
+            do {
+                let alertPayload = try JSONDecoder().decode(LowGlucoseAlertPayload.self, from: alertData)
+#if os(watchOS)
+                Task {
+                    await scheduleWatchLowGlucoseNotificationIfNeeded(for: alertPayload)
+                }
+#endif
+            } catch {
+                Logger.connectivity.error("Failed to decode low glucose alert payload: \(error.localizedDescription)")
+            }
+        }
+
 
         
         if let replyHandler = replyHandler {
@@ -319,7 +401,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
                 if message["useApplicationContext"] as? Bool ?? true {
                     Logger.connectivity.warning("Error, trying updateApplicationContext")
                     do {
-                        try self.session.updateApplicationContext(message)
+                        try self.updateApplicationContextMessage(message)
                     } catch {
                         Logger.connectivity.error("updateApplicationContext failed: \(error.localizedDescription)")
                     }
@@ -334,7 +416,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             if message["useApplicationContext"] as? Bool ?? false {
                 Logger.connectivity.warning("Trying updateApplicationContext. Sending message: \(message).")
                 do {
-                    try self.session.updateApplicationContext(message)
+                    try self.updateApplicationContextMessage(message)
                 } catch {
                     Logger.connectivity.error("updateApplicationContext failed: \(error.localizedDescription)")
                 }
@@ -414,7 +496,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
     }
     
     func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String : Any] ) {
-        received(applicationContext)
+        deliverApplicationContext(applicationContext)
     }
     
     func session(_ session: WCSession, didReceiveUserInfo userInfo: [String : Any] = [:]) {
@@ -465,9 +547,14 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         SharedData.showActivityCurveWatch = snapshot.showActivityCurveWatch
         SharedData.widgetUpdateFrequency = snapshot.widgetUpdateFrequency
         SharedData.tapComplicationReloads = snapshot.tapComplicationReloads
-        if snapshot.hasValidCredentials,
-           let username = snapshot.username, !username.isEmpty,
-           let password = snapshot.password, !password.isEmpty {
+        let shouldForceReload =
+            snapshot.hasValidCredentials
+            && !(snapshot.username ?? "").isEmpty
+            && !(snapshot.password ?? "").isEmpty
+
+        if shouldForceReload,
+           let username = snapshot.username,
+           let password = snapshot.password {
             UserDefaults.group.username = username
             try? PasswordKeychain.save(password)
             if let patientId = snapshot.patientId, !patientId.isEmpty {
@@ -478,9 +565,10 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             Task { @MainActor in
                 await LibreLinkUpService.shared.requestReloadIfNeeded(force: true)
             }
-        }
-        Task { @MainActor in
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+        } else {
+            Task { @MainActor in
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            }
         }
     }
 
@@ -498,6 +586,9 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
         if WCSession.isSupported() {
             session.delegate = self
             session.activate()
+#if os(watchOS)
+            configureWatchLowGlucoseNotifications()
+#endif
             for transfer in session.outstandingUserInfoTransfers {
                 Logger.connectivity.info("Outstanding transfer: \(transfer.userInfo.keys) isTransferring=\(transfer.isTransferring)")
                 // Optional: if you detect very old or duplicated items, decide whether to cancel or leave them
@@ -505,6 +596,196 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {  // ObservableObje
             }
         }
     }
+
+    private func updateApplicationContextMessage(_ message: [String: Any]) throws {
+        guard let content = message["content"] as? String else {
+            try session.updateApplicationContext(message)
+            return
+        }
+
+        var mergedContext = session.applicationContext
+        mergedContext[content] = message
+        try session.updateApplicationContext(mergedContext)
+    }
+
+    private func deliverApplicationContext(_ applicationContext: [String: Any]) {
+        var deliveredAnyMessage = false
+        for value in applicationContext.values {
+            guard let nestedMessage = value as? [String: Any],
+                  nestedMessage["content"] != nil else {
+                continue
+            }
+            deliveredAnyMessage = true
+            received(nestedMessage)
+        }
+
+        if deliveredAnyMessage {
+            return
+        }
+
+        if applicationContext["content"] != nil {
+            received(applicationContext)
+            return
+        }
+
+        if !deliveredAnyMessage {
+            Logger.connectivity.info("Ignoring application context without recognized messages: \(applicationContext.keys)")
+        }
+    }
+
+#if os(iOS)
+    func sendLowGlucoseAlertToWatch(title: String, body: String, sentAt: Date) {
+        let payload = LowGlucoseAlertPayload(
+            title: title,
+            body: body,
+            sentAt: sentAt
+        )
+
+        do {
+            let alertData = try JSONEncoder().encode(payload)
+            let messageToWatch: [String: Any] = [
+                "content": Self.lowGlucoseAlertContent,
+                Self.lowGlucoseAlertDataKey: alertData,
+                "useApplicationContext": true
+            ]
+            try updateApplicationContextMessage(messageToWatch)
+        } catch {
+            Logger.connectivity.error("Failed to encode low glucose alert payload: \(error.localizedDescription)")
+        }
+    }
+#endif
+
+#if os(watchOS)
+    func updateWatchScenePhase(_ scenePhase: ScenePhase) {
+        switch scenePhase {
+        case .active:
+            watchAppVisibilityState = .active
+        case .inactive:
+            watchAppVisibilityState = .inactive
+        case .background:
+            watchAppVisibilityState = .background
+        @unknown default:
+            watchAppVisibilityState = .background
+        }
+        Logger.connectivity.info("Updated watch scene phase to \(String(describing: scenePhase), privacy: .public)")
+    }
+
+    private func configureWatchLowGlucoseNotifications() {
+        watchNotificationCenter.delegate = self
+    }
+
+    func requestWatchLowGlucoseNotificationAuthorization() {
+        Task {
+            _ = await requestWatchNotificationAuthorizationIfNeeded()
+        }
+    }
+
+    private func requestWatchNotificationAuthorizationIfNeeded() async -> Bool {
+        let settings = await watchNotificationCenter.notificationSettings()
+        guard settings.authorizationStatus != .denied else {
+            Logger.connectivity.warning("Watch low glucose notification authorization denied")
+            return false
+        }
+
+        if [.authorized, .provisional].contains(settings.authorizationStatus) {
+            return true
+        }
+
+        do {
+            return try await watchNotificationCenter.requestAuthorization(options: [.alert, .sound, .badge])
+        } catch {
+            Logger.connectivity.error("Watch low glucose notification authorization failed: \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    private func scheduleWatchLowGlucoseNotificationIfNeeded(for payload: LowGlucoseAlertPayload) async {
+        Logger.connectivity.info(
+            "Watch low glucose fallback received: state=\(String(describing: self.watchAppVisibilityState), privacy: .public), sentAt=\(payload.sentAt.formatted(date: .omitted, time: .standard), privacy: .public)"
+        )
+        guard watchAppVisibilityState.isFrontmost else {
+            Logger.connectivity.info("Skipping watch low glucose fallback: app not frontmost")
+            return
+        }
+
+        let now = Date()
+        let alertAge = now.timeIntervalSince(payload.sentAt)
+        Logger.connectivity.info("Watch low glucose fallback age: \(alertAge, privacy: .public)s")
+        guard now.timeIntervalSince(payload.sentAt) <= Self.watchLowGlucoseAlertFreshness else {
+            Logger.connectivity.info("Skipping watch low glucose fallback: alert is stale")
+            return
+        }
+
+        let sentAtInterval = payload.sentAt.timeIntervalSince1970
+        guard sentAtInterval > lastScheduledWatchLowGlucoseSentAt else {
+            Logger.connectivity.info("Skipping watch low glucose fallback: already scheduled this alert")
+            return
+        }
+
+        guard now.timeIntervalSince(lastWatchLowGlucoseAlertAt) >= Self.watchLowGlucoseAlertCooldown else {
+            Logger.connectivity.info("Skipping watch low glucose fallback: cooldown active")
+            return
+        }
+
+        let settings = await watchNotificationCenter.notificationSettings()
+        Logger.connectivity.info(
+            "Watch notification settings: authorization=\(settings.authorizationStatus.rawValue, privacy: .public), alerts=\(settings.alertSetting.rawValue, privacy: .public), sound=\(settings.soundSetting.rawValue, privacy: .public)"
+        )
+        guard [.authorized, .provisional].contains(settings.authorizationStatus) else {
+            Logger.connectivity.warning("Skipping watch low glucose fallback: notification authorization unavailable")
+            return
+        }
+        guard settings.alertSetting == .enabled || settings.notificationCenterSetting == .enabled else {
+            Logger.connectivity.warning("Skipping watch low glucose fallback: alerts disabled in system settings")
+            return
+        }
+
+        let content = UNMutableNotificationContent()
+        content.title = payload.title
+        content.body = payload.body
+        if settings.soundSetting == .enabled {
+            content.sound = .default
+        }
+        content.interruptionLevel = .timeSensitive
+        content.relevanceScore = 1
+
+        let requestIdentifier = "\(Self.watchLowGlucoseNotificationIdentifierPrefix)-\(Int(now.timeIntervalSince1970))"
+        let pendingRequests = await watchNotificationCenter.pendingNotificationRequests()
+        let matchingPendingIdentifiers = pendingRequests
+            .map(\.identifier)
+            .filter { $0.hasPrefix(Self.watchLowGlucoseNotificationIdentifierPrefix) }
+        if !matchingPendingIdentifiers.isEmpty {
+            watchNotificationCenter.removePendingNotificationRequests(withIdentifiers: matchingPendingIdentifiers)
+        }
+
+        let request = UNNotificationRequest(
+            identifier: requestIdentifier,
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: Self.watchLowGlucoseAlertTriggerDelay, repeats: false)
+        )
+
+        do {
+            try await watchNotificationCenter.add(request)
+            lastWatchLowGlucoseAlertAt = now
+            lastScheduledWatchLowGlucoseSentAt = sentAtInterval
+            Logger.connectivity.info("Scheduled watch low glucose fallback notification with identifier \(requestIdentifier, privacy: .public)")
+        } catch {
+            Logger.connectivity.error("Failed to schedule watch low glucose fallback notification: \(error.localizedDescription)")
+        }
+    }
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        guard notification.request.identifier.hasPrefix(Self.watchLowGlucoseNotificationIdentifierPrefix) else {
+            completionHandler([])
+            return
+        }
+        completionHandler([.banner, .sound])
+    }
+#endif
 }
 
 protocol WatchMessage {

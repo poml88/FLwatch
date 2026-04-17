@@ -137,6 +137,11 @@ final class LowGlucoseNotificationManager: NSObject {
             SharedData.lowGlucoseNotificationLastSentDate = now
             SharedData.lowGlucoseNotificationPendingRepeat = false
             SharedData.lowGlucoseNotificationSnoozeUntilDate = .distantPast
+            WatchConnectivityManager.shared.sendLowGlucoseAlertToWatch(
+                title: content.title,
+                body: content.body,
+                sentAt: now
+            )
         } catch {
             Logger.connectivity.error("Low glucose notification scheduling failed: \(error.localizedDescription, privacy: .public)")
         }

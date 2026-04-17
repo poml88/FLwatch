@@ -67,7 +67,8 @@ struct PhoneAppHomeView: View {
 //    private let libreLinkUp = LibreLinkUp()
     @StateObject private var lluService = LibreLinkUpService.shared
      
-    private let timer = Timer.publish(every: 60, tolerance: 1, on: .main, in: .common).autoconnect()
+    private static let foregroundReloadInterval: TimeInterval = 63
+    private let timer = Timer.publish(every: Self.foregroundReloadInterval, tolerance: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
         VStack {
@@ -376,7 +377,8 @@ struct PhoneAppHomeView: View {
                 await LiveActivityManager.shared.refreshFromCurrentHistory(
                     useLiveActivities: useLiveActivities,
                     reloadFailed: lluService.didLastReloadFail,
-                    restartIfOlderThan: liveActivityRestartThreshold
+                    restartIfOlderThan: liveActivityRestartThreshold,
+                    refreshIOB: false
                 )
             }
             isShowingReloadFailed = shouldShowReloadFailedAlert

@@ -75,12 +75,21 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
+            BlueprintIdentifier = "7B2E7EAB2CB59C9300A3473B"
+            BuildableName = "FlwatchWatchWidgetExtension.appex"
+            BlueprintName = "FlwatchWatchWidgetExtension"
+            ReferencedContainer = "container:LibreWrist.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
             BlueprintIdentifier = "7BA0AE282C582F63004226FE"
             BuildableName = "FLwatch.app"
             BlueprintName = "FLwatch"
             ReferencedContainer = "container:LibreWrist.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </MacroExpansion>
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "_XCWidgetKind"

@@ -49,7 +49,8 @@ final class LiveActivityManager {
     func refreshFromCurrentHistory(
         useLiveActivities: Bool,
         reloadFailed: Bool = false,
-        restartIfOlderThan threshold: TimeInterval? = nil
+        restartIfOlderThan threshold: TimeInterval? = nil,
+        refreshIOB: Bool = true
     ) async {
         guard useLiveActivities else {
             await endAllActivities()
@@ -72,7 +73,9 @@ final class LiveActivityManager {
             let insulinHistory = InsulinDeliveryHistorySingleton.shared
             insulinHistory.read()
             let currentIOB = CurrentIOBSingleton.shared
-            currentIOB.updateCurrentIOBAndGraphs()
+            if refreshIOB {
+                currentIOB.updateCurrentIOBAndGraphs()
+            }
             _ = SensorSettingsStore.shared.refreshFromPersistence(force: reloadFailed)
             let sensorSettings = SensorSettingsStore.shared.sensorSettings
             let cutoffDate = Date.now.addingTimeInterval(-6 * 60 * 60 - 10 * 60)

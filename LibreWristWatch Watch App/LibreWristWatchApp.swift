@@ -32,8 +32,14 @@ struct LibreWristWatch_Watch_AppApp: App {
                 .environment(\.sensorSettingsStore, sensorSettingsStore)
                 .environment(\.currentIOBSingleton, currentIOBSingleton)
                 .environment(\.insulinDeliveryHistorySingleton, insulinDeliveryHistorySingleton)
+                .onAppear {
+                    WatchConnectivityManager.shared.updateWatchScenePhase(scenePhase)
+                    WatchConnectivityManager.shared.requestWatchLowGlucoseNotificationAuthorization()
+                }
                 .onChange(of: scenePhase) { _, newPhase in
+                    WatchConnectivityManager.shared.updateWatchScenePhase(newPhase)
                     guard newPhase == .active else { return }
+                    WatchConnectivityManager.shared.requestWatchLowGlucoseNotificationAuthorization()
                     LibreLinkUpHistory.shared.refreshFromPersistence()
                     SensorSettingsStore.shared.refreshFromPersistence()
                 }

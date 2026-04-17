@@ -43,7 +43,8 @@ final class PhoneHeartbeatRefreshCoordinator {
             await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
             await LiveActivityManager.shared.refreshFromCurrentHistory(
                 useLiveActivities: SharedData.useLiveActivities,
-                reloadFailed: LibreLinkUpService.shared.didLastReloadFail
+                reloadFailed: LibreLinkUpService.shared.didLastReloadFail,
+                refreshIOB: false
             )
             WidgetCenter.shared.reloadAllTimelines()
             WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()

@@ -153,7 +153,8 @@ final class BGAppRefreshScheduler {
             await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
             await LiveActivityManager.shared.refreshFromCurrentHistory(
                 useLiveActivities: SharedData.useLiveActivities,
-                reloadFailed: LibreLinkUpService.shared.didLastReloadFail
+                reloadFailed: LibreLinkUpService.shared.didLastReloadFail,
+                refreshIOB: false
             )
             Logger.bgTaskScheduler.info("requestReloadIfNeeded() completed; live activity updated from BG refresh")
             WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()

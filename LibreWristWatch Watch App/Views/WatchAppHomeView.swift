@@ -40,7 +40,8 @@ struct WatchAppHomeView: View {
     //    @State var currentGlucose: Int = 0
     //    @State var trendArrow = "---"
     
-    private let timer = Timer.publish(every: 60, tolerance: 1, on: .main, in: .common).autoconnect()
+    private static let foregroundReloadInterval: TimeInterval = 65
+    private let timer = Timer.publish(every: Self.foregroundReloadInterval, tolerance: 1, on: .main, in: .common).autoconnect()
     private let minimumWidgetReloadInterval: TimeInterval = 2
     private let minimumHistoryReloadInterval: TimeInterval = 2
 
@@ -242,4 +243,3 @@ struct WatchAppHomeView: View {
     WatchAppHomeView()
     //        .environment(History.test)
 }
-

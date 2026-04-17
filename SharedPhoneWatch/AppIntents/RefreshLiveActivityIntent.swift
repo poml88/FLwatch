@@ -21,7 +21,8 @@ struct RefreshLiveActivityIntent: LiveActivityIntent {
         _ = await LibreLinkUpService.shared.requestReloadIfNeeded()
         await LiveActivityManager.shared.refreshFromCurrentHistory(
             useLiveActivities: SharedData.useLiveActivities,
-            reloadFailed: LibreLinkUpService.shared.didLastReloadFail
+            reloadFailed: LibreLinkUpService.shared.didLastReloadFail,
+            refreshIOB: false
         )
         WidgetCenter.shared.reloadAllTimelines()
         return .result()

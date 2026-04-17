@@ -129,8 +129,8 @@ final class LibreLinkUpService: ObservableObject {
         _ = self.refreshSensorSettingsFromPersistence(force: true)
         let history = LibreLinkUpHistory.shared
         if history.lastReadingDate >= recentStatus.lastReadingDate || history.updatedAt >= recentStatus.historyUpdatedAt {
-            let age = Date().timeIntervalSince(recentStatus.finishedAt ?? recentStatus.startedAt)
-            Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: peer reload completed \(String(format: "%.1f", age))s ago and newer data is already persisted")
+            let age = Date().timeIntervalSince(recentStatus.startedAt)
+            Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: peer reload started \(String(format: "%.1f", age))s ago and newer data is already persisted")
             return true
         }
 
@@ -348,8 +348,7 @@ actor ReloadGate {
         do {
             guard let status = try readStatus(),
                   status.succeeded == true,
-                  let finishedAt = status.finishedAt,
-                  now.timeIntervalSince(finishedAt) < Double(maxAgeMinutes * 60) else {
+                  now.timeIntervalSince(status.startedAt) < Double(maxAgeMinutes * 60) else {
                 return nil
             }
             return status
