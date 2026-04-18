@@ -15,7 +15,9 @@ import WidgetKit
 final class PhoneHeartbeatRefreshCoordinator {
     static let shared = PhoneHeartbeatRefreshCoordinator()
 
-    private static let minimumRefreshInterval: TimeInterval = 60
+    private static let nominalRefreshInterval: TimeInterval = 60
+    private static let refreshJitterAllowance: TimeInterval = 5
+    private static let minimumRefreshInterval = nominalRefreshInterval - refreshJitterAllowance
     private var refreshTask: Task<Void, Never>?
 
     private init() {}

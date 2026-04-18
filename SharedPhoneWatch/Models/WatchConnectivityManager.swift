@@ -455,7 +455,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             let messageToWatch: [String: Any] = [
                 "content": Self.settingsSnapshotContent,
                 Self.settingsSnapshotDataKey: settingsData,
-                "useApplicationContext": true
+                "useApplicationContext": false
             ]
             sendMessageToPairedDevice(messageToWatch)
         } catch {
@@ -555,15 +555,31 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         if shouldForceReload,
            let username = snapshot.username,
            let password = snapshot.password {
+            let existingUsername = UserDefaults.group.username
+            let existingPassword = (try? PasswordKeychain.read()) ?? ""
+            let existingPatientId = SharedData.libreLinkUpPatientId
+            let hasToken = !SharedData.libreLinkUpToken.isEmpty
             UserDefaults.group.username = username
             try? PasswordKeychain.save(password)
             if let patientId = snapshot.patientId, !patientId.isEmpty {
                 SharedData.libreLinkUpPatientId = patientId
             }
-            SharedData.libreLinkUpToken = ""
+            let credentialsChanged =
+                username != existingUsername ||
+                password != existingPassword ||
+                ((snapshot.patientId ?? "").isEmpty == false && snapshot.patientId != existingPatientId)
+            if credentialsChanged {
+                SharedData.libreLinkUpToken = ""
+            }
             UserDefaults.group.connected = .connected
-            Task { @MainActor in
-                await LibreLinkUpService.shared.requestReloadIfNeeded(force: true)
+            if credentialsChanged || !hasToken {
+                Task { @MainActor in
+                    await LibreLinkUpService.shared.requestReloadIfNeeded(force: true)
+                }
+            } else {
+                Task { @MainActor in
+                    CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+                }
             }
         } else {
             Task { @MainActor in
@@ -648,7 +664,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
                 Self.lowGlucoseAlertDataKey: alertData,
                 "useApplicationContext": true
             ]
-            try updateApplicationContextMessage(messageToWatch)
+            sendMessageToPairedDevice(messageToWatch)
         } catch {
             Logger.connectivity.error("Failed to encode low glucose alert payload: \(error.localizedDescription)")
         }
