@@ -2,7 +2,7 @@
 //  LowGlucoseNotificationManager.swift
 //  LibreWrist
 //
-//  Created by Codex on 28.03.26.
+//  Created on 28.03.26.
 //
 
 #if os(iOS)

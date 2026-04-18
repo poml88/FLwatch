@@ -2,7 +2,7 @@
 //  AppleHealthExportManager.swift
 //  LibreWrist
 //
-//  Created by Codex on 11.03.26.
+//  Created on 11.03.26.
 //
 
 import Foundation
