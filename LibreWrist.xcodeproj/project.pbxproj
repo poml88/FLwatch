@@ -60,6 +60,7 @@
 		7B435CD02C6D5103006F6E53 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CCF2C6D5103006F6E53 /* Date.swift */; };
 		7B435CD42C6D57F5006F6E53 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CD32C6D57F5006F6E53 /* String.swift */; };
 		7B45C5392F756BC000203B4C /* BluetoothHeartbeatManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B45C5382F756BC000203B4C /* BluetoothHeartbeatManager.swift */; };
+		7BF0A0122FA4000200C0D001 /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF0A0112FA4000200C0D001 /* CarPlaySceneDelegate.swift */; };
 		7BF92A5D2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF92A5C2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift */; };
 		7B462BFD2C7FBAC8003FEDC3 /* MeasurementColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */; };
 		7B462BFE2C7FC46A003FEDC3 /* MeasurementColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */; };
@@ -380,6 +381,7 @@
 		7BDB81312CB09AF800F4A60F /* LLUHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLUHeaders.swift; sourceTree = "<group>"; };
 		7BDF0A702DBA40D500852BAD /* ReadGlucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadGlucose.swift; sourceTree = "<group>"; };
 		7BDF0A7B2DBB886400852BAD /* FLwatchShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLwatchShortcuts.swift; sourceTree = "<group>"; };
+		7BF0A0112FA4000200C0D001 /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
 		7BF0A0012F8A000100C0D001 /* AppleHealthExportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleHealthExportManager.swift; sourceTree = "<group>"; };
 		7BFD83562C84DF6200A9B195 /* InsulinObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinObjects.swift; sourceTree = "<group>"; };
 		7BFD835A2C84E48800A9B195 /* InsulinModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InsulinModel.swift; sourceTree = "<group>"; };
@@ -589,6 +591,7 @@
 			isa = PBXGroup;
 			children = (
 				7B45C5382F756BC000203B4C /* BluetoothHeartbeatManager.swift */,
+				7BF0A0112FA4000200C0D001 /* CarPlaySceneDelegate.swift */,
 				7BF92A5C2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift */,
 				7BA0AE2C2C582F63004226FE /* LibreWristApp.swift */,
 				7BC51FC02C7D3DEF009542D2 /* Views */,
@@ -1053,6 +1056,7 @@
 				7BA304152F5E30B0005384BF /* SensorSettings.swift in Sources */,
 				7BA304162F5E30B0005384BF /* PasswordKeychain.swift in Sources */,
 				7B45C5392F756BC000203B4C /* BluetoothHeartbeatManager.swift in Sources */,
+				7BF0A0122FA4000200C0D001 /* CarPlaySceneDelegate.swift in Sources */,
 				7BF92A5D2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift in Sources */,
 				7B096C9B2E33F2CA00B6744C /* PhoneAppGraphView.swift in Sources */,
 				7BF0A0022F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */,
@@ -1482,7 +1486,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSSupportsLiveActivitiesFrequentUpdates = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -1521,7 +1525,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSSupportsLiveActivitiesFrequentUpdates = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

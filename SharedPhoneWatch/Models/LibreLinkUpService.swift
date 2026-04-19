@@ -9,6 +9,16 @@ import Foundation
 import SwiftUI
 import OSLog
 
+extension Notification.Name {
+    static let libreWristDataDidChange = Notification.Name("LibreWristDataDidChange")
+}
+
+enum LibreWristUpdateNotifier {
+    static func postDataDidChange() {
+        NotificationCenter.default.post(name: .libreWristDataDidChange, object: nil)
+    }
+}
+
 @MainActor
 final class LibreLinkUpService: ObservableObject {
     static let shared = LibreLinkUpService()
@@ -117,6 +127,7 @@ final class LibreLinkUpService: ObservableObject {
                 )
                 Logger.libreLinkUpService.info("requestReloadIfNeeded completed successfully")
             }
+            LibreWristUpdateNotifier.postDataDidChange()
 #if os(iOS)
 //            WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
 #endif
@@ -181,6 +192,7 @@ final class LibreLinkUpService: ObservableObject {
             let history = LibreLinkUpHistory.shared
             if history.updatedAt > baselineUpdatedAt || history.lastReadingDate > baselineLastReadingDate {
                 Logger.libreLinkUpService.info("requestReloadIfNeeded observed fresh persisted data from peer process")
+                LibreWristUpdateNotifier.postDataDidChange()
                 return true
             }
         }
