@@ -12,6 +12,7 @@ import UIKit
 final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
     private weak var interfaceController: CPInterfaceController?
     private var observers: [NSObjectProtocol] = []
+    private var refreshTimer: Timer?
 
     func templateApplicationScene(
         _ templateApplicationScene: CPTemplateApplicationScene,
@@ -46,11 +47,13 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     private func connect(_ interfaceController: CPInterfaceController) {
         self.interfaceController = interfaceController
         startObservingUpdates()
+        startRefreshTimer()
         updateCarPlayUI(animated: false)
     }
 
     private func disconnect() {
         stopObservingUpdates()
+        stopRefreshTimer()
         self.interfaceController = nil
     }
 
@@ -89,6 +92,23 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         observers.removeAll()
     }
 
+    private func startRefreshTimer() {
+        guard refreshTimer == nil else { return }
+
+        let timer = Timer(timeInterval: 60, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.updateCarPlayUI(animated: false)
+            }
+        }
+        refreshTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func stopRefreshTimer() {
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+    }
+
     private func updateCarPlayUI(animated: Bool = true) {
         guard let interfaceController else { return }
 
@@ -110,11 +130,6 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         )
         glucoseItem.isPlaying = false
 
-        let statusItem = CPListItem(
-            text: snapshot.statusTitle,
-            detailText: snapshot.statusDetail
-        )
-
         let refreshItem = CPListItem(
             text: "Refresh now",
             detailText: "Ask FLwatch to fetch the latest glucose reading."
@@ -132,7 +147,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             }
         }
 
-        let infoSection = CPListSection(items: [glucoseItem, statusItem], header: "Glucose", sectionIndexTitle: nil)
+        let infoSection = CPListSection(items: [glucoseItem], header: "Glucose", sectionIndexTitle: nil)
         let actionsSection = CPListSection(items: [refreshItem], header: "Actions", sectionIndexTitle: nil)
 
         let template = CPListTemplate(title: "FLwatch", sections: [infoSection, actionsSection])
@@ -150,9 +165,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
               history.lastReadingDate > .distantPast else {
             return Snapshot(
                 primaryText: "--",
-                secondaryText: "No recent reading available.",
-                statusTitle: "Status",
-                statusDetail: "FLwatch has not loaded a glucose value yet."
+                secondaryText: "No recent reading available."
             )
         }
 
@@ -167,23 +180,13 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             return "IOB \(String(format: "%.1f", currentIOB))u"
         }()
 
-        let ageText = minutesAgo == 0 ? "just now" : "\(minutesAgo)m ago"
+        let readingTimeText = history.lastReadingDate.formatted(date: .omitted, time: .shortened)
+        let ageText = minutesAgo == 0 ? "just now (\(readingTimeText))" : "\(minutesAgo)m ago (\(readingTimeText))"
         let secondaryText = "\(iobText) • \(ageText) • \(glucoseUnit.description)"
-
-        let statusDetail: String
-        if LibreLinkUpService.shared.didLastReloadFail {
-            statusDetail = "Last reload failed. Showing cached data from \(ageText)."
-        } else if isStale {
-            statusDetail = "Reading is stale. Last value was seen \(ageText)."
-        } else {
-            statusDetail = "Reading is current. Last value was seen \(ageText)."
-        }
 
         return Snapshot(
             primaryText: primaryText,
-            secondaryText: secondaryText,
-            statusTitle: "Status",
-            statusDetail: statusDetail
+            secondaryText: secondaryText
         )
     }
 }
@@ -192,8 +195,6 @@ private extension CarPlaySceneDelegate {
     struct Snapshot {
         let primaryText: String
         let secondaryText: String
-        let statusTitle: String
-        let statusDetail: String
     }
 }
 #endif
