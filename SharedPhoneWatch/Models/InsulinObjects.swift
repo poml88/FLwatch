@@ -171,7 +171,6 @@ struct InsulinTypePresets: Codable, Identifiable {
         )
         insulinDeliveryHistory.append(delivery)
         saveAndUpdateIOB()
-        LibreWristUpdateNotifier.postDataDidChange()
         return delivery
     }
 
@@ -209,10 +208,6 @@ struct InsulinTypePresets: Codable, Identifiable {
     func replaceHistory(_ history: [InsulinDelivery]) {
         insulinDeliveryHistory = Self.canonicalized(history)
         persistCurrentHistory()
-        Task { @MainActor in
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-        }
-        LibreWristUpdateNotifier.postDataDidChange()
     }
 
     @discardableResult
@@ -223,10 +218,6 @@ struct InsulinTypePresets: Codable, Identifiable {
         let didRemove = insulinDeliveryHistory.count != originalCount
         if didRemove {
             persistCurrentHistory()
-            Task { @MainActor in
-                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-            }
-            LibreWristUpdateNotifier.postDataDidChange()
         }
         return didRemove
     }
@@ -239,10 +230,6 @@ struct InsulinTypePresets: Codable, Identifiable {
         let didRemove = insulinDeliveryHistory.count != originalCount
         if didRemove {
             persistCurrentHistory()
-            Task { @MainActor in
-                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-            }
-            LibreWristUpdateNotifier.postDataDidChange()
         }
         return didRemove
     }
@@ -250,10 +237,6 @@ struct InsulinTypePresets: Codable, Identifiable {
     func clearHistory() {
         insulinDeliveryHistory = []
         persistCurrentHistory()
-        Task { @MainActor in
-            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-        }
-        LibreWristUpdateNotifier.postDataDidChange()
     }
 }
 
