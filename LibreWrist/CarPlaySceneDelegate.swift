@@ -129,9 +129,12 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             detailText: snapshot.secondaryText
         )
         glucoseItem.isPlaying = false
+        glucoseItem.handler = { _, completion in
+            completion()
+        }
 
         let refreshItem = CPListItem(
-            text: "Refresh now",
+            text: "Tap to refresh now",
             detailText: "Ask FLwatch to fetch the latest glucose reading."
         )
         refreshItem.handler = { [weak self] _, completion in
@@ -147,12 +150,34 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             }
         }
 
-        let infoSection = CPListSection(items: [glucoseItem], header: "Glucose", sectionIndexTitle: nil)
-        let actionsSection = CPListSection(items: [refreshItem], header: "Actions", sectionIndexTitle: nil)
+        let graphInfoItem = CPListItem(
+            text: "Glucose Graphs in CarPlay",
+            detailText: "Use the widget or Live Activity."
+        )
+        graphInfoItem.handler = { [weak self] _, completion in
+            completion()
+            self?.presentGraphInfoAlert()
+        }
 
-        let template = CPListTemplate(title: "FLwatch", sections: [infoSection, actionsSection])
+        let glucoseSection = CPListSection(items: [glucoseItem], header: "Current glucose & IOB", sectionIndexTitle: nil)
+        let actionsSection = CPListSection(items: [refreshItem], header: "Actions", sectionIndexTitle: nil)
+        let infoSection = CPListSection(items: [graphInfoItem], header: "Info", sectionIndexTitle: nil)
+
+        let template = CPListTemplate(title: "FLwatch", sections: [glucoseSection, actionsSection, infoSection])
         template.tabTitle = "FLwatch"
         return template
+    }
+
+    private func presentGraphInfoAlert() {
+        guard let interfaceController else { return }
+
+        let okAction = CPAlertAction(title: "OK", style: .default) { _ in }
+        let alert = CPActionSheetTemplate(
+            title: "Glucose Graphs in CarPlay",
+            message: "Use the FLwatch widget or Live Activity to view the glucose graph.",
+            actions: [okAction]
+        )
+        interfaceController.presentTemplate(alert, animated: true) { _, _ in }
     }
 
     private func makeSnapshot(now: Date = Date()) -> Snapshot {
