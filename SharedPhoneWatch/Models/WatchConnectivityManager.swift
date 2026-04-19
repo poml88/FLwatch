@@ -315,6 +315,9 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             }
             do {
                 let snapshot = try JSONDecoder().decode(LibreLinkUpSnapshotPayload.self, from: snapshotData)
+#if os(watchOS)
+                SharedData.watchPeerSnapshotLastReceivedDate = Date()
+#endif
                 Task { @MainActor in
                     let history = LibreLinkUpHistory.shared
                     _ = history.refreshFromPersistence()

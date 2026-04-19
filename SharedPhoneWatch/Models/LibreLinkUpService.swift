@@ -15,7 +15,8 @@ final class LibreLinkUpService: ObservableObject {
     private static let peerReloadWaitTimeout: TimeInterval = 15
     private static let recentReloadWindowNanoseconds: UInt64 = 300_000_000
 #if os(watchOS)
-    private static let watchReloadStartDelaySeconds: TimeInterval = 0
+    private static let watchReloadStartDelaySeconds: TimeInterval = 1
+    private static let watchReloadDelayRecentSnapshotWindow: TimeInterval = 3 * 60
 #endif
 
     private let gate = ReloadGate()
@@ -59,7 +60,8 @@ final class LibreLinkUpService: ObservableObject {
         Logger.libreLinkUpService.info("requestReloadIfNeeded called (maxAgeMinutes: \(maxAgeMinutes), force: \(force))")
 
 #if os(watchOS)
-        if Self.watchReloadStartDelaySeconds > 0 {
+        if Self.watchReloadStartDelaySeconds > 0,
+           Date().timeIntervalSince(SharedData.watchPeerSnapshotLastReceivedDate) <= Self.watchReloadDelayRecentSnapshotWindow {
             Logger.libreLinkUpService.info("requestReloadIfNeeded delaying start by \(Self.watchReloadStartDelaySeconds, privacy: .public)s")
             let delayNanoseconds = UInt64(Self.watchReloadStartDelaySeconds * 1_000_000_000)
             try? await Task.sleep(nanoseconds: delayNanoseconds)

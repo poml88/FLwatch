@@ -44,6 +44,7 @@ enum DefaultsKey: String {
     case bluetoothHeartbeatCharacteristicUUID = "bluetoothHeartbeatCharacteristicUUIDKey"
     case bluetoothHeartbeatLastEventDate = "bluetoothHeartbeatLastEventDateKey"
     case bluetoothHeartbeatLastRefreshDate = "bluetoothHeartbeatLastRefreshDateKey"
+    case watchPeerSnapshotLastReceivedDate = "watchPeerSnapshotLastReceivedDateKey"
     case lowGlucoseNotificationsEnabled = "lowGlucoseNotificationsEnabledKey"
     case lowGlucoseNotificationThreshold = "lowGlucoseNotificationThresholdKey"
     case lowGlucoseNotificationLastSentDate = "lowGlucoseNotificationLastSentDateKey"
@@ -304,6 +305,11 @@ enum SharedData {
     static var bluetoothHeartbeatLastRefreshDate: Date {
         get { store.getDate(.bluetoothHeartbeatLastRefreshDate, defaultValue: Date(timeIntervalSince1970: 0)) }
         set { store.setDate(newValue, forKey: .bluetoothHeartbeatLastRefreshDate) }
+    }
+
+    static var watchPeerSnapshotLastReceivedDate: Date {
+        get { store.getDate(.watchPeerSnapshotLastReceivedDate, defaultValue: Date(timeIntervalSince1970: 0)) }
+        set { store.setDate(newValue, forKey: .watchPeerSnapshotLastReceivedDate) }
     }
 
     static var lowGlucoseNotificationsEnabled: Bool {
