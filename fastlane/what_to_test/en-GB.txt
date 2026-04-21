@@ -1,1 +1,1 @@
-(hopefully) fix crash when using the 15 minute alert snooze
+* better carplay implementation. alterts now also on carplay.

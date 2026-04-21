@@ -1,3 +1,8 @@
-* bug fix release
-* Bluetooth heartbeat
-* low glucose alerts
+* various fixes around api reload
+* fix lost token on watch that broke widget reload
+* delay api call 1 sec to give time for WC snapshot to arrive
+* add watch local notification if watch app is in foreground or frontmost, otherwise no alert
+* improve gating of LLU API calls
+* fix some rare crashes around insulin delivery history
+* translations
+

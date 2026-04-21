@@ -183,6 +183,16 @@ def external_groups
   groups
 end
 
+def editable_app_store_version_string(app_identifier:, platform: "ios")
+  app = Spaceship::ConnectAPI::App.find(app_identifier)
+  UI.user_error!("Couldn't find app with identifier #{app_identifier}") if app.nil?
+
+  version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform.map(platform))
+  UI.user_error!("Couldn't find an editable App Store version for #{app_identifier}") if version.nil?
+
+  version.version_string
+end
+
 platform :ios do
   private_lane :build_archive do
     ensure_full_xcode_selected!
@@ -271,6 +281,14 @@ platform :ios do
         set_changelog(
           api_key_path: api_key_json_path,
           changelog: whats_new_text
+        )
+
+        # `deliver` auto-detects `app_version` from the newest local `*.ipa` if present.
+        # For existing-build submissions that can point at a stale archive, so pin the
+        # editable App Store Connect version we just updated instead.
+        options[:app_version] = editable_app_store_version_string(
+          app_identifier: CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier),
+          platform: "ios"
         )
 
         upload_to_app_store(api_key_path: api_key_json_path, **options)

@@ -81,6 +81,7 @@ enum DefaultsKey: String {
     case hasSeenDisclaimer = "hasSeenDisclaimer"
     case hasSeenWelcomeMessage = "hasSeenWelcomeMessage"
     case hasSeenNotification001 = "hasSeenNotification001"
+    case lastSeenUpdateNoteVersion = "lastSeenUpdateNoteVersion"
     case libreLinkUpHistorySnapshot = "libreLinkUpHistorySnapshotKey"
     
     
@@ -357,9 +358,29 @@ enum SharedData {
         set { store.setBool(newValue, forKey: .hasSeenWelcomeMessage) }
     }
     
-    static var hasSeenNotification: Bool {
-        get { store.getBool(.hasSeenNotification001, defaultValue: false) }
-        set { store.setBool(newValue, forKey: .hasSeenNotification001) }
+    static var lastSeenUpdateNoteVersion: Int {
+        get {
+            if store.object(forKey: DefaultsKey.lastSeenUpdateNoteVersion.rawValue) != nil {
+                return store.getInt(.lastSeenUpdateNoteVersion, defaultValue: 0)
+            }
+
+            // Migrate the legacy one-off boolean flag to version 1.
+            return store.getBool(.hasSeenNotification001, defaultValue: false) ? 1 : 0
+        }
+        set {
+            store.setInt(newValue, forKey: .lastSeenUpdateNoteVersion)
+            if newValue >= 1 {
+                store.setBool(true, forKey: .hasSeenNotification001)
+            }
+        }
+    }
+
+    static func hasSeenNotification(version: Int) -> Bool {
+        lastSeenUpdateNoteVersion >= version
+    }
+
+    static func markNotificationSeen(version: Int) {
+        lastSeenUpdateNoteVersion = max(lastSeenUpdateNoteVersion, version)
     }
     
     static var libreLinkUpUserId: String {

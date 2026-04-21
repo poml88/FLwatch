@@ -29,18 +29,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         connect(interfaceController)
     }
 
-    func templateApplicationScene(
-        _ templateApplicationScene: CPTemplateApplicationScene,
-        didDisconnect interfaceController: CPInterfaceController
-    ) {
-        disconnect()
-    }
-
-    func templateApplicationScene(
-        _ templateApplicationScene: CPTemplateApplicationScene,
-        didDisconnect interfaceController: CPInterfaceController,
-        from window: CPWindow
-    ) {
+    func sceneDidDisconnect(_ scene: UIScene) {
         disconnect()
     }
 
@@ -123,6 +112,8 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     private func makeRootTemplate() -> CPTemplate {
         let snapshot = makeSnapshot()
+        let shouldShowSnoozeAction = SharedData.lowGlucoseNotificationsEnabled &&
+            !LowGlucoseNotificationManager.shared.isLowGlucoseAlertSnoozed()
 
         let glucoseItem = CPListItem(
             text: snapshot.primaryText,
@@ -134,8 +125,8 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         }
 
         let refreshItem = CPListItem(
-            text: "Tap to refresh now",
-            detailText: "Ask FLwatch to fetch the latest glucose reading."
+            text: String(localized: "Tap to refresh now"),
+            detailText: String(localized: "Ask FLwatch to fetch the latest glucose reading.")
         )
         refreshItem.handler = { [weak self] _, completion in
             Task { @MainActor [weak self] in
@@ -150,31 +141,46 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             }
         }
 
+        let snoozeAlertItem = CPListItem(
+            text: String(localized: "Snooze low alert for 15 min"),
+            detailText: String(localized: "Pause low glucose alerts temporarily.")
+        )
+        snoozeAlertItem.handler = { [weak self] _, completion in
+            Task { @MainActor [weak self] in
+                await LowGlucoseNotificationManager.shared.snoozeLowGlucoseAlerts()
+                self?.updateCarPlayUI()
+                completion()
+            }
+        }
+
         let graphInfoItem = CPListItem(
-            text: "Glucose Graphs in CarPlay",
-            detailText: "Use the widget or Live Activity."
+            text: String(localized: "Glucose Graphs in CarPlay"),
+            detailText: String(localized: "Use the widget or Live Activity.")
         )
         graphInfoItem.handler = { [weak self] _, completion in
             completion()
             self?.presentGraphInfoAlert()
         }
 
-        let glucoseSection = CPListSection(items: [glucoseItem], header: "Current glucose & IOB", sectionIndexTitle: nil)
-        let actionsSection = CPListSection(items: [refreshItem], header: "Actions", sectionIndexTitle: nil)
-        let infoSection = CPListSection(items: [graphInfoItem], header: "Info", sectionIndexTitle: nil)
+        let glucoseSection = CPListSection(items: [glucoseItem], header: String(localized: "Current glucose & IOB"), sectionIndexTitle: nil)
+        let actionItems = shouldShowSnoozeAction
+            ? [snoozeAlertItem, refreshItem]
+            : [refreshItem]
+        let actionsSection = CPListSection(items: actionItems, header: String(localized: "Actions"), sectionIndexTitle: nil)
+        let infoSection = CPListSection(items: [graphInfoItem], header: String(localized: "Info"), sectionIndexTitle: nil)
 
-        let template = CPListTemplate(title: "FLwatch", sections: [glucoseSection, actionsSection, infoSection])
-        template.tabTitle = "FLwatch"
+        let template = CPListTemplate(title: String(localized: "FLwatch"), sections: [glucoseSection, actionsSection, infoSection])
+        template.tabTitle = String(localized: "FLwatch")
         return template
     }
 
     private func presentGraphInfoAlert() {
         guard let interfaceController else { return }
 
-        let okAction = CPAlertAction(title: "OK", style: .default) { _ in }
+        let okAction = CPAlertAction(title: String(localized: "OK"), style: .default) { _ in }
         let alert = CPActionSheetTemplate(
-            title: "Glucose Graphs in CarPlay",
-            message: "Use the FLwatch widget or Live Activity to view the glucose graph.",
+            title: String(localized: "Glucose Graphs in CarPlay"),
+            message: String(localized: "Use the FLwatch widget or Live Activity to view the glucose graph."),
             actions: [okAction]
         )
         interfaceController.presentTemplate(alert, animated: true) { _, _ in }
@@ -190,7 +196,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
               history.lastReadingDate > .distantPast else {
             return Snapshot(
                 primaryText: "--",
-                secondaryText: "No recent reading available."
+                secondaryText: String(localized: "No recent reading available.")
             )
         }
 
@@ -198,16 +204,21 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         let isStale = now.timeIntervalSince(history.lastReadingDate) > 5 * 60
         let trend = history.currentTrendArrow == "---" ? "-" : history.currentTrendArrow
         let glucoseValue = history.currentGlucose.asGlucose(glucoseUnitValue: uom)
-        let primaryText = isStale ? "\(glucoseValue) \(trend) (old)" : "\(glucoseValue) \(trend)"
-
-        let iobText: String = {
-            guard currentIOB >= 0 else { return "IOB -.-u" }
-            return "IOB \(String(format: "%.1f", currentIOB))u"
-        }()
+        let currentGlucoseText = "\(glucoseValue) \(trend)"
+        let primaryText = isStale
+            ? String(format: String(localized: "%@ (old)"), currentGlucoseText)
+            : currentGlucoseText
 
         let readingTimeText = history.lastReadingDate.formatted(date: .omitted, time: .shortened)
-        let ageText = minutesAgo == 0 ? "just now (\(readingTimeText))" : "\(minutesAgo)m ago (\(readingTimeText))"
-        let secondaryText = "\(iobText) • \(ageText) • \(glucoseUnit.description)"
+        let ageText = minutesAgo == 0
+            ? String(format: String(localized: "just now (%@)"), readingTimeText)
+            : String(format: String(localized: "%dm ago (%@)"), minutesAgo, readingTimeText)
+        let iobPrefix: String = {
+            guard currentIOB > 0 else { return "" }
+            let iobValue = String(format: "%.1f", currentIOB)
+            return String(format: String(localized: "IOB %@u • "), iobValue)
+        }()
+        let secondaryText = "\(iobPrefix)\(ageText) • \(glucoseUnit.description)"
 
         return Snapshot(
             primaryText: primaryText,

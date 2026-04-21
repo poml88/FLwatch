@@ -13,6 +13,10 @@ import StoreKit
 
 
 struct PhoneAppHomeView: View {
+    private struct StartupUpdateNote {
+        let version: Int
+        let message: String
+    }
     
     
     
@@ -64,6 +68,15 @@ struct PhoneAppHomeView: View {
     private let minimumDaysOfUse = 10
     private let defaultOverlayConnectionMessage = String(localized: "Check that Libre app is running.")
     
+    // -------------------------------------
+    private let startupUpdateNote: StartupUpdateNote? = nil
+
+//    private let startupUpdateNote: StartupUpdateNote? = StartupUpdateNote(
+//        version: 2,
+//        message: "Test note!"
+//    )
+    // -------------------------------------
+    
 //    private let libreLinkUp = LibreLinkUp()
     @StateObject private var lluService = LibreLinkUpService.shared
      
@@ -104,10 +117,13 @@ struct PhoneAppHomeView: View {
         }
         
         .alert ("Update note", isPresented: $isShowingNotification) {
-            Button("Understood", role: .cancel, action: {SharedData.hasSeenNotification = true})
+            Button("Understood", role: .cancel) {
+                guard let startupUpdateNote else { return }
+                SharedData.markNotificationSeen(version: startupUpdateNote.version)
+            }
         }
         message: {
-            Text("Please reboot phone and watch once if widgets do not work!")
+            Text(startupUpdateNote?.message ?? "")
         }
         
         .alert ("Warning", isPresented: $isShowingReloadFailed) {
@@ -166,11 +182,10 @@ struct PhoneAppHomeView: View {
             
             
             
-//            Uncomment to show a notification at app start
-//            Increase counter in Settings (hasSeenNotification000)
-//            if settings.hasSeenNotification == false {
-//                isShowingNotification = true
-//            }
+            if let startupUpdateNote,
+               SharedData.hasSeenNotification(version: startupUpdateNote.version) == false {
+                isShowingNotification = true
+            }
             
             //MARK: Skip the following on app start
             if onAppearNotToDoFirstStart == false { // not to do on first start

@@ -37,7 +37,7 @@ final class LowGlucoseNotificationManager: NSObject {
                 actions: [
                     UNNotificationAction(
                         identifier: LowGlucoseNotificationConfig.snoozeActionIdentifier,
-                        title: "Snooze 15 min"
+                        title: String(localized: "Snooze 15 min")
                     )
                 ],
                 intentIdentifiers: [],
@@ -110,12 +110,15 @@ final class LowGlucoseNotificationManager: NSObject {
 
         let glucoseUnit = GlucoseUnit(uom: SensorSettingsStore.shared.sensorSettings.uom)
         let currentValue = formattedGlucoseValue(history.currentGlucose, glucoseUnit: glucoseUnit)
+        let compactCurrentValue = formattedGlucoseNumber(history.currentGlucose, glucoseUnit: glucoseUnit)
         let thresholdValue = formattedGlucoseValue(threshold, glucoseUnit: glucoseUnit)
         let trendArrow = history.currentTrendArrow == "---" ? "-" : history.currentTrendArrow
+        let compactTrendSummary = "\(compactCurrentValue) \(trendArrow)"
 
         let content = UNMutableNotificationContent()
-        content.title = "Glucose is low"
-        content.body = "Current reading is \(currentValue) \(trendArrow). Your alert level is \(thresholdValue)."
+        content.title = String(localized: "Glucose is low")
+        content.subtitle = compactTrendSummary
+        content.body = String(format: String(localized: "Your alert level is %@."), thresholdValue)
         if settings.soundSetting == .enabled {
             content.sound = .default
         } else {
@@ -139,6 +142,7 @@ final class LowGlucoseNotificationManager: NSObject {
             SharedData.lowGlucoseNotificationSnoozeUntilDate = .distantPast
             WatchConnectivityManager.shared.sendLowGlucoseAlertToWatch(
                 title: content.title,
+                subtitle: content.subtitle,
                 body: content.body,
                 sentAt: now
             )
@@ -156,7 +160,27 @@ final class LowGlucoseNotificationManager: NSObject {
         await clearPendingNotifications(resetCooldown: true)
     }
 
+    func isLowGlucoseAlertSnoozed(now: Date = Date()) -> Bool {
+        now < SharedData.lowGlucoseNotificationSnoozeUntilDate
+    }
+
+    func snoozeLowGlucoseAlerts(now: Date = Date()) async {
+        await removePendingAndDeliveredNotifications()
+        SharedData.lowGlucoseNotificationSnoozeUntilDate = now.addingTimeInterval(LowGlucoseNotificationConfig.snoozeInterval)
+        SharedData.lowGlucoseNotificationPendingRepeat = true
+    }
+
     private func clearPendingNotifications(resetCooldown: Bool) async {
+        await removePendingAndDeliveredNotifications()
+
+        if resetCooldown {
+            SharedData.lowGlucoseNotificationLastSentDate = .distantPast
+            SharedData.lowGlucoseNotificationPendingRepeat = false
+            SharedData.lowGlucoseNotificationSnoozeUntilDate = .distantPast
+        }
+    }
+
+    private func removePendingAndDeliveredNotifications() async {
         let pendingRequests = await notificationCenter.pendingNotificationRequests()
         let matchingPendingIdentifiers = pendingRequests
             .map(\.identifier)
@@ -171,12 +195,6 @@ final class LowGlucoseNotificationManager: NSObject {
             .filter { $0.hasPrefix(LowGlucoseNotificationConfig.notificationIdentifierPrefix) }
         if !matchingDeliveredIdentifiers.isEmpty {
             notificationCenter.removeDeliveredNotifications(withIdentifiers: matchingDeliveredIdentifiers)
-        }
-
-        if resetCooldown {
-            SharedData.lowGlucoseNotificationLastSentDate = .distantPast
-            SharedData.lowGlucoseNotificationPendingRepeat = false
-            SharedData.lowGlucoseNotificationSnoozeUntilDate = .distantPast
         }
     }
 
@@ -193,6 +211,16 @@ final class LowGlucoseNotificationManager: NSObject {
             let mmolValue = valueInMgDl.displayedGlucoseValue(glucoseUnit: glucoseUnit)
             let formatted = GlucoseFormatters.mmolLFormatter.string(from: mmolValue as NSNumber) ?? String(format: "%.1f", mmolValue)
             return "\(formatted) \(glucoseUnit.description)"
+        }
+    }
+
+    private func formattedGlucoseNumber(_ valueInMgDl: Int, glucoseUnit: GlucoseUnit) -> String {
+        switch glucoseUnit {
+        case .mgdl:
+            return "\(valueInMgDl)"
+        case .mmoll:
+            let mmolValue = valueInMgDl.displayedGlucoseValue(glucoseUnit: glucoseUnit)
+            return GlucoseFormatters.mmolLFormatter.string(from: mmolValue as NSNumber) ?? String(format: "%.1f", mmolValue)
         }
     }
 }
@@ -225,10 +253,9 @@ extension LowGlucoseNotificationManager: UNUserNotificationCenterDelegate {
             return
         }
 
-        center.removeDeliveredNotifications(withIdentifiers: [response.notification.request.identifier])
-        center.removePendingNotificationRequests(withIdentifiers: [response.notification.request.identifier])
-        SharedData.lowGlucoseNotificationSnoozeUntilDate = Date().addingTimeInterval(LowGlucoseNotificationConfig.snoozeInterval)
-        SharedData.lowGlucoseNotificationPendingRepeat = true
+        Task { @MainActor in
+            await LowGlucoseNotificationManager.shared.snoozeLowGlucoseAlerts()
+        }
     }
 }
 #endif

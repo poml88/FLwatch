@@ -59,6 +59,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
 
     private struct LowGlucoseAlertPayload: Codable {
         let title: String
+        let subtitle: String
         let body: String
         let sentAt: Date
     }
@@ -653,9 +654,10 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     }
 
 #if os(iOS)
-    func sendLowGlucoseAlertToWatch(title: String, body: String, sentAt: Date) {
+    func sendLowGlucoseAlertToWatch(title: String, subtitle: String, body: String, sentAt: Date) {
         let payload = LowGlucoseAlertPayload(
             title: title,
+            subtitle: subtitle,
             body: body,
             sentAt: sentAt
         )
@@ -761,6 +763,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
 
         let content = UNMutableNotificationContent()
         content.title = payload.title
+        content.subtitle = payload.subtitle
         content.body = payload.body
         if settings.soundSetting == .enabled {
             content.sound = .default
