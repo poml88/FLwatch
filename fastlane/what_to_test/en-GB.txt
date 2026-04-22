@@ -1,1 +1,2 @@
 * better carplay implementation. alterts now also on carplay.
+* warning about LLU 5 API

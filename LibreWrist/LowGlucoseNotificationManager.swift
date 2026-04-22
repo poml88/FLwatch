@@ -164,6 +164,22 @@ final class LowGlucoseNotificationManager: NSObject {
         now < SharedData.lowGlucoseNotificationSnoozeUntilDate
     }
 
+    func shouldShowSnoozeAction(now: Date = Date()) -> Bool {
+        guard SharedData.lowGlucoseNotificationsEnabled else {
+            return false
+        }
+
+        let history = LibreLinkUpHistory.shared
+        guard history.currentGlucose > 0,
+              history.lastReadingDate > .distantPast,
+              now.timeIntervalSince(history.lastReadingDate) <= LowGlucoseNotificationConfig.maxReadingAge else {
+            return false
+        }
+
+        return history.currentGlucose < SharedData.lowGlucoseNotificationThreshold &&
+            !isLowGlucoseAlertSnoozed(now: now)
+    }
+
     func snoozeLowGlucoseAlerts(now: Date = Date()) async {
         await removePendingAndDeliveredNotifications()
         SharedData.lowGlucoseNotificationSnoozeUntilDate = now.addingTimeInterval(LowGlucoseNotificationConfig.snoozeInterval)

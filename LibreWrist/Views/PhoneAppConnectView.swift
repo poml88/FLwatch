@@ -71,7 +71,32 @@ struct PhoneAppConnectView: View {
             
             
             Form {
-                Section(header: Text("Credentials"), footer: Text("Enter the credentials for your [LibreLinkUp follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://flwatch.app/)")) {
+                
+                Section {
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                            .padding(.top, 1)
+                        
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Important note")
+                                .font(.headline)
+                            
+                            Text("FLwatch currently supports the LibreLinkUp 4.x API. Abbott has released API 5.0.0, which is not yet supported.")
+                            
+                            Text("If Abbott disables API 4.x in the future, glucose data in FLwatch may stop working without notice. IOB-related features will still continue to work.")
+                        }
+                        .font(.subheadline)
+                    }
+                    .padding(.vertical, 4)
+                }
+                
+                Section(
+                    header: Text("Credentials"),
+                    footer: Text(
+                        "Enter the credentials for your [LibreLinkUp follower account](https://www.librelinkup.com/) and press the Connect button. Credentials will be sent automatically to watch app if it is installed.\n[TROUBLE? TAP TO OPEN HELP](https://flwatch.app/)"
+                    )
+                ) {
                     TextField(text: $username, prompt: Text("Username (email adress)")) {
                         Text("Username")
                     }
@@ -98,6 +123,7 @@ struct PhoneAppConnectView: View {
                         libreLinkUpPatients = []
                     }
                 }
+                
                 Section {
                     Button("Connect") {
                         tryToConnect()

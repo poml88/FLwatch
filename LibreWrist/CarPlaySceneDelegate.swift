@@ -112,8 +112,8 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     private func makeRootTemplate() -> CPTemplate {
         let snapshot = makeSnapshot()
-        let shouldShowSnoozeAction = SharedData.lowGlucoseNotificationsEnabled &&
-            !LowGlucoseNotificationManager.shared.isLowGlucoseAlertSnoozed()
+        let shouldShowSnoozeAction = LowGlucoseNotificationManager.shared.shouldShowSnoozeAction()
+        let shouldShowManualRefreshAction = shouldShowManualRefreshAction()
 
         let glucoseItem = CPListItem(
             text: snapshot.primaryText,
@@ -163,13 +163,22 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         }
 
         let glucoseSection = CPListSection(items: [glucoseItem], header: String(localized: "Current glucose & IOB"), sectionIndexTitle: nil)
-        let actionItems = shouldShowSnoozeAction
-            ? [snoozeAlertItem, refreshItem]
-            : [refreshItem]
-        let actionsSection = CPListSection(items: actionItems, header: String(localized: "Actions"), sectionIndexTitle: nil)
         let infoSection = CPListSection(items: [graphInfoItem], header: String(localized: "Info"), sectionIndexTitle: nil)
 
-        let template = CPListTemplate(title: String(localized: "FLwatch"), sections: [glucoseSection, actionsSection, infoSection])
+        var sections = [glucoseSection]
+        var actionItems: [CPListItem] = []
+        if shouldShowSnoozeAction {
+            actionItems.append(snoozeAlertItem)
+        }
+        if shouldShowManualRefreshAction {
+            actionItems.append(refreshItem)
+        }
+        if !actionItems.isEmpty {
+            sections.append(CPListSection(items: actionItems, header: String(localized: "Actions"), sectionIndexTitle: nil))
+        }
+        sections.append(infoSection)
+
+        let template = CPListTemplate(title: String(localized: "FLwatch"), sections: sections)
         template.tabTitle = String(localized: "FLwatch")
         return template
     }
@@ -224,6 +233,19 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             primaryText: primaryText,
             secondaryText: secondaryText
         )
+    }
+
+    private func shouldShowManualRefreshAction(now: Date = Date()) -> Bool {
+        guard SharedData.bluetoothHeartbeatEnabled else {
+            return true
+        }
+
+        let lastHeartbeatDate = SharedData.bluetoothHeartbeatLastEventDate
+        guard lastHeartbeatDate.timeIntervalSince1970 > 0 else {
+            return true
+        }
+
+        return now.timeIntervalSince(lastHeartbeatDate) > 120
     }
 }
 
