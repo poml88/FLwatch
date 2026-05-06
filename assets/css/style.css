@@ -138,6 +138,15 @@ a:hover{text-decoration:underline}
 .markdown-body h1,.markdown-body h2,.markdown-body h3{scroll-margin-top:80px}
 .markdown-body pre{background:#0a1220;border-radius:8px;padding:12px;overflow:auto}
 .markdown-body code{background:#0a1220;padding:2px 6px;border-radius:6px}
+.notice-note{
+  margin:1rem 0 1.25rem;
+  padding:1rem 1.1rem;
+  border:1px solid rgba(78,161,255,.35);
+  border-radius:10px;
+  background:rgba(78,161,255,.08);
+}
+.notice-note > :first-child{margin-top:0}
+.notice-note > :last-child{margin-bottom:0}
 
 
 /* Home button (sticky, compact) */

@@ -10,6 +10,14 @@ hero_title: "FLwatch - Glucose Sensor Graph"
 
 ***Warning: FLwatch is a highly experimental project. Use it with caution and extreme care. Do not make medical decisions based on this software. It comes with no warranty and is used at your own risk.***
 
+<div class="notice-note">
+**Important note**
+
+FLwatch currently supports the LibreLinkUp 4.x API. Abbott has released API 5.0.0, which is not yet supported.
+
+If Abbott disables API 4.x in the future, glucose data in FLwatch may stop working without notice. IOB-related features will still continue to work.
+</div>
+
 FLwatch is free and open source. It is being developed out of personal needs, but everyone should be able to benefit from it.
 
 ### At a Glance
