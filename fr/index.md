@@ -8,6 +8,14 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch: Graphique glycémie"
 ---
 
+<div class="notice-note">
+<strong>Note importante</strong>
+<br>
+FLwatch prend actuellement en charge l’API 4.x de LibreLinkUp. Abbott a publié l’API 5.0.0, qui n’est pas encore prise en charge.
+<br>
+Si Abbott désactive l’API 4.x à l’avenir, les données de glucose dans FLwatch pourraient cesser de fonctionner sans avertissement. Les fonctions liées à l’IOB continueront de fonctionner.
+</div>
+
 ***Attention : FLwatch est un projet hautement expérimental. Utilisez cette application avec prudence et une extrême précaution. Ne prenez pas de décisions médicales sur la base de ce logiciel. Il est fourni sans aucune garantie et s’utilise à vos propres risques.***
 
 Ce logiciel est gratuit et open source. Il est développé pour répondre à des besoins personnels, mais tout le monde devrait pouvoir en bénéficier.

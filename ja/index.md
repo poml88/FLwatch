@@ -8,6 +8,14 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch - グルコースセンサーグラフ"
 ---
 
+<div class="notice-note">
+<strong>重要なお知らせ</strong>
+<br>
+FLwatch は現在、LibreLinkUp 4.x API をサポートしています。Abbott は API 5.0.0 を公開しましたが、まだサポートされていません。
+<br>
+将来 Abbott が API 4.x を無効にした場合、FLwatch の血糖データは予告なく動作しなくなる可能性があります。IOB 関連の機能は引き続き動作します。
+</div>
+
 ***警告: FLwatch は非常に実験的なプロジェクトです。十分に注意してご利用ください。このソフトウェアに基づいて医療上の判断を行わないでください。いかなる保証もなく提供されており、使用はすべて自己責任です。***
 
 このソフトウェアは無料のオープンソースです。個人的な必要性から開発されていますが、誰でも利用できるようにすることを目指しています。

@@ -8,6 +8,14 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch - Grafico del sensore di glucosio"
 ---
 
+<div class="notice-note">
+<strong>Nota importante</strong>
+<br>
+FLwatch al momento supporta l’API 4.x di LibreLinkUp. Abbott ha rilasciato l’API 5.0.0, che non è ancora supportata.
+<br>
+Se in futuro Abbott disattiva l’API 4.x, i dati glicemici in FLwatch potrebbero smettere di funzionare senza preavviso. Le funzioni relative all’IOB continueranno a funzionare.
+</div>
+
 ***Attenzione: FLwatch è un progetto altamente sperimentale. Usa questa app con cautela e con la massima attenzione. Non prendere decisioni mediche basandoti su questo software. Viene fornito senza alcuna garanzia ed è usato a tuo rischio.***
 
 Questo software è gratuito e open source. È nato da esigenze personali, ma dovrebbe poter essere utile a tutti.

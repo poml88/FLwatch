@@ -8,6 +8,14 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch：血糖传感器图表"
 ---
 
+<div class="notice-note">
+<strong>重要提示</strong>
+<br>
+FLwatch 目前支持 LibreLinkUp 4.x API。Abbott 已发布 API 5.0.0，但尚不受支持。
+<br>
+如果 Abbott 将来停用 API 4.x，FLwatch 中的血糖数据可能会在没有任何提示的情况下停止工作。与 IOB 相关的功能仍会继续运行。
+</div>
+
 ***警告：FLwatch 是一个高度实验性的项目。使用本应用时请务必谨慎小心。请勿基于本软件做出医疗决策。本软件不提供任何保证，使用风险由您自行承担。***
 
 本软件为免费开源项目。它源于个人需求开发，但希望能够让更多人受益。
