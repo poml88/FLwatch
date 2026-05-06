@@ -8,6 +8,8 @@ image: /assets/images/app-preview-optimized.png
 hero_title: "FLwatch - Glucosesensorgrafiek"
 ---
 
+***Waarschuwing: FLwatch is een sterk experimenteel project. Gebruik deze app met voorzichtigheid en uiterste zorg. Neem geen medische beslissingen op basis van deze software. De software wordt zonder enige garantie geleverd en gebruik is volledig op eigen risico.***
+
 <div class="notice-note">
 <strong>Belangrijke opmerking</strong>
 <br>
@@ -15,8 +17,6 @@ FLwatch ondersteunt momenteel de LibreLinkUp API 4.x. Abbott heeft API 5.0.0 uit
 <br>
 Als Abbott API 4.x in de toekomst uitschakelt, kunnen de glucosegegevens in FLwatch zonder waarschuwing stoppen met werken. Functies die met IOB te maken hebben blijven wel werken.
 </div>
-
-***Waarschuwing: FLwatch is een sterk experimenteel project. Gebruik deze app met voorzichtigheid en uiterste zorg. Neem geen medische beslissingen op basis van deze software. De software wordt zonder enige garantie geleverd en gebruik is volledig op eigen risico.***
 
 Deze software is gratis en open source. Ze is ontwikkeld vanuit een persoonlijke behoefte, maar iedereen zou er baat bij moeten kunnen hebben.
 

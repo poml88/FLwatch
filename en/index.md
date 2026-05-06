@@ -101,12 +101,13 @@ More insulin types can be added on request.
 
 #### System Integration
 * iOS widgets and lock screen widgets with and without graph(s)
-* Live Activities on iPhone, including Watch Smart Stack mirroring
+* Live Activities on iPhone, including Watch Smart Stack and CarPlay mirroring
 * StandBy mode widget
 * watchOS widgets and complications
-* CarPlay support via widgets and Live Activities
+* CarPlay support via CarPlay app, widgets and Live Activities
 * Export insulin doses and glucose data to Apple Health
 * Siri and Shortcuts support for glucose display, glucose readout, and quick insulin dose recording
+* Bluetooth heartbeat enables updates nearly every minute and low glucose alarms on iPhone, watch and CarPlay
 
 ### Technical Notes
 FLwatch uses the exponential insulin model from LoopKit. The model uses three parameters: `actionDuration`, `peakActivityTime`, and `delay`.
