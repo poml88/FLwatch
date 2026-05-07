@@ -19,6 +19,46 @@ enum LibreWristUpdateNotifier {
     }
 }
 
+// MARK: - CGM provider abstraction
+
+enum CGMProviderKind: String, Codable {
+    case libreLinkUp
+    case dexcomShare
+}
+
+protocol CGMProvider: AnyObject {
+    var kind: CGMProviderKind { get }
+    var lastReloadResponseMessage: String { get }
+    var lastReloadDidFail: Bool { get }
+    func reload() async
+}
+
+@MainActor
+enum CGMProviderRegistry {
+    static func makeProvider(for kind: CGMProviderKind) -> CGMProvider {
+        switch kind {
+        case .libreLinkUp:
+            return LibreLinkUpProvider()
+        case .dexcomShare:
+            assertionFailure("DexcomShareProvider not yet implemented (Phase 2). Falling back to LibreLinkUp.")
+            return LibreLinkUpProvider()
+        }
+    }
+}
+
+@MainActor
+final class LibreLinkUpProvider: CGMProvider {
+    let kind: CGMProviderKind = .libreLinkUp
+    private let libreLinkUp = LibreLinkUp()
+
+    var lastReloadResponseMessage: String { libreLinkUp.libreLinkUpResponse }
+    var lastReloadDidFail: Bool { libreLinkUp.libreLinkUpErrorBool }
+
+    func reload() async {
+        await libreLinkUp.reloadLibreLinkUp()
+    }
+}
+
 @MainActor
 final class LibreLinkUpService: ObservableObject {
     static let shared = LibreLinkUpService()
@@ -30,7 +70,7 @@ final class LibreLinkUpService: ObservableObject {
 #endif
 
     private let gate = ReloadGate()
-    private let libreLinkUp = LibreLinkUp()
+    private(set) var activeProvider: CGMProvider = CGMProviderRegistry.makeProvider(for: SharedData.cgmProviderKind)
 
     @Published var isReloading = false
     @Published private(set) var libreLinkUpResponse = "[...]"
@@ -107,10 +147,10 @@ final class LibreLinkUpService: ObservableObject {
             self.isReloading = true
             defer { self.isReloading = false }
 
-            Logger.libreLinkUpService.info("requestReloadIfNeeded starting network reload")
-            await self.libreLinkUp.reloadLibreLinkUp()
-            self.libreLinkUpResponse = self.libreLinkUp.libreLinkUpResponse
-            self.didLastReloadFail = self.libreLinkUp.libreLinkUpErrorBool
+            Logger.libreLinkUpService.info("requestReloadIfNeeded starting network reload via \(self.activeProvider.kind.rawValue, privacy: .public) provider")
+            await self.activeProvider.reload()
+            self.libreLinkUpResponse = self.activeProvider.lastReloadResponseMessage
+            self.didLastReloadFail = self.activeProvider.lastReloadDidFail
             if self.didLastReloadFail {
                 await self.gate.recordCompletion(
                     succeeded: false,

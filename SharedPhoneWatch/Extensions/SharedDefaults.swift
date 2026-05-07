@@ -93,6 +93,9 @@ enum DefaultsKey: String {
     case keyLockTime = "lockTime"
     case insulinDeliveryHistory = "insulinDeliveryHistoryKey"
     case insulinTypeSelected = "insulinTypeSelectedKey"
+
+    // CGM provider selection (Libre vs Dexcom Share)
+    case cgmProviderKind = "cgmProviderKindKey"
 }
 
 // MARK: - Convenience typed helpers + Codable helpers
@@ -431,6 +434,14 @@ enum SharedData {
     static var usedDays: [String] {
         get { store.getStringArray(.usedDays, defaultValue: []) }
         set { store.setStringArray(newValue, forKey: .usedDays) }
+    }
+
+    static var cgmProviderKind: CGMProviderKind {
+        get {
+            let raw = store.getString(.cgmProviderKind, defaultValue: CGMProviderKind.libreLinkUp.rawValue)
+            return CGMProviderKind(rawValue: raw) ?? .libreLinkUp
+        }
+        set { store.setString(newValue.rawValue, forKey: .cgmProviderKind) }
     }
 
     // Add other static properties as needed — or prefer using @AppStorage directly (below).
