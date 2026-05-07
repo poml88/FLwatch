@@ -1,8 +1,2 @@
-* various fixes around api reload
-* fix lost token on watch that broke widget reload
-* delay api call 1 sec to give time for WC snapshot to arrive
-* add watch local notification if watch app is in foreground or frontmost, otherwise no alert
-* improve gating of LLU API calls
-* fix some rare crashes around insulin delivery history
-* translations
-
+* full CarPlay support
+* Note: FLwatch currently supports the LibreLinkUp 4.x.x API. Abbott has released API 5.0.0, which is not yet supported. If Abbott disables API 4.x in the future, glucose data in FLwatch may stop working without notice. IOB-related features will still continue to work.

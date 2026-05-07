@@ -13,3 +13,4 @@ fastlane/*.p8
 vendor/bundle/
 *.ipa
 *.dSYM.zip
+dexcom-api-docs/
