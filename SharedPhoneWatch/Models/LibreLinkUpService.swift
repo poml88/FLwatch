@@ -19,46 +19,6 @@ enum LibreWristUpdateNotifier {
     }
 }
 
-// MARK: - CGM provider abstraction
-
-enum CGMProviderKind: String, Codable {
-    case libreLinkUp
-    case dexcomShare
-}
-
-protocol CGMProvider: AnyObject {
-    var kind: CGMProviderKind { get }
-    var lastReloadResponseMessage: String { get }
-    var lastReloadDidFail: Bool { get }
-    func reload() async
-}
-
-@MainActor
-enum CGMProviderRegistry {
-    static func makeProvider(for kind: CGMProviderKind) -> CGMProvider {
-        switch kind {
-        case .libreLinkUp:
-            return LibreLinkUpProvider()
-        case .dexcomShare:
-            assertionFailure("DexcomShareProvider not yet implemented (Phase 2). Falling back to LibreLinkUp.")
-            return LibreLinkUpProvider()
-        }
-    }
-}
-
-@MainActor
-final class LibreLinkUpProvider: CGMProvider {
-    let kind: CGMProviderKind = .libreLinkUp
-    private let libreLinkUp = LibreLinkUp()
-
-    var lastReloadResponseMessage: String { libreLinkUp.libreLinkUpResponse }
-    var lastReloadDidFail: Bool { libreLinkUp.libreLinkUpErrorBool }
-
-    func reload() async {
-        await libreLinkUp.reloadLibreLinkUp()
-    }
-}
-
 @MainActor
 final class LibreLinkUpService: ObservableObject {
     static let shared = LibreLinkUpService()

@@ -96,6 +96,10 @@ enum DefaultsKey: String {
 
     // CGM provider selection (Libre vs Dexcom Share)
     case cgmProviderKind = "cgmProviderKindKey"
+
+    // Dexcom Share
+    case dexcomShareUsername = "dexcomShareUsernameKey"
+    case dexcomShareRegion = "dexcomShareRegionKey"
 }
 
 // MARK: - Convenience typed helpers + Codable helpers
@@ -442,6 +446,26 @@ enum SharedData {
             return CGMProviderKind(rawValue: raw) ?? .libreLinkUp
         }
         set { store.setString(newValue.rawValue, forKey: .cgmProviderKind) }
+    }
+
+    static var dexcomShareUsername: String {
+        get { store.getString(.dexcomShareUsername, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.dexcomShareUsername.rawValue) }
+            else { store.setString(newValue, forKey: .dexcomShareUsername) }
+        }
+    }
+
+    static var dexcomShareRegion: ShareRegion {
+        get {
+            let raw = store.getString(.dexcomShareRegion, defaultValue: "")
+            return ShareRegion(rawValue: raw) ?? .us
+        }
+        set { store.setString(newValue.rawValue, forKey: .dexcomShareRegion) }
+    }
+
+    static var dexcomShareRegionIsKnown: Bool {
+        !store.getString(.dexcomShareRegion, defaultValue: "").isEmpty
     }
 
     // Add other static properties as needed — or prefer using @AppStorage directly (below).

@@ -67,6 +67,10 @@
 		7B5A9CD32E704F250076716A /* PasswordKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5A9CD12E704F200076716A /* PasswordKeychain.swift */; };
 		7B5CD22A2C946D330066B92B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */; };
 		7B5CD22B2C946D340066B92B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */; };
+		7B62EDAE2FACD18900C9502B /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDAD2FACD18200C9502B /* CGMProvider.swift */; };
+		7B62EDAF2FACD18900C9502B /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDAD2FACD18200C9502B /* CGMProvider.swift */; };
+		7B62EDB02FACD18900C9502B /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDAD2FACD18200C9502B /* CGMProvider.swift */; };
+		7B62EDB12FACD18900C9502B /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDAD2FACD18200C9502B /* CGMProvider.swift */; };
 		7B631AAC2CB85F6600CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
 		7B631AAD2CB85FB800CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
 		7B631AAE2CB85FBB00CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
@@ -318,6 +322,7 @@
 		7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeDifferencePicker.swift; sourceTree = "<group>"; };
 		7B5A9CD12E704F200076716A /* PasswordKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordKeychain.swift; sourceTree = "<group>"; };
 		7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		7B62EDAD2FACD18200C9502B /* CGMProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGMProvider.swift; sourceTree = "<group>"; };
 		7B631AAB2CB85F6600CE9EEF /* Reload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reload.swift; sourceTree = "<group>"; };
 		7B69F7C22CDD74DF00E3A50C /* Localizable.oldwatchstrings */ = {isa = PBXFileReference; lastKnownFileType = text; path = Localizable.oldwatchstrings; sourceTree = "<group>"; };
 		7B7790B92E599B9D00DE6B01 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -517,6 +522,7 @@
 		7B3EA4FE2C6C0B1A0061F239 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				7B62EDAD2FACD18200C9502B /* CGMProvider.swift */,
 				7B62ED7A2FACC97700C9502B /* Dexcom */,
 				7B299A0A2C90AF8C002A15C8 /* AuthTicket.swift */,
 				7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */,
@@ -987,6 +993,7 @@
 				7B435CCC2C6D46DF006F6E53 /* Logger.swift in Sources */,
 				7BADE0232C73EB450074A47F /* GlucoseUnit.swift in Sources */,
 				7BADE01D2C73E4E70074A47F /* Int.swift in Sources */,
+				7B62EDB12FACD18900C9502B /* CGMProvider.swift in Sources */,
 				7BADE0212C73EB060074A47F /* Double.swift in Sources */,
 				7A1F7C0C2FDF000100A1B2C3 /* FLwatchFullGraphWidget.swift in Sources */,
 				7A1F7C102FDF000300A1B2C3 /* FullGraphGlucoseMeasurementIOBEntry.swift in Sources */,
@@ -1044,6 +1051,7 @@
 				7B2E7EBF2CB59FA600A3473B /* GlucoseMeasurement.swift in Sources */,
 				7B2E7EBE2CB59DEB00A3473B /* GlucoseMeasurementIOBEntry.swift in Sources */,
 				7BDF0A6F2DBA392100852BAD /* Reload.swift in Sources */,
+				7B62EDAE2FACD18900C9502B /* CGMProvider.swift in Sources */,
 				7B2E7EC62CB5A05700A3473B /* String.swift in Sources */,
 				7B2E7EB12CB59C9300A3473B /* LibreWristWatchWidget.swift in Sources */,
 				7B2E7EC12CB59FCC00A3473B /* MeasurementColor.swift in Sources */,
@@ -1110,6 +1118,7 @@
 				7B631AAC2CB85F6600CE9EEF /* Reload.swift in Sources */,
 				7B299A142C90B06C002A15C8 /* GlucoseMeasurement.swift in Sources */,
 				7BA0AE2F2C582F63004226FE /* ContentView.swift in Sources */,
+				7B62EDAF2FACD18900C9502B /* CGMProvider.swift in Sources */,
 				7BA0AE2D2C582F63004226FE /* LibreWristApp.swift in Sources */,
 				7B8965422DC156E9003A50CE /* WatchConnectivityManager.swift in Sources */,
 				7B096C9E2E33FB0900B6744C /* WatchAppGraphView.swift in Sources */,
@@ -1164,6 +1173,7 @@
 				7BA3042B2F5E30B0005384BF /* Logger.swift in Sources */,
 				7BDB81332CB09AF800F4A60F /* LLUHeaders.swift in Sources */,
 				7BA3042C2F5E30B0005384BF /* SensorSettings.swift in Sources */,
+				7B62EDB02FACD18900C9502B /* CGMProvider.swift in Sources */,
 				7BFD835C2C84E48800A9B195 /* InsulinModel.swift in Sources */,
 				7BC51F522C7C8413009542D2 /* TrendArrow.swift in Sources */,
 				7BFD835F2C84E48E00A9B195 /* ExponentialInsulinModel.swift in Sources */,
