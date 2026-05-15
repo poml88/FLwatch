@@ -13,6 +13,7 @@ struct PhoneAppSettingsView: View {
     
     @Environment(\.openURL) private var openURL
     
+    @AppStorage(DefaultsKey.cgmProviderKind.rawValue, store: UserDefaults.group) private var cgmProviderKindRaw: String = CGMProviderKind.libreLinkUp.rawValue
     @AppStorage(DefaultsKey.showInsulinDeliveryMarksPhone.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksPhone: Bool = false
     @AppStorage(DefaultsKey.showInsulinDeliveryMarksWatch.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksWatch: Bool = false
     @AppStorage(DefaultsKey.showIOBCurvePhone.rawValue, store: UserDefaults.group) private var showIOBCurvePhone: Bool = false
@@ -30,6 +31,7 @@ struct PhoneAppSettingsView: View {
     @State private var showingMailView = false
     @State private var isShowingSiriSheet = false
     @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
+    @State private var pendingProviderSwitch: CGMProviderKind? = nil
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
     @State private var appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
     @State private var appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
@@ -104,8 +106,51 @@ struct PhoneAppSettingsView: View {
         }
     }
     
+    private var cgmProviderKind: CGMProviderKind {
+        CGMProviderKind(rawValue: cgmProviderKindRaw) ?? .libreLinkUp
+    }
+
     var body: some View {
         Form {
+            Section {
+                Picker(
+                    selection: Binding(
+                        get: { cgmProviderKind },
+                        set: { newValue in
+                            guard newValue != cgmProviderKind else { return }
+                            pendingProviderSwitch = newValue
+                        }
+                    )
+                ) {
+                    Text("FreeStyle Libre (LibreLinkUp)").tag(CGMProviderKind.libreLinkUp)
+                    Text("Dexcom (Share)").tag(CGMProviderKind.dexcomShare)
+                } label: {
+                    Text("CGM provider")
+                }
+                .confirmationDialog(
+                    "Switch CGM provider?",
+                    isPresented: Binding(
+                        get: { pendingProviderSwitch != nil },
+                        set: { if !$0 { pendingProviderSwitch = nil } }
+                    ),
+                    titleVisibility: .visible,
+                    presenting: pendingProviderSwitch
+                ) { newKind in
+                    Button("Switch", role: .destructive) {
+                        applyProviderSwitch(to: newKind)
+                    }
+                    Button("Cancel", role: .cancel) {
+                        pendingProviderSwitch = nil
+                    }
+                } message: { _ in
+                    Text("Switching disconnects the current provider and clears its cached glucose readings on this device. Credentials for both providers stay saved, so switching back doesn't require re-entering them.")
+                }
+            } header: {
+                Text("CGM Provider")
+            } footer: {
+                Text("Choose which CGM service FLwatch reads from. Sensor settings (mg/dL vs mmol/L, target range) are shared across providers.")
+            }
+
             Section {
                 LazyVGrid(
                     columns: [GridItem(spacing: 8), GridItem(spacing: 8)],
@@ -506,6 +551,14 @@ struct PhoneAppSettingsView: View {
     }
     func sendMessagetoOther(message: [String: Any]) {
         watchConnector.sendMessageToPairedDevice(message)
+    }
+
+    /// Decision 7.1: switching providers triggers a disconnect. Both providers'
+    /// credentials stay in place per decision 7.2.
+    private func applyProviderSwitch(to newKind: CGMProviderKind) {
+        pendingProviderSwitch = nil
+        LibreLinkUpService.shared.switchProvider(to: newKind)
+        cgmProviderKindRaw = newKind.rawValue
     }
 
     private func refreshAppleHealthStatus() {

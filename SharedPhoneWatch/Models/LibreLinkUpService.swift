@@ -36,6 +36,17 @@ final class LibreLinkUpService: ObservableObject {
     @Published private(set) var libreLinkUpResponse = "[...]"
     @Published private(set) var didLastReloadFail = false
 
+    /// Switches the active CGM backend. Decision 7.1: this is a "disconnect"
+    /// from the user's perspective, identical to clearing credentials. Cached
+    /// `LibreLinkUpHistory` is left in place — it'll be overwritten on the next
+    /// successful reload by the new provider, so any stale-data window is brief.
+    func switchProvider(to kind: CGMProviderKind) {
+        SharedData.cgmProviderKind = kind
+        UserDefaults.group.connected = .disconnected
+        activeProvider = CGMProviderRegistry.makeProvider(for: kind)
+        Logger.libreLinkUpService.info("switched active provider to \(kind.rawValue, privacy: .public)")
+    }
+
     /// Refreshes history from the persisted snapshot on MainActor.
     @discardableResult
     func refreshHistoryFromPersistence(force: Bool = false) -> Bool {

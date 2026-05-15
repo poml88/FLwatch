@@ -71,6 +71,8 @@
 		7B62EDAF2FACD18900C9502B /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDAD2FACD18200C9502B /* CGMProvider.swift */; };
 		7B62EDB02FACD18900C9502B /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDAD2FACD18200C9502B /* CGMProvider.swift */; };
 		7B62EDB12FACD18900C9502B /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDAD2FACD18200C9502B /* CGMProvider.swift */; };
+		7B62EDB32FACD8E000C9502B /* PhoneAppCGMProviderPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDB22FACD8CD00C9502B /* PhoneAppCGMProviderPickerView.swift */; };
+		7B62EDB52FACD8FA00C9502B /* PhoneAppDexcomShareConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDB42FACD8F500C9502B /* PhoneAppDexcomShareConnectView.swift */; };
 		7B631AAC2CB85F6600CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
 		7B631AAD2CB85FB800CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
 		7B631AAE2CB85FBB00CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
@@ -323,6 +325,8 @@
 		7B5A9CD12E704F200076716A /* PasswordKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordKeychain.swift; sourceTree = "<group>"; };
 		7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7B62EDAD2FACD18200C9502B /* CGMProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGMProvider.swift; sourceTree = "<group>"; };
+		7B62EDB22FACD8CD00C9502B /* PhoneAppCGMProviderPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppCGMProviderPickerView.swift; sourceTree = "<group>"; };
+		7B62EDB42FACD8F500C9502B /* PhoneAppDexcomShareConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppDexcomShareConnectView.swift; sourceTree = "<group>"; };
 		7B631AAB2CB85F6600CE9EEF /* Reload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reload.swift; sourceTree = "<group>"; };
 		7B69F7C22CDD74DF00E3A50C /* Localizable.oldwatchstrings */ = {isa = PBXFileReference; lastKnownFileType = text; path = Localizable.oldwatchstrings; sourceTree = "<group>"; };
 		7B7790B92E599B9D00DE6B01 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -697,6 +701,8 @@
 		7BC51FC02C7D3DEF009542D2 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7B62EDB42FACD8F500C9502B /* PhoneAppDexcomShareConnectView.swift */,
+				7B62EDB22FACD8CD00C9502B /* PhoneAppCGMProviderPickerView.swift */,
 				7BA0AE2E2C582F63004226FE /* ContentView.swift */,
 				7BA0AE5A2C5AE980004226FE /* PhoneAppHomeView.swift */,
 				7BA0AE562C5834F6004226FE /* PhoneAppConnectView.swift */,
@@ -1083,6 +1089,7 @@
 				7B462BFD2C7FBAC8003FEDC3 /* MeasurementColor.swift in Sources */,
 				7BA304182F5E30B0005384BF /* Int.swift in Sources */,
 				7BA567992CBA974D003244EE /* MailView.swift in Sources */,
+				7B62EDB52FACD8FA00C9502B /* PhoneAppDexcomShareConnectView.swift in Sources */,
 				7B8965452DC17399003A50CE /* PhoneAppSiriSheetView.swift in Sources */,
 				7B183E9B2C84C9540018A24F /* PhoneAppInsulinDeliveryView.swift in Sources */,
 				7B4855DF2DB58DC90089409E /* TimeDifferencePicker.swift in Sources */,
@@ -1122,6 +1129,7 @@
 				7BA0AE2D2C582F63004226FE /* LibreWristApp.swift in Sources */,
 				7B8965422DC156E9003A50CE /* WatchConnectivityManager.swift in Sources */,
 				7B096C9E2E33FB0900B6744C /* WatchAppGraphView.swift in Sources */,
+				7B62EDB32FACD8E000C9502B /* PhoneAppCGMProviderPickerView.swift in Sources */,
 				7BA304222F5E30B0005384BF /* LibreLinkUpAlarm.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
