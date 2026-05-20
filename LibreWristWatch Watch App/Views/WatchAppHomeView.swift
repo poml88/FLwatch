@@ -54,7 +54,7 @@ struct WatchAppHomeView: View {
     }
 
     private var isMissingCredentials: Bool {
-        UserDefaults.group.username.isEmpty
+        !SharedData.hasActiveProviderAccount
     }
 
   

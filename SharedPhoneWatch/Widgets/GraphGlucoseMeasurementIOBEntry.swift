@@ -71,9 +71,9 @@ struct GraphGlucoseMeasurementIOBEntry: TimelineEntry {
 
     static func getPatientGraph(maxAgeMinutes: Int? = nil,
                                 forceReload: Bool = false) async throws -> GraphGlucoseMeasurementIOBEntry {
-        guard !(SharedData.libreLinkUpUserId.isEmpty || SharedData.libreLinkUpToken.isEmpty) else {
+        guard SharedData.canActiveProviderReload else {
             throw NSError(domain: "MissingSettings", code: -5,
-                          userInfo: [NSLocalizedDescriptionKey: "Missing UserId or Token"])
+                          userInfo: [NSLocalizedDescriptionKey: "Missing CGM credentials"])
         }
 
         _ = await LibreLinkUpService.shared.requestReloadIfNeeded(maxAgeMinutes: maxAgeMinutes, force: forceReload)

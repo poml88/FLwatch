@@ -468,6 +468,41 @@ enum SharedData {
         !store.getString(.dexcomShareRegion, defaultValue: "").isEmpty
     }
 
+    // MARK: - Provider-agnostic credential gates
+    //
+    // The widgets, watch home view, and intents historically gated on
+    // LibreLinkUp's `libreLinkUpUserId`/`libreLinkUpToken`/`username`, which
+    // Dexcom never populates. These two helpers branch on the active provider
+    // so the same call sites work for both backends. Synchronous and
+    // non-isolated on purpose — widget extensions read them off the main actor.
+
+    /// True when the user has configured an account for the active provider
+    /// (i.e. has entered credentials at least once). Used for "open the phone
+    /// app to sign in" prompts — deliberately lenient (no live-session check).
+    static var hasActiveProviderAccount: Bool {
+        switch cgmProviderKind {
+        case .libreLinkUp:
+            return !UserDefaults.group.username.isEmpty
+        case .dexcomShare:
+            return !dexcomShareUsername.isEmpty
+        }
+    }
+
+    /// True when the active provider has enough persisted state to attempt a
+    /// reload right now. Stricter than `hasActiveProviderAccount`. Used by the
+    /// widgets to bail out early instead of kicking off a doomed reload.
+    static var canActiveProviderReload: Bool {
+        switch cgmProviderKind {
+        case .libreLinkUp:
+            return !(libreLinkUpUserId.isEmpty || libreLinkUpToken.isEmpty)
+        case .dexcomShare:
+            let password = ((try? DexcomShareTokenStore.read(.password)) ?? nil) ?? ""
+            return !dexcomShareUsername.isEmpty
+                && dexcomShareRegionIsKnown
+                && !password.isEmpty
+        }
+    }
+
     // Add other static properties as needed — or prefer using @AppStorage directly (below).
 }
 

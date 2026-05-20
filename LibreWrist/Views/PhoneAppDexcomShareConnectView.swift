@@ -176,6 +176,9 @@ struct PhoneAppDexcomShareConnectView: View {
             do {
                 try await provider.connect(email: trimmedEmail, password: trimmedPassword)
                 UserDefaults.group.connected = .connected
+                // Mirror the freshly-acquired Dexcom session to the watch so it
+                // can run its own Share reloads when the phone is unreachable.
+                WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()
             } catch {
                 errorMessage = error.localizedDescription
                 isShowingConnectionFailed = true
