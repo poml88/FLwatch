@@ -49,13 +49,20 @@ final class DexcomShareProvider: CGMProvider {
         lastReloadDidFail = false
         DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
 
-        guard let password = (try? DexcomShareTokenStore.read(.password)) ?? nil,
-              !password.isEmpty,
-              !SharedData.dexcomShareUsername.isEmpty,
-              SharedData.dexcomShareRegionIsKnown else {
+        // A reload needs a username, a known region, and *a* session to try —
+        // either the keychain session (app) or the published app-group session
+        // (widget, which can't read the keychain). The password is NOT required
+        // up front: it's only needed to re-authenticate an expired session, and
+        // the widget intentionally has no way to read it.
+        let hasUsableSession =
+            (((try? DexcomShareTokenStore.read(.sessionId)) ?? nil).map { !$0.isEmpty } ?? false)
+            || !SharedData.dexcomShareSessionId.isEmpty
+        guard !SharedData.dexcomShareUsername.isEmpty,
+              SharedData.dexcomShareRegionIsKnown,
+              hasUsableSession else {
             lastReloadDidFail = true
             lastReloadResponseMessage = String(localized: "Dexcom account is not connected.")
-            Logger.dexcomShare.info("reload skipped: missing credentials")
+            Logger.dexcomShare.info("reload skipped: missing credentials or session")
             return
         }
 
@@ -69,6 +76,19 @@ final class DexcomShareProvider: CGMProvider {
                 : "[OK]"
             Logger.dexcomShare.info("reload succeeded with \(entries.count, privacy: .public) entries")
         } catch DexcomShareError.sessionInvalid {
+            // No password reachable (i.e. running in the widget extension): we
+            // can't re-authenticate here. Clear the published session so the
+            // widget's reload gate (`canActiveProviderReload`) turns off and it
+            // stops retrying until the app logs in again and republishes a fresh
+            // session. Deliberately do NOT touch `connected` — that's the app's.
+            guard let password = (try? DexcomShareTokenStore.read(.password)) ?? nil,
+                  !password.isEmpty else {
+                SharedData.dexcomShareSessionId = ""
+                lastReloadDidFail = true
+                lastReloadResponseMessage = String(localized: "Dexcom session expired.")
+                Logger.dexcomShare.info("session invalid and no password available; cleared published session, not re-authenticating")
+                return
+            }
             // Cached session is no longer valid; transparently re-login and retry once.
             Logger.dexcomShare.info("session invalid; re-logging in once and retrying")
             do {
@@ -118,6 +138,7 @@ final class DexcomShareProvider: CGMProvider {
         try DexcomShareTokenStore.save(password,  kind: .password)
         try DexcomShareTokenStore.save(accountId, kind: .accountId)
         try DexcomShareTokenStore.save(sessionId, kind: .sessionId)
+        SharedData.dexcomShareSessionId = sessionId
 
         // Stamp sensor type so the rest of the app knows it's a Dexcom session.
         // Sensor settings (target/alarm thresholds) are kept as-is — Share
@@ -134,6 +155,7 @@ final class DexcomShareProvider: CGMProvider {
     /// Wipes Dexcom credentials. Does not touch LibreLinkUp credentials.
     func signOut() async {
         SharedData.dexcomShareUsername = ""
+        SharedData.dexcomShareSessionId = ""
         try? DexcomShareTokenStore.deleteAll()
     }
 
@@ -169,6 +191,7 @@ final class DexcomShareProvider: CGMProvider {
                 region: region
             )
             try DexcomShareTokenStore.save(newSessionId, kind: .sessionId)
+            SharedData.dexcomShareSessionId = newSessionId
             return
         }
 
@@ -177,6 +200,7 @@ final class DexcomShareProvider: CGMProvider {
         let sessionId = try await client.loginById(accountId: accountId, password: password, region: region)
         try DexcomShareTokenStore.save(accountId, kind: .accountId)
         try DexcomShareTokenStore.save(sessionId, kind: .sessionId)
+        SharedData.dexcomShareSessionId = sessionId
     }
 
     /// Iterates through every Share region until one accepts the credentials.
@@ -244,19 +268,29 @@ final class DexcomShareProvider: CGMProvider {
     // MARK: - Fetch + apply
 
     /// 24 h × 5 min cadence is plenty for the home graph.
-    private static let graphMinutes = 1440
+    private static let graphMinutes = 720 // 12 hours
     private static let graphMaxCount = 288
 
     private func fetchGlucose(region: ShareRegion) async throws -> [ShareGlucoseEntry] {
-        guard let sessionId = try DexcomShareTokenStore.read(.sessionId), !sessionId.isEmpty else {
+        // Prefer the keychain (source of truth for the app); fall back to the
+        // app-group copy so the widget — which can't read the keychain — can
+        // still fetch with the session the app published.
+        let sessionId = ((try? DexcomShareTokenStore.read(.sessionId)) ?? nil)
+            .flatMap { $0.isEmpty ? nil : $0 }
+            ?? SharedData.dexcomShareSessionId
+        guard !sessionId.isEmpty else {
             throw DexcomShareError.sessionInvalid
         }
-        return try await client.readLatestGlucose(
+        let entries = try await client.readLatestGlucose(
             sessionId: sessionId,
             region: region,
             minutes: Self.graphMinutes,
             maxCount: Self.graphMaxCount
         )
+        // Republish on every success so a session the widget previously cleared
+        // (or one only held in the keychain) is restored to the app group.
+        SharedData.dexcomShareSessionId = sessionId
+        return entries
     }
 
     /// Maps the Share entries into LibreLinkUpGlucose values and writes them to
@@ -267,7 +301,7 @@ final class DexcomShareProvider: CGMProvider {
 
         // Server returns newest-first. Sort defensively so downstream logic that
         // assumes index 0 is the latest stays correct.
-        let sortedNewestFirst = entries.sorted { $0.wallTime > $1.wallTime }
+        let sortedNewestFirst = entries.sorted { $0.timestamp > $1.timestamp }
         let settings = SensorSettingsStore.shared.sensorSettings
 
         // Build LibreLinkUpGlucose, computing trend rate from each entry's

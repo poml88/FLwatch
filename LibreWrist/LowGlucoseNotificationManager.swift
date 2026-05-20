@@ -15,6 +15,11 @@ private enum LowGlucoseNotificationConfig {
     static let categoryIdentifier = "LOW_GLUCOSE_ALERT"
     static let snoozeActionIdentifier = "LOW_GLUCOSE_ALERT_SNOOZE"
     static let repeatInterval: TimeInterval = 5 * 60
+    // Readings arrive on the same ~5min cadence as repeatInterval, so jitter
+    // (propagation delay, network, processing) can make the measured gap fall a
+    // few seconds short of 300s and skip a whole cycle. Treat a reading landing
+    // within this grace window as due.
+    static let repeatIntervalTolerance: TimeInterval = 10
     static let snoozeInterval: TimeInterval = 15 * 60
     static let deliveryDelay: TimeInterval = 1
 }
@@ -77,7 +82,7 @@ final class LowGlucoseNotificationManager: NSObject {
         }
         let history = LibreLinkUpHistory.shared
         let threshold = SharedData.lowGlucoseNotificationThreshold
-        let notificationIsDue = now.timeIntervalSince(SharedData.lowGlucoseNotificationLastSentDate) >= LowGlucoseNotificationConfig.repeatInterval
+        let notificationIsDue = now.timeIntervalSince(SharedData.lowGlucoseNotificationLastSentDate) >= LowGlucoseNotificationConfig.repeatInterval - LowGlucoseNotificationConfig.repeatIntervalTolerance
         let snoozeUntil = SharedData.lowGlucoseNotificationSnoozeUntilDate
 
         guard history.currentGlucose > 0,

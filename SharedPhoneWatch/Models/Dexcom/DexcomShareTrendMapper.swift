@@ -14,16 +14,20 @@ enum DexcomShareTrendMapper {
 
     // MARK: - Trend arrow
 
-    /// Share has 7 active trend levels; FLwatch has 5. Doubles map to the
-    /// "quickly" variants, singles and forty-fives both collapse to the
-    /// non-quick rising/falling. Non-computable / out-of-range become `.notDetermined`.
+    /// Share has 7 active trend levels and FLwatch now models all 7. Doubles map
+    /// to the FLwatch-only "very quickly" extremes (rawValues 6/7), singles to the
+    /// "quickly" variants, and forty-fives to the plain rising/falling. The five
+    /// non-extreme levels keep the symbols Libre also uses; only Dexcom ever
+    /// produces the two doubles. Non-computable / out-of-range become `.notDetermined`.
     static func arrow(for trend: ShareTrend) -> TrendArrow {
         switch trend {
-        case .doubleUp:                          return .risingQuickly
-        case .singleUp, .fortyFiveUp:            return .rising
+        case .doubleUp:                          return .risingVeryQuickly
+        case .singleUp:                          return .risingQuickly
+        case .fortyFiveUp:                       return .rising
         case .flat:                              return .stable
-        case .singleDown, .fortyFiveDown:        return .falling
-        case .doubleDown:                        return .fallingQuickly
+        case .fortyFiveDown:                     return .falling
+        case .singleDown:                        return .fallingQuickly
+        case .doubleDown:                        return .fallingVeryQuickly
         case .notComputable, .rateOutOfRange:    return .notDetermined
         }
     }
@@ -58,7 +62,7 @@ enum DexcomShareTrendMapper {
 
     static func trendRate(latest: ShareGlucoseEntry, previous: ShareGlucoseEntry?) -> Double {
         guard let previous else { return 0 }
-        let intervalSeconds = latest.wallTime.timeIntervalSince(previous.wallTime)
+        let intervalSeconds = latest.timestamp.timeIntervalSince(previous.timestamp)
         guard intervalSeconds > 0 else { return 0 }
         let delta = Double(latest.value - previous.value)
         return delta / (intervalSeconds / 60.0)
@@ -77,7 +81,7 @@ enum DexcomShareTrendMapper {
         previous: ShareGlucoseEntry?,
         settings: SensorSettings
     ) -> LibreLinkUpGlucose {
-        let id = Int(entry.wallTime.timeIntervalSince1970 / 60.0)
+        let id = Int(entry.timestamp.timeIntervalSince1970 / 60.0)
         let arrow = self.arrow(for: entry.trend)
         let rate = self.trendRate(latest: entry, previous: previous)
         let glucose = Glucose(
@@ -86,7 +90,7 @@ enum DexcomShareTrendMapper {
             trendRate: rate,
             trendArrow: arrow,
             id: id,
-            date: entry.wallTime,
+            date: entry.timestamp,
             source: "Dexcom"
         )
         return LibreLinkUpGlucose(

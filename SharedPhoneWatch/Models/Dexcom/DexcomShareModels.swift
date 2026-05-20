@@ -130,6 +130,12 @@ struct ShareGlucoseEntry: Decodable {
     /// Glucose value in mg/dL.
     let value: Int
 
+    /// Canonical reading time. Each Dexcom EGV carries three clocks (ST/DT/WT)
+    /// that differ by seconds; we pick ST (system time, the transmitter clock)
+    /// consistently — same choice xdrip4ios's follower parser makes — so dedup,
+    /// sorting, and id derivation all key off one timestamp.
+    var timestamp: Date { systemTime }
+
     private enum CodingKeys: String, CodingKey {
         case wt    = "WT"
         case st    = "ST"

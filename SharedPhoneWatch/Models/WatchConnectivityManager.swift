@@ -688,6 +688,10 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         try? DexcomShareTokenStore.save(accountId, kind: .accountId)
         if let sessionId = snapshot.dexcomShareSessionId, !sessionId.isEmpty {
             try? DexcomShareTokenStore.save(sessionId, kind: .sessionId)
+            // Also publish into the watch's app group so the watch widget's
+            // reload gate (`canActiveProviderReload`) passes immediately —
+            // the widget can't read the watch keychain.
+            SharedData.dexcomShareSessionId = sessionId
         }
         UserDefaults.group.connected = .connected
 

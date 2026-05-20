@@ -100,6 +100,7 @@ enum DefaultsKey: String {
     // Dexcom Share
     case dexcomShareUsername = "dexcomShareUsernameKey"
     case dexcomShareRegion = "dexcomShareRegionKey"
+    case dexcomShareSessionId = "dexcomShareSessionIdKey"
 }
 
 // MARK: - Convenience typed helpers + Codable helpers
@@ -464,6 +465,19 @@ enum SharedData {
         set { store.setString(newValue.rawValue, forKey: .dexcomShareRegion) }
     }
 
+    /// Non-secret Dexcom Share session GUID, mirrored into the app group so the
+    /// widget can read glucose without the keychain password. The app publishes
+    /// this on every successful fetch / login; the widget clears it (sets empty)
+    /// when Dexcom rejects it as invalid, which gates the widget off until the
+    /// app re-authenticates and republishes a fresh value.
+    static var dexcomShareSessionId: String {
+        get { store.getString(.dexcomShareSessionId, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.dexcomShareSessionId.rawValue) }
+            else { store.setString(newValue, forKey: .dexcomShareSessionId) }
+        }
+    }
+
     static var dexcomShareRegionIsKnown: Bool {
         !store.getString(.dexcomShareRegion, defaultValue: "").isEmpty
     }
@@ -496,10 +510,13 @@ enum SharedData {
         case .libreLinkUp:
             return !(libreLinkUpUserId.isEmpty || libreLinkUpToken.isEmpty)
         case .dexcomShare:
-            let password = ((try? DexcomShareTokenStore.read(.password)) ?? nil) ?? ""
+            // Gate on the app-group sessionId (readable from the widget),
+            // not the keychain password. The widget clears this when Dexcom
+            // says the session is invalid, which stops it from retrying until
+            // the app republishes a fresh session.
             return !dexcomShareUsername.isEmpty
                 && dexcomShareRegionIsKnown
-                && !password.isEmpty
+                && !dexcomShareSessionId.isEmpty
         }
     }
 

@@ -118,13 +118,46 @@ actor DexcomShareClient {
 
         do {
             let entries = try decoder.decode([ShareGlucoseEntry].self, from: data)
-            Logger.dexcomShare.info("readLatestGlucose: \(entries.count, privacy: .public) entries")
-            return entries
+            let deduped = Self.deduplicate(entries)
+            Logger.dexcomShare.info("readLatestGlucose: \(entries.count, privacy: .public) entries, \(deduped.count, privacy: .public) after dedup")
+            return deduped
         } catch {
             let bodyText = String(data: data, encoding: .utf8) ?? "<binary>"
             Logger.dexcomShare.error("Failed to decode EGV array; body=\(bodyText, privacy: .public): \(error.localizedDescription, privacy: .public)")
             throw DexcomShareError.malformedResponse("could not decode glucose array: \(error.localizedDescription)")
         }
+    }
+
+    // MARK: - Dedup
+    //
+    // Share — especially G7 follower mode — can return near-duplicate EGVs a few
+    // seconds apart: the same reading under slightly different clocks, plus G7
+    // backfill noise. Collapse those and drop non-positive values before handing
+    // the array downstream. Keep the newest reading, then accept an older one
+    // only if it's more than `minReadingSpacing` older than the last kept one.
+    //
+    // The window must stay well below the real ~5-min (300 s) cadence: a
+    // threshold near 5 min would collide with the genuine cadence and drop
+    // legitimate readings that arrive slightly early. 60 s comfortably catches
+    // the seconds-apart duplicates while leaving every real reading intact.
+
+    private static let minReadingSpacing: TimeInterval = 60
+
+    static func deduplicate(_ entries: [ShareGlucoseEntry]) -> [ShareGlucoseEntry] {
+        let cleaned = entries
+            .filter { $0.value > 0 }
+            .sorted { $0.timestamp > $1.timestamp }
+
+        var kept: [ShareGlucoseEntry] = []
+        kept.reserveCapacity(cleaned.count)
+        for entry in cleaned {
+            if let last = kept.last,
+               last.timestamp.timeIntervalSince(entry.timestamp) < minReadingSpacing {
+                continue
+            }
+            kept.append(entry)
+        }
+        return kept
     }
 
     // MARK: - Internals

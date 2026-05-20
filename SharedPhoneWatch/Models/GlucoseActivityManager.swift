@@ -4,7 +4,7 @@ import OSLog
 
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
-    private static let maxGraphPoints = 72
+    private static let maxGraphPoints = 74 // 6h10m at 5-min cadence; keep the newest, drop anything older
     private static let maxMinutePoints = 48
     private static let foregroundRestartThreshold: TimeInterval = 60 * 60
 
@@ -83,17 +83,17 @@ final class LiveActivityManager {
             let showActivityCurve = SharedData.showActivityCurvePhone
             let showInsulinDeliveryMarks = SharedData.showInsulinDeliveryMarksPhone
 
-            let graphPoints = Array(history.libreLinkUpGlucose
+            let graphPoints = history.libreLinkUpGlucose
                 .filter { $0.glucose.date >= cutoffDate }
                 .sorted { $0.glucose.date < $1.glucose.date }
-                .sampled(maxCount: Self.maxGraphPoints)
+                .suffix(Self.maxGraphPoints) // keep the newest, drop anything older
                 .map {
                     FLWatchAttributes.GraphPoint(
                         timestamp: $0.glucose.date,
                         valueInMgPerDl: $0.glucose.value,
                         colorRawValue: $0.color.rawValue
                     )
-                })
+                }
 
             let minutePoints = Array(history.libreLinkUpMinuteGlucose
                 .filter { $0.glucose.date >= cutoffDate }
@@ -233,43 +233,16 @@ final class LiveActivityManager {
     }
 }
 private extension Array {
-    /// Downsamples to *exactly* `maxCount` elements (when the array is larger)
-    /// while preserving full detail for the most recent readings. The array is
-    /// assumed oldest-first (the most recent reading is last).
-    ///
-    /// The newest `recentKeep` (12) elements are always kept un-thinned, since
-    /// recent glucose detail matters most on the chart. The older remainder is
-    /// sampled down to fill the entire leftover budget (`maxCount - 12`) using
-    /// a fractional step, so the full point budget is used (no wasted slots)
-    /// and the older region stays as dense as the cap allows. Spacing in the
-    /// older region varies by at most one source sample — unavoidable for a
-    /// non-integer downsample ratio. Returns the array unchanged when it
-    /// already fits, so sparse feeds (Libre) pass through and dense feeds get
-    /// thinned instead of clipped.
+    /// Evenly downsamples to `maxCount` elements (keeping the first and last),
+    /// or returns the array unchanged when it already fits.
     func sampled(maxCount: Int) -> [Element] {
         guard count > maxCount, maxCount > 1 else {
             return self
         }
 
-        let recentKeep = Swift.min(12, maxCount)      // newest readings kept at full detail
-        let tailStart = count - recentKeep            // first index of the kept recent tail
-        let olderBudget = maxCount - recentKeep       // points allotted to the older remainder
-
-        var indices: [Int] = []
-        if tailStart > 0, olderBudget > 0 {
-            if tailStart <= olderBudget {
-                indices.append(contentsOf: 0..<tailStart)         // older region fits, keep all
-            } else if olderBudget == 1 {
-                indices.append(0)
-            } else {
-                // Spread olderBudget picks evenly across indices 0..<tailStart.
-                let step = Double(tailStart - 1) / Double(olderBudget - 1)
-                indices.append(contentsOf: (0..<olderBudget).map {
-                    Int((Double($0) * step).rounded())
-                })
-            }
+        let step = Double(count - 1) / Double(maxCount - 1)
+        return (0..<maxCount).map { index in
+            self[Int((Double(index) * step).rounded(.toNearestOrAwayFromZero))]
         }
-        indices.append(contentsOf: tailStart..<count) // append the recent tail in full
-        return indices.map { self[$0] }
     }
 }
