@@ -181,6 +181,7 @@
 		7BCA586A2C8A292600C50F11 /* SensorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCA58682C8A292600C50F11 /* SensorSettings.swift */; };
 		7BD2C65D2DC3BE6D0079EE4A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7BD2C65B2DC3BE6D0079EE4A /* InfoPlist.strings */; };
 		7BD2C65E2DC3BE6D0079EE4A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7BD2C65B2DC3BE6D0079EE4A /* InfoPlist.strings */; };
+		7BD574E22FBDF89400BE7E7D /* HeartbeatConnectionProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD574E12FBDF89400BE7E7D /* HeartbeatConnectionProfile.swift */; };
 		7BDB81292CB0893700F4A60F /* LibreLinkUpGlucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B299A162C90B089002A15C8 /* LibreLinkUpGlucose.swift */; };
 		7BDB812C2CB089B100F4A60F /* MeasurementColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */; };
 		7BDB812D2CB089B400F4A60F /* TrendArrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC51F502C7C8413009542D2 /* TrendArrow.swift */; };
@@ -386,6 +387,7 @@
 		7BCA58682C8A292600C50F11 /* SensorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorSettings.swift; sourceTree = "<group>"; };
 		7BD2C65C2DC3BE6D0079EE4A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7BD2C65F2DC3BEC60079EE4A /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		7BD574E12FBDF89400BE7E7D /* HeartbeatConnectionProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartbeatConnectionProfile.swift; sourceTree = "<group>"; };
 		7BDB81312CB09AF800F4A60F /* LLUHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLUHeaders.swift; sourceTree = "<group>"; };
 		7BDF0A702DBA40D500852BAD /* ReadGlucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadGlucose.swift; sourceTree = "<group>"; };
 		7BDF0A7B2DBB886400852BAD /* FLwatchShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLwatchShortcuts.swift; sourceTree = "<group>"; };
@@ -603,6 +605,7 @@
 			isa = PBXGroup;
 			children = (
 				7B45C5382F756BC000203B4C /* BluetoothHeartbeatManager.swift */,
+				7BD574E12FBDF89400BE7E7D /* HeartbeatConnectionProfile.swift */,
 				7BF0A0112FA4000200C0D001 /* CarPlaySceneDelegate.swift */,
 				7BF92A5C2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift */,
 				7BA0AE2C2C582F63004226FE /* LibreWristApp.swift */,
@@ -1090,6 +1093,7 @@
 				7BA304182F5E30B0005384BF /* Int.swift in Sources */,
 				7BA567992CBA974D003244EE /* MailView.swift in Sources */,
 				7B62EDB52FACD8FA00C9502B /* PhoneAppDexcomShareConnectView.swift in Sources */,
+				7BD574E22FBDF89400BE7E7D /* HeartbeatConnectionProfile.swift in Sources */,
 				7B8965452DC17399003A50CE /* PhoneAppSiriSheetView.swift in Sources */,
 				7B183E9B2C84C9540018A24F /* PhoneAppInsulinDeliveryView.swift in Sources */,
 				7B4855DF2DB58DC90089409E /* TimeDifferencePicker.swift in Sources */,

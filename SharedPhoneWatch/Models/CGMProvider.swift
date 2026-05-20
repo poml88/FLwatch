@@ -50,12 +50,11 @@ protocol CGMProvider: AnyObject {
     /// heartbeat may fire more often) — avoids burning a network call when
     /// we already have a reading younger than the source cadence.
     var reloadThrottleByReadingAge: Bool { get }
-    /// Delay between a Bluetooth-heartbeat trigger and the network fetch.
-    /// Lets the publisher's official app (e.g. Dexcom G7 app) finish
-    /// uploading the just-advertised reading to the Share servers before
-    /// we fetch — otherwise the heartbeat-triggered fetch races the upload
-    /// and returns the *previous* reading.
-    var heartbeatToFetchDelay: TimeInterval { get }
+
+    // Note: Bluetooth-heartbeat BLE timing (which connect/notify/disconnect
+    // events tick, connection strategy, watchdog window, upload head-start)
+    // lives in `HeartbeatConnectionProfile`, not here — this protocol stays
+    // about cloud/data concerns.
 
     /// User-visible hint shown in the home-view "no data" overlay,
     /// suggesting the user check the publisher mobile app for the active
@@ -69,7 +68,6 @@ extension CGMProvider {
     var cadenceMinutes: Int { 1 }
     var staleReadingAfter: TimeInterval { 3 * 60 }
     var reloadThrottleByReadingAge: Bool { false }
-    var heartbeatToFetchDelay: TimeInterval { 0 }
     var noDataReceivedHint: String { String(localized: "Check that Libre app is running.") }
 }
 

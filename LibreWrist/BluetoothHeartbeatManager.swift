@@ -22,7 +22,7 @@ final class PhoneHeartbeatRefreshCoordinator {
 
     private init() {}
 
-    func recordHeartbeat(source: String) {
+    func recordHeartbeat(source: String, bypassPropagationDelay: Bool = false) {
         let now = Date()
         SharedData.bluetoothHeartbeatLastEventDate = now
         Logger.connectivity.info("Bluetooth heartbeat received from \(source, privacy: .public)")
@@ -40,17 +40,25 @@ final class PhoneHeartbeatRefreshCoordinator {
 
         SharedData.bluetoothHeartbeatLastRefreshDate = now
         refreshTask = Task {
-            // Give the publisher's official app time to upload the just-
-            // advertised reading to the cloud. Libre's path returns 0;
-            // Dexcom's path returns ~10 s. Without this, the heartbeat-
-            // triggered fetch races the Dexcom-app upload and returns the
-            // previous reading.
-            let propagationDelay = LibreLinkUpService.shared.activeProvider.heartbeatToFetchDelay
+            // Give the publisher's official app a head start to upload the
+            // just-advertised reading to the cloud before we fetch; without
+            // it the fetch races the upload and returns the previous reading.
+            // A disconnect tick (expired Dexcom G7 dropping with no data)
+            // carries no pending upload to wait for, so skip the grace delay.
+            let propagationDelay = bypassPropagationDelay ? 0 : HeartbeatConnectionProfileFactory.current.fetchDelay
             if propagationDelay > 0 {
                 Logger.connectivity.info("Heartbeat: waiting \(propagationDelay, privacy: .public)s for publisher upload to propagate")
                 try? await Task.sleep(nanoseconds: UInt64(propagationDelay * 1_000_000_000))
             }
-            await LibreLinkUpService.shared.requestReloadIfNeeded()
+            // A data-bearing tick (value notification, or Libre's connect) is
+            // positive evidence a new reading exists, so force past the
+            // reading-age throttle and peer-result reuse — otherwise the fetch
+            // can skip and serve a stale cached/peer reading despite the fresh
+            // heartbeat. The disconnect metronome tick (bypassPropagationDelay)
+            // may carry no new data, so it stays throttled. The lease still
+            // serializes calls, so force can't cause concurrent duplicates.
+            let forceReload = !bypassPropagationDelay
+            await LibreLinkUpService.shared.requestReloadIfNeeded(force: forceReload)
             await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
             await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
             await LiveActivityManager.shared.refreshFromCurrentHistory(
@@ -71,8 +79,13 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
     static let shared = BluetoothHeartbeatManager()
     private static let minimumHeartbeatInterval: TimeInterval = 30
     private static let connectionTimeout: TimeInterval = 5
-    private static let notificationWatchdogTimeout: TimeInterval = 120
     private static let watchdogPollInterval: UInt64 = 30_000_000_000
+
+    // Per-sensor BLE timing (which events tick, connection strategy, watchdog
+    // window) lives in the profile, read live so a provider switch applies on
+    // the next callback. The shared CoreBluetooth engine below is identical
+    // for both sensors.
+    private var profile: HeartbeatConnectionProfile { HeartbeatConnectionProfileFactory.current }
 
     struct DiscoveredDevice: Identifiable, Equatable {
         let id: UUID
@@ -335,11 +348,16 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
 
         if let selectedPeripheralIdentifier {
             let restoredPeripherals = centralManager.retrievePeripherals(withIdentifiers: [selectedPeripheralIdentifier])
-            if let peripheral = restoredPeripherals.first {
+            if let peripheral = restoredPeripherals.first, isSelectedDevice(peripheral) {
                 peripheralsByIdentifier[peripheral.identifier] = peripheral
                 connect(peripheral, using: centralManager)
                 return
             }
+            // Stored UUID points at a device whose name no longer matches the
+            // selection (stale after a sensor/provider change); drop it and
+            // fall back to discovering the selected device by name.
+            selectedPeripheralUUID = ""
+            SharedData.bluetoothHeartbeatPeripheralUUID = ""
         }
 
         if let peripheral = peripheralsByIdentifier.values.first(where: { self.effectiveName(for: $0).uppercased() == self.selectedDeviceName }) {
@@ -361,8 +379,29 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
         return peripheral.name ?? ""
     }
 
+    /// Identity of the user's chosen heartbeat device is its *name*; the stored
+    /// UUID is only a fast-path for `retrievePeripherals`. Name is authoritative
+    /// so a stale restored peripheral (e.g. a Dexcom left over from before the
+    /// user switched to Libre) can't masquerade as the selection and hijack the
+    /// connection. Falls back to UUID only when a peripheral has no cached name.
+    private func isSelectedDevice(_ peripheral: CBPeripheral) -> Bool {
+        guard !selectedDeviceName.isEmpty else { return false }
+        let name = effectiveName(for: peripheral).uppercased()
+        if !name.isEmpty {
+            return name == selectedDeviceName
+        }
+        return selectedPeripheralIdentifier == peripheral.identifier
+    }
+
     private func connect(_ peripheral: CBPeripheral, using centralManager: CBCentralManager) {
         guard isCentralPoweredOn else { return }
+        guard isSelectedDevice(peripheral) else {
+            Logger.connectivity.info("Ignoring connect to non-selected device \(self.effectiveName(for: peripheral).uppercased(), privacy: .public)")
+            if peripheral.state == .connected || peripheral.state == .connecting {
+                centralManager.cancelPeripheralConnection(peripheral)
+            }
+            return
+        }
         guard peripheral.state != .connected, peripheral.state != .connecting else { return }
         pendingReconnect = true
         pendingConnectionPeripheralID = peripheral.identifier
@@ -375,10 +414,15 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
                 CBConnectPeripheralOptionNotifyOnDisconnectionKey: true
             ]
         )
-        startConnectionTimeout(for: peripheral.identifier)
+        // Pending-connect sensors (Dexcom G7) advertise only briefly every
+        // cycle; leave the connect pending until iOS satisfies it. Timing it
+        // out here would cancel-and-retry every few seconds in a tight loop.
+        if profile.usesPersistentConnection {
+            startConnectionTimeout(for: peripheral.identifier)
+        }
     }
 
-    private func recordHeartbeat(source: String) {
+    private func recordHeartbeat(source: String, bypassPropagationDelay: Bool = false) {
         let now = Date()
         let secondsSinceLastHeartbeat = now.timeIntervalSince(SharedData.bluetoothHeartbeatLastEventDate)
         guard secondsSinceLastHeartbeat >= Self.minimumHeartbeatInterval else {
@@ -388,7 +432,7 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
 
         lastHeartbeatDate = now
         SharedData.bluetoothHeartbeatLastEventDate = now
-        PhoneHeartbeatRefreshCoordinator.shared.recordHeartbeat(source: source)
+        PhoneHeartbeatRefreshCoordinator.shared.recordHeartbeat(source: source, bypassPropagationDelay: bypassPropagationDelay)
     }
 
     private func resumeRestoredPeripheralIfNeeded() {
@@ -397,8 +441,12 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
 
         Logger.connectivity.info("Resuming restored peripheral \(restoredPeripheralAwaitingResume.identifier.uuidString, privacy: .public) state=\(restoredPeripheralAwaitingResume.state.rawValue, privacy: .public)")
         self.restoredPeripheralAwaitingResume = nil
-        subscribeToHeartbeatCharacteristics(for: restoredPeripheralAwaitingResume, rediscoverServices: true)
-        if restoredPeripheralAwaitingResume.state != .connected, let centralManager {
+        // Service discovery is only valid once connected; a restored
+        // peripheral is often still .connecting (state=1). Discovering then
+        // throws "API MISUSE: can only accept commands while connected".
+        if restoredPeripheralAwaitingResume.state == .connected {
+            subscribeToHeartbeatCharacteristics(for: restoredPeripheralAwaitingResume, rediscoverServices: true)
+        } else if let centralManager {
             connect(restoredPeripheralAwaitingResume, using: centralManager)
         }
     }
@@ -483,7 +531,7 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
         guard let lastNotificationDate else { return }
 
         let silenceInterval = Date().timeIntervalSince(lastNotificationDate)
-        guard silenceInterval >= Self.notificationWatchdogTimeout else { return }
+        guard silenceInterval >= profile.watchdogTimeout else { return }
 
         Logger.connectivity.warning("Bluetooth heartbeat watchdog fired after \(silenceInterval, privacy: .public)s without notifications")
         subscribeToHeartbeatCharacteristics(for: connectedPeripheral, rediscoverServices: true)
@@ -531,7 +579,15 @@ extension BluetoothHeartbeatManager: @preconcurrency CBCentralManagerDelegate {
                 peripheral.delegate = self
                 peripheralsByIdentifier[peripheral.identifier] = peripheral
             }
-            if let restored = restoredPeripherals.first(where: { $0.identifier == selectedPeripheralIdentifier }) ?? restoredPeripherals.first {
+            // Cancel standing connects to any restored peripheral that isn't the
+            // currently-selected device — e.g. a previously-selected sensor left
+            // over from before a provider switch. Otherwise its connect/notify/
+            // disconnect events would fire heartbeats for the wrong sensor.
+            for peripheral in restoredPeripherals where !isSelectedDevice(peripheral) {
+                Logger.connectivity.info("Cancelling restored non-selected peripheral \(self.effectiveName(for: peripheral).uppercased(), privacy: .public)")
+                central.cancelPeripheralConnection(peripheral)
+            }
+            if let restored = restoredPeripherals.first(where: { isSelectedDevice($0) }) {
                 connectedPeripheral = restored
                 if selectedPeripheralUUID.isEmpty {
                     selectedPeripheralUUID = restored.identifier.uuidString
@@ -567,6 +623,11 @@ extension BluetoothHeartbeatManager: @preconcurrency CBCentralManagerDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        guard isSelectedDevice(peripheral) else {
+            Logger.connectivity.info("Connected to non-selected device \(self.effectiveName(for: peripheral).uppercased(), privacy: .public); cancelling")
+            central.cancelPeripheralConnection(peripheral)
+            return
+        }
         connectionTimeoutTask?.cancel()
         connectionTimeoutTask = nil
         pendingConnectionPeripheralID = nil
@@ -579,7 +640,9 @@ extension BluetoothHeartbeatManager: @preconcurrency CBCentralManagerDelegate {
         lastNotificationDate = Date()
         startWatchdogIfNeeded()
         stopScanning()
-        recordHeartbeat(source: "connect:\(effectiveName(for: peripheral).uppercased())")
+        if profile.firesHeartbeatOnConnect {
+            recordHeartbeat(source: "connect:\(effectiveName(for: peripheral).uppercased())")
+        }
         subscribeToHeartbeatCharacteristics(for: peripheral)
     }
 
@@ -592,7 +655,9 @@ extension BluetoothHeartbeatManager: @preconcurrency CBCentralManagerDelegate {
         status = .idle
         if pendingReconnect {
             connectToSelectedDeviceIfAvailable()
-            startScanning()
+            if profile.usesPersistentConnection {
+                startScanning()
+            }
         }
     }
 
@@ -607,10 +672,21 @@ extension BluetoothHeartbeatManager: @preconcurrency CBCentralManagerDelegate {
         }
         lastNotificationDate = nil
         Logger.connectivity.info("Bluetooth heartbeat device disconnected: \(self.effectiveName(for: peripheral).uppercased(), privacy: .public)")
+        // An expired Dexcom G7 connects then drops ~1 s later without ever
+        // sending a value; the disconnect is the only tick left to keep Share
+        // polling alive. No upload is pending, so skip the propagation delay.
+        if profile.firesHeartbeatOnDisconnect {
+            recordHeartbeat(source: "disconnect:\(effectiveName(for: peripheral).uppercased())", bypassPropagationDelay: true)
+        }
         if isEnabled, !selectedDeviceName.isEmpty {
             status = .idle
             connectToSelectedDeviceIfAvailable()
-            startScanning()
+            // For pending-connect sensors (Dexcom G7) a disconnect is the
+            // normal end of a ~5 min cycle; just re-arm the standing connect.
+            // Rescanning would spin the nil-service scan pointlessly.
+            if profile.usesPersistentConnection {
+                startScanning()
+            }
         }
     }
 }

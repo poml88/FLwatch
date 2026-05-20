@@ -29,16 +29,6 @@ final class DexcomShareProvider: CGMProvider {
     // younger than the source cadence is already cached.
     var reloadThrottleByReadingAge: Bool { true }
 
-    // The Dexcom mobile app's upload latency to Share is typically 5–15 s.
-    // We can't wait the full upper bound: iOS only gives an app ~30 s of
-    // background runtime per BT-triggered wake, and the post-fetch pipeline
-    // (parse → persist → watch sync → widget reload → Live Activity → low-
-    // glucose alert evaluation) needs most of that budget. 10 s catches the
-    // common case and leaves enough headroom for the rest of the work; if
-    // the upload arrives later, the *next* heartbeat (or the reading-age
-    // throttle on the next trigger) catches it.
-    var heartbeatToFetchDelay: TimeInterval { 10 }
-
     var noDataReceivedHint: String { String(localized: "Check that Dexcom app is running.") }
 
     private let client: DexcomShareClient
