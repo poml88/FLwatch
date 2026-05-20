@@ -38,8 +38,14 @@ final class LibreLinkUpService: ObservableObject {
 
     /// Switches the active CGM backend. Decision 7.1: this is a "disconnect"
     /// from the user's perspective, identical to clearing credentials. Cached
-    /// `LibreLinkUpHistory` is left in place — it'll be overwritten on the next
-    /// successful reload by the new provider, so any stale-data window is brief.
+    /// `LibreLinkUpHistory` is left in place — it'll be overwritten on the
+    /// next successful reload by the new provider, so any stale-data window
+    /// is brief.
+    ///
+    /// Kept free of platform-specific plumbing on purpose: iOS callers that
+    /// want the watch to follow the new provider immediately should call
+    /// `WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()`
+    /// themselves after this (Settings + first-launch picker already do).
     func switchProvider(to kind: CGMProviderKind) {
         SharedData.cgmProviderKind = kind
         UserDefaults.group.connected = .disconnected
@@ -66,8 +72,10 @@ final class LibreLinkUpService: ObservableObject {
         }
     }
 
-    func hasFreshReading(maxAgeMinutes: Int = 1, now: Date = Date()) -> Bool {
-        now.timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) < Double(maxAgeMinutes * 60)
+    /// NOTE: unused - probably obsolete
+    func hasFreshReading(maxAgeMinutes: Int? = nil, now: Date = Date()) -> Bool {
+        let minutes = maxAgeMinutes ?? activeProvider.cadenceMinutes
+        return now.timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) < Double(minutes * 60)
     }
 
     private func canReload() -> Bool {
@@ -75,9 +83,30 @@ final class LibreLinkUpService: ObservableObject {
         return connected == .connected
     }
 
+    /// True when a fetch can be skipped because the cached reading is younger
+    /// than `maxAgeMinutes`. Only providers that opt into
+    /// `reloadThrottleByReadingAge` (Dexcom) use this; for everyone else it's
+    /// always false so the conventional call-age throttle takes over.
+    ///
+    /// Checked twice in `requestReloadIfNeeded` — once before the gate and once
+    /// inside the lease — because a peer process may refresh the cache while we
+    /// wait on the gate. `context` distinguishes the two in the log.
+    private func hasFreshEnoughReading(maxAgeMinutes: Int, force: Bool, context: String) -> Bool {
+        guard !force, activeProvider.reloadThrottleByReadingAge else { return false }
+        let lastReadingAge = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate)
+        guard lastReadingAge < Double(maxAgeMinutes * 60) else { return false }
+        Logger.libreLinkUpService.info("requestReloadIfNeeded skipped \(context, privacy: .public): cached reading is \(Int(lastReadingAge / 60))min old (threshold \(maxAgeMinutes)min); no network call")
+        return true
+    }
+
     /// Awaitable: returns when either (a) no reload was needed, or (b) the reload finished.
+    ///
+    /// `maxAgeMinutes == nil` (default) means "use the active provider's
+    /// cadence" — i.e. don't refetch if we already pulled within one cadence
+    /// window. Callers can still pass an explicit value to override.
     @discardableResult
-    func requestReloadIfNeeded(maxAgeMinutes: Int = 1, force: Bool = false) async -> Bool {
+    func requestReloadIfNeeded(maxAgeMinutes: Int? = nil, force: Bool = false) async -> Bool {
+        let maxAgeMinutes = maxAgeMinutes ?? activeProvider.cadenceMinutes
         Logger.libreLinkUpService.info("requestReloadIfNeeded called (maxAgeMinutes: \(maxAgeMinutes), force: \(force))")
 
 #if os(watchOS)
@@ -96,6 +125,13 @@ final class LibreLinkUpService: ObservableObject {
         _ = self.refreshSensorSettingsFromPersistence()
         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
 
+        // Reading-age throttle (Dexcom: skip the fetch entirely when we
+        // already have a reading younger than the source cadence). Libre
+        // keeps the conventional call-age throttle below.
+        if hasFreshEnoughReading(maxAgeMinutes: maxAgeMinutes, force: force, context: "before lease") {
+            return false
+        }
+
         if !force,
            await self.consumeRecentSuccessfulPeerResultIfAvailable(maxAgeMinutes: maxAgeMinutes) {
             return false
@@ -109,6 +145,11 @@ final class LibreLinkUpService: ObservableObject {
 
             guard self.canReload() else {
                 Logger.libreLinkUpService.info("requestReloadIfNeeded skipped: not connected (state: \(UserDefaults.group.connected.rawValue))")
+                return false
+            }
+            // Re-check reading-age inside the lease — a peer process may have
+            // refreshed the cache while we were waiting on the gate.
+            if self.hasFreshEnoughReading(maxAgeMinutes: maxAgeMinutes, force: force, context: "after lease") {
                 return false
             }
             if !force,
@@ -139,9 +180,6 @@ final class LibreLinkUpService: ObservableObject {
                 Logger.libreLinkUpService.info("requestReloadIfNeeded completed successfully")
             }
             LibreWristUpdateNotifier.postDataDidChange()
-#if os(iOS)
-//            WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
-#endif
             return true
             },
             waitForPeerResult: { [weak self] in

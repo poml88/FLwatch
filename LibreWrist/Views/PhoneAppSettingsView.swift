@@ -559,6 +559,9 @@ struct PhoneAppSettingsView: View {
         pendingProviderSwitch = nil
         LibreLinkUpService.shared.switchProvider(to: newKind)
         cgmProviderKindRaw = newKind.rawValue
+        // Mirror the change to the watch so its stale window and cadence
+        // follow without waiting for the next settings sync.
+        watchConnector.sendSettingsSnapshotToWatch()
     }
 
     private func refreshAppleHealthStatus() {

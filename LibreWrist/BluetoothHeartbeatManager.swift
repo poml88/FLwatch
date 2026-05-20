@@ -40,7 +40,17 @@ final class PhoneHeartbeatRefreshCoordinator {
 
         SharedData.bluetoothHeartbeatLastRefreshDate = now
         refreshTask = Task {
-            await LibreLinkUpService.shared.requestReloadIfNeeded(maxAgeMinutes: 1)
+            // Give the publisher's official app time to upload the just-
+            // advertised reading to the cloud. Libre's path returns 0;
+            // Dexcom's path returns ~10 s. Without this, the heartbeat-
+            // triggered fetch races the Dexcom-app upload and returns the
+            // previous reading.
+            let propagationDelay = LibreLinkUpService.shared.activeProvider.heartbeatToFetchDelay
+            if propagationDelay > 0 {
+                Logger.connectivity.info("Heartbeat: waiting \(propagationDelay, privacy: .public)s for publisher upload to propagate")
+                try? await Task.sleep(nanoseconds: UInt64(propagationDelay * 1_000_000_000))
+            }
+            await LibreLinkUpService.shared.requestReloadIfNeeded()
             await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
             await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
             await LiveActivityManager.shared.refreshFromCurrentHistory(
@@ -289,8 +299,19 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
 
     private func matchesHeartbeatName(_ name: String) -> Bool {
         let range = NSRange(location: 0, length: name.utf16.count)
-        return heartbeatNameRegex?.firstMatch(in: name, options: [], range: range) != nil
-            || name.contains("ABBOTT")
+        // Libre 3 advertises its serial as 12 hex characters; some Libre
+        // variants include "ABBOTT" in the advertised name.
+        if heartbeatNameRegex?.firstMatch(in: name, options: [], range: range) != nil
+            || name.contains("ABBOTT") {
+            return true
+        }
+        // Dexcom: G7 / G7 15-day advertises as "DX…" (e.g. "DXCMPq", "DX02…");
+        // G5 / G6 / G6 Firefly advertises as "DEXCOM…". Matches xdrip4ios's
+        // peripheral name filter (see CGMG7Transmitter / CGMG6FireflyTransmitter).
+        if name.hasPrefix("DX") || name.hasPrefix("DEXCOM") {
+            return true
+        }
+        return false
     }
 
     private func updateDiscoveredDevice(peripheral: CBPeripheral, name: String, rssi: Int) {

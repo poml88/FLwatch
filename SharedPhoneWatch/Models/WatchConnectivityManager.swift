@@ -54,6 +54,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         let username: String?
         let password: String?
         let patientId: String?
+        let cgmProviderKind: String?
         let updatedAt: Date
     }
 
@@ -451,6 +452,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             username: hasValidCredentials ? username : nil,
             password: hasValidCredentials ? password : nil,
             patientId: hasValidCredentials && !SharedData.libreLinkUpPatientId.isEmpty ? SharedData.libreLinkUpPatientId : nil,
+            cgmProviderKind: SharedData.cgmProviderKind.rawValue,
             updatedAt: Date()
         )
 
@@ -551,6 +553,17 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         SharedData.showActivityCurveWatch = snapshot.showActivityCurveWatch
         SharedData.widgetUpdateFrequency = snapshot.widgetUpdateFrequency
         SharedData.tapComplicationReloads = snapshot.tapComplicationReloads
+
+        // Mirror the phone's active CGM provider so the watch's
+        // staleReadingAfter / cadenceMinutes follow Libre vs Dexcom correctly.
+        // Older phone builds send nil here — keep whatever the watch had then.
+        if let kindRaw = snapshot.cgmProviderKind,
+           let kind = CGMProviderKind(rawValue: kindRaw),
+           kind != SharedData.cgmProviderKind {
+            Task { @MainActor in
+                LibreLinkUpService.shared.switchProvider(to: kind)
+            }
+        }
         let shouldForceReload =
             snapshot.hasValidCredentials
             && !(snapshot.username ?? "").isEmpty

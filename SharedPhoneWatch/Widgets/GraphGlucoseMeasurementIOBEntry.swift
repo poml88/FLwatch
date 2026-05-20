@@ -69,7 +69,7 @@ struct GraphGlucoseMeasurementIOBEntry: TimelineEntry {
         }
     }
 
-    static func getPatientGraph(maxAgeMinutes: Int = 1,
+    static func getPatientGraph(maxAgeMinutes: Int? = nil,
                                 forceReload: Bool = false) async throws -> GraphGlucoseMeasurementIOBEntry {
         guard !(SharedData.libreLinkUpUserId.isEmpty || SharedData.libreLinkUpToken.isEmpty) else {
             throw NSError(domain: "MissingSettings", code: -5,

@@ -14,7 +14,6 @@ private enum LowGlucoseNotificationConfig {
     static let notificationIdentifierPrefix = "low-glucose-alert"
     static let categoryIdentifier = "LOW_GLUCOSE_ALERT"
     static let snoozeActionIdentifier = "LOW_GLUCOSE_ALERT_SNOOZE"
-    static let maxReadingAge: TimeInterval = 3 * 60
     static let repeatInterval: TimeInterval = 5 * 60
     static let snoozeInterval: TimeInterval = 15 * 60
     static let deliveryDelay: TimeInterval = 1
@@ -87,8 +86,9 @@ final class LowGlucoseNotificationManager: NSObject {
             await clearPendingNotifications(resetCooldown: false)
             return
         }
-        guard now.timeIntervalSince(history.lastReadingDate) <= LowGlucoseNotificationConfig.maxReadingAge else {
-            Logger.connectivity.info("Low glucose notification skipped: glucose value is stale")
+        let maxReadingAge = LibreLinkUpService.shared.activeProvider.staleReadingAfter
+        guard now.timeIntervalSince(history.lastReadingDate) <= maxReadingAge else {
+            Logger.connectivity.info("Low glucose notification skipped: glucose value is stale (>\(Int(maxReadingAge / 60))min)")
             markPendingRepeatIfNeeded(notificationIsDue)
             await clearPendingNotifications(resetCooldown: false)
             return
@@ -172,7 +172,7 @@ final class LowGlucoseNotificationManager: NSObject {
         let history = LibreLinkUpHistory.shared
         guard history.currentGlucose > 0,
               history.lastReadingDate > .distantPast,
-              now.timeIntervalSince(history.lastReadingDate) <= LowGlucoseNotificationConfig.maxReadingAge else {
+              now.timeIntervalSince(history.lastReadingDate) <= LibreLinkUpService.shared.activeProvider.staleReadingAfter else {
             return false
         }
 

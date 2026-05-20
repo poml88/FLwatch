@@ -13,43 +13,59 @@ import Foundation
 // MARK: - Constants
 
 enum DexcomShareConstants {
-    /// Well-known applicationId used by Loop, xDrip4iOS, Spike, etc.
+    /// Well-known applicationId used by Loop, xDrip4iOS, Spike, etc. for
+    /// every Share region except Japan, which uses a separate one (below).
     /// Do not change without coordinating with the wider open-source CGM ecosystem.
     static let applicationId = "d89443d2-327c-4a6f-89e5-496bbb0317db"
+
+    /// Japan has its own applicationId that the non-JP one is rejected against.
+    static let applicationIdJapan = "d8665ade-9673-4e27-9ff6-92db4ce13d13"
 
     /// Path prefix shared by every Share endpoint.
     static let basePath = "/ShareWebServices/Services"
 
-    /// User-Agent string mimicking the legacy Dexcom Share iOS app. Some
-    /// Share servers reject default URLSession user-agents; this string
-    /// is the historical form Loop and xDrip have always used.
-    static let userAgent = "Dexcom Share/3.0.2.11 CFNetwork/672.0.2 Darwin/14.0.0"
+    /// User-Agent used on the *read* path (`ReadPublisherLatestGlucoseValues`).
+    /// Mirrors xdripswift's `DexcomShareFollowManager` exactly: literal space
+    /// between "Dexcom" and "Share".
+    static let userAgent = "Dexcom Share/3.0.2.11 CFNetwork/1390 Darwin/22.0.0"
+
+    /// User-Agent used on the *auth* endpoints (`AuthenticatePublisherAccount`
+    /// and `LoginPublisherAccountById`). xdripswift sends the URL-encoded
+    /// space form here even though the read path uses a literal space — the
+    /// split is intentional, not a transcription quirk, so we mirror it.
+    static let userAgentAuth = "Dexcom%20Share/3.0.2.11 CFNetwork/1390 Darwin/22.0.0"
 }
 
 // MARK: - Region
 
 enum ShareRegion: String, Codable, CaseIterable {
     case us
+    /// "Outside US": Europe, Australia, Canada, Korea, Hong Kong, etc.
+    /// (Historical name kept for compatibility with previously-saved values.)
     case ous
+    case japan
 
     var host: String {
         switch self {
-        case .us:  return "https://share2.dexcom.com"
-        case .ous: return "https://shareous1.dexcom.com"
+        case .us:    return "https://share2.dexcom.com"
+        case .ous:   return "https://shareous1.dexcom.com"
+        case .japan: return "https://share.dexcom.jp"
         }
     }
 
     var displayName: String {
         switch self {
-        case .us:  return "United States"
-        case .ous: return "Outside United States"
+        case .us:    return "United States"
+        case .ous:   return "Outside United States"
+        case .japan: return "Japan"
         }
     }
 
-    var other: ShareRegion {
+    /// Japan rejects the standard applicationId — needs its own.
+    var applicationId: String {
         switch self {
-        case .us:  return .ous
-        case .ous: return .us
+        case .japan: return DexcomShareConstants.applicationIdJapan
+        default:     return DexcomShareConstants.applicationId
         }
     }
 }

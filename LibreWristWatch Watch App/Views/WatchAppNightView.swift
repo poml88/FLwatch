@@ -77,7 +77,7 @@ struct WatchAppNightView: View {
 //                .padding()
             }
             .overlay {
-                if Int(Date().timeIntervalSince(libreLinkUpHistory.lastReadingDate) / 60) >= 3 {
+                if Date().timeIntervalSince(libreLinkUpHistory.lastReadingDate) >= LibreLinkUpService.shared.activeProvider.staleReadingAfter {
                     ZStack {
                         Color(white: 0, opacity: 0.5)
                         

@@ -35,7 +35,7 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
         }
     }
 
-    static func getLastGlucoseMeasurement(maxAgeMinutes: Int = 1,
+    static func getLastGlucoseMeasurement(maxAgeMinutes: Int? = nil,
                                           forceReload: Bool = false) async throws -> GlucoseMeasurementIOBEntry {
         guard !(SharedData.libreLinkUpUserId.isEmpty || SharedData.libreLinkUpToken.isEmpty) else {
             throw NSError(domain: "MissingSettings", code: -5,

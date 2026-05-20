@@ -19,6 +19,28 @@ final class DexcomShareProvider: CGMProvider {
 
     let kind: CGMProviderKind = .dexcomShare
 
+    // Dexcom G7 / G6 / ONE all publish on a 5-min cadence. Stale window is
+    // cadence + 3 min grace = 8 min — matches xdrip4ios's tolerance.
+    var cadenceMinutes: Int { 5 }
+    var staleReadingAfter: TimeInterval { 8 * 60 }
+
+    // Throttle by cached-reading age, not call age. xdrip4ios uses the same
+    // pattern: poll on triggers, but skip the network call if a reading
+    // younger than the source cadence is already cached.
+    var reloadThrottleByReadingAge: Bool { true }
+
+    // The Dexcom mobile app's upload latency to Share is typically 5–15 s.
+    // We can't wait the full upper bound: iOS only gives an app ~30 s of
+    // background runtime per BT-triggered wake, and the post-fetch pipeline
+    // (parse → persist → watch sync → widget reload → Live Activity → low-
+    // glucose alert evaluation) needs most of that budget. 10 s catches the
+    // common case and leaves enough headroom for the rest of the work; if
+    // the upload arrives later, the *next* heartbeat (or the reading-age
+    // throttle on the next trigger) catches it.
+    var heartbeatToFetchDelay: TimeInterval { 10 }
+
+    var noDataReceivedHint: String { String(localized: "Check that Dexcom app is running.") }
+
     private let client: DexcomShareClient
 
     /// Last user-visible status string. Read by `LibreLinkUpService` after each `reload()`.
@@ -83,28 +105,23 @@ final class DexcomShareProvider: CGMProvider {
 
     // MARK: - Connect / sign out (called from the connect view in Phase 3)
 
-    /// Performs both auth steps, persists credentials and tokens, and triggers
-    /// a first reload. Auto-detects the region on first ever connect: tries
-    /// the saved region (default US) and falls back to the other on `accountNotFound`.
-    /// `accountPasswordInvalid` does not trigger a fall-back — wrong password
-    /// means the region was already correct.
+    /// Single-step publisher login + persist credentials + first reload.
+    /// Auto-detects the Share region on first ever connect by trying each
+    /// host in turn (cached region first when available).
     func connect(email: String, password: String) async throws {
-        let initialRegion: ShareRegion
-        let allowFallback: Bool
-        if SharedData.dexcomShareRegionIsKnown {
-            initialRegion = SharedData.dexcomShareRegion
-            allowFallback = false
+        let cached = SharedData.dexcomShareRegionIsKnown ? SharedData.dexcomShareRegion : nil
+        if let cached {
+            Logger.dexcomShare.info("connect: starting with cached region=\(cached.rawValue, privacy: .public); will try other regions if it fails")
         } else {
-            initialRegion = .us
-            allowFallback = true
+            Logger.dexcomShare.info("connect: no region cached; will iterate through all regions")
         }
 
-        let (resolvedRegion, accountId, sessionId) = try await fullLogin(
+        let (resolvedRegion, accountId, sessionId) = try await loginIteratingAllRegions(
             email: email,
             password: password,
-            region: initialRegion,
-            allowFallback: allowFallback
+            preferredFirst: cached
         )
+        Logger.dexcomShare.info("connect: login complete at region=\(resolvedRegion.rawValue, privacy: .public)")
 
         SharedData.dexcomShareUsername = email
         SharedData.dexcomShareRegion = resolvedRegion
@@ -142,9 +159,19 @@ final class DexcomShareProvider: CGMProvider {
 
     // MARK: - Auth helpers
 
-    /// Re-runs `loginById` using the stored accountId, refreshing only the sessionId.
-    /// Falls back to a full `authenticate` + `loginById` if the accountId is missing.
+    /// Re-runs `loginById` from the cached accountId at the cached region only,
+    /// refreshing just the sessionId. Falls back to a full two-step
+    /// `authenticate` + `loginById` if the accountId is missing.
+    ///
+    /// Deliberately *not* iterating across regions on session refresh: every
+    /// failed login attempt on Share counts toward an opaque per-account
+    /// rate limit, and a single expired-session event would otherwise trip
+    /// three back-to-back login attempts. If a user moves countries the
+    /// cached region becomes wrong — but that's rare, and the recovery is
+    /// "sign out and sign back in" via the connect UI (which goes through
+    /// `connect()` → `loginIteratingAllRegions(...)`).
     private func reauthenticate(region: ShareRegion, password: String) async throws {
+        Logger.dexcomShare.info("reauthenticate: refreshing session at cached region=\(region.rawValue, privacy: .public)")
         if let accountId = try DexcomShareTokenStore.read(.accountId), !accountId.isEmpty {
             let newSessionId = try await client.loginById(
                 accountId: accountId,
@@ -156,35 +183,58 @@ final class DexcomShareProvider: CGMProvider {
         }
 
         let email = SharedData.dexcomShareUsername
-        let (_, accountId, sessionId) = try await fullLogin(
-            email: email,
-            password: password,
-            region: region,
-            allowFallback: false
-        )
+        let accountId = try await client.authenticate(email: email, password: password, region: region)
+        let sessionId = try await client.loginById(accountId: accountId, password: password, region: region)
         try DexcomShareTokenStore.save(accountId, kind: .accountId)
         try DexcomShareTokenStore.save(sessionId, kind: .sessionId)
     }
 
-    /// Authenticate + loginById, with optional region fall-back if the account
-    /// isn't found at the first-tried region.
-    private func fullLogin(
+    /// Iterates through every Share region until one accepts the credentials.
+    ///
+    /// `preferredFirst` (when set) is tried before the rest — so a returning
+    /// user with a previously-detected region hits it immediately. If the
+    /// preferred region fails, *every* other region is still tried, because
+    /// the user may have moved countries since they last logged in (and
+    /// because some Share hosts return `AccountPasswordInvalid` as an
+    /// enumeration-defense for accounts that exist in a different region).
+    ///
+    /// `maxAuthenticationAttempts` short-circuits the loop: Dexcom has locked
+    /// the account out, no other region will let us in either.
+    private func loginIteratingAllRegions(
         email: String,
         password: String,
-        region: ShareRegion,
-        allowFallback: Bool
+        preferredFirst: ShareRegion?
     ) async throws -> (ShareRegion, String, String) {
-        do {
-            let accountId = try await client.authenticate(email: email, password: password, region: region)
-            let sessionId = try await client.loginById(accountId: accountId, password: password, region: region)
-            return (region, accountId, sessionId)
-        } catch DexcomShareError.accountNotFound where allowFallback {
-            let fallback = region.other
-            Logger.dexcomShare.info("accountNotFound at \(region.rawValue, privacy: .public); falling back to \(fallback.rawValue, privacy: .public)")
-            let accountId = try await client.authenticate(email: email, password: password, region: fallback)
-            let sessionId = try await client.loginById(accountId: accountId, password: password, region: fallback)
-            return (fallback, accountId, sessionId)
+
+        // Build the candidate order: preferred first (if any), then the rest in declaration order.
+        var candidates: [ShareRegion] = []
+        if let preferredFirst {
+            candidates.append(preferredFirst)
         }
+        for region in ShareRegion.allCases where region != preferredFirst {
+            candidates.append(region)
+        }
+
+        var lastError: Error = DexcomShareError.other(code: "NoCandidateTried", message: nil)
+        for region in candidates {
+            Logger.dexcomShare.info("login attempt at region=\(region.rawValue, privacy: .public) (appId=\(region.applicationId.prefix(8), privacy: .public)...)")
+            do {
+                let accountId = try await client.authenticate(email: email, password: password, region: region)
+                let sessionId = try await client.loginById(accountId: accountId, password: password, region: region)
+                Logger.dexcomShare.info("login succeeded at region=\(region.rawValue, privacy: .public)")
+                return (region, accountId, sessionId)
+            } catch DexcomShareError.maxAuthenticationAttempts {
+                Logger.dexcomShare.error("login at region=\(region.rawValue, privacy: .public) reported MaxAuthenticationAttempts; stopping")
+                throw DexcomShareError.maxAuthenticationAttempts
+            } catch {
+                lastError = error
+                Logger.dexcomShare.info("login at region=\(region.rawValue, privacy: .public) failed (\(error.localizedDescription, privacy: .public)); trying next region")
+                continue
+            }
+        }
+
+        Logger.dexcomShare.error("login: all \(candidates.count, privacy: .public) regions failed; last error: \(lastError.localizedDescription, privacy: .public)")
+        throw lastError
     }
 
     /// On terminal auth failures, mark the connection state so the rest of the

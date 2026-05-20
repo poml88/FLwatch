@@ -67,10 +67,12 @@ struct PhoneAppDexcomShareConnectView: View {
                             .padding(.top, 1)
 
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Important note")
+                            Text("Use the CGM wearer's own credentials")
                                 .font(.headline)
 
-                            Text("FLwatch uses the Dexcom Share service (the same one Dexcom Follow uses). To use this you need to have set up the Share feature in the Dexcom app on your phone.")
+                            Text("Enter the email and password of the **Dexcom account that wears the sensor** — the same login as the Dexcom G7/G6/ONE app on the wearer's phone. FLwatch then acts as a parallel display of that data, the same way xdrip4ios and Loop do.")
+
+                            Text("**Follower / Share-invite accounts will not work.** Dexcom's Share service does not expose follower-mode reading to third-party apps; only the wearer's own account can pull readings.")
 
                             Text("Share is unofficial. Dexcom may change or restrict it without notice.")
                         }
@@ -81,7 +83,7 @@ struct PhoneAppDexcomShareConnectView: View {
 
                 Section(
                     header: Text("Credentials"),
-                    footer: Text("Enter your Dexcom account email and password. The region (United States or outside) is detected automatically when you press Connect.\n[TROUBLE? TAP TO OPEN HELP](https://flwatch.app/)")
+                    footer: Text("Region (United States, outside US, or Japan) is detected automatically when you press Connect.\n[TROUBLE? TAP TO OPEN HELP](https://flwatch.app/)")
                 ) {
                     TextField(text: $email, prompt: Text("Email address")) {
                         Text("Email")
@@ -160,10 +162,19 @@ struct PhoneAppDexcomShareConnectView: View {
     }
 
     private func tryToConnect() {
+        // Trim whitespace from both fields. A surprisingly common failure
+        // mode: password managers paste a trailing space or newline that the
+        // SecureField happily keeps, and Share then reports the password as
+        // invalid with no clue why.
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedEmail != email { email = trimmedEmail }
+        if trimmedPassword != password { password = trimmedPassword }
+
         UserDefaults.group.connected = .connecting
         Task {
             do {
-                try await provider.connect(email: email, password: password)
+                try await provider.connect(email: trimmedEmail, password: trimmedPassword)
                 UserDefaults.group.connected = .connected
             } catch {
                 errorMessage = error.localizedDescription

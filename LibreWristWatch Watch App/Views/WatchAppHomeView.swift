@@ -50,7 +50,7 @@ struct WatchAppHomeView: View {
     }
 
     private var isReadingStale: Bool {
-        minutesSinceLastReading >= 3
+        currentTime.timeIntervalSince(libreLinkUpHistory.lastReadingDate) >= LibreLinkUpService.shared.activeProvider.staleReadingAfter
     }
 
     private var isMissingCredentials: Bool {
