@@ -50,6 +50,12 @@ protocol CGMProvider: AnyObject {
     /// heartbeat may fire more often) — avoids burning a network call when
     /// we already have a reading younger than the source cadence.
     var reloadThrottleByReadingAge: Bool { get }
+    /// Grace added to the reading-age throttle so we don't fetch the instant a
+    /// reading hits `cadence`: the next value publishes at `T + cadence` but
+    /// reaches the cloud a few seconds later, so firing exactly on the boundary
+    /// races the publisher's upload and re-fetches the same reading. Mirrors the
+    /// heartbeat's publisher-upload propagation delay.
+    var reloadThrottleGraceSeconds: TimeInterval { get }
 
     // Note: Bluetooth-heartbeat BLE timing (which connect/notify/disconnect
     // events tick, connection strategy, watchdog window, upload head-start)
@@ -68,6 +74,7 @@ extension CGMProvider {
     var cadenceMinutes: Int { 1 }
     var staleReadingAfter: TimeInterval { 3 * 60 }
     var reloadThrottleByReadingAge: Bool { false }
+    var reloadThrottleGraceSeconds: TimeInterval { 3 }
     var noDataReceivedHint: String { String(localized: "Check that Libre app is running.") }
 }
 
@@ -93,6 +100,12 @@ enum CGMProviderRegistry {
 final class LibreLinkUpProvider: CGMProvider {
     let kind: CGMProviderKind = .libreLinkUp
     private let libreLinkUp = LibreLinkUp()
+
+    // Throttle by the cached reading's age (1-min cadence): skip a network
+    // reload when we already hold a reading younger than one minute — e.g. one
+    // just delivered over WatchConnectivity, which updates `lastReadingDate`
+    // but not `lastSuccessfulLibreLinkUpAPICall`.
+    var reloadThrottleByReadingAge: Bool { true }
 
     var lastReloadResponseMessage: String { libreLinkUp.libreLinkUpResponse }
     var lastReloadDidFail: Bool { libreLinkUp.libreLinkUpErrorBool }

@@ -26,7 +26,6 @@ final class LibreLinkUpService: ObservableObject {
     private static let recentReloadWindowNanoseconds: UInt64 = 300_000_000
 #if os(watchOS)
     private static let watchReloadStartDelaySeconds: TimeInterval = 1
-    private static let watchReloadDelayRecentSnapshotWindow: TimeInterval = 3 * 60
 #endif
 
     private let gate = ReloadGate()
@@ -84,9 +83,10 @@ final class LibreLinkUpService: ObservableObject {
     }
 
     /// True when a fetch can be skipped because the cached reading is younger
-    /// than `maxAgeMinutes`. Only providers that opt into
-    /// `reloadThrottleByReadingAge` (Dexcom) use this; for everyone else it's
-    /// always false so the conventional call-age throttle takes over.
+    /// than `maxAgeMinutes` plus the provider's upload-propagation grace. Only
+    /// providers that opt into `reloadThrottleByReadingAge` use this; for
+    /// everyone else it's always false so the conventional call-age throttle
+    /// takes over.
     ///
     /// Checked twice in `requestReloadIfNeeded` — once before the gate and once
     /// inside the lease — because a peer process may refresh the cache while we
@@ -94,8 +94,9 @@ final class LibreLinkUpService: ObservableObject {
     private func hasFreshEnoughReading(maxAgeMinutes: Int, force: Bool, context: String) -> Bool {
         guard !force, activeProvider.reloadThrottleByReadingAge else { return false }
         let lastReadingAge = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate)
-        guard lastReadingAge < Double(maxAgeMinutes * 60) else { return false }
-        Logger.libreLinkUpService.info("requestReloadIfNeeded skipped \(context, privacy: .public): cached reading is \(Int(lastReadingAge / 60))min old (threshold \(maxAgeMinutes)min); no network call")
+        let thresholdSeconds = Double(maxAgeMinutes * 60) + activeProvider.reloadThrottleGraceSeconds
+        guard lastReadingAge < thresholdSeconds else { return false }
+        Logger.libreLinkUpService.info("requestReloadIfNeeded skipped \(context, privacy: .public): cached reading is \(Int(lastReadingAge))s old (threshold \(Int(thresholdSeconds))s); no network call")
         return true
     }
 
@@ -110,8 +111,13 @@ final class LibreLinkUpService: ObservableObject {
         Logger.libreLinkUpService.info("requestReloadIfNeeded called (maxAgeMinutes: \(maxAgeMinutes), force: \(force))")
 
 #if os(watchOS)
+        // Only delay when WC has plausibly delivered within one cadence window
+        // (i.e. data isn't yet stale), so an in-flight snapshot can land before
+        // we check the throttle. Scales with the provider: Libre 3 min, Dexcom
+        // 8 min — a fixed window would treat an active Dexcom feed (≤5-min
+        // cadence) as quiet between snapshots.
         if Self.watchReloadStartDelaySeconds > 0,
-           Date().timeIntervalSince(SharedData.watchPeerSnapshotLastReceivedDate) <= Self.watchReloadDelayRecentSnapshotWindow {
+           Date().timeIntervalSince(SharedData.watchPeerSnapshotLastReceivedDate) <= activeProvider.staleReadingAfter {
             Logger.libreLinkUpService.info("requestReloadIfNeeded delaying start by \(Self.watchReloadStartDelaySeconds, privacy: .public)s")
             let delayNanoseconds = UInt64(Self.watchReloadStartDelaySeconds * 1_000_000_000)
             try? await Task.sleep(nanoseconds: delayNanoseconds)
