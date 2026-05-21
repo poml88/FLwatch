@@ -66,7 +66,10 @@ final class PhoneHeartbeatRefreshCoordinator {
                 reloadFailed: LibreLinkUpService.shared.didLastReloadFail,
                 refreshIOB: false
             )
-            WidgetCenter.shared.reloadAllTimelines()
+            ///this is probably counter-productive, because it fires every minute for Libre and consumes the budget within the hour. it is better NOT to call it here.
+            ///Recommendation: drop the reloadAllTimelines() from BluetoothHeartbeatManager.swift:69 entirely and test. Worst case the phone widget lags a reading by up to widgetUpdateFrequency minutes — which is exactly the staleness the user already opted into via that setting. You stay inside the OS budget all day instead of burning it in an hour.
+           /// Note the other reloadAllTimelines() callers are fine to leave: the Siri intents, AddInsulin, PhoneAppConnectView, and the foreground PhoneAppHomeView path (:259) are all event-driven user actions — rare, and exactly when an instant refresh is warranted. Only the per-heartbeat one is the budget killer.
+//            WidgetCenter.shared.reloadAllTimelines()
             WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
             Logger.connectivity.info("Heartbeat refresh pipeline completed")
             refreshTask = nil

@@ -246,7 +246,6 @@ struct PhoneAppSettingsView: View {
             Section {
                 Toggle("Keep phone screen always on", isOn: $isScreenAlwaysOn)
                     .onChange(of: isScreenAlwaysOn) {
-                        print("yes")
                         UIApplication.shared.isIdleTimerDisabled.toggle()
                     }
 
@@ -456,7 +455,6 @@ struct PhoneAppSettingsView: View {
                     Text("Default behaviour: opens FLwatch app. Only watchOS 11 and later.")
                 }
                 .onChange(of: tapComplicationReloads) { oldValue, newValue in
-                    print("yes")
                     let messageToWatch: [String: Any] = ["content": "tapComplicationReloadsMessage",
                                                          "tapComplicationReloads": newValue]
                     sendMessagetoOther(message: messageToWatch)
@@ -506,22 +504,18 @@ struct PhoneAppSettingsView: View {
             Section {
                 Toggle("Phone: show insulin delivery marks", isOn: $showInsulinDeliveryMarksPhone)
                     .onChange(of: showInsulinDeliveryMarksPhone) {
-                        print("yes")
                     }
                 
                 Toggle("Phone: show IOB graph", isOn: $showIOBCurvePhone)
                     .onChange(of: showIOBCurvePhone) {
-                        print("yes")
                     }
                 
                 Toggle("Phone: show insulin activity graph", isOn: $showActivityCurvePhone)
                     .onChange(of: showActivityCurvePhone) {
-                        print("yes")
                     }
                 
                 Toggle("Watch: show insulin delivery marks", isOn: $showInsulinDeliveryMarksWatch)
                     .onChange(of: showInsulinDeliveryMarksWatch) { oldValue, newValue in
-                        print("yes")
                         let messageToWatch: [String: Any] = ["content": "showInsulinDeliveryMarksWatchMessage",
                                                              "showInsulinDeliveryMarksWatch": newValue]
                         sendMessagetoOther(message: messageToWatch)
@@ -529,7 +523,6 @@ struct PhoneAppSettingsView: View {
                 
                 Toggle("Watch: show IOB graph", isOn: $showIOBCurveWatch)
                     .onChange(of: showIOBCurveWatch) { oldValue, newValue in
-                        print("yes")
                         let messageToWatch: [String: Any] = ["content": "showIOBCurveWatchMessage",
                                                              "showIOBCurveWatch": newValue]
                         sendMessagetoOther(message: messageToWatch)
@@ -537,7 +530,6 @@ struct PhoneAppSettingsView: View {
                 
                 Toggle("Watch: show insulin activity graph", isOn: $showActivityCurveWatch)
                     .onChange(of: showActivityCurveWatch) { oldValue, newValue in
-                        print("yes")
                         let messageToWatch: [String: Any] = ["content": "showActivityCurveWatchMessage",
                                                              "showActivityCurveWatch": newValue]
                         sendMessagetoOther(message: messageToWatch)
