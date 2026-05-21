@@ -24,6 +24,13 @@ final class LibreLinkUpService: ObservableObject {
     static let shared = LibreLinkUpService()
     private static let peerReloadWaitTimeout: TimeInterval = 15
     private static let recentReloadWindowNanoseconds: UInt64 = 300_000_000
+    /// How recently a *successful* reload must have started for us to reuse its
+    /// result instead of fetching again. This is a dedup/anti-hammer guard, not
+    /// a cadence throttle — it stays at 60s for every provider so it never
+    /// paces faster than once a minute. Cadence-aware pacing is the reading-age
+    /// throttle's job (`hasFreshEnoughReading`); sizing this to the cadence is
+    /// what made Dexcom drift a whole publish cycle behind the sensor.
+    private static let peerReloadDedupeWindow: TimeInterval = 60
 #if os(watchOS)
     private static let watchReloadStartDelaySeconds: TimeInterval = 1
 #endif
@@ -131,15 +138,16 @@ final class LibreLinkUpService: ObservableObject {
         _ = self.refreshSensorSettingsFromPersistence()
         CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
 
-        // Reading-age throttle (Dexcom: skip the fetch entirely when we
-        // already have a reading younger than the source cadence). Libre
-        // keeps the conventional call-age throttle below.
+        // Reading-age throttle: skip the fetch entirely when we already hold a
+        // reading younger than the source cadence (+grace). This is the
+        // cadence-aware pacer; the recent-success guard below is only a 60s
+        // anti-hammer/dedup window, not a per-cadence throttle.
         if hasFreshEnoughReading(maxAgeMinutes: maxAgeMinutes, force: force, context: "before lease") {
             return false
         }
 
         if !force,
-           await self.consumeRecentSuccessfulPeerResultIfAvailable(maxAgeMinutes: maxAgeMinutes) {
+           await self.consumeRecentSuccessfulPeerResultIfAvailable() {
             return false
         }
 
@@ -159,7 +167,7 @@ final class LibreLinkUpService: ObservableObject {
                 return false
             }
             if !force,
-               await self.consumeRecentSuccessfulPeerResultIfAvailable(maxAgeMinutes: maxAgeMinutes) {
+               await self.consumeRecentSuccessfulPeerResultIfAvailable() {
                 return false
             }
             self.isReloading = true
@@ -199,8 +207,8 @@ final class LibreLinkUpService: ObservableObject {
         )
     }
 
-    private func consumeRecentSuccessfulPeerResultIfAvailable(maxAgeMinutes: Int) async -> Bool {
-        guard let recentStatus = await self.gate.recentSuccessfulCompletion(maxAgeMinutes: maxAgeMinutes) else {
+    private func consumeRecentSuccessfulPeerResultIfAvailable() async -> Bool {
+        guard let recentStatus = await self.gate.recentSuccessfulCompletion(within: Self.peerReloadDedupeWindow) else {
             return false
         }
 
@@ -424,11 +432,11 @@ actor ReloadGate {
         }
     }
 
-    func recentSuccessfulCompletion(maxAgeMinutes: Int, now: Date = Date()) -> ReloadStatusSnapshot? {
+    func recentSuccessfulCompletion(within window: TimeInterval, now: Date = Date()) -> ReloadStatusSnapshot? {
         do {
             guard let status = try readStatus(),
                   status.succeeded == true,
-                  now.timeIntervalSince(status.startedAt) < Double(maxAgeMinutes * 60) else {
+                  now.timeIntervalSince(status.startedAt) < window else {
                 return nil
             }
             return status
