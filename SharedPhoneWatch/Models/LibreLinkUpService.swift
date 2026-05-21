@@ -59,6 +59,18 @@ final class LibreLinkUpService: ObservableObject {
         Logger.libreLinkUpService.info("switched active provider to \(kind.rawValue, privacy: .public)")
     }
 
+    /// Rebuild `activeProvider` if it no longer matches the persisted
+    /// `cgmProviderKind`. `switchProvider` mutates this instance directly, but
+    /// only in the process that switched; every other process (widgets,
+    /// intents, the watch app when the phone switched) must pick up the change
+    /// from the app group. Cheap: only rebuilds on an actual kind mismatch.
+    func syncActiveProviderWithPersistedKind() {
+        let persisted = SharedData.cgmProviderKind
+        guard activeProvider.kind != persisted else { return }
+        activeProvider = CGMProviderRegistry.makeProvider(for: persisted)
+        Logger.libreLinkUpService.info("activeProvider re-synced to persisted kind \(persisted.rawValue, privacy: .public)")
+    }
+
     /// Refreshes history from the persisted snapshot on MainActor.
     @discardableResult
     func refreshHistoryFromPersistence(force: Bool = false) -> Bool {
@@ -114,6 +126,14 @@ final class LibreLinkUpService: ObservableObject {
     /// window. Callers can still pass an explicit value to override.
     @discardableResult
     func requestReloadIfNeeded(maxAgeMinutes: Int? = nil, force: Bool = false) async -> Bool {
+        // Reconcile with the persisted provider kind before doing anything.
+        // `switchProvider` only runs in the app that performed the switch;
+        // widget/intent extension processes (which WidgetKit keeps alive across
+        // refreshes) hold a `shared` whose `activeProvider` was fixed at init.
+        // Without this, after a provider switch such a process reloads via the
+        // OLD provider and overwrites the shared history with the wrong source's
+        // data — clobbering the app's correct graph minutes later.
+        syncActiveProviderWithPersistedKind()
         let maxAgeMinutes = maxAgeMinutes ?? activeProvider.cadenceMinutes
         Logger.libreLinkUpService.info("requestReloadIfNeeded called (maxAgeMinutes: \(maxAgeMinutes), force: \(force))")
 
