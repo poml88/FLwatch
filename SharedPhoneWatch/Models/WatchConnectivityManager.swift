@@ -64,6 +64,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         let dexcomSharePassword: String?
         let dexcomShareAccountId: String?
         let dexcomShareSessionId: String?
+        // Sensor settings (unit, target/alarm range) and sensor type. Share
+        // doesn't return these, so the phone is the source of truth and mirrors
+        // them here. Optional for older builds that didn't send them.
+        let sensorSettings: SensorSettings?
+        let sensorTypeRawValue: String?
         let updatedAt: Date
     }
 
@@ -444,6 +449,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
 
 #if os(iOS)
     func sendSettingsSnapshotToWatch() {
+      Task { @MainActor in
         let providerKind = SharedData.cgmProviderKind
         let isConnected = UserDefaults.group.connected == .connected
 
@@ -507,6 +513,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             dexcomSharePassword: dexcomSharePassword,
             dexcomShareAccountId: dexcomShareAccountId,
             dexcomShareSessionId: dexcomShareSessionId,
+            // Only Dexcom needs the phone to be the source of truth for sensor
+            // settings; for Libre the watch fetches its own from LibreLinkUp, so
+            // leave these nil to avoid clobbering them.
+            sensorSettings: providerKind == .dexcomShare ? SensorSettingsStore.shared.sensorSettings : nil,
+            sensorTypeRawValue: providerKind == .dexcomShare ? SensorSettingsStore.shared.sensorType.rawValue : nil,
             updatedAt: Date()
         )
 
@@ -521,6 +532,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         } catch {
             Logger.connectivity.error("Failed to encode settings snapshot: \(error.localizedDescription)")
         }
+      }
     }
 
     func sendLibreLinkUpSnapshotToWatch() {
@@ -607,6 +619,21 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         SharedData.showActivityCurveWatch = snapshot.showActivityCurveWatch
         SharedData.widgetUpdateFrequency = snapshot.widgetUpdateFrequency
         SharedData.tapComplicationReloads = snapshot.tapComplicationReloads
+
+        // Mirror the phone's sensor settings (unit, target range, sensor type).
+        // The phone is authoritative; Share never returns these on the watch.
+        if let sensorSettings = snapshot.sensorSettings {
+            let updatedAt = snapshot.updatedAt
+            let rawType = snapshot.sensorTypeRawValue
+            Task { @MainActor in
+                let sensorType = rawType.flatMap { SensorType(rawValue: $0) } ?? SensorSettingsStore.shared.sensorType
+                _ = SensorSettingsStore.shared.replaceCacheAndPersist(
+                    sensorSettings: sensorSettings,
+                    sensorType: sensorType,
+                    updatedAt: updatedAt
+                )
+            }
+        }
 
         // Mirror the phone's active CGM provider and its credentials in one
         // ordered MainActor task. switchProvider() flips `connected` to

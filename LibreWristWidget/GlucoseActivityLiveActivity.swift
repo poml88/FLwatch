@@ -427,9 +427,11 @@ private struct GlucoseLiveActivityChart: View {
             .opacity(0.2)
             .foregroundStyle(.green)
 
-            RuleMark(y: .value("Lower limit", alarmLow))
-                .foregroundStyle(.red)
-                .lineStyle(.init(lineWidth: 1, dash: [2]))
+            if contentState.alarmLow >= SensorSettings.minDrawableAlarmMgDl {
+                RuleMark(y: .value("Lower limit", alarmLow))
+                    .foregroundStyle(.red)
+                    .lineStyle(.init(lineWidth: 1, dash: [2]))
+            }
 
             ForEach(contentState.graphPoints) { point in
                 LineMark(

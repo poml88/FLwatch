@@ -33,12 +33,19 @@ struct PhoneAppSettingsView: View {
     @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
     @State private var pendingProviderSwitch: CGMProviderKind? = nil
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
+    @State private var dexcomUom: Int = SensorSettingsStore.shared.sensorSettings.uom
+    @State private var dexcomTargetLow: Int = SensorSettingsStore.shared.sensorSettings.targetLow
+    @State private var dexcomTargetHigh: Int = SensorSettingsStore.shared.sensorSettings.targetHigh
     @State private var appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
     @State private var appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
     @StateObject private var bluetoothHeartbeatManager = BluetoothHeartbeatManager.shared
     private var watchConnector = WatchConnectivityManager.shared
     let updateFrequencyOptions: [Int] = [1, 5, 10, 15, 20]
     let lowGlucoseThresholdOptions: [Int] = Array(stride(from: 60, through: 200, by: 5))
+    // Stored in mg/dL; displayed in the selected unit. Ranges kept disjoint so
+    // targetLow stays below targetHigh and never trips SensorSettings normalization.
+    let dexcomTargetLowOptions: [Int] = Array(stride(from: 50, through: 120, by: 5))
+    let dexcomTargetHighOptions: [Int] = Array(stride(from: 125, through: 250, by: 5))
     private var bgAppRefreshExecutionTimestamps: [Date] {
         (UserDefaults.group.array(forKey: "bgAppRefreshExecutionTimestamps") as? [TimeInterval] ?? [])
             .map(Date.init(timeIntervalSince1970:))
@@ -149,6 +156,36 @@ struct PhoneAppSettingsView: View {
                 Text("CGM Provider")
             } footer: {
                 Text("Choose which CGM service FLwatch reads from. Sensor settings (mg/dL vs mmol/L, target range) are shared across providers.")
+            }
+
+            if cgmProviderKind == .dexcomShare {
+                Section {
+                    Picker("Glucose unit", selection: $dexcomUom) {
+                        Text("mg/dL").tag(1)
+                        Text("mmol/L").tag(0)
+                    }
+                    .onChange(of: dexcomUom) { _, _ in persistDexcomSensorSettings() }
+
+                    Picker("Target low", selection: $dexcomTargetLow) {
+                        ForEach(dexcomTargetLowOptions, id: \.self) { value in
+                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: dexcomUom), withUnit: true))
+                                .tag(value)
+                        }
+                    }
+                    .onChange(of: dexcomTargetLow) { _, _ in persistDexcomSensorSettings() }
+
+                    Picker("Target high", selection: $dexcomTargetHigh) {
+                        ForEach(dexcomTargetHighOptions, id: \.self) { value in
+                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: dexcomUom), withUnit: true))
+                                .tag(value)
+                        }
+                    }
+                    .onChange(of: dexcomTargetHigh) { _, _ in persistDexcomSensorSettings() }
+                } header: {
+                    Text("Dexcom Sensor Settings")
+                } footer: {
+                    Text("Dexcom Share doesn't send these, so set them here. Values are shown in the selected unit and used for the graph target range and reading colors.")
+                }
             }
 
             Section {
@@ -374,6 +411,9 @@ struct PhoneAppSettingsView: View {
                             lowGlucoseNotificationsEnabled = false
                             return
                         }
+                        if cgmProviderKind == .dexcomShare {
+                            persistDexcomSensorSettings()
+                        }
                         handleLowGlucoseAlertsChanged(isEnabled)
                     }
                     .disabled(!bluetoothHeartbeatManager.isEnabled)
@@ -386,6 +426,9 @@ struct PhoneAppSettingsView: View {
                         }
                     }
                     .onChange(of: lowGlucoseNotificationThreshold) { _, _ in
+                        if cgmProviderKind == .dexcomShare {
+                            persistDexcomSensorSettings()
+                        }
                         Task {
                             await LowGlucoseNotificationManager.shared.enableNotifications()
                         }
@@ -551,6 +594,26 @@ struct PhoneAppSettingsView: View {
     }
     func sendMessagetoOther(message: [String: Any]) {
         watchConnector.sendMessageToPairedDevice(message)
+    }
+
+    /// Persists the manually-entered Dexcom sensor settings (stored in mg/dL) and
+    /// mirrors them to the watch. Coloring runs off the target range; the red alarm
+    /// line tracks the low-glucose notification threshold when alerts are enabled,
+    /// otherwise it stays hidden at the sentinel.
+    private func persistDexcomSensorSettings() {
+        let alarms = SensorSettings.dexcomAlarms(
+            notificationsEnabled: lowGlucoseNotificationsEnabled,
+            threshold: lowGlucoseNotificationThreshold
+        )
+        let updated = SensorSettings(
+            uom: dexcomUom,
+            targetLow: dexcomTargetLow,
+            targetHigh: dexcomTargetHigh,
+            alarmLow: alarms.low,
+            alarmHigh: alarms.high
+        )
+        SensorSettingsStore.shared.updateSensorSettings(updated)
+        watchConnector.sendSettingsSnapshotToWatch()
     }
 
     /// Decision 7.1: switching providers triggers a disconnect. Both providers'

@@ -175,10 +175,12 @@ struct PhoneAppGraphView: View {
             .opacity(0.2)
             .foregroundStyle(.green)
             
-            RuleMark(y: .value("Lower limit", chartRuleAlarmLL))
-                .foregroundStyle(.red)
-                .lineStyle(.init(lineWidth: 1, dash: [2]))
-            
+            if sensorSettingsStore.sensorSettings.hasDrawableLowAlarm {
+                RuleMark(y: .value("Lower limit", chartRuleAlarmLL))
+                    .foregroundStyle(.red)
+                    .lineStyle(.init(lineWidth: 1, dash: [2]))
+            }
+
             //                    RuleMark(x: .value("Scroll right", rectXStop))
             //                        .foregroundStyle(.yellow)
             //                        .lineStyle(.init(lineWidth: 2))

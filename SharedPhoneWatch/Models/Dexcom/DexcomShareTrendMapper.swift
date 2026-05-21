@@ -35,22 +35,15 @@ enum DexcomShareTrendMapper {
     // MARK: - Color classification
     //
     // LibreLinkUp gets a pre-computed color from the server. Share doesn't, so
-    // we classify against the user's SensorSettings here. The bands are:
+    // we classify against the user's target range here — Dexcom carries no alarm
+    // thresholds (they're sentinel values, see SensorSettings). The bands are:
     //
-    //   value < alarmLow          → red
-    //   value > alarmHigh         → red
-    //   value < targetLow         → yellow (low warning, between alarm and target)
-    //   value > targetHigh        → yellow (high warning)
+    //   value < targetLow              → red (low)
+    //   value > targetHigh             → yellow (high warning)
     //   targetLow ≤ value ≤ targetHigh → green
-    //
-    // If alarmLow > targetLow (allowed by SensorSettings — that's actually the
-    // current default), the low warning band is empty: anything below targetLow
-    // is already caught by the alarmLow check and returns red.
 
     static func color(for valueMgDl: Int, settings: SensorSettings) -> MeasurementColor {
-        if valueMgDl < settings.alarmLow  { return .red }
-        if valueMgDl > settings.alarmHigh { return .red }
-        if valueMgDl < settings.targetLow  { return .yellow }
+        if valueMgDl < settings.targetLow  { return .red }
         if valueMgDl > settings.targetHigh { return .yellow }
         return .green
     }

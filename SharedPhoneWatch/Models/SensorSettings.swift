@@ -17,11 +17,35 @@ struct SensorSettings: Codable, Equatable {
     private static let defaultAlarmLow = 80
     private static let defaultAlarmHigh = 300
 
+    // Dexcom Share doesn't send alarm thresholds and we classify its colors from
+    // the target range instead (see DexcomShareTrendMapper.color). These tiny
+    // sentinel values pass the `> 0` and `low < high` normalization untouched
+    // while staying below `minDrawableAlarmMgDl`, so the red alarm line is
+    // suppressed in every graph. A real Libre alarm is always well above this.
+    static let dexcomAlarmLowSentinel = 1
+    // Fixed high alarm for Dexcom: never drawn and never reached by a real
+    // reading, while staying safely above any low alarm so SensorSettings.init
+    // doesn't treat the pair as inverted and reset it.
+    static let dexcomAlarmHigh = 1000
+    static let minDrawableAlarmMgDl = 10
+
     let uom: Int
     let targetLow: Int
     let targetHigh: Int
     let alarmLow: Int
     let alarmHigh: Int
+
+    var hasDrawableLowAlarm: Bool { alarmLow >= Self.minDrawableAlarmMgDl }
+
+    /// The alarm pair to store for a Dexcom session. When low-glucose alerts are
+    /// enabled the low alarm tracks the notification threshold so the red line
+    /// appears there; otherwise the low sentinel keeps it hidden (Dexcom carries
+    /// no real alarm thresholds). The high alarm is a fixed out-of-range value
+    /// that's never drawn and always above the low alarm.
+    static func dexcomAlarms(notificationsEnabled: Bool, threshold: Int) -> (low: Int, high: Int) {
+        let low = notificationsEnabled && threshold >= minDrawableAlarmMgDl ? threshold : dexcomAlarmLowSentinel
+        return (low, dexcomAlarmHigh)
+    }
 
     private enum CodingKeys: String, CodingKey {
         case uom

@@ -141,11 +141,23 @@ final class DexcomShareProvider: CGMProvider {
         SharedData.dexcomShareSessionId = sessionId
 
         // Stamp sensor type so the rest of the app knows it's a Dexcom session.
-        // Sensor settings (target/alarm thresholds) are kept as-is — Share
-        // doesn't return them and we don't want to clobber the user's choices.
+        // Share doesn't send alarm thresholds: the alarm line tracks the low-glucose
+        // notification threshold when enabled, otherwise stays at the hidden
+        // sentinel. The user's unit and target choices are kept as-is.
         let existing = SensorSettingsStore.shared.sensorSettings
+        let alarms = SensorSettings.dexcomAlarms(
+            notificationsEnabled: SharedData.lowGlucoseNotificationsEnabled,
+            threshold: SharedData.lowGlucoseNotificationThreshold
+        )
+        let dexcomSettings = SensorSettings(
+            uom: existing.uom,
+            targetLow: existing.targetLow,
+            targetHigh: existing.targetHigh,
+            alarmLow: alarms.low,
+            alarmHigh: alarms.high
+        )
         _ = SensorSettingsStore.shared.replaceCacheAndPersist(
-            sensorSettings: existing,
+            sensorSettings: dexcomSettings,
             sensorType: .dexcomG7
         )
 
