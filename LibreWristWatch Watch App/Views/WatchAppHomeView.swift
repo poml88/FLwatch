@@ -116,7 +116,7 @@ struct WatchAppHomeView: View {
         }
         
         .onReceive(timer) { time in
-            print("Timer")
+            Logger.viewDebug.debug("Timer")
             currentTime = time
             reloadAndRefreshHistory(trigger: "timer")
         }
@@ -213,7 +213,7 @@ struct WatchAppHomeView: View {
     private func reloadAndRefreshHistory(trigger: String) {
         let now = Date()
         guard now.timeIntervalSince(lastHistoryReloadAt) >= minimumHistoryReloadInterval else {
-            print("Skipping reloadAndRefreshHistory() [\(trigger)]")
+            Logger.viewDebug.debug("Skipping reloadAndRefreshHistory() [\(trigger, privacy: .public)]")
             return
         }
         lastHistoryReloadAt = now
@@ -222,18 +222,18 @@ struct WatchAppHomeView: View {
             await lluService.requestReloadIfNeeded()
             currentTime = Date()
         }
-        print("reloadAndRefreshHistory() [\(trigger)]")
+        Logger.viewDebug.debug("reloadAndRefreshHistory() [\(trigger, privacy: .public)]")
     }
     
     private func reloadWidgetsIfNeeded(trigger: String) {
         let now = Date()
         guard now.timeIntervalSince(lastWidgetReloadAt) >= minimumWidgetReloadInterval else {
-            print("Skipping WidgetCenter.shared.reloadAllTimelines() [\(trigger)]")
+            Logger.viewDebug.debug("Skipping WidgetCenter.shared.reloadAllTimelines() [\(trigger, privacy: .public)]")
             return
         }
         lastWidgetReloadAt = now
         WidgetCenter.shared.reloadAllTimelines()
-        print("WidgetCenter.shared.reloadAllTimelines() [\(trigger)]")
+        Logger.viewDebug.debug("WidgetCenter.shared.reloadAllTimelines() [\(trigger, privacy: .public)]")
     }
     
 }

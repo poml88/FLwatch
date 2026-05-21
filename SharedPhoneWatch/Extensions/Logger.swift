@@ -39,4 +39,10 @@ extension Logger {
 
     static let healthKit = Logger(subsystem: subsystem, category: "HealthKit")
 
+    /// IOB / insulin model calculations.
+    static let insulin = Logger(subsystem: subsystem, category: "Insulin")
+
+    /// Verbose view lifecycle / refresh tracing (timers, scene phase, reloads).
+    static let viewDebug = Logger(subsystem: subsystem, category: "ViewDebug")
+
 }

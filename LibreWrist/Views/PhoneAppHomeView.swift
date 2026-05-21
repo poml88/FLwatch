@@ -183,7 +183,7 @@ struct PhoneAppHomeView: View {
         .onChange(of: isShowingNotification)   { evaluateProviderPicker() }
 
         .onReceive(timer) { time in
-            print("Timer") // Timer fires as well when on a different tab, for example settings tab
+            Logger.viewDebug.debug("Timer") // Timer fires as well when on a different tab, for example settings tab
             
 
             
@@ -440,7 +440,7 @@ struct PhoneAppHomeView: View {
         trigger: String,
         liveActivityRestartThreshold: TimeInterval? = nil
     ) {
-        print("reloadAndUpdateMinutes() [\(trigger)]")
+        Logger.viewDebug.debug("reloadAndUpdateMinutes() [\(trigger, privacy: .public)]")
         Task {
             await lluService.requestReloadIfNeeded()
             if refreshLiveActivity {

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import OSLog
 
 enum InsulinType: Int, CaseIterable {
     case rapidActing = 0
@@ -344,7 +345,7 @@ struct InsulinTypePresets: Codable, Identifiable {
     }
     
     func updateCurrentIOBAndGraphs() {
-        print("Updating IOB graphs: \(Date.now)")
+        Logger.insulin.debug("Updating IOB graphs: \(Date.now, privacy: .public)")
         let now = Date().timeIntervalSince1970
         let historySnapshot = InsulinDeliveryHistorySingleton.persistedHistorySnapshot()
         let activeHistory = Self.activeHistory(from: historySnapshot, now: now)

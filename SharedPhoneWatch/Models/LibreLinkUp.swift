@@ -138,7 +138,7 @@ class LibreLinkUp  {
     //    }
     
     func reloadLibreLinkUp() async {
-        print("reloadLibreLinkUp()")
+        Logger.libreLinkUp.debug("reloadLibreLinkUp()")
         var dataString = ""
         var retries = 0
         DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
@@ -1026,7 +1026,7 @@ class LibreLinkUp  {
             var request = URLRequest(url: URL(string: "\(regionalSiteURL)/llu/connections")!)
             request.timeoutInterval = 15
             request.httpMethod = "GET"
-            print("\(request)")
+            Logger.libreLinkUp.debug("\(request)")
             let headers = LLUHeaders().headers
             var authenticatedHeaders = headers
             authenticatedHeaders["Authorization"] = "Bearer \(SharedData.libreLinkUpToken)"
