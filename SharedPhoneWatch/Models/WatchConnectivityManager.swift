@@ -795,6 +795,18 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     }
 
 #if os(iOS)
+    // NOTE: sent with `useApplicationContext: true`, so it's merged into the WC
+    // application context under the "lowGlucoseAlert" key (a sibling of the
+    // "libreLinkUpSnapshot" key, not nested inside it). Application context is
+    // latest-state storage, not a queue: the value lingers until a newer alert
+    // overwrites it, and the system *replays the whole context* to the watch on
+    // every session activation / reachability change (see deliverApplicationCtx
+    // → received). So the watch will see this same alert re-delivered repeatedly
+    // — alongside the snapshot — especially under Xcode where each relaunch
+    // re-activates the session. That's expected and harmless: the watch's
+    // `sentAt` staleness guard drops any replay older than its window. If a
+    // future change needs alerts to fire exactly once, switch them to
+    // transferUserInfo (FIFO, delivered once) or clear this key after consume.
     func sendLowGlucoseAlertToWatch(title: String, subtitle: String, body: String, sentAt: Date) {
         let payload = LowGlucoseAlertPayload(
             title: title,
