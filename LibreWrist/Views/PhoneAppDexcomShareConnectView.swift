@@ -67,14 +67,12 @@ struct PhoneAppDexcomShareConnectView: View {
                             .padding(.top, 1)
 
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Use the CGM wearer's own credentials")
+                            Text("Sign in as the sensor wearer")
                                 .font(.headline)
 
-                            Text("Enter the email and password of the **Dexcom account that wears the sensor** — the same login as the Dexcom G7/G6/ONE app on the wearer's phone. FLwatch then acts as a parallel display of that data, the same way xdrip4ios and Loop do.")
+                            Text("Use the email and password of the **Dexcom account the sensor is set up on** — the same login as the Dexcom G7/G6/ONE app on the wearer's phone. FLwatch then shows that data in parallel.")
 
-                            Text("**Follower / Share-invite accounts will not work.** Dexcom's Share service does not expose follower-mode reading to third-party apps; only the wearer's own account can pull readings.")
-
-                            Text("Share is unofficial. Dexcom may change or restrict it without notice.")
+                            Text("Share must be turned on in the Dexcom app, which requires inviting at least one follower. But don't sign in with a **follower's** login — Dexcom doesn't expose follower readings to third-party apps, so only the wearer's own account can pull data.")
                         }
                         .font(.subheadline)
                     }
@@ -83,7 +81,7 @@ struct PhoneAppDexcomShareConnectView: View {
 
                 Section(
                     header: Text("Credentials"),
-                    footer: Text("Region (United States, outside US, or Japan) is detected automatically when you press Connect.\n[TROUBLE? TAP TO OPEN HELP](https://flwatch.app/)")
+                    footer: Text("Region (United States, outside US, or Japan) is detected automatically when you press Connect.\nShare is unofficial. Dexcom may change or restrict it without notice.\n[TROUBLE? TAP TO OPEN HELP](https://flwatch.app/)")
                 ) {
                     TextField(text: $email, prompt: Text("Email address")) {
                         Text("Email")

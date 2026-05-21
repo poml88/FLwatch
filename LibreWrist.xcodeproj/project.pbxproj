@@ -704,11 +704,11 @@
 		7BC51FC02C7D3DEF009542D2 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				7B62EDB42FACD8F500C9502B /* PhoneAppDexcomShareConnectView.swift */,
-				7B62EDB22FACD8CD00C9502B /* PhoneAppCGMProviderPickerView.swift */,
 				7BA0AE2E2C582F63004226FE /* ContentView.swift */,
 				7BA0AE5A2C5AE980004226FE /* PhoneAppHomeView.swift */,
+				7B62EDB22FACD8CD00C9502B /* PhoneAppCGMProviderPickerView.swift */,
 				7BA0AE562C5834F6004226FE /* PhoneAppConnectView.swift */,
+				7B62EDB42FACD8F500C9502B /* PhoneAppDexcomShareConnectView.swift */,
 				7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */,
 				7BA0AE5C2C5AEB89004226FE /* PhoneAppDonateView.swift */,
 				7B183E9A2C84C9540018A24F /* PhoneAppInsulinDeliveryView.swift */,

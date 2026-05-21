@@ -120,75 +120,6 @@ struct PhoneAppSettingsView: View {
     var body: some View {
         Form {
             Section {
-                Picker(
-                    selection: Binding(
-                        get: { cgmProviderKind },
-                        set: { newValue in
-                            guard newValue != cgmProviderKind else { return }
-                            pendingProviderSwitch = newValue
-                        }
-                    )
-                ) {
-                    Text("FreeStyle Libre (LibreLinkUp)").tag(CGMProviderKind.libreLinkUp)
-                    Text("Dexcom (Share)").tag(CGMProviderKind.dexcomShare)
-                } label: {
-                    Text("CGM provider")
-                }
-                .confirmationDialog(
-                    "Switch CGM provider?",
-                    isPresented: Binding(
-                        get: { pendingProviderSwitch != nil },
-                        set: { if !$0 { pendingProviderSwitch = nil } }
-                    ),
-                    titleVisibility: .visible,
-                    presenting: pendingProviderSwitch
-                ) { newKind in
-                    Button("Switch", role: .destructive) {
-                        applyProviderSwitch(to: newKind)
-                    }
-                    Button("Cancel", role: .cancel) {
-                        pendingProviderSwitch = nil
-                    }
-                } message: { _ in
-                    Text("Switching disconnects the current provider and clears its cached glucose readings on this device. Credentials for both providers stay saved, so switching back doesn't require re-entering them.")
-                }
-            } header: {
-                Text("CGM Provider")
-            } footer: {
-                Text("Choose which CGM service FLwatch reads from. Sensor settings (mg/dL vs mmol/L, target range) are shared across providers.")
-            }
-
-            if cgmProviderKind == .dexcomShare {
-                Section {
-                    Picker("Glucose unit", selection: $dexcomUom) {
-                        Text("mg/dL").tag(1)
-                        Text("mmol/L").tag(0)
-                    }
-                    .onChange(of: dexcomUom) { _, _ in persistDexcomSensorSettings() }
-
-                    Picker("Target low", selection: $dexcomTargetLow) {
-                        ForEach(dexcomTargetLowOptions, id: \.self) { value in
-                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: dexcomUom), withUnit: true))
-                                .tag(value)
-                        }
-                    }
-                    .onChange(of: dexcomTargetLow) { _, _ in persistDexcomSensorSettings() }
-
-                    Picker("Target high", selection: $dexcomTargetHigh) {
-                        ForEach(dexcomTargetHighOptions, id: \.self) { value in
-                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: dexcomUom), withUnit: true))
-                                .tag(value)
-                        }
-                    }
-                    .onChange(of: dexcomTargetHigh) { _, _ in persistDexcomSensorSettings() }
-                } header: {
-                    Text("Dexcom Sensor Settings")
-                } footer: {
-                    Text("Dexcom Share doesn't send these, so set them here. Values are shown in the selected unit and used for the graph target range and reading colors.")
-                }
-            }
-
-            Section {
                 LazyVGrid(
                     columns: [GridItem(spacing: 8), GridItem(spacing: 8)],
                     spacing: 12
@@ -243,6 +174,75 @@ struct PhoneAppSettingsView: View {
                 Text("Support")
             }
             
+            Section {
+                Picker(
+                    selection: Binding(
+                        get: { cgmProviderKind },
+                        set: { newValue in
+                            guard newValue != cgmProviderKind else { return }
+                            pendingProviderSwitch = newValue
+                        }
+                    )
+                ) {
+                    Text("FreeStyle Libre (LibreLinkUp)").tag(CGMProviderKind.libreLinkUp)
+                    Text("Dexcom (Share)").tag(CGMProviderKind.dexcomShare)
+                } label: {
+                    Text("CGM provider")
+                }
+                .confirmationDialog(
+                    "Switch CGM provider?",
+                    isPresented: Binding(
+                        get: { pendingProviderSwitch != nil },
+                        set: { if !$0 { pendingProviderSwitch = nil } }
+                    ),
+                    titleVisibility: .visible,
+                    presenting: pendingProviderSwitch
+                ) { newKind in
+                    Button("Switch", role: .destructive) {
+                        applyProviderSwitch(to: newKind)
+                    }
+                    Button("Cancel", role: .cancel) {
+                        pendingProviderSwitch = nil
+                    }
+                } message: { _ in
+                    Text("Switching disconnects the current provider and clears its cached glucose readings in FLwatch on this device. Credentials for both providers stay saved, so switching back doesn't require re-entering them.")
+                }
+            } header: {
+                Text("CGM Provider")
+            } footer: {
+                Text("Choose which CGM service FLwatch reads from.")
+            }
+
+            if cgmProviderKind == .dexcomShare {
+                Section {
+                    Picker("Glucose unit", selection: $dexcomUom) {
+                        Text("mg/dL").tag(1)
+                        Text("mmol/L").tag(0)
+                    }
+                    .onChange(of: dexcomUom) { _, _ in persistDexcomSensorSettings() }
+
+                    Picker("Target low", selection: $dexcomTargetLow) {
+                        ForEach(dexcomTargetLowOptions, id: \.self) { value in
+                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: dexcomUom), withUnit: true))
+                                .tag(value)
+                        }
+                    }
+                    .onChange(of: dexcomTargetLow) { _, _ in persistDexcomSensorSettings() }
+
+                    Picker("Target high", selection: $dexcomTargetHigh) {
+                        ForEach(dexcomTargetHighOptions, id: \.self) { value in
+                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: dexcomUom), withUnit: true))
+                                .tag(value)
+                        }
+                    }
+                    .onChange(of: dexcomTargetHigh) { _, _ in persistDexcomSensorSettings() }
+                } header: {
+                    Text("Dexcom Sensor Settings")
+                } footer: {
+                    Text("Dexcom Share doesn't send these settings, so set them here. Values are shown in the selected unit and used for the graph target range and reading colors.")
+                }
+            }
+
             Section {
                 Toggle("Keep phone screen always on", isOn: $isScreenAlwaysOn)
                     .onChange(of: isScreenAlwaysOn) {

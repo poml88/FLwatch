@@ -4,7 +4,7 @@
 //
 //  Created by Peter Müller on 07.05.26.
 //
-//  First-launch CGM provider picker. Shown by ContentView once when:
+//  First-launch CGM provider picker. Shown in PhoneAppHomeView once when:
 //    - the user has never explicitly chosen a provider, AND
 //    - there are no LibreLinkUp credentials carried over from a 2.0.6 install.
 //  Existing LibreLinkUp users skip this and silently default to .libreLinkUp.
@@ -20,8 +20,15 @@ struct PhoneAppCGMProviderPickerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("FLwatch")
+            Image("FLwatchLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 88, height: 88)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .padding(.top, 40)
+
+            Text("FLwatch")
+                .padding(.top, 16)
                 .font(.system(.largeTitle))
                 .foregroundColor(.green)
 
@@ -41,7 +48,7 @@ struct PhoneAppCGMProviderPickerView: View {
             VStack(spacing: 16) {
                 providerCard(
                     title: "FreeStyle Libre",
-                    subtitle: "Connects via your LibreLinkUp follower account.",
+                    subtitle: "Connects via your LibreLinkUp follower account. Detailed setup instructions and a video guide are on the app's website.",
                     systemImage: "drop.circle"
                 ) {
                     pick(.libreLinkUp)
@@ -49,7 +56,7 @@ struct PhoneAppCGMProviderPickerView: View {
 
                 providerCard(
                     title: "Dexcom",
-                    subtitle: "Connects via Dexcom Share. Requires the Share feature to be set up in the Dexcom app.",
+                    subtitle: "Connects via Dexcom Share. In the Dexcom app, turn on Share and invite at least one follower. Then sign in here with the sharer's (patient's) account — not a follower's.",
                     systemImage: "waveform.path.ecg"
                 ) {
                     pick(.dexcomShare)
