@@ -19,9 +19,9 @@ final class DexcomShareProvider: CGMProvider {
 
     let kind: CGMProviderKind = .dexcomShare
 
-    // Dexcom G7 / G6 / ONE all publish on a 5-min cadence. Stale window is
-    // cadence + 3 min grace = 8 min — matches xdrip4ios's tolerance.
-    var cadenceMinutes: Int { 5 }
+    // Dexcom G7 / G6 / ONE all publish on a 5-min cadence (from the kind).
+    // Stale window is cadence + 3 min grace = 8 min — matches xdrip4ios's
+    // tolerance.
     var staleReadingAfter: TimeInterval { 8 * 60 }
 
     // Throttle by cached-reading age, not call age. xdrip4ios uses the same

@@ -249,7 +249,10 @@ private struct MediumSupplementalActivityView: View {
     let contentState: FLWatchAttributes.ContentState
     
     var body: some View {
-        let isUpdateUI: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.updateUIAfterInterval) <= Date()
+        // Show the manual-refresh affordance once a new reading is overdue by
+        // one source cadence (Libre 1 min, Dexcom 5 min).
+        let updateUIAfter = TimeInterval(SharedData.cgmProviderKind.cadenceMinutes * 60)
+        let isUpdateUI: Bool = contentState.latestTimestamp.addingTimeInterval(updateUIAfter) <= Date()
         let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
 
         VStack (spacing: 8){

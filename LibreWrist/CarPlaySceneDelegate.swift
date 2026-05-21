@@ -245,7 +245,10 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             return true
         }
 
-        return now.timeIntervalSince(lastHeartbeatDate) > 120
+        // Heartbeat overdue = one source cadence plus a 1-min grace.
+        // Libre 2 min; Dexcom 6 min.
+        let overdueAfter = Double(LibreLinkUpService.shared.activeProvider.cadenceMinutes * 60) + 60
+        return now.timeIntervalSince(lastHeartbeatDate) > overdueAfter
     }
 }
 

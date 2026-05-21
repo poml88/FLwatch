@@ -17,6 +17,16 @@ import Foundation
 enum CGMProviderKind: String, Codable {
     case libreLinkUp
     case dexcomShare
+
+    /// Source cadence in minutes. Single source of truth, readable without a
+    /// provider instance so non-isolated consumers (widgets, Live Activity)
+    /// that only know the kind can derive cadence-aware timing.
+    var cadenceMinutes: Int {
+        switch self {
+        case .libreLinkUp: return 1
+        case .dexcomShare: return 5
+        }
+    }
 }
 
 // MARK: - Protocol
@@ -71,7 +81,7 @@ protocol CGMProvider: AnyObject {
 extension CGMProvider {
     // Libre-like defaults. LibreLinkUpProvider gets these for free,
     // preserving its previously-shipping behavior bit-for-bit.
-    var cadenceMinutes: Int { 1 }
+    var cadenceMinutes: Int { kind.cadenceMinutes }
     var staleReadingAfter: TimeInterval { 3 * 60 }
     var reloadThrottleByReadingAge: Bool { false }
     var reloadThrottleGraceSeconds: TimeInterval { 3 }
