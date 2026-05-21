@@ -118,11 +118,25 @@ final class LibreLinkUpService: ObservableObject {
         Logger.libreLinkUpService.info("requestReloadIfNeeded called (maxAgeMinutes: \(maxAgeMinutes), force: \(force))")
 
 #if os(watchOS)
-        // Only delay when WC has plausibly delivered within one cadence window
-        // (i.e. data isn't yet stale), so an in-flight snapshot can land before
-        // we check the throttle. Scales with the provider: Libre 3 min, Dexcom
-        // 8 min — a fixed window would treat an active Dexcom feed (≤5-min
-        // cadence) as quiet between snapshots.
+        // Brief grace so an in-flight WC glucose snapshot can land and update
+        // the cache *before* we check the throttle — letting it skip a redundant
+        // network fetch the watch would otherwise make.
+        //
+        // We gate it on "a snapshot arrived within `staleReadingAfter`" rather
+        // than "just now", because that's the proxy for "the phone is actively
+        // feeding us": the phone only pushes glucose snapshots from its BT
+        // heartbeat / background execution, so a recent snapshot means that
+        // pipeline is alive and another one is likely imminent. When it's alive
+        // a watch-side network fetch is redundant anyway, so eating 1s to wait
+        // for the snapshot is the right trade. The window scales with the
+        // provider (Libre 3 min, Dexcom 8 min) so an active Dexcom feed isn't
+        // treated as quiet between its ≤5-min snapshots.
+        //
+        // `watchPeerSnapshotLastReceivedDate` is persisted in the app group, so
+        // it stays "recent" across launches. Consequence: in environments with
+        // no heartbeat and no background execution (e.g. the Simulator) no
+        // snapshots ever arrive, the window lapses, and this delay simply never
+        // fires — which is why it's absent from Simulator logs.
         if Self.watchReloadStartDelaySeconds > 0,
            Date().timeIntervalSince(SharedData.watchPeerSnapshotLastReceivedDate) <= activeProvider.staleReadingAfter {
             Logger.libreLinkUpService.info("requestReloadIfNeeded delaying start by \(Self.watchReloadStartDelaySeconds, privacy: .public)s")
