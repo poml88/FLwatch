@@ -339,9 +339,13 @@ final class DexcomShareProvider: CGMProvider {
         }
 
         // Share has no minute-resolution stream — the 5-min cadence is the only
-        // resolution we have. Use the most recent ~25 minutes (5 entries) for the
-        // "minute" stream so consumers that read it still see something fresh.
-        let minuteHistory = Array(fullHistoryNewestFirst.prefix(5))
+        // resolution we have, and it's already the main graph. So leave the
+        // minute array empty: there's no sub-cadence data to show, and writing
+        // the cadence points here just paints a redundant overlay on top of the
+        // identical 5-min line. Empty is safe — the latest value is supplied via
+        // `latestLibreLinkUpGlucose`, and every consumer draws nothing for an
+        // empty minute stream.
+        let minuteHistory: [LibreLinkUpGlucose] = []
 
         let indexOfMaxGlucoseItem = filteredGraph.indices.max(by: {
             filteredGraph[$0].glucose.value < filteredGraph[$1].glucose.value
