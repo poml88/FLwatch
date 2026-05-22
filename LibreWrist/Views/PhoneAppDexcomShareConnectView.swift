@@ -18,6 +18,7 @@ struct PhoneAppDexcomShareConnectView: View {
     @State private var connected: Connection = UserDefaults.group.connected
     @State private var errorMessage: String = "[...]"
     @State private var isShowingConnectionFailed = false
+    private var watchConnector = WatchConnectivityManager.shared
 
     private let provider = DexcomShareProvider()
     private let timer = Timer.publish(every: 1, tolerance: 0.5, on: .main, in: .common).autoconnect()
@@ -83,8 +84,8 @@ struct PhoneAppDexcomShareConnectView: View {
                     header: Text("Credentials"),
                     footer: Text("Region (United States, outside US, or Japan) is detected automatically when you press Connect.\nShare is unofficial. Dexcom may change or restrict it without notice.\n[TROUBLE? TAP TO OPEN HELP](https://flwatch.app/)")
                 ) {
-                    TextField(text: $email, prompt: Text("Email address")) {
-                        Text("Email")
+                    TextField(text: $email, prompt: Text("Username (email adress)")) {
+                        Text("Username")
                     }
                     .textContentType(.emailAddress)
                     .keyboardType(.emailAddress)
@@ -118,6 +119,14 @@ struct PhoneAppDexcomShareConnectView: View {
                     }
                 }
 
+                if watchConnector.session.activationState == .activated && !watchConnector.session.isWatchAppInstalled {
+                    Text("**Watch app not installed / detected**\nCredentials will not be transferred to watch. Install watch app and press \"Connect\" again to resend credentials to watch.")
+                        .font(.system(size: 16))
+                } else {
+                    Text("Press \"Connect\" again to resend credentials to watch.")
+                        .font(.system(size: 16))
+                }
+                
                 if connected == .connected {
                     Text("**Not for treatment decisions.**\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.")
                         .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
