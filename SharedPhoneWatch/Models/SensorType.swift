@@ -28,5 +28,9 @@ enum SensorType: String, CustomStringConvertible {
 
     var description: String { rawValue }
     var isALibre: Bool { self == .libre3 || self == .libre3Plus || self == .libre2 || self == .libre2Plus || self == .libre1 || self == .libreUS14day || self == .libreProH || self == .libre2US || self == .libre2CA || self == .libre2RU || self == .libreSense || self == .lingo }
+    var isADexcom: Bool { self == .dexcomG6 || self == .dexcomONE || self == .dexcomG7 || self == .dexcomONEPlus }
+
+    /// User-selectable Dexcom sensor types, in the order shown in the settings picker.
+    static let dexcomSelectable: [SensorType] = [.dexcomG7, .dexcomONEPlus, .dexcomG6, .dexcomONE]
 }
 

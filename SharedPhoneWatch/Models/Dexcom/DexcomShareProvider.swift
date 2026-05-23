@@ -156,9 +156,14 @@ final class DexcomShareProvider: CGMProvider {
             alarmLow: alarms.low,
             alarmHigh: alarms.high
         )
+        // Honor the user's previously selected Dexcom sensor type if any, so
+        // the picker in Settings is the source of truth across re-connects.
+        // Default to G7 when no Dexcom type has been chosen yet.
+        let existingType = SensorSettingsStore.shared.sensorType
+        let resolvedType: SensorType = existingType.isADexcom ? existingType : .dexcomG7
         _ = SensorSettingsStore.shared.replaceCacheAndPersist(
             sensorSettings: dexcomSettings,
-            sensorType: .dexcomG7
+            sensorType: resolvedType
         )
 
         await reload()

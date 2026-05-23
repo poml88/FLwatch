@@ -36,6 +36,10 @@ struct PhoneAppSettingsView: View {
     @State private var dexcomUom: Int = SensorSettingsStore.shared.sensorSettings.uom
     @State private var dexcomTargetLow: Int = SensorSettingsStore.shared.sensorSettings.targetLow
     @State private var dexcomTargetHigh: Int = SensorSettingsStore.shared.sensorSettings.targetHigh
+    @State private var dexcomSensorType: SensorType = {
+        let current = SensorSettingsStore.shared.sensorType
+        return current.isADexcom ? current : .dexcomG7
+    }()
     @State private var appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
     @State private var appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
     @StateObject private var bluetoothHeartbeatManager = BluetoothHeartbeatManager.shared
@@ -215,6 +219,16 @@ struct PhoneAppSettingsView: View {
 
             if cgmProviderKind == .dexcomShare {
                 Section {
+                    Picker("Sensor model", selection: $dexcomSensorType) {
+                        ForEach(SensorType.dexcomSelectable, id: \.self) { type in
+                            Text(type.description).tag(type)
+                        }
+                    }
+                    .onChange(of: dexcomSensorType) { _, newValue in
+                        _ = SensorSettingsStore.shared.updateSensorType(newValue)
+                        watchConnector.sendSettingsSnapshotToWatch()
+                    }
+
                     Picker("Glucose unit", selection: $dexcomUom) {
                         Text("mg/dL").tag(1)
                         Text("mmol/L").tag(0)
@@ -614,6 +628,10 @@ struct PhoneAppSettingsView: View {
         pendingProviderSwitch = nil
         LibreLinkUpService.shared.switchProvider(to: newKind)
         cgmProviderKindRaw = newKind.rawValue
+        // `switchProvider` may have replaced a stale sensor type — sync the
+        // picker @State so it reflects what's now persisted.
+        let resolved = SensorSettingsStore.shared.sensorType
+        dexcomSensorType = resolved.isADexcom ? resolved : .dexcomG7
         // Mirror the change to the watch so its stale window and cadence
         // follow without waiting for the next settings sync.
         watchConnector.sendSettingsSnapshotToWatch()

@@ -56,6 +56,23 @@ final class LibreLinkUpService: ObservableObject {
         SharedData.cgmProviderKind = kind
         UserDefaults.group.connected = .disconnected
         activeProvider = CGMProviderRegistry.makeProvider(for: kind)
+
+        // Reset the sensor type so it doesn't lag the new provider until the
+        // first reload lands. For Dexcom we keep a previously chosen Dexcom
+        // type (the user's picker selection) and otherwise default to G7;
+        // for Libre we drop a stale Dexcom stamp to `.unknown` and let the
+        // first LLU reload fill in the real model.
+        let currentType = SensorSettingsStore.shared.sensorType
+        switch kind {
+        case .dexcomShare:
+            if !currentType.isADexcom {
+                _ = SensorSettingsStore.shared.updateSensorType(.dexcomG7)
+            }
+        case .libreLinkUp:
+            if currentType.isADexcom {
+                _ = SensorSettingsStore.shared.updateSensorType(.unknown)
+            }
+        }
         Logger.libreLinkUpService.info("switched active provider to \(kind.rawValue, privacy: .public)")
     }
 
