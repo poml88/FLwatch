@@ -47,7 +47,12 @@ final class DexcomShareProvider: CGMProvider {
 
     func reload() async {
         lastReloadDidFail = false
+        // The two debug singletons are named after Libre but used as a
+        // provider-agnostic surface by the home banner and the Settings debug
+        // row. Clear them at the start of a reload so the previous error
+        // doesn't linger past a recovery.
         DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
+        DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
 
         // A reload needs a username, a known region, and *a* session to try —
         // either the keychain session (app) or the published app-group session
@@ -86,6 +91,7 @@ final class DexcomShareProvider: CGMProvider {
                 SharedData.dexcomShareSessionId = ""
                 lastReloadDidFail = true
                 lastReloadResponseMessage = String(localized: "Dexcom session expired.")
+                DebugMessageSingleton.shared.libreLinkUpResponseError = "Dexcom: session expired"
                 Logger.dexcomShare.info("session invalid and no password available; cleared published session, not re-authenticating")
                 return
             }
@@ -102,15 +108,25 @@ final class DexcomShareProvider: CGMProvider {
             } catch {
                 lastReloadDidFail = true
                 lastReloadResponseMessage = error.localizedDescription
+                publishDebugError(stage: "reauth+fetch", error: error)
                 handleAuthFailure(error)
                 Logger.dexcomShare.error("reload-after-reauth failed: \(error.localizedDescription, privacy: .public)")
             }
         } catch {
             lastReloadDidFail = true
             lastReloadResponseMessage = error.localizedDescription
+            publishDebugError(stage: "fetch", error: error)
             handleAuthFailure(error)
             Logger.dexcomShare.error("reload failed: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    /// Mirrors a Dexcom error into the two provider-agnostic debug singletons
+    /// the rest of the app reads (Settings debug row + home banner overlay).
+    private func publishDebugError(stage: String, error: Error) {
+        let message = error.localizedDescription
+        DebugMessageSingleton.shared.libreLinkUpResponseError = "Dexcom \(stage): \(message)"
+        DebugMessageSingleton.shared.libreLinkUpOverlayError = message
     }
 
     // MARK: - Connect / sign out (called from the connect view in Phase 3)
