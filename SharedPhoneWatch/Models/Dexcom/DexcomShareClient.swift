@@ -112,6 +112,9 @@ actor DexcomShareClient {
 
         let (data, response) = try await perform(request: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        // TEMP DEBUG: log full glucose response
+//        let glucoseBodyText = String(data: data, encoding: .utf8) ?? "<binary>"
+//        Logger.dexcomShare.debug("readLatestGlucose HTTP \(status, privacy: .public) full response:\n\(glucoseBodyText, privacy: .public)")
         if status != 200 {
             throw makeError(data: data, status: status)
         }
@@ -180,6 +183,9 @@ actor DexcomShareClient {
 
         let (data, response) = try await perform(request: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        // TEMP DEBUG: log full auth response
+//        let authBodyText = String(data: data, encoding: .utf8) ?? "<binary>"
+//        Logger.dexcomShare.debug("postAuthExpectingString \(url.lastPathComponent, privacy: .public) HTTP \(status, privacy: .public) full response:\n\(authBodyText, privacy: .public)")
         if status != 200 {
             throw makeError(data: data, status: status)
         }
