@@ -193,7 +193,9 @@ class LibreLinkUp  {
                                 filteredGraphHistory.append(graphHistoryReversed[1]) // this is only added for trend filter below
                             }
                         }
-                        Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpGlucose: \(filteredGraphHistory)")
+                        // TEMP DEBUG: log every single graph measurement
+                        Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpGlucose: [...] log commented out because of size")
+//                        Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpGlucose: \(filteredGraphHistory)")
 //                        if graphHistory.count > 1 {                                                                                 // make sure that [0] exists, must be 2 to drop 1.
 //                            LibreLinkUpHistory.shared.libreLinkUpGlucose = graphHistory.reversed().dropLast(graphHistory.count / 2) // deviding by two reduces graph to 6 hours.
 //                        } else {
@@ -243,7 +245,9 @@ class LibreLinkUp  {
                             maxBG: maxBG,
                             lastSuccessfulLibreLinkUpAPICall: now
                         )
-                        Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpMinuteGlucose: \(historyStore.libreLinkUpMinuteGlucose)")
+                        // TEMP DEBUG: log every single graph measurement
+                        Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpMinuteGlucose: [...] log commented out because of size")
+//                        Logger.libreLinkUp.debug("LibreLinkUp: libreLinkUpHistory.libreLinkUpMinuteGlucose: \(historyStore.libreLinkUpMinuteGlucose)")
                         // TODO: merge and update sensor history / trend
                         //                            app.main.didParseSensor(app.sensor)
                     }
@@ -462,7 +466,9 @@ class LibreLinkUp  {
                                 }
                                 Logger.libreLinkUp.debug("LibreLinkUp: URL request: \(request.url!.absoluteString), headers: \(request.allHTTPHeaderFields!)")
                                 let (data, response) = try await URLSession.shared.data(for: request)
-                                Logger.libreLinkUp.debug("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
+                                // TEMP DEBUG: log full country list response
+                                Logger.libreLinkUp.debug("LibreLinkUp: response data: [...] log commented out because of size")
+//                                Logger.libreLinkUp.debug("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \((response as! HTTPURLResponse).statusCode)")
                                 do {
                                     if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                                        let data = json["data"] as? [String: Any],
@@ -613,8 +619,10 @@ class LibreLinkUp  {
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             let status = (response as! HTTPURLResponse).statusCode
-            Logger.libreLinkUp.debug("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)")
-            responseData = "LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)"
+            // TEMP DEBUG: log full getPatientGraph() response
+            Logger.libreLinkUp.debug("LibreLinkUp: response data: [...] log commented out because of size")
+//            Logger.libreLinkUp.debug("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)")
+//            responseData = "LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)"
             
             if status == 401 {
                 Logger.general.error("LibreLinkUp: error: Invalid auth session")
@@ -671,7 +679,9 @@ class LibreLinkUp  {
                    let connection = data["connection"] as? [String: Any],
                    let patientDevice = connection["patientDevice"] as? [String: Any]
                 {
-                    Logger.libreLinkUp.debug("LibreLinkUp: connection data: \(connection)")
+                    // TEMP DEBUG: log full connection data
+                    Logger.libreLinkUp.debug("LibreLinkUp: connection data: [...] log commented out because of size")
+//                    Logger.libreLinkUp.debug("LibreLinkUp: connection data: \(connection)")
                     let uom = connection["uom"] as? Int ?? 1 // test mmol units: let uom = 0
                     unit = (uom == 1) ? .mgdl : .mmoll
                     let unitString = "\(unit)"
@@ -833,13 +843,17 @@ class LibreLinkUp  {
                                         if lifeCount % 5 == 1 { lifeCount -= 1 }
                                         history.append(LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow))
                                         let measurementString = "\(measurement)"
-                                        Logger.libreLinkUp.debug("LibreLinkUp: graph measurement # \(i) of \(graphData.count): \(measurementString) (JSON: \(glucoseMeasurement)), lifeCount = \(lifeCount)")
+                                        // TEMP DEBUG: log every single graph measurement
+                                        Logger.libreLinkUp.debug("LibreLinkUp: graph measurement #  [...] log commented out because of size")
+//                                        Logger.libreLinkUp.debug("LibreLinkUp: graph measurement # \(i) of \(graphData.count): \(measurementString) (JSON: \(glucoseMeasurement)), lifeCount = \(lifeCount)")
                                     }
                                 }
                             }
                             
                             history.append(lastGlucose)
-                            Logger.libreLinkUp.debug("LibreLinkUp: graph values: \(history.map { ($0.glucose.id, $0.glucose.value, $0.glucose.date.shortDateTime, $0.color) })")
+                            // TEMP DEBUG: log full graph history response
+                            Logger.libreLinkUp.debug("LibreLinkUp: graph values: [...] log commented out because of size")
+//                            Logger.libreLinkUp.debug("LibreLinkUp: graph values: \(history.map { ($0.glucose.id, $0.glucose.value, $0.glucose.date.shortDateTime, $0.color) })")
                             
                             // TODO: https://api-eu.libreview.io/glucoseHistory?from=1700092800&numPeriods=5&period=14
                             //                            if settings.userLevel >= .test {

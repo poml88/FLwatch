@@ -4342,6 +4342,9 @@
         }
       }
     },
+    "Discussion forum" : {
+
+    },
     "Dismiss" : {
       "localizations" : {
         "de" : {
@@ -11370,6 +11373,9 @@
           }
         }
       }
+    },
+    "Setup video" : {
+
     },
     "Share must be turned on in the Dexcom app, which requires inviting at least one follower. But don't sign in with a **follower's** login — Dexcom doesn't expose follower readings to third-party apps, so only the wearer's own account can pull data." : {
       "comment" : "A description of how to use the Dexcom Share feature.",

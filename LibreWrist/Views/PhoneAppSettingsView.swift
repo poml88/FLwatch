@@ -161,6 +161,16 @@ struct PhoneAppSettingsView: View {
                     .buttonStyle(.bordered)
 
                     Button {
+                        if let url = URL(string: "https://github.com/poml88/FLwatch/discussions") {
+                            openURL(url)
+                        }
+                    } label: {
+                        Text("Discussion forum")
+                            .padding(2)
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button {
                         showingMailView.toggle()
                     } label: {
                         Text("Send Email to Support")
@@ -168,10 +178,24 @@ struct PhoneAppSettingsView: View {
                         //                            .frame(width: 140, height: 50)
                     }
                     .buttonStyle(.bordered)
-                    
+
                     .disabled(!MailView.canSendMail())
                     .sheet(isPresented: $showingMailView) {
                         MailView(result: $mailResult)
+                    }
+
+                    // Setup walkthrough is Libre-specific; hide on Dexcom so we
+                    // don't link users to a video that doesn't cover their flow.
+                    if cgmProviderKind == .libreLinkUp {
+                        Button {
+                            if let url = URL(string: "https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB") {
+                                openURL(url)
+                            }
+                        } label: {
+                            Text("Setup video")
+                                .padding(2)
+                        }
+                        .buttonStyle(.bordered)
                     }
                 }
             } header: {
