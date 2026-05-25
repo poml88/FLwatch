@@ -42,9 +42,57 @@ struct LibreWristWidgetEntryView : View {
             return "\(String(format: "%.1f", entry.currentIOB))u"
         }
     }
-    
+
+    /// True when the active provider (Dexcom) has no usable session and the
+    /// widget can't refresh on its own. The widget process has no access to
+    /// the password, so the only useful action is "open the app" — which is
+    /// what a default complication tap does. We surface that by drawing just
+    /// a reload arrow and skipping any Button wrapper that would otherwise
+    /// trigger a doomed reload intent.
+    private var needsManualReauth: Bool {
+        SharedData.cgmProviderKind == .dexcomShare && !SharedData.canActiveProviderReload
+    }
+
+    @ViewBuilder
+    private var reauthBody: some View {
+        switch family {
+        case .accessoryInline:
+            // Inline can only render a single line of text — no images.
+            Text(verbatim: "↻ Open FLwatch")
+                .containerBackground(.background, for: .widget)
+        case .accessoryCorner:
+            Image(systemName: "arrow.clockwise")
+                .font(.system(size: 18, weight: .heavy))
+                .widgetCurvesContent()
+                .containerBackground(.background, for: .widget)
+        case .accessoryRectangular:
+            HStack(spacing: 10) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 34, weight: .heavy))
+                    .containerBackground(for: .widget) { EmptyView() }
+                Text("Open\nFLwatch")
+            }
+        case .accessoryCircular:
+            Image(systemName: "arrow.clockwise")
+                .font(.system(size: 26, weight: .heavy))
+                .containerBackground(.background, for: .widget)
+        default:
+            Image("AppIcon")
+                .containerBackground(.background, for: .widget)
+        }
+    }
+
     @ViewBuilder
     var body: some View {
+        if needsManualReauth {
+            reauthBody
+        } else {
+            normalBody
+        }
+    }
+
+    @ViewBuilder
+    private var normalBody: some View {
         switch family {
 
         case .accessoryCircular:
