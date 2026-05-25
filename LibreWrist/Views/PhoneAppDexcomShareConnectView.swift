@@ -71,7 +71,7 @@ struct PhoneAppDexcomShareConnectView: View {
                             Text("Sign in as the sensor wearer")
                                 .font(.headline)
 
-                            Text("Use the email and password of the **Dexcom account the sensor is set up on** — the same login as the Dexcom G7/G6/ONE app on the wearer's phone. FLwatch then shows that data in parallel.")
+                            Text("Use the email and password of the **Dexcom account the sensor is set up on** — the same login as the Dexcom G7/G6/ONE+ app on the wearer's phone. FLwatch then shows that data in parallel.")
 
                             Text("Share must be turned on in the Dexcom app, which requires inviting at least one follower. But don't sign in with a **follower's** login — Dexcom doesn't expose follower readings to third-party apps, so only the wearer's own account can pull data.")
                         }

@@ -19,7 +19,7 @@ final class DexcomShareProvider: CGMProvider {
 
     let kind: CGMProviderKind = .dexcomShare
 
-    // Dexcom G7 / G6 / ONE all publish on a 5-min cadence (from the kind).
+    // Dexcom G7 / G6 / ONE+ all publish on a 5-min cadence (from the kind).
     // Stale window is cadence + 3 min grace = 8 min — matches xdrip4ios's
     // tolerance.
     var staleReadingAfter: TimeInterval { 8 * 60 }
