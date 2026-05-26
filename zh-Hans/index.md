@@ -26,7 +26,8 @@ FLwatch 目前支持 LibreLinkUp 4.x API。Abbott 已发布 API 5.0.0，但尚�
 - 支持手动记录胰岛素，并内置碳水化合物换算胰岛素计算器
 - 需要 iOS 18 和 watchOS 10.5
 - 如需参与 Beta 测试，FLwatch 也提供 TestFlight 版本：[https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
-- 使用 LibreLinkUp 关注者账户凭据，而不是 LibreView 凭据
+- 通过 LibreLinkUp（仅 API 4.x 版本）支持 Freestyle Libre 2 和 3 传感器——使用 LibreLinkUp 关注者账户凭据，而不是 LibreView 凭据
+- 通过 Dexcom Share 支持 Dexcom G6、G7 和 ONE+ 传感器——请使用配置该传感器的 Dexcom 账户的邮箱和密码登录（与佩戴者手机上 Dexcom 应用使用的登录信息相同）。必须在 Dexcom 应用中开启 "Share"，这需要至少邀请一位关注者。请勿使用关注者账户登录——Dexcom 仅向第三方应用提供佩戴者本人的读数。
 
 ### 快速开始 {#usage}
 1. 通过 [App Store]({{ site.appstore_url }}) 安装 FLwatch。 {% include appstore_badge.html %}
@@ -135,4 +136,4 @@ FLwatch 使用 LoopKit 的指数型胰岛素模型。该模型使用三个参数
 
 [DiaBLE](https://github.com/gui-dos/DiaBLE)、[LoopKit](https://github.com/LoopKit)、[GlucoseDirect](https://github.com/creepymonster/GlucoseDirect)、[Nightguard](https://github.com/nightscout/nightguard)、[Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
-所有产品及公司名称、商标、服务标记、注册商标及注册服务标记均为其各自所有者的财产。此处使用仅为信息目的，不暗示与之存在任何关联或获得其认可。请注意：本应用与 Abbott Diabetes Care Inc. 无关，亦未获得其认可。
+所有产品及公司名称、商标、服务标记、注册商标及注册服务标记均为其各自所有者的财产。此处使用仅为信息目的，不暗示与之存在任何关联或获得其认可。请注意：本应用与 Abbott Diabetes Care Inc. 和 Dexcom, Inc. 均无关联，亦未获得这些公司的认可。

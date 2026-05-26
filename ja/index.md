@@ -26,7 +26,8 @@ FLwatch は現在、LibreLinkUp 4.x API をサポートしています。Abbott 
 - 手動でのインスリン記録と、内蔵の炭水化物対インスリン計算機をサポートしています
 - iOS 18 と watchOS 10.5 が必要です
 - ベータテスト用に、FLwatch は TestFlight でも利用できます: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
-- LibreView の認証情報ではなく、LibreLinkUp のフォロワーアカウントの認証情報を使用します
+- LibreLinkUp 経由で Freestyle Libre 2 および 3 センサーに対応（API バージョン 4.x のみ）— LibreView の認証情報ではなく、LibreLinkUp のフォロワーアカウントの認証情報を使用します
+- Dexcom Share 経由で Dexcom G6、G7、ONE+ センサーに対応 — センサーが設定されている Dexcom アカウントのメールアドレスとパスワード（装着者の電話の Dexcom アプリと同じログイン情報）でサインインしてください。Dexcom アプリで「Share」を有効にする必要があり、少なくとも 1 人のフォロワーを招待する必要があります。フォロワーのアカウントではサインインしないでください — Dexcom はサードパーティアプリに対して装着者本人の測定値のみを公開します。
 
 ### クイックスタート {#usage}
 1. [App Store]({{ site.appstore_url }}) から FLwatch をインストールします。 {% include appstore_badge.html %}
@@ -135,4 +136,4 @@ FLwatch は LoopKit の指数インスリンモデルを使用しています。
 
 [DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard](https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
-すべての製品名、会社名、商標、サービスマーク、登録商標、登録サービスマークは、それぞれの所有者に帰属します。ここでの使用は情報提供のみを目的としており、提携や承認を意味するものではありません。ご注意ください: このアプリは Abbott Diabetes Care Inc. とは一切関係がなく、同社の承認も受けていません。
+すべての製品名、会社名、商標、サービスマーク、登録商標、登録サービスマークは、それぞれの所有者に帰属します。ここでの使用は情報提供のみを目的としており、提携や承認を意味するものではありません。ご注意ください: このアプリは Abbott Diabetes Care Inc. および Dexcom, Inc. とは一切関係がなく、これらの企業の承認も受けていません。

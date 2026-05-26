@@ -26,7 +26,8 @@ FLwatch is free and open source. It is being developed out of personal needs, bu
 - Supports manual insulin logging and a built-in carb-to-insulin calculator
 - Requires iOS 18 and watchOS 10.5
 - Beta testing: FLwatch is also available on TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
-- Uses LibreLinkUp follower account credentials, not LibreView credentials
+- Supports Freestyle Libre 2 and 3 sensors via LibreLinkUp (only API version 4.x) — uses LibreLinkUp follower account credentials, not LibreView credentials
+- Supports Dexcom G6, G7 and ONE+ sensors via Dexcom Share — sign in with the email and password of the Dexcom account the sensor is set up on (the same login as the Dexcom app on the wearer's phone). Share must be turned on in the Dexcom app, which requires inviting at least one follower. Do not sign in with a follower's login — Dexcom only exposes the wearer's own readings to third-party apps.
 
 ### Quick Start {#usage}
 1. Install FLwatch from the [App Store]({{ site.appstore_url }}). {% include appstore_badge.html %}
@@ -136,4 +137,4 @@ Please have a look at these projects as well:
 
 [DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard](https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
-All product and company names, trademarks, service marks, registered trademarks, and registered service marks are the property of their respective holders. Their use is for information purposes and does not imply any affiliation with or endorsement by them. Please note: this app has no connection with and is not endorsed by Abbott Diabetes Care Inc.
+All product and company names, trademarks, service marks, registered trademarks, and registered service marks are the property of their respective holders. Their use is for information purposes and does not imply any affiliation with or endorsement by them. Please note: this app has no connection with and is not endorsed by Abbott Diabetes Care Inc. or Dexcom, Inc.

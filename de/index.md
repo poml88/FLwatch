@@ -26,7 +26,8 @@ Diese Software ist kostenlos und Open Source. Sie wurde aus persönlichen Bedür
 - Unterstützt manuelle Insulinerfassung und einen integrierten Kohlenhydrat-zu-Insulin-Rechner
 - Benötigt iOS 18 und watchOS 10.5
 - Für Betatests ist FLwatch auch über TestFlight verfügbar: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
-- Verwendet Zugangsdaten eines LibreLinkUp-Follower-Kontos, nicht LibreView-Anmeldedaten
+- Unterstützt Freestyle Libre 2 und 3 Sensoren über LibreLinkUp (nur API-Version 4.x) — verwendet Zugangsdaten eines LibreLinkUp-Follower-Kontos, nicht LibreView-Anmeldedaten
+- Unterstützt Dexcom G6, G7 und ONE+ Sensoren über Dexcom Share — melden Sie sich mit E-Mail und Passwort des Dexcom-Kontos an, auf dem der Sensor eingerichtet ist (dieselben Zugangsdaten wie die Dexcom-App auf dem Telefon des Trägers). „Share" muss in der Dexcom-App aktiviert sein, was die Einladung mindestens eines Followers erfordert. Melden Sie sich nicht mit einem Follower-Konto an — Dexcom stellt Drittanbieter-Apps nur die Werte des Trägers zur Verfügung.
 
 ### Schnellstart {#usage}
 1. Installieren Sie FLwatch aus dem [App Store]({{ site.appstore_url }}). {% include appstore_badge.html %}
@@ -135,4 +136,4 @@ Bitte schauen Sie sich auch diese Projekte an:
 
 [DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard](https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
-Alle Produkt- und Firmennamen, Marken, Dienstleistungsmarken, eingetragenen Marken und eingetragenen Dienstleistungsmarken sind Eigentum ihrer jeweiligen Inhaber. Ihre Verwendung dient ausschließlich Informationszwecken und bedeutet keine Zugehörigkeit zu oder Billigung durch diese. Bitte beachten Sie: Diese App steht in keiner Verbindung zu Abbott Diabetes Care Inc. und wird von diesem Unternehmen nicht unterstützt.
+Alle Produkt- und Firmennamen, Marken, Dienstleistungsmarken, eingetragenen Marken und eingetragenen Dienstleistungsmarken sind Eigentum ihrer jeweiligen Inhaber. Ihre Verwendung dient ausschließlich Informationszwecken und bedeutet keine Zugehörigkeit zu oder Billigung durch diese. Bitte beachten Sie: Diese App steht in keiner Verbindung zu Abbott Diabetes Care Inc. oder Dexcom, Inc. und wird von diesen Unternehmen nicht unterstützt.

@@ -26,7 +26,8 @@ To darmowe oprogramowanie open source. Powstało z osobistej potrzeby, ale powin
 - Obsługuje ręczne rejestrowanie insuliny oraz wbudowany kalkulator węglowodanów do insuliny
 - Wymaga iOS 18 oraz watchOS 10.5
 - Do testów beta FLwatch jest dostępny także przez TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
-- Korzysta z danych logowania konta obserwatora LibreLinkUp, a nie z danych LibreView
+- Obsługuje sensory Freestyle Libre 2 i 3 przez LibreLinkUp (tylko API w wersji 4.x) — korzysta z danych logowania konta obserwatora LibreLinkUp, a nie z danych LibreView
+- Obsługuje sensory Dexcom G6, G7 i ONE+ przez Dexcom Share — zaloguj się adresem e-mail i hasłem konta Dexcom, na którym skonfigurowano sensor (te same dane logowania co aplikacja Dexcom na telefonie osoby noszącej sensor). „Share" musi być włączone w aplikacji Dexcom, co wymaga zaproszenia co najmniej jednego obserwatora. Nie loguj się przy użyciu konta obserwatora — Dexcom udostępnia aplikacjom innych firm wyłącznie odczyty osoby noszącej sensor.
 
 ### Szybki start {#usage}
 1. Zainstaluj FLwatch z [App Store]({{ site.appstore_url }}). {% include appstore_badge.html %}
@@ -135,4 +136,4 @@ Zobacz też te projekty:
 
 [DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard](https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
-Wszystkie nazwy produktów i firm, znaki towarowe, znaki usługowe, zarejestrowane znaki towarowe i zarejestrowane znaki usługowe należą do ich odpowiednich właścicieli. Ich użycie ma charakter wyłącznie informacyjny i nie oznacza żadnego powiązania ani poparcia. Uwaga: ta aplikacja nie jest powiązana z Abbott Diabetes Care Inc. ani przez tę firmę wspierana.
+Wszystkie nazwy produktów i firm, znaki towarowe, znaki usługowe, zarejestrowane znaki towarowe i zarejestrowane znaki usługowe należą do ich odpowiednich właścicieli. Ich użycie ma charakter wyłącznie informacyjny i nie oznacza żadnego powiązania ani poparcia. Uwaga: ta aplikacja nie jest powiązana z Abbott Diabetes Care Inc. ani z Dexcom, Inc., ani przez te firmy wspierana.
