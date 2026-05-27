@@ -24,7 +24,7 @@ struct ReadGlucose: AppIntent {
     //    func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         var dialogString: IntentDialog = "[...]"
-        _ = await LibreLinkUpService.shared.requestReloadIfNeeded(maxAgeMinutes: 1)
+        _ = await LibreLinkUpService.shared.requestReloadIfNeeded()
         let history = LibreLinkUpHistory.shared
         let sensor = SensorSettingsStore.shared
         let latest = history.latestLibreLinkUpGlucose

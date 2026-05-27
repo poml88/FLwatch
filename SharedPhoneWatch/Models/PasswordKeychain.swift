@@ -4,6 +4,27 @@
 //
 //  Created by Peter Müller on 09.09.25.
 //
+//  IMPORTANT — widget processes cannot read these secrets.
+//
+//  Neither widget extension (LibreWristWidget, LibreWristWatchWidget) declares
+//  a `keychain-access-groups` entitlement, and `KEYCHAIN_ACCESS_GROUP` is not
+//  defined in any Info.plist, so each process falls back to its own bundle-ID-
+//  derived default keychain group. The phone app writes under its own group;
+//  the widget reads its own (empty) group and gets `errSecItemNotFound`.
+//  Same on the watch side.
+//
+//  Consequence: a widget tick can refresh data only via a credential that
+//  *does* live in the shared app group (LLU bearer token, Dexcom sessionId).
+//  Once those are cleared (LLU 401, Dexcom sessionInvalid), the widget can't
+//  re-auth on its own — login needs the password, which is in the keychain it
+//  can't reach. The watch widget surfaces this as the "Open FLwatch" arrow
+//  (`needsManualReauth` in LibreWristWatchWidget.swift); on the phone widget
+//  the user just sees stale data until the app re-auths.
+//
+//  Same applies to `DexcomShareTokenStore`. The structural fix is to add the
+//  `keychain-access-groups` entitlement to both widget extensions so they
+//  share their parent app's keychain — pattern used by xdrip4ios, Loop, Spike.
+//
 
 import Foundation
 import Security

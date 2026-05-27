@@ -10,11 +10,29 @@ import OSLog
 import WidgetKit
  
 
+/// Routes between the LibreLinkUp and Dexcom Share connect screens based on
+/// the user's selected provider. Re-renders when `cgmProviderKind` changes
+/// (e.g. via the picker in Settings) thanks to `@AppStorage`.
 struct PhoneAppConnectView: View {
-    
+    @AppStorage(DefaultsKey.cgmProviderKind.rawValue, store: UserDefaults.group)
+    private var cgmProviderKindRaw: String = CGMProviderKind.libreLinkUp.rawValue
+
+    var body: some View {
+        let kind = CGMProviderKind(rawValue: cgmProviderKindRaw) ?? .libreLinkUp
+        switch kind {
+        case .libreLinkUp:
+            LibreLinkUpConnectView()
+        case .dexcomShare:
+            PhoneAppDexcomShareConnectView()
+        }
+    }
+}
+
+struct LibreLinkUpConnectView: View {
+
 //    @StateObject var watchConnector = WatchConnectivityManager.shared
 //    @EnvironmentObject var watchConnector: WatchConnectivityManager
-    
+
     @State private var username = UserDefaults.group.username
     @State private var password: String 
     @State private var connected = UserDefaults.group.connected
@@ -282,6 +300,10 @@ struct PhoneAppConnectView: View {
     }
 }
 
-#Preview {
+#Preview("Router") {
     PhoneAppConnectView()
+}
+
+#Preview("LibreLinkUp") {
+    LibreLinkUpConnectView()
 }

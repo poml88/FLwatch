@@ -130,7 +130,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         )
         refreshItem.handler = { [weak self] _, completion in
             Task { @MainActor [weak self] in
-                _ = await LibreLinkUpService.shared.requestReloadIfNeeded(maxAgeMinutes: 1, force: true)
+                _ = await LibreLinkUpService.shared.requestReloadIfNeeded(force: true)
                 await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
                 await LiveActivityManager.shared.refreshFromCurrentHistory(
                     useLiveActivities: SharedData.useLiveActivities,
@@ -210,7 +210,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         }
 
         let minutesAgo = max(Int(now.timeIntervalSince(history.lastReadingDate) / 60), 0)
-        let isStale = now.timeIntervalSince(history.lastReadingDate) > 5 * 60
+        let isStale = now.timeIntervalSince(history.lastReadingDate) > LibreLinkUpService.shared.activeProvider.staleReadingAfter
         let trend = history.currentTrendArrow == "---" ? "-" : history.currentTrendArrow
         let glucoseValue = history.currentGlucose.asGlucose(glucoseUnitValue: uom)
         let currentGlucoseText = "\(glucoseValue) \(trend)"
@@ -245,7 +245,10 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             return true
         }
 
-        return now.timeIntervalSince(lastHeartbeatDate) > 120
+        // Heartbeat overdue = one source cadence plus a 1-min grace.
+        // Libre 2 min; Dexcom 6 min.
+        let overdueAfter = Double(LibreLinkUpService.shared.activeProvider.cadenceMinutes * 60) + 60
+        return now.timeIntervalSince(lastHeartbeatDate) > overdueAfter
     }
 }
 

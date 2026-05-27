@@ -13,6 +13,7 @@ struct PhoneAppSettingsView: View {
     
     @Environment(\.openURL) private var openURL
     
+    @AppStorage(DefaultsKey.cgmProviderKind.rawValue, store: UserDefaults.group) private var cgmProviderKindRaw: String = CGMProviderKind.libreLinkUp.rawValue
     @AppStorage(DefaultsKey.showInsulinDeliveryMarksPhone.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksPhone: Bool = false
     @AppStorage(DefaultsKey.showInsulinDeliveryMarksWatch.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksWatch: Bool = false
     @AppStorage(DefaultsKey.showIOBCurvePhone.rawValue, store: UserDefaults.group) private var showIOBCurvePhone: Bool = false
@@ -30,13 +31,25 @@ struct PhoneAppSettingsView: View {
     @State private var showingMailView = false
     @State private var isShowingSiriSheet = false
     @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
+    @State private var pendingProviderSwitch: CGMProviderKind? = nil
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
+    @State private var dexcomUom: Int = SensorSettingsStore.shared.sensorSettings.uom
+    @State private var dexcomTargetLow: Int = SensorSettingsStore.shared.sensorSettings.targetLow
+    @State private var dexcomTargetHigh: Int = SensorSettingsStore.shared.sensorSettings.targetHigh
+    @State private var dexcomSensorType: SensorType = {
+        let current = SensorSettingsStore.shared.sensorType
+        return current.isADexcom ? current : .dexcomG7
+    }()
     @State private var appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
     @State private var appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
     @StateObject private var bluetoothHeartbeatManager = BluetoothHeartbeatManager.shared
     private var watchConnector = WatchConnectivityManager.shared
     let updateFrequencyOptions: [Int] = [1, 5, 10, 15, 20]
     let lowGlucoseThresholdOptions: [Int] = Array(stride(from: 60, through: 200, by: 5))
+    // Stored in mg/dL; displayed in the selected unit. Ranges kept disjoint so
+    // targetLow stays below targetHigh and never trips SensorSettings normalization.
+    let dexcomTargetLowOptions: [Int] = Array(stride(from: 50, through: 120, by: 5))
+    let dexcomTargetHighOptions: [Int] = Array(stride(from: 125, through: 250, by: 5))
     private var bgAppRefreshExecutionTimestamps: [Date] {
         (UserDefaults.group.array(forKey: "bgAppRefreshExecutionTimestamps") as? [TimeInterval] ?? [])
             .map(Date.init(timeIntervalSince1970:))
@@ -104,6 +117,10 @@ struct PhoneAppSettingsView: View {
         }
     }
     
+    private var cgmProviderKind: CGMProviderKind {
+        CGMProviderKind(rawValue: cgmProviderKindRaw) ?? .libreLinkUp
+    }
+
     var body: some View {
         Form {
             Section {
@@ -144,6 +161,16 @@ struct PhoneAppSettingsView: View {
                     .buttonStyle(.bordered)
 
                     Button {
+                        if let url = URL(string: "https://github.com/poml88/FLwatch/discussions") {
+                            openURL(url)
+                        }
+                    } label: {
+                        Text("Discussion forum")
+                            .padding(2)
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button {
                         showingMailView.toggle()
                     } label: {
                         Text("Send Email to Support")
@@ -151,10 +178,24 @@ struct PhoneAppSettingsView: View {
                         //                            .frame(width: 140, height: 50)
                     }
                     .buttonStyle(.bordered)
-                    
+
                     .disabled(!MailView.canSendMail())
                     .sheet(isPresented: $showingMailView) {
                         MailView(result: $mailResult)
+                    }
+
+                    // Setup walkthrough is Libre-specific; hide on Dexcom so we
+                    // don't link users to a video that doesn't cover their flow.
+                    if cgmProviderKind == .libreLinkUp {
+                        Button {
+                            if let url = URL(string: "https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB") {
+                                openURL(url)
+                            }
+                        } label: {
+                            Text("Setup video")
+                                .padding(2)
+                        }
+                        .buttonStyle(.bordered)
                     }
                 }
             } header: {
@@ -162,9 +203,87 @@ struct PhoneAppSettingsView: View {
             }
             
             Section {
+                Picker(
+                    selection: Binding(
+                        get: { cgmProviderKind },
+                        set: { newValue in
+                            guard newValue != cgmProviderKind else { return }
+                            pendingProviderSwitch = newValue
+                        }
+                    )
+                ) {
+                    Text("FreeStyle Libre (LibreLinkUp)").tag(CGMProviderKind.libreLinkUp)
+                    Text("Dexcom (Share)").tag(CGMProviderKind.dexcomShare)
+                } label: {
+                    Text("CGM provider")
+                }
+                .confirmationDialog(
+                    "Switch CGM provider?",
+                    isPresented: Binding(
+                        get: { pendingProviderSwitch != nil },
+                        set: { if !$0 { pendingProviderSwitch = nil } }
+                    ),
+                    titleVisibility: .visible,
+                    presenting: pendingProviderSwitch
+                ) { newKind in
+                    Button("Switch", role: .destructive) {
+                        applyProviderSwitch(to: newKind)
+                    }
+                    Button("Cancel", role: .cancel) {
+                        pendingProviderSwitch = nil
+                    }
+                } message: { _ in
+                    Text("Switching disconnects the current provider and clears its cached glucose readings in FLwatch on this device. Credentials for both providers stay saved, so switching back doesn't require re-entering them.")
+                }
+            } header: {
+                Text("CGM Provider")
+            } footer: {
+                Text("Choose which CGM service FLwatch reads from.")
+            }
+
+            if cgmProviderKind == .dexcomShare {
+                Section {
+                    Picker("Sensor model", selection: $dexcomSensorType) {
+                        ForEach(SensorType.dexcomSelectable, id: \.self) { type in
+                            Text(type.description).tag(type)
+                        }
+                    }
+                    .onChange(of: dexcomSensorType) { _, newValue in
+                        _ = SensorSettingsStore.shared.updateSensorType(newValue)
+                        watchConnector.sendSettingsSnapshotToWatch()
+                    }
+
+                    Picker("Glucose unit", selection: $dexcomUom) {
+                        Text("mg/dL").tag(1)
+                        Text("mmol/L").tag(0)
+                    }
+                    .onChange(of: dexcomUom) { _, _ in persistDexcomSensorSettings() }
+
+                    Picker("Target low", selection: $dexcomTargetLow) {
+                        ForEach(dexcomTargetLowOptions, id: \.self) { value in
+                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: dexcomUom), withUnit: true))
+                                .tag(value)
+                        }
+                    }
+                    .onChange(of: dexcomTargetLow) { _, _ in persistDexcomSensorSettings() }
+
+                    Picker("Target high", selection: $dexcomTargetHigh) {
+                        ForEach(dexcomTargetHighOptions, id: \.self) { value in
+                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: dexcomUom), withUnit: true))
+                                .tag(value)
+                        }
+                    }
+                    .onChange(of: dexcomTargetHigh) { _, _ in persistDexcomSensorSettings() }
+                } header: {
+                    Text("Dexcom Sensor Settings")
+                } footer: {
+                    Text("Dexcom Share doesn't send these settings, so set them here. Values are shown in the selected unit and used for the graph target range and reading colors.")
+                }
+            }
+
+            Section {
                 Toggle("Keep phone screen always on", isOn: $isScreenAlwaysOn)
                     .onChange(of: isScreenAlwaysOn) {
-                        print("yes")
                         UIApplication.shared.isIdleTimerDisabled.toggle()
                     }
 
@@ -329,6 +448,9 @@ struct PhoneAppSettingsView: View {
                             lowGlucoseNotificationsEnabled = false
                             return
                         }
+                        if cgmProviderKind == .dexcomShare {
+                            persistDexcomSensorSettings()
+                        }
                         handleLowGlucoseAlertsChanged(isEnabled)
                     }
                     .disabled(!bluetoothHeartbeatManager.isEnabled)
@@ -341,6 +463,9 @@ struct PhoneAppSettingsView: View {
                         }
                     }
                     .onChange(of: lowGlucoseNotificationThreshold) { _, _ in
+                        if cgmProviderKind == .dexcomShare {
+                            persistDexcomSensorSettings()
+                        }
                         Task {
                             await LowGlucoseNotificationManager.shared.enableNotifications()
                         }
@@ -368,7 +493,6 @@ struct PhoneAppSettingsView: View {
                     Text("Default behaviour: opens FLwatch app. Only watchOS 11 and later.")
                 }
                 .onChange(of: tapComplicationReloads) { oldValue, newValue in
-                    print("yes")
                     let messageToWatch: [String: Any] = ["content": "tapComplicationReloadsMessage",
                                                          "tapComplicationReloads": newValue]
                     sendMessagetoOther(message: messageToWatch)
@@ -418,22 +542,18 @@ struct PhoneAppSettingsView: View {
             Section {
                 Toggle("Phone: show insulin delivery marks", isOn: $showInsulinDeliveryMarksPhone)
                     .onChange(of: showInsulinDeliveryMarksPhone) {
-                        print("yes")
                     }
                 
                 Toggle("Phone: show IOB graph", isOn: $showIOBCurvePhone)
                     .onChange(of: showIOBCurvePhone) {
-                        print("yes")
                     }
                 
                 Toggle("Phone: show insulin activity graph", isOn: $showActivityCurvePhone)
                     .onChange(of: showActivityCurvePhone) {
-                        print("yes")
                     }
                 
                 Toggle("Watch: show insulin delivery marks", isOn: $showInsulinDeliveryMarksWatch)
                     .onChange(of: showInsulinDeliveryMarksWatch) { oldValue, newValue in
-                        print("yes")
                         let messageToWatch: [String: Any] = ["content": "showInsulinDeliveryMarksWatchMessage",
                                                              "showInsulinDeliveryMarksWatch": newValue]
                         sendMessagetoOther(message: messageToWatch)
@@ -441,7 +561,6 @@ struct PhoneAppSettingsView: View {
                 
                 Toggle("Watch: show IOB graph", isOn: $showIOBCurveWatch)
                     .onChange(of: showIOBCurveWatch) { oldValue, newValue in
-                        print("yes")
                         let messageToWatch: [String: Any] = ["content": "showIOBCurveWatchMessage",
                                                              "showIOBCurveWatch": newValue]
                         sendMessagetoOther(message: messageToWatch)
@@ -449,7 +568,6 @@ struct PhoneAppSettingsView: View {
                 
                 Toggle("Watch: show insulin activity graph", isOn: $showActivityCurveWatch)
                     .onChange(of: showActivityCurveWatch) { oldValue, newValue in
-                        print("yes")
                         let messageToWatch: [String: Any] = ["content": "showActivityCurveWatchMessage",
                                                              "showActivityCurveWatch": newValue]
                         sendMessagetoOther(message: messageToWatch)
@@ -506,6 +624,41 @@ struct PhoneAppSettingsView: View {
     }
     func sendMessagetoOther(message: [String: Any]) {
         watchConnector.sendMessageToPairedDevice(message)
+    }
+
+    /// Persists the manually-entered Dexcom sensor settings (stored in mg/dL) and
+    /// mirrors them to the watch. Coloring runs off the target range; the red alarm
+    /// line tracks the low-glucose notification threshold when alerts are enabled,
+    /// otherwise it stays hidden at the sentinel.
+    private func persistDexcomSensorSettings() {
+        let alarms = SensorSettings.dexcomAlarms(
+            notificationsEnabled: lowGlucoseNotificationsEnabled,
+            threshold: lowGlucoseNotificationThreshold
+        )
+        let updated = SensorSettings(
+            uom: dexcomUom,
+            targetLow: dexcomTargetLow,
+            targetHigh: dexcomTargetHigh,
+            alarmLow: alarms.low,
+            alarmHigh: alarms.high
+        )
+        SensorSettingsStore.shared.updateSensorSettings(updated)
+        watchConnector.sendSettingsSnapshotToWatch()
+    }
+
+    /// Decision 7.1: switching providers triggers a disconnect. Both providers'
+    /// credentials stay in place per decision 7.2.
+    private func applyProviderSwitch(to newKind: CGMProviderKind) {
+        pendingProviderSwitch = nil
+        LibreLinkUpService.shared.switchProvider(to: newKind)
+        cgmProviderKindRaw = newKind.rawValue
+        // `switchProvider` may have replaced a stale sensor type — sync the
+        // picker @State so it reflects what's now persisted.
+        let resolved = SensorSettingsStore.shared.sensorType
+        dexcomSensorType = resolved.isADexcom ? resolved : .dexcomG7
+        // Mirror the change to the watch so its stale window and cadence
+        // follow without waiting for the next settings sync.
+        watchConnector.sendSettingsSnapshotToWatch()
     }
 
     private func refreshAppleHealthStatus() {

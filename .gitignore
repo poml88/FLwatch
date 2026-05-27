@@ -14,4 +14,4 @@ vendor/bundle/
 *.ipa
 *.dSYM.zip
 dexcom-api-docs/
-smartguide-integration
+smartguide-integration/

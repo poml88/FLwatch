@@ -21,12 +21,16 @@ enum SensorType: String, CustomStringConvertible {
     case libre3Plus    = "Libre 3 Plus"
     case lingo         = "Lingo"
     case dexcomG6      = "Dexcom G6"
-    case dexcomONE     = "Dexcom ONE"
     case dexcomG7      = "Dexcom G7"
     case dexcomONEPlus = "Dexcom ONE+"
     case unknown       = "unknown"
 
     var description: String { rawValue }
     var isALibre: Bool { self == .libre3 || self == .libre3Plus || self == .libre2 || self == .libre2Plus || self == .libre1 || self == .libreUS14day || self == .libreProH || self == .libre2US || self == .libre2CA || self == .libre2RU || self == .libreSense || self == .lingo }
+    var isADexcom: Bool { self == .dexcomG6 || self == .dexcomG7 || self == .dexcomONEPlus }
+
+    /// User-selectable Dexcom sensor types, in the order shown in the settings picker.
+    /// Dexcom Share only exposes data for G6, G7, and ONE+ — plain "ONE" is excluded.
+    static let dexcomSelectable: [SensorType] = [.dexcomG7, .dexcomONEPlus, .dexcomG6]
 }
 

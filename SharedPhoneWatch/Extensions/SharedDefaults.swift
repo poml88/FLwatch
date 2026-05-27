@@ -93,6 +93,14 @@ enum DefaultsKey: String {
     case keyLockTime = "lockTime"
     case insulinDeliveryHistory = "insulinDeliveryHistoryKey"
     case insulinTypeSelected = "insulinTypeSelectedKey"
+
+    // CGM provider selection (Libre vs Dexcom Share)
+    case cgmProviderKind = "cgmProviderKindKey"
+
+    // Dexcom Share
+    case dexcomShareUsername = "dexcomShareUsernameKey"
+    case dexcomShareRegion = "dexcomShareRegionKey"
+    case dexcomShareSessionId = "dexcomShareSessionIdKey"
 }
 
 // MARK: - Convenience typed helpers + Codable helpers
@@ -431,6 +439,85 @@ enum SharedData {
     static var usedDays: [String] {
         get { store.getStringArray(.usedDays, defaultValue: []) }
         set { store.setStringArray(newValue, forKey: .usedDays) }
+    }
+
+    static var cgmProviderKind: CGMProviderKind {
+        get {
+            let raw = store.getString(.cgmProviderKind, defaultValue: CGMProviderKind.libreLinkUp.rawValue)
+            return CGMProviderKind(rawValue: raw) ?? .libreLinkUp
+        }
+        set { store.setString(newValue.rawValue, forKey: .cgmProviderKind) }
+    }
+
+    static var dexcomShareUsername: String {
+        get { store.getString(.dexcomShareUsername, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.dexcomShareUsername.rawValue) }
+            else { store.setString(newValue, forKey: .dexcomShareUsername) }
+        }
+    }
+
+    static var dexcomShareRegion: ShareRegion {
+        get {
+            let raw = store.getString(.dexcomShareRegion, defaultValue: "")
+            return ShareRegion(rawValue: raw) ?? .us
+        }
+        set { store.setString(newValue.rawValue, forKey: .dexcomShareRegion) }
+    }
+
+    /// Non-secret Dexcom Share session GUID, mirrored into the app group so the
+    /// widget can read glucose without the keychain password. The app publishes
+    /// this on every successful fetch / login; the widget clears it (sets empty)
+    /// when Dexcom rejects it as invalid, which gates the widget off until the
+    /// app re-authenticates and republishes a fresh value.
+    static var dexcomShareSessionId: String {
+        get { store.getString(.dexcomShareSessionId, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.dexcomShareSessionId.rawValue) }
+            else { store.setString(newValue, forKey: .dexcomShareSessionId) }
+        }
+    }
+
+    static var dexcomShareRegionIsKnown: Bool {
+        !store.getString(.dexcomShareRegion, defaultValue: "").isEmpty
+    }
+
+    // MARK: - Provider-agnostic credential gates
+    //
+    // The widgets, watch home view, and intents historically gated on
+    // LibreLinkUp's `libreLinkUpUserId`/`libreLinkUpToken`/`username`, which
+    // Dexcom never populates. These two helpers branch on the active provider
+    // so the same call sites work for both backends. Synchronous and
+    // non-isolated on purpose — widget extensions read them off the main actor.
+
+    /// True when the user has configured an account for the active provider
+    /// (i.e. has entered credentials at least once). Used for "open the phone
+    /// app to sign in" prompts — deliberately lenient (no live-session check).
+    static var hasActiveProviderAccount: Bool {
+        switch cgmProviderKind {
+        case .libreLinkUp:
+            return !UserDefaults.group.username.isEmpty
+        case .dexcomShare:
+            return !dexcomShareUsername.isEmpty
+        }
+    }
+
+    /// True when the active provider has enough persisted state to attempt a
+    /// reload right now. Stricter than `hasActiveProviderAccount`. Used by the
+    /// widgets to bail out early instead of kicking off a doomed reload.
+    static var canActiveProviderReload: Bool {
+        switch cgmProviderKind {
+        case .libreLinkUp:
+            return !(libreLinkUpUserId.isEmpty || libreLinkUpToken.isEmpty)
+        case .dexcomShare:
+            // Gate on the app-group sessionId (readable from the widget),
+            // not the keychain password. The widget clears this when Dexcom
+            // says the session is invalid, which stops it from retrying until
+            // the app republishes a fresh session.
+            return !dexcomShareUsername.isEmpty
+                && dexcomShareRegionIsKnown
+                && !dexcomShareSessionId.isEmpty
+        }
     }
 
     // Add other static properties as needed — or prefer using @AppStorage directly (below).

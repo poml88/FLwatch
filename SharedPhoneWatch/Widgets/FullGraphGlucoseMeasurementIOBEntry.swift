@@ -139,20 +139,25 @@ struct FullGraphGlucoseMeasurementIOBEntry: TimelineEntry {
         }
     }
     
-    static func getPatientGraph(maxAgeMinutes: Int = 1,
+    static func getPatientGraph(maxAgeMinutes: Int? = nil,
                                 forceReload: Bool = false) async throws -> FullGraphGlucoseMeasurementIOBEntry {
-        guard !(SharedData.libreLinkUpUserId.isEmpty || SharedData.libreLinkUpToken.isEmpty) else {
+        // See GlucoseMeasurementIOBEntry: the reload gate is not a precondition
+        // for displaying persisted history that may have arrived via a peer
+        // process (e.g. WatchConnectivity) since this widget's session was cleared.
+        if SharedData.canActiveProviderReload {
+            _ = await LibreLinkUpService.shared.requestReloadIfNeeded(maxAgeMinutes: maxAgeMinutes, force: forceReload)
+        }
+
+        if let entry = await entryFromHistory() {
+            return entry
+        }
+
+        if !SharedData.canActiveProviderReload {
             throw NSError(domain: "MissingSettings", code: -5,
-                          userInfo: [NSLocalizedDescriptionKey: "Missing UserId or Token"])
+                          userInfo: [NSLocalizedDescriptionKey: "Missing CGM credentials"])
         }
-        
-        _ = await LibreLinkUpService.shared.requestReloadIfNeeded(maxAgeMinutes: maxAgeMinutes, force: forceReload)
-        
-        guard let entry = await entryFromHistory() else {
-            throw NSError(domain: "ResponseError", code: -3,
-                          userInfo: [NSLocalizedDescriptionKey: "No glucose item found in history."])
-        }
-        return entry
+        throw NSError(domain: "ResponseError", code: -3,
+                      userInfo: [NSLocalizedDescriptionKey: "No glucose item found in history."])
     }
     
     @MainActor

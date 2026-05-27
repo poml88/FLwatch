@@ -32,9 +32,17 @@ extension Logger {
     static let bgTaskScheduler = Logger(subsystem: subsystem, category: "BGTaskScheduler")
     
     static let libreLinkUpService = Logger(subsystem: subsystem, category: "LibreLinkUpService")
+
+    static let dexcomShare = Logger(subsystem: subsystem, category: "DexcomShare")
     
     static let liveActivity = Logger(subsystem: subsystem, category: "LiveActivity")
 
     static let healthKit = Logger(subsystem: subsystem, category: "HealthKit")
+
+    /// IOB / insulin model calculations.
+    static let insulin = Logger(subsystem: subsystem, category: "Insulin")
+
+    /// Verbose view lifecycle / refresh tracing (timers, scene phase, reloads).
+    static let viewDebug = Logger(subsystem: subsystem, category: "ViewDebug")
 
 }

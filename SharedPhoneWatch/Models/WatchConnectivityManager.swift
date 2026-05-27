@@ -24,6 +24,13 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     private static let requestSettingsSnapshotContent = "requestSettingsSnapshot"
     private static let lowGlucoseAlertContent = "lowGlucoseAlert"
     private static let lowGlucoseAlertDataKey = "lowGlucoseAlertData"
+    /// Phone → watch nudge: a fresh Dexcom Share sessionId after the phone
+    /// re-authenticated. The watch persists it so its own next reload skips
+    /// the dead-session round-trip. LLU has no equivalent because its bearer
+    /// token has a multi-month lifetime and gets refreshed rarely enough that
+    /// the existing settings-snapshot path already covers it.
+    private static let dexcomShareSessionContent = "dexcomShareSession"
+    private static let dexcomShareSessionIdKey = "dexcomShareSessionId"
 #if os(watchOS)
     private static let watchLowGlucoseNotificationIdentifierPrefix = "watch-low-glucose-alert"
     private static let watchLowGlucoseAlertFreshness: TimeInterval = 3 * 60
@@ -54,6 +61,21 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         let username: String?
         let password: String?
         let patientId: String?
+        let cgmProviderKind: String?
+        // Dexcom Share credentials. Sent only when Dexcom is the active
+        // provider and connected; nil otherwise (and from older phone builds).
+        // They let the watch run its own Share reloads when the phone is
+        // unreachable, mirroring the LibreLinkUp username/password path.
+        let dexcomShareUsername: String?
+        let dexcomShareRegion: String?
+        let dexcomSharePassword: String?
+        let dexcomShareAccountId: String?
+        let dexcomShareSessionId: String?
+        // Sensor settings (unit, target/alarm range) and sensor type. Share
+        // doesn't return these, so the phone is the source of truth and mirrors
+        // them here. Optional for older builds that didn't send them.
+        let sensorSettings: SensorSettings?
+        let sensorTypeRawValue: String?
         let updatedAt: Date
     }
 
@@ -354,6 +376,23 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             }
         }
 
+#if os(watchOS)
+        if message["content"] as? String == Self.dexcomShareSessionContent {
+            guard let sessionId = message[Self.dexcomShareSessionIdKey] as? String,
+                  !sessionId.isEmpty else {
+                Logger.connectivity.error("Missing Dexcom sessionId in refresh message")
+                return
+            }
+            do {
+                try DexcomShareTokenStore.save(sessionId, kind: .sessionId)
+                SharedData.dexcomShareSessionId = sessionId
+                Logger.connectivity.info("Applied fresh Dexcom sessionId from WatchConnectivity")
+            } catch {
+                Logger.connectivity.error("Failed to persist Dexcom sessionId: \(error.localizedDescription)")
+            }
+        }
+#endif
+
         if message["content"] as? String == Self.lowGlucoseAlertContent {
             guard let alertData = message[Self.lowGlucoseAlertDataKey] as? Data else {
                 Logger.connectivity.error("Missing low glucose alert data in message")
@@ -434,11 +473,52 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
 
 #if os(iOS)
     func sendSettingsSnapshotToWatch() {
-        let username = UserDefaults.group.username
-        let password = try? PasswordKeychain.read()
-        let hasValidCredentials = UserDefaults.group.connected == .connected
-            && !username.isEmpty
-            && !(password ?? "").isEmpty
+      Task { @MainActor in
+        let providerKind = SharedData.cgmProviderKind
+        let isConnected = UserDefaults.group.connected == .connected
+
+        // Per-provider credential bundle. Only the active provider's secrets are
+        // sent, and only when connected.
+        var hasValidCredentials = false
+        var username: String?
+        var password: String?
+        var patientId: String?
+        var dexcomShareUsername: String?
+        var dexcomShareRegion: String?
+        var dexcomSharePassword: String?
+        var dexcomShareAccountId: String?
+        var dexcomShareSessionId: String?
+
+        switch providerKind {
+        case .libreLinkUp:
+            let llUsername = UserDefaults.group.username
+            let llPassword = try? PasswordKeychain.read()
+            hasValidCredentials = isConnected
+                && !llUsername.isEmpty
+                && !(llPassword ?? "").isEmpty
+            if hasValidCredentials {
+                username = llUsername
+                password = llPassword
+                patientId = SharedData.libreLinkUpPatientId.isEmpty ? nil : SharedData.libreLinkUpPatientId
+            }
+        case .dexcomShare:
+            let dxUsername = SharedData.dexcomShareUsername
+            let dxPassword = (try? DexcomShareTokenStore.read(.password)) ?? nil
+            let dxAccountId = (try? DexcomShareTokenStore.read(.accountId)) ?? nil
+            let dxSessionId = (try? DexcomShareTokenStore.read(.sessionId)) ?? nil
+            hasValidCredentials = isConnected
+                && !dxUsername.isEmpty
+                && SharedData.dexcomShareRegionIsKnown
+                && !(dxPassword ?? "").isEmpty
+                && !(dxAccountId ?? "").isEmpty
+            if hasValidCredentials {
+                dexcomShareUsername = dxUsername
+                dexcomShareRegion = SharedData.dexcomShareRegion.rawValue
+                dexcomSharePassword = dxPassword
+                dexcomShareAccountId = dxAccountId
+                dexcomShareSessionId = dxSessionId
+            }
+        }
 
         let snapshot = SettingsSnapshotPayload(
             insulinTypeSelected: UserDefaults.group.insulinTypeSelected.rawValue,
@@ -448,9 +528,20 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             widgetUpdateFrequency: SharedData.widgetUpdateFrequency,
             tapComplicationReloads: SharedData.tapComplicationReloads,
             hasValidCredentials: hasValidCredentials,
-            username: hasValidCredentials ? username : nil,
-            password: hasValidCredentials ? password : nil,
-            patientId: hasValidCredentials && !SharedData.libreLinkUpPatientId.isEmpty ? SharedData.libreLinkUpPatientId : nil,
+            username: username,
+            password: password,
+            patientId: patientId,
+            cgmProviderKind: providerKind.rawValue,
+            dexcomShareUsername: dexcomShareUsername,
+            dexcomShareRegion: dexcomShareRegion,
+            dexcomSharePassword: dexcomSharePassword,
+            dexcomShareAccountId: dexcomShareAccountId,
+            dexcomShareSessionId: dexcomShareSessionId,
+            // Only Dexcom needs the phone to be the source of truth for sensor
+            // settings; for Libre the watch fetches its own from LibreLinkUp, so
+            // leave these nil to avoid clobbering them.
+            sensorSettings: providerKind == .dexcomShare ? SensorSettingsStore.shared.sensorSettings : nil,
+            sensorTypeRawValue: providerKind == .dexcomShare ? SensorSettingsStore.shared.sensorType.rawValue : nil,
             updatedAt: Date()
         )
 
@@ -465,6 +556,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         } catch {
             Logger.connectivity.error("Failed to encode settings snapshot: \(error.localizedDescription)")
         }
+      }
     }
 
     func sendLibreLinkUpSnapshotToWatch() {
@@ -492,6 +584,21 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
                 Logger.connectivity.error("Failed to encode LibreLinkUp snapshot: \(error.localizedDescription)")
             }
         }
+    }
+
+    /// Phone → watch: notify the watch that the phone just minted a fresh
+    /// Dexcom Share sessionId. Watch persists it to keychain + app group so
+    /// the watch widget's reload gate opens again and its next tick can fetch
+    /// without going through a sessionInvalid round-trip first. Dexcom is
+    /// observed to accept the same sessionId being used from multiple
+    /// processes concurrently, so we don't worry about contention here.
+    func sendDexcomShareSessionToWatch(_ sessionId: String) {
+        guard !sessionId.isEmpty else { return }
+        let messageToWatch: [String: Any] = [
+            "content": Self.dexcomShareSessionContent,
+            Self.dexcomShareSessionIdKey: sessionId
+        ]
+        sendMessageToPairedDevice(messageToWatch)
     }
 #endif
     
@@ -542,6 +649,19 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     
     private override init(){
         super.init()
+#if os(iOS)
+        // Bridge `DexcomShareProvider` re-auths to the watch without giving
+        // the provider a compile-time dependency on this class (the provider
+        // is built into widget targets that don't link WC).
+        NotificationCenter.default.addObserver(
+            forName: .dexcomShareSessionDidRefresh,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            guard let sessionId = note.object as? String else { return }
+            self?.sendDexcomShareSessionToWatch(sessionId)
+        }
+#endif
     }
 
     private func applySettingsSnapshot(_ snapshot: SettingsSnapshotPayload) {
@@ -551,44 +671,117 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         SharedData.showActivityCurveWatch = snapshot.showActivityCurveWatch
         SharedData.widgetUpdateFrequency = snapshot.widgetUpdateFrequency
         SharedData.tapComplicationReloads = snapshot.tapComplicationReloads
+
+        // Mirror the phone's sensor settings (unit, target range, sensor type).
+        // The phone is authoritative; Share never returns these on the watch.
+        if let sensorSettings = snapshot.sensorSettings {
+            let updatedAt = snapshot.updatedAt
+            let rawType = snapshot.sensorTypeRawValue
+            Task { @MainActor in
+                let sensorType = rawType.flatMap { SensorType(rawValue: $0) } ?? SensorSettingsStore.shared.sensorType
+                _ = SensorSettingsStore.shared.replaceCacheAndPersist(
+                    sensorSettings: sensorSettings,
+                    sensorType: sensorType,
+                    updatedAt: updatedAt
+                )
+            }
+        }
+
+        // Mirror the phone's active CGM provider and its credentials in one
+        // ordered MainActor task. switchProvider() flips `connected` to
+        // .disconnected, so the credential application that re-sets it to
+        // .connected must run *after* the switch — hence the single task.
+        // Older phone builds send a nil cgmProviderKind: fall back to whatever
+        // the watch already had.
+        let targetKind = snapshot.cgmProviderKind.flatMap { CGMProviderKind(rawValue: $0) }
+        Task { @MainActor in
+            if let targetKind, targetKind != SharedData.cgmProviderKind {
+                LibreLinkUpService.shared.switchProvider(to: targetKind)
+            }
+            switch targetKind ?? SharedData.cgmProviderKind {
+            case .dexcomShare:
+                await self.applyDexcomShareCredentials(from: snapshot)
+            case .libreLinkUp:
+                await self.applyLibreLinkUpCredentials(from: snapshot)
+            }
+        }
+    }
+
+    @MainActor
+    private func applyLibreLinkUpCredentials(from snapshot: SettingsSnapshotPayload) async {
         let shouldForceReload =
             snapshot.hasValidCredentials
             && !(snapshot.username ?? "").isEmpty
             && !(snapshot.password ?? "").isEmpty
 
-        if shouldForceReload,
-           let username = snapshot.username,
-           let password = snapshot.password {
-            let existingUsername = UserDefaults.group.username
-            let existingPassword = (try? PasswordKeychain.read()) ?? ""
-            let existingPatientId = SharedData.libreLinkUpPatientId
-            let hasToken = !SharedData.libreLinkUpToken.isEmpty
-            UserDefaults.group.username = username
-            try? PasswordKeychain.save(password)
-            if let patientId = snapshot.patientId, !patientId.isEmpty {
-                SharedData.libreLinkUpPatientId = patientId
-            }
-            let credentialsChanged =
-                username != existingUsername ||
-                password != existingPassword ||
-                ((snapshot.patientId ?? "").isEmpty == false && snapshot.patientId != existingPatientId)
-            if credentialsChanged {
-                SharedData.libreLinkUpToken = ""
-            }
-            UserDefaults.group.connected = .connected
-            if credentialsChanged || !hasToken {
-                Task { @MainActor in
-                    await LibreLinkUpService.shared.requestReloadIfNeeded(force: true)
-                }
-            } else {
-                Task { @MainActor in
-                    CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-                }
-            }
+        guard shouldForceReload,
+              let username = snapshot.username,
+              let password = snapshot.password else {
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            return
+        }
+
+        let existingUsername = UserDefaults.group.username
+        let existingPassword = (try? PasswordKeychain.read()) ?? ""
+        let existingPatientId = SharedData.libreLinkUpPatientId
+        let hasToken = !SharedData.libreLinkUpToken.isEmpty
+        UserDefaults.group.username = username
+        try? PasswordKeychain.save(password)
+        if let patientId = snapshot.patientId, !patientId.isEmpty {
+            SharedData.libreLinkUpPatientId = patientId
+        }
+        let credentialsChanged =
+            username != existingUsername ||
+            password != existingPassword ||
+            ((snapshot.patientId ?? "").isEmpty == false && snapshot.patientId != existingPatientId)
+        if credentialsChanged {
+            SharedData.libreLinkUpToken = ""
+        }
+        UserDefaults.group.connected = .connected
+        if credentialsChanged || !hasToken {
+            await LibreLinkUpService.shared.requestReloadIfNeeded(force: true)
         } else {
-            Task { @MainActor in
-                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-            }
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+        }
+    }
+
+    @MainActor
+    private func applyDexcomShareCredentials(from snapshot: SettingsSnapshotPayload) async {
+        guard snapshot.hasValidCredentials,
+              let username = snapshot.dexcomShareUsername, !username.isEmpty,
+              let regionRaw = snapshot.dexcomShareRegion, let region = ShareRegion(rawValue: regionRaw),
+              let password = snapshot.dexcomSharePassword, !password.isEmpty,
+              let accountId = snapshot.dexcomShareAccountId, !accountId.isEmpty else {
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            return
+        }
+
+        let existingUsername = SharedData.dexcomShareUsername
+        let existingPassword = ((try? DexcomShareTokenStore.read(.password)) ?? nil) ?? ""
+        let existingAccountId = ((try? DexcomShareTokenStore.read(.accountId)) ?? nil) ?? ""
+        let hadSession = !(((try? DexcomShareTokenStore.read(.sessionId)) ?? nil) ?? "").isEmpty
+
+        SharedData.dexcomShareUsername = username
+        SharedData.dexcomShareRegion = region
+        try? DexcomShareTokenStore.save(password, kind: .password)
+        try? DexcomShareTokenStore.save(accountId, kind: .accountId)
+        if let sessionId = snapshot.dexcomShareSessionId, !sessionId.isEmpty {
+            try? DexcomShareTokenStore.save(sessionId, kind: .sessionId)
+            // Also publish into the watch's app group so the watch widget's
+            // reload gate (`canActiveProviderReload`) passes immediately —
+            // the widget can't read the watch keychain.
+            SharedData.dexcomShareSessionId = sessionId
+        }
+        UserDefaults.group.connected = .connected
+
+        let credentialsChanged =
+            username != existingUsername ||
+            password != existingPassword ||
+            accountId != existingAccountId
+        if credentialsChanged || !hadSession {
+            await LibreLinkUpService.shared.requestReloadIfNeeded(force: true)
+        } else {
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
         }
     }
 
@@ -654,6 +847,18 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     }
 
 #if os(iOS)
+    // NOTE: sent with `useApplicationContext: true`, so it's merged into the WC
+    // application context under the "lowGlucoseAlert" key (a sibling of the
+    // "libreLinkUpSnapshot" key, not nested inside it). Application context is
+    // latest-state storage, not a queue: the value lingers until a newer alert
+    // overwrites it, and the system *replays the whole context* to the watch on
+    // every session activation / reachability change (see deliverApplicationCtx
+    // → received). So the watch will see this same alert re-delivered repeatedly
+    // — alongside the snapshot — especially under Xcode where each relaunch
+    // re-activates the session. That's expected and harmless: the watch's
+    // `sentAt` staleness guard drops any replay older than its window. If a
+    // future change needs alerts to fire exactly once, switch them to
+    // transferUserInfo (FIFO, delivered once) or clear this key after consume.
     func sendLowGlucoseAlertToWatch(title: String, subtitle: String, body: String, sentAt: Date) {
         let payload = LowGlucoseAlertPayload(
             title: title,

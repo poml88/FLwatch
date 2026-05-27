@@ -35,20 +35,27 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
         }
     }
 
-    static func getLastGlucoseMeasurement(maxAgeMinutes: Int = 1,
+    static func getLastGlucoseMeasurement(maxAgeMinutes: Int? = nil,
                                           forceReload: Bool = false) async throws -> GlucoseMeasurementIOBEntry {
-        guard !(SharedData.libreLinkUpUserId.isEmpty || SharedData.libreLinkUpToken.isEmpty) else {
+        // The reload gate is about whether a *network* fetch is feasible here.
+        // It is not a precondition for *displaying* a value: persisted history
+        // can be fresher than the gate, e.g. when the phone re-authenticated
+        // and pushed new readings via WatchConnectivity after the widget's
+        // own session expired and was cleared.
+        if SharedData.canActiveProviderReload {
+            _ = await LibreLinkUpService.shared.requestReloadIfNeeded(maxAgeMinutes: maxAgeMinutes, force: forceReload)
+        }
+
+        if let entry = await entryFromHistory() {
+            return entry
+        }
+
+        if !SharedData.canActiveProviderReload {
             throw NSError(domain: "MissingSettings", code: -5,
-                          userInfo: [NSLocalizedDescriptionKey: "Missing UserId or Token"])
+                          userInfo: [NSLocalizedDescriptionKey: "Missing CGM credentials"])
         }
-
-        _ = await LibreLinkUpService.shared.requestReloadIfNeeded(maxAgeMinutes: maxAgeMinutes, force: forceReload)
-
-        guard let entry = await entryFromHistory() else {
-            throw NSError(domain: "ResponseError", code: -3,
-                          userInfo: [NSLocalizedDescriptionKey: "No glucose item found in history."])
-        }
-        return entry
+        throw NSError(domain: "ResponseError", code: -3,
+                      userInfo: [NSLocalizedDescriptionKey: "No glucose item found in history."])
     }
 
     @MainActor

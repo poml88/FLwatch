@@ -9,22 +9,22 @@ import SwiftUI
 import OSLog
 
 struct ContentView: View {
-    
+
 //    @StateObject var watchConnector = WatchConnectivityManager()
-    
+
     @State var selectedTab = "Home"
-    
+
     var body: some View {
         TabView (selection:$selectedTab){
-            
-            PhoneAppHomeView()
-                .tabItem { 
+
+            PhoneAppHomeView(selectedTab: $selectedTab)
+                .tabItem {
                     Image(systemName: "house")
 //                    Text ("Tab 1")
                 }
                 .tag("Home")
-            
-            
+
+
             PhoneAppConnectView()
 //                .environmentObject(watchConnector)
                 .tabItem {
@@ -32,14 +32,14 @@ struct ContentView: View {
 //                    Text ("Tab 2")
                 }
                 .tag("Connect")
-            
+
             PhoneAppSettingsView()
                 .tabItem {
                     Image(systemName: "gear")
 //                    Text ("Tab 2")
                 }
                 .tag("Settings")
-            
+
             PhoneAppDonateView()
                 .tabItem {
                     Image(systemName: "hand.thumbsup")

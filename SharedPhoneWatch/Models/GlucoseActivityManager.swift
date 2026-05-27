@@ -4,7 +4,7 @@ import OSLog
 
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
-    private static let maxGraphPoints = 72
+    private static let maxGraphPoints = 74 // 6h10m at 5-min cadence; keep the newest, drop anything older
     private static let maxMinutePoints = 48
     private static let foregroundRestartThreshold: TimeInterval = 60 * 60
 
@@ -83,17 +83,17 @@ final class LiveActivityManager {
             let showActivityCurve = SharedData.showActivityCurvePhone
             let showInsulinDeliveryMarks = SharedData.showInsulinDeliveryMarksPhone
 
-            let graphPoints = Array(history.libreLinkUpGlucose
+            let graphPoints = history.libreLinkUpGlucose
                 .filter { $0.glucose.date >= cutoffDate }
                 .sorted { $0.glucose.date < $1.glucose.date }
-                .suffix(Self.maxGraphPoints)
+                .suffix(Self.maxGraphPoints) // keep the newest, drop anything older
                 .map {
                     FLWatchAttributes.GraphPoint(
                         timestamp: $0.glucose.date,
                         valueInMgPerDl: $0.glucose.value,
                         colorRawValue: $0.color.rawValue
                     )
-                })
+                }
 
             let minutePoints = Array(history.libreLinkUpMinuteGlucose
                 .filter { $0.glucose.date >= cutoffDate }
@@ -233,6 +233,8 @@ final class LiveActivityManager {
     }
 }
 private extension Array {
+    /// Evenly downsamples to `maxCount` elements (keeping the first and last),
+    /// or returns the array unchanged when it already fits.
     func sampled(maxCount: Int) -> [Element] {
         guard count > maxCount, maxCount > 1 else {
             return self

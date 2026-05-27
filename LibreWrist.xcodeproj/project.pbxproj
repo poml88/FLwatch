@@ -60,8 +60,6 @@
 		7B435CD02C6D5103006F6E53 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CCF2C6D5103006F6E53 /* Date.swift */; };
 		7B435CD42C6D57F5006F6E53 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CD32C6D57F5006F6E53 /* String.swift */; };
 		7B45C5392F756BC000203B4C /* BluetoothHeartbeatManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B45C5382F756BC000203B4C /* BluetoothHeartbeatManager.swift */; };
-		7BF0A0122FA4000200C0D001 /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF0A0112FA4000200C0D001 /* CarPlaySceneDelegate.swift */; };
-		7BF92A5D2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF92A5C2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift */; };
 		7B462BFD2C7FBAC8003FEDC3 /* MeasurementColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */; };
 		7B462BFE2C7FC46A003FEDC3 /* MeasurementColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */; };
 		7B4855DF2DB58DC90089409E /* TimeDifferencePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */; };
@@ -69,6 +67,12 @@
 		7B5A9CD32E704F250076716A /* PasswordKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5A9CD12E704F200076716A /* PasswordKeychain.swift */; };
 		7B5CD22A2C946D330066B92B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */; };
 		7B5CD22B2C946D340066B92B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */; };
+		7B62EDAE2FACD18900C9502B /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDAD2FACD18200C9502B /* CGMProvider.swift */; };
+		7B62EDAF2FACD18900C9502B /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDAD2FACD18200C9502B /* CGMProvider.swift */; };
+		7B62EDB02FACD18900C9502B /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDAD2FACD18200C9502B /* CGMProvider.swift */; };
+		7B62EDB12FACD18900C9502B /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDAD2FACD18200C9502B /* CGMProvider.swift */; };
+		7B62EDB32FACD8E000C9502B /* PhoneAppCGMProviderPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDB22FACD8CD00C9502B /* PhoneAppCGMProviderPickerView.swift */; };
+		7B62EDB52FACD8FA00C9502B /* PhoneAppDexcomShareConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDB42FACD8F500C9502B /* PhoneAppDexcomShareConnectView.swift */; };
 		7B631AAC2CB85F6600CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
 		7B631AAD2CB85FB800CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
 		7B631AAE2CB85FBB00CE9EEF /* Reload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B631AAB2CB85F6600CE9EEF /* Reload.swift */; };
@@ -177,6 +181,7 @@
 		7BCA586A2C8A292600C50F11 /* SensorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCA58682C8A292600C50F11 /* SensorSettings.swift */; };
 		7BD2C65D2DC3BE6D0079EE4A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7BD2C65B2DC3BE6D0079EE4A /* InfoPlist.strings */; };
 		7BD2C65E2DC3BE6D0079EE4A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7BD2C65B2DC3BE6D0079EE4A /* InfoPlist.strings */; };
+		7BD574E22FBDF89400BE7E7D /* HeartbeatConnectionProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD574E12FBDF89400BE7E7D /* HeartbeatConnectionProfile.swift */; };
 		7BDB81292CB0893700F4A60F /* LibreLinkUpGlucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B299A162C90B089002A15C8 /* LibreLinkUpGlucose.swift */; };
 		7BDB812C2CB089B100F4A60F /* MeasurementColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */; };
 		7BDB812D2CB089B400F4A60F /* TrendArrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC51F502C7C8413009542D2 /* TrendArrow.swift */; };
@@ -193,6 +198,8 @@
 		7BF0A0032F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF0A0012F8A000100C0D001 /* AppleHealthExportManager.swift */; };
 		7BF0A0042F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF0A0012F8A000100C0D001 /* AppleHealthExportManager.swift */; };
 		7BF0A0052F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF0A0012F8A000100C0D001 /* AppleHealthExportManager.swift */; };
+		7BF0A0122FA4000200C0D001 /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF0A0112FA4000200C0D001 /* CarPlaySceneDelegate.swift */; };
+		7BF92A5D2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF92A5C2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift */; };
 		7BFD83572C84DF6200A9B195 /* InsulinObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD83562C84DF6200A9B195 /* InsulinObjects.swift */; };
 		7BFD83582C84DF6200A9B195 /* InsulinObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD83562C84DF6200A9B195 /* InsulinObjects.swift */; };
 		7BFD835B2C84E48800A9B195 /* InsulinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD835A2C84E48800A9B195 /* InsulinModel.swift */; };
@@ -314,11 +321,13 @@
 		7B435CD32C6D57F5006F6E53 /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		7B435CD52C6D5C1D006F6E53 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7B45C5382F756BC000203B4C /* BluetoothHeartbeatManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothHeartbeatManager.swift; sourceTree = "<group>"; };
-		7BF92A5C2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LowGlucoseNotificationManager.swift; sourceTree = "<group>"; };
 		7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasurementColor.swift; sourceTree = "<group>"; };
 		7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeDifferencePicker.swift; sourceTree = "<group>"; };
 		7B5A9CD12E704F200076716A /* PasswordKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordKeychain.swift; sourceTree = "<group>"; };
 		7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		7B62EDAD2FACD18200C9502B /* CGMProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGMProvider.swift; sourceTree = "<group>"; };
+		7B62EDB22FACD8CD00C9502B /* PhoneAppCGMProviderPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppCGMProviderPickerView.swift; sourceTree = "<group>"; };
+		7B62EDB42FACD8F500C9502B /* PhoneAppDexcomShareConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppDexcomShareConnectView.swift; sourceTree = "<group>"; };
 		7B631AAB2CB85F6600CE9EEF /* Reload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reload.swift; sourceTree = "<group>"; };
 		7B69F7C22CDD74DF00E3A50C /* Localizable.oldwatchstrings */ = {isa = PBXFileReference; lastKnownFileType = text; path = Localizable.oldwatchstrings; sourceTree = "<group>"; };
 		7B7790B92E599B9D00DE6B01 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -378,11 +387,13 @@
 		7BCA58682C8A292600C50F11 /* SensorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorSettings.swift; sourceTree = "<group>"; };
 		7BD2C65C2DC3BE6D0079EE4A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7BD2C65F2DC3BEC60079EE4A /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		7BD574E12FBDF89400BE7E7D /* HeartbeatConnectionProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartbeatConnectionProfile.swift; sourceTree = "<group>"; };
 		7BDB81312CB09AF800F4A60F /* LLUHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLUHeaders.swift; sourceTree = "<group>"; };
 		7BDF0A702DBA40D500852BAD /* ReadGlucose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadGlucose.swift; sourceTree = "<group>"; };
 		7BDF0A7B2DBB886400852BAD /* FLwatchShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLwatchShortcuts.swift; sourceTree = "<group>"; };
-		7BF0A0112FA4000200C0D001 /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
 		7BF0A0012F8A000100C0D001 /* AppleHealthExportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleHealthExportManager.swift; sourceTree = "<group>"; };
+		7BF0A0112FA4000200C0D001 /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
+		7BF92A5C2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LowGlucoseNotificationManager.swift; sourceTree = "<group>"; };
 		7BFD83562C84DF6200A9B195 /* InsulinObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinObjects.swift; sourceTree = "<group>"; };
 		7BFD835A2C84E48800A9B195 /* InsulinModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InsulinModel.swift; sourceTree = "<group>"; };
 		7BFD835D2C84E48E00A9B195 /* ExponentialInsulinModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExponentialInsulinModel.swift; sourceTree = "<group>"; };
@@ -406,6 +417,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		7B62ED7A2FACC97700C9502B /* Dexcom */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Dexcom; sourceTree = "<group>"; };
 		7BDF0A832DBBB3AA00852BAD /* Localizations */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7B3931622E58697800E2406E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7B3931632E58697800E2406E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Localizations; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -516,6 +528,8 @@
 		7B3EA4FE2C6C0B1A0061F239 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				7B62EDAD2FACD18200C9502B /* CGMProvider.swift */,
+				7B62ED7A2FACC97700C9502B /* Dexcom */,
 				7B299A0A2C90AF8C002A15C8 /* AuthTicket.swift */,
 				7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */,
 				7BA3043B2F5E31E8005384BF /* FileStoreHelper.swift */,
@@ -591,6 +605,7 @@
 			isa = PBXGroup;
 			children = (
 				7B45C5382F756BC000203B4C /* BluetoothHeartbeatManager.swift */,
+				7BD574E12FBDF89400BE7E7D /* HeartbeatConnectionProfile.swift */,
 				7BF0A0112FA4000200C0D001 /* CarPlaySceneDelegate.swift */,
 				7BF92A5C2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift */,
 				7BA0AE2C2C582F63004226FE /* LibreWristApp.swift */,
@@ -691,7 +706,9 @@
 			children = (
 				7BA0AE2E2C582F63004226FE /* ContentView.swift */,
 				7BA0AE5A2C5AE980004226FE /* PhoneAppHomeView.swift */,
+				7B62EDB22FACD8CD00C9502B /* PhoneAppCGMProviderPickerView.swift */,
 				7BA0AE562C5834F6004226FE /* PhoneAppConnectView.swift */,
+				7B62EDB42FACD8F500C9502B /* PhoneAppDexcomShareConnectView.swift */,
 				7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */,
 				7BA0AE5C2C5AEB89004226FE /* PhoneAppDonateView.swift */,
 				7B183E9A2C84C9540018A24F /* PhoneAppInsulinDeliveryView.swift */,
@@ -726,6 +743,9 @@
 			);
 			dependencies = (
 			);
+			fileSystemSynchronizedGroups = (
+				7B62ED7A2FACC97700C9502B /* Dexcom */,
+			);
 			name = FLwatchWidgetExtension;
 			productName = LibreWristWidgetExtension;
 			productReference = 7B022C992CADDBE800CA64B4 /* FLwatchWidgetExtension.appex */;
@@ -742,6 +762,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7B62ED7A2FACC97700C9502B /* Dexcom */,
 			);
 			name = FlwatchWatchWidgetExtension;
 			productName = LibreWristWatchWidgetExtension;
@@ -765,6 +788,7 @@
 				7B022CA72CADDBEA00CA64B4 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+				7B62ED7A2FACC97700C9502B /* Dexcom */,
 				7BDF0A832DBBB3AA00852BAD /* Localizations */,
 			);
 			name = FLwatch;
@@ -825,6 +849,7 @@
 				7B2E7EB62CB59C9500A3473B /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+				7B62ED7A2FACC97700C9502B /* Dexcom */,
 				7BDF0A832DBBB3AA00852BAD /* Localizations */,
 			);
 			name = FLwatchWatchApp;
@@ -977,6 +1002,7 @@
 				7B435CCC2C6D46DF006F6E53 /* Logger.swift in Sources */,
 				7BADE0232C73EB450074A47F /* GlucoseUnit.swift in Sources */,
 				7BADE01D2C73E4E70074A47F /* Int.swift in Sources */,
+				7B62EDB12FACD18900C9502B /* CGMProvider.swift in Sources */,
 				7BADE0212C73EB060074A47F /* Double.swift in Sources */,
 				7A1F7C0C2FDF000100A1B2C3 /* FLwatchFullGraphWidget.swift in Sources */,
 				7A1F7C102FDF000300A1B2C3 /* FullGraphGlucoseMeasurementIOBEntry.swift in Sources */,
@@ -1034,6 +1060,7 @@
 				7B2E7EBF2CB59FA600A3473B /* GlucoseMeasurement.swift in Sources */,
 				7B2E7EBE2CB59DEB00A3473B /* GlucoseMeasurementIOBEntry.swift in Sources */,
 				7BDF0A6F2DBA392100852BAD /* Reload.swift in Sources */,
+				7B62EDAE2FACD18900C9502B /* CGMProvider.swift in Sources */,
 				7B2E7EC62CB5A05700A3473B /* String.swift in Sources */,
 				7B2E7EB12CB59C9300A3473B /* LibreWristWatchWidget.swift in Sources */,
 				7B2E7EC12CB59FCC00A3473B /* MeasurementColor.swift in Sources */,
@@ -1065,6 +1092,8 @@
 				7B462BFD2C7FBAC8003FEDC3 /* MeasurementColor.swift in Sources */,
 				7BA304182F5E30B0005384BF /* Int.swift in Sources */,
 				7BA567992CBA974D003244EE /* MailView.swift in Sources */,
+				7B62EDB52FACD8FA00C9502B /* PhoneAppDexcomShareConnectView.swift in Sources */,
+				7BD574E22FBDF89400BE7E7D /* HeartbeatConnectionProfile.swift in Sources */,
 				7B8965452DC17399003A50CE /* PhoneAppSiriSheetView.swift in Sources */,
 				7B183E9B2C84C9540018A24F /* PhoneAppInsulinDeliveryView.swift in Sources */,
 				7B4855DF2DB58DC90089409E /* TimeDifferencePicker.swift in Sources */,
@@ -1100,9 +1129,11 @@
 				7B631AAC2CB85F6600CE9EEF /* Reload.swift in Sources */,
 				7B299A142C90B06C002A15C8 /* GlucoseMeasurement.swift in Sources */,
 				7BA0AE2F2C582F63004226FE /* ContentView.swift in Sources */,
+				7B62EDAF2FACD18900C9502B /* CGMProvider.swift in Sources */,
 				7BA0AE2D2C582F63004226FE /* LibreWristApp.swift in Sources */,
 				7B8965422DC156E9003A50CE /* WatchConnectivityManager.swift in Sources */,
 				7B096C9E2E33FB0900B6744C /* WatchAppGraphView.swift in Sources */,
+				7B62EDB32FACD8E000C9502B /* PhoneAppCGMProviderPickerView.swift in Sources */,
 				7BA304222F5E30B0005384BF /* LibreLinkUpAlarm.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1154,6 +1185,7 @@
 				7BA3042B2F5E30B0005384BF /* Logger.swift in Sources */,
 				7BDB81332CB09AF800F4A60F /* LLUHeaders.swift in Sources */,
 				7BA3042C2F5E30B0005384BF /* SensorSettings.swift in Sources */,
+				7B62EDB02FACD18900C9502B /* CGMProvider.swift in Sources */,
 				7BFD835C2C84E48800A9B195 /* InsulinModel.swift in Sources */,
 				7BC51F522C7C8413009542D2 /* TrendArrow.swift in Sources */,
 				7BFD835F2C84E48E00A9B195 /* ExponentialInsulinModel.swift in Sources */,

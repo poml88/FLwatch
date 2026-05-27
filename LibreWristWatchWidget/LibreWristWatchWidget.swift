@@ -42,9 +42,66 @@ struct LibreWristWidgetEntryView : View {
             return "\(String(format: "%.1f", entry.currentIOB))u"
         }
     }
-    
+
+    /// True when the active provider has no credential the widget process can
+    /// use to fetch *and* the cached reading is already stale. The widget
+    /// can't re-auth itself (no keychain access, see `PasswordKeychain`), so
+    /// the only useful action then is "open the app" — which is what a
+    /// default complication tap does. We surface that by drawing just a
+    /// reload arrow and skipping any Button wrapper that would otherwise
+    /// trigger a doomed reload intent.
+    ///
+    /// Freshness guard: while the phone is still pushing fresh snapshots over
+    /// WC, `LibreLinkUpHistory.lastReadingDate` keeps advancing even if the
+    /// watch's own token/session is empty. Showing the arrow in that window
+    /// would hide perfectly good data — so we only flip once history has
+    /// drifted past the provider's stale threshold (LLU 3 min, Dexcom 8 min).
+    private var needsManualReauth: Bool {
+        guard !SharedData.canActiveProviderReload else { return false }
+        let staleAfter = SharedData.cgmProviderKind.staleReadingAfter
+        return Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) > staleAfter
+    }
+
+    @ViewBuilder
+    private var reauthBody: some View {
+        switch family {
+        case .accessoryInline:
+            // Inline can only render a single line of text — no images.
+            Text(verbatim: "↻ Open FLwatch")
+                .containerBackground(.background, for: .widget)
+        case .accessoryCorner:
+            Image(systemName: "arrow.clockwise")
+                .font(.system(size: 18, weight: .heavy))
+                .widgetCurvesContent()
+                .containerBackground(.background, for: .widget)
+        case .accessoryRectangular:
+            HStack(spacing: 10) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 34, weight: .heavy))
+                    .containerBackground(for: .widget) { EmptyView() }
+                Text("Open\nFLwatch")
+            }
+        case .accessoryCircular:
+            Image(systemName: "arrow.clockwise")
+                .font(.system(size: 26, weight: .heavy))
+                .containerBackground(.background, for: .widget)
+        default:
+            Image("AppIcon")
+                .containerBackground(.background, for: .widget)
+        }
+    }
+
     @ViewBuilder
     var body: some View {
+        if needsManualReauth {
+            reauthBody
+        } else {
+            normalBody
+        }
+    }
+
+    @ViewBuilder
+    private var normalBody: some View {
         switch family {
 
         case .accessoryCircular:

@@ -48,7 +48,12 @@ struct PhoneAppHomeView: View {
     @State private var isShowingDisclaimer = false
     @State private var isShowingWelcomeMessage = false
     @State private var isShowingNotification = false
+    @State private var showsProviderPicker = false
     @State private var isShowingInsulinDeliverySheet = false
+
+    /// Bound to ContentView's tab selection so the first-launch picker can send
+    /// the user straight to the Connect tab after choosing a provider.
+    @Binding var selectedTab: String
 //    @State private var currentIOB: Double = 0.0
 //    @State private var scrollPosition: Date = Date.now
 //    @State private var sensorSettings = SensorSettings()
@@ -66,7 +71,9 @@ struct PhoneAppHomeView: View {
     private let safeRange: ClosedRange<Int> = 70...180
     private let allowedHours = 0...24
     private let minimumDaysOfUse = 10
-    private let defaultOverlayConnectionMessage = String(localized: "Check that Libre app is running.")
+    private var defaultOverlayConnectionMessage: String {
+        lluService.activeProvider.noDataReceivedHint
+    }
     
     // -------------------------------------
     private let startupUpdateNote: StartupUpdateNote? = nil
@@ -156,9 +163,27 @@ struct PhoneAppHomeView: View {
         } message: {
             Text("Your feedback helps us improve and makes it easier for others with diabetes to discover the app. And it motivates to continue the work. 😊\nWould you like to leave a quick review?")
         }
-        
+
+        // First-launch CGM picker. Presented only after the welcome/disclaimer/
+        // update-note alerts have all been dismissed (see evaluateProviderPicker).
+        .fullScreenCover(isPresented: $showsProviderPicker) {
+            PhoneAppCGMProviderPickerView { kind in
+                LibreLinkUpService.shared.switchProvider(to: kind)
+                // Mirror the picked provider to the watch right away.
+                WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()
+                showsProviderPicker = false
+                selectedTab = "Connect"
+            }
+            .interactiveDismissDisabled(true)
+        }
+        // Each startup alert chains to the next via SwiftUI's one-at-a-time
+        // presentation; the picker waits until the last one closes.
+        .onChange(of: isShowingWelcomeMessage) { evaluateProviderPicker() }
+        .onChange(of: isShowingDisclaimer)     { evaluateProviderPicker() }
+        .onChange(of: isShowingNotification)   { evaluateProviderPicker() }
+
         .onReceive(timer) { time in
-            print("Timer") // Timer fires as well when on a different tab, for example settings tab
+            Logger.viewDebug.debug("Timer") // Timer fires as well when on a different tab, for example settings tab
             
 
             
@@ -186,7 +211,12 @@ struct PhoneAppHomeView: View {
                SharedData.hasSeenNotification(version: startupUpdateNote.version) == false {
                 isShowingNotification = true
             }
-            
+
+            // If no startup alert needs showing, the picker can come up right
+            // away; otherwise the onChange handlers trigger it after the last
+            // alert is dismissed.
+            evaluateProviderPicker()
+
             //MARK: Skip the following on app start
             if onAppearNotToDoFirstStart == false { // not to do on first start
                 
@@ -256,8 +286,8 @@ struct PhoneAppHomeView: View {
                 }
             }
             
-            let minutesSinceLastReadingOverlay = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
-            if minutesSinceLastReadingOverlay >= 3 && lluService.isReloading == false {
+            let secondsSinceLastReadingOverlay = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate)
+            if secondsSinceLastReadingOverlay >= lluService.activeProvider.staleReadingAfter && lluService.isReloading == false {
                 ZStack {
                     Color(white: 0, opacity: 0.5)
                         .cornerRadius(10)
@@ -380,12 +410,37 @@ struct PhoneAppHomeView: View {
 
     }
    
+    /// First-launch picker is shown only when no provider has been chosen and
+    /// no LibreLinkUp credentials carry over from a 2.0.6 install (decision 7.5).
+    /// Existing LibreLinkUp users skip it and silently default to `.libreLinkUp`.
+    private static func shouldShowFirstLaunchPicker() -> Bool {
+        let store = UserDefaults.group
+        let providerKindIsExplicitlySet = store.object(forKey: DefaultsKey.cgmProviderKind.rawValue) != nil
+        if providerKindIsExplicitlySet { return false }
+        return store.username.isEmpty
+    }
+
+    /// Shows the first-launch CGM picker, but only once every startup alert has
+    /// been dismissed — preserving the fresh-install order
+    /// Welcome → Warning → Update note → CGM picker. Called from `onAppear` and
+    /// from each alert's `onChange`, so it re-checks after every dismissal.
+    private func evaluateProviderPicker() {
+        guard !showsProviderPicker else { return }
+        guard !isShowingWelcomeMessage,
+              !isShowingDisclaimer,
+              !isShowingNotification else { return }
+        guard Self.shouldShowFirstLaunchPicker() else { return }
+        // Defer one runloop tick so a just-dismissed alert finishes animating
+        // out before the full-screen cover animates in.
+        DispatchQueue.main.async { showsProviderPicker = true }
+    }
+
     private func reloadAndUpdateMinutes(
         refreshLiveActivity: Bool = false,
         trigger: String,
         liveActivityRestartThreshold: TimeInterval? = nil
     ) {
-        print("reloadAndUpdateMinutes() [\(trigger)]")
+        Logger.viewDebug.debug("reloadAndUpdateMinutes() [\(trigger, privacy: .public)]")
         Task {
             await lluService.requestReloadIfNeeded()
             if refreshLiveActivity {
@@ -451,8 +506,8 @@ struct GlucoseValueView: View {
 
 
 #Preview {
-    PhoneAppHomeView()
-    
+    PhoneAppHomeView(selectedTab: .constant("Home"))
+
 //        .environment(History.test)
 //        .environment(LibreLinkUpHistory.mock)
 }

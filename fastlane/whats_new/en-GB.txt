@@ -1,2 +1,2 @@
-* full CarPlay support
-* Note: FLwatch currently supports the LibreLinkUp 4.x.x API. Abbott has released API 5.0.0, which is not yet supported. If Abbott disables API 4.x in the future, glucose data in FLwatch may stop working without notice. IOB-related features will still continue to work.
+* add Dexcom Share support
+* other bugfixes

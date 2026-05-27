@@ -315,10 +315,12 @@ private struct FullGraphWidgetChart: View {
             .opacity(0.2)
             .foregroundStyle(rangeColorIfGlucoseGreen)
             
-            RuleMark(y: .value("Lower limit", alarmLow))
-                .foregroundStyle(.red)
-                .lineStyle(.init(lineWidth: 1, dash: [2]))
-            
+            if entry.alarmLow >= SensorSettings.minDrawableAlarmMgDl {
+                RuleMark(y: .value("Lower limit", alarmLow))
+                    .foregroundStyle(.red)
+                    .lineStyle(.init(lineWidth: 1, dash: [2]))
+            }
+
             ForEach(entry.graph) { item in
                 var strokeColor: Color { colorScheme == .dark ? item.color.color : .black }
                 LineMark(

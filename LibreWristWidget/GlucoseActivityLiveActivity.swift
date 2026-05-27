@@ -249,7 +249,10 @@ private struct MediumSupplementalActivityView: View {
     let contentState: FLWatchAttributes.ContentState
     
     var body: some View {
-        let isUpdateUI: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.updateUIAfterInterval) <= Date()
+        // Show the manual-refresh affordance once a new reading is overdue by
+        // one source cadence (Libre 1 min, Dexcom 5 min).
+        let updateUIAfter = TimeInterval(SharedData.cgmProviderKind.cadenceMinutes * 60)
+        let isUpdateUI: Bool = contentState.latestTimestamp.addingTimeInterval(updateUIAfter) <= Date()
         let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
 
         VStack (spacing: 8){
@@ -427,9 +430,11 @@ private struct GlucoseLiveActivityChart: View {
             .opacity(0.2)
             .foregroundStyle(.green)
 
-            RuleMark(y: .value("Lower limit", alarmLow))
-                .foregroundStyle(.red)
-                .lineStyle(.init(lineWidth: 1, dash: [2]))
+            if contentState.alarmLow >= SensorSettings.minDrawableAlarmMgDl {
+                RuleMark(y: .value("Lower limit", alarmLow))
+                    .foregroundStyle(.red)
+                    .lineStyle(.init(lineWidth: 1, dash: [2]))
+            }
 
             ForEach(contentState.graphPoints) { point in
                 LineMark(
