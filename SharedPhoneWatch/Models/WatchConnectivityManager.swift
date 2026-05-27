@@ -70,6 +70,10 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         let dexcomShareRegion: String?
         let dexcomSharePassword: String?
         let dexcomShareAccountId: String?
+        // Also pushed separately on BG re-auth via `sendDexcomShareSessionToWatch`
+        // (see comment there). The two paths overlap by design — both writes
+        // are idempotent; the settings snapshot covers user-facing events,
+        // the dedicated push covers background re-auths.
         let dexcomShareSessionId: String?
         // Sensor settings (unit, target/alarm range) and sensor type. Share
         // doesn't return these, so the phone is the source of truth and mirrors
@@ -592,6 +596,16 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     /// without going through a sessionInvalid round-trip first. Dexcom is
     /// observed to accept the same sessionId being used from multiple
     /// processes concurrently, so we don't worry about contention here.
+    ///
+    /// Intentional overlap with `SettingsSnapshotPayload.dexcomShareSessionId`:
+    /// the settings snapshot also carries the session, but is only sent on
+    /// user-facing events (Settings/Connect/Home view, initial connect). It
+    /// does NOT fire from background re-auths — which is exactly when the
+    /// watch's session silently goes stale and the user wakes up to a frozen
+    /// widget. This dedicated push closes that gap. The overlap case (user
+    /// opens app right around a reauth) is benign: both writes are idempotent.
+    /// Don't "dedupe" by dropping the field from the settings snapshot
+    /// without also adding an explicit push from the initial-connect path.
     func sendDexcomShareSessionToWatch(_ sessionId: String) {
         guard !sessionId.isEmpty else { return }
         let messageToWatch: [String: Any] = [
