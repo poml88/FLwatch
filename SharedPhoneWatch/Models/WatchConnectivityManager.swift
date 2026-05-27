@@ -24,6 +24,13 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     private static let requestSettingsSnapshotContent = "requestSettingsSnapshot"
     private static let lowGlucoseAlertContent = "lowGlucoseAlert"
     private static let lowGlucoseAlertDataKey = "lowGlucoseAlertData"
+    /// Phone → watch nudge: a fresh Dexcom Share sessionId after the phone
+    /// re-authenticated. The watch persists it so its own next reload skips
+    /// the dead-session round-trip. LLU has no equivalent because its bearer
+    /// token has a multi-month lifetime and gets refreshed rarely enough that
+    /// the existing settings-snapshot path already covers it.
+    private static let dexcomShareSessionContent = "dexcomShareSession"
+    private static let dexcomShareSessionIdKey = "dexcomShareSessionId"
 #if os(watchOS)
     private static let watchLowGlucoseNotificationIdentifierPrefix = "watch-low-glucose-alert"
     private static let watchLowGlucoseAlertFreshness: TimeInterval = 3 * 60
@@ -369,6 +376,23 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             }
         }
 
+#if os(watchOS)
+        if message["content"] as? String == Self.dexcomShareSessionContent {
+            guard let sessionId = message[Self.dexcomShareSessionIdKey] as? String,
+                  !sessionId.isEmpty else {
+                Logger.connectivity.error("Missing Dexcom sessionId in refresh message")
+                return
+            }
+            do {
+                try DexcomShareTokenStore.save(sessionId, kind: .sessionId)
+                SharedData.dexcomShareSessionId = sessionId
+                Logger.connectivity.info("Applied fresh Dexcom sessionId from WatchConnectivity")
+            } catch {
+                Logger.connectivity.error("Failed to persist Dexcom sessionId: \(error.localizedDescription)")
+            }
+        }
+#endif
+
         if message["content"] as? String == Self.lowGlucoseAlertContent {
             guard let alertData = message[Self.lowGlucoseAlertDataKey] as? Data else {
                 Logger.connectivity.error("Missing low glucose alert data in message")
@@ -561,6 +585,21 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             }
         }
     }
+
+    /// Phone → watch: notify the watch that the phone just minted a fresh
+    /// Dexcom Share sessionId. Watch persists it to keychain + app group so
+    /// the watch widget's reload gate opens again and its next tick can fetch
+    /// without going through a sessionInvalid round-trip first. Dexcom is
+    /// observed to accept the same sessionId being used from multiple
+    /// processes concurrently, so we don't worry about contention here.
+    func sendDexcomShareSessionToWatch(_ sessionId: String) {
+        guard !sessionId.isEmpty else { return }
+        let messageToWatch: [String: Any] = [
+            "content": Self.dexcomShareSessionContent,
+            Self.dexcomShareSessionIdKey: sessionId
+        ]
+        sendMessageToPairedDevice(messageToWatch)
+    }
 #endif
     
     func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
@@ -610,6 +649,19 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     
     private override init(){
         super.init()
+#if os(iOS)
+        // Bridge `DexcomShareProvider` re-auths to the watch without giving
+        // the provider a compile-time dependency on this class (the provider
+        // is built into widget targets that don't link WC).
+        NotificationCenter.default.addObserver(
+            forName: .dexcomShareSessionDidRefresh,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            guard let sessionId = note.object as? String else { return }
+            self?.sendDexcomShareSessionToWatch(sessionId)
+        }
+#endif
     }
 
     private func applySettingsSnapshot(_ snapshot: SettingsSnapshotPayload) {

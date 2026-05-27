@@ -1034,6 +1034,8 @@ class LibreLinkUp  {
         }
     }
     
+#if FALSE
+    // currently unused - to be removed in the future
     func getLastGlucoseDataXXX(completion: @escaping (LibreLinkUpLastGlucoseEntry?, Any?) -> ()) {
         if !(SharedData.libreLinkUpUserId.isEmpty ||
              SharedData.libreLinkUpToken.isEmpty) {
@@ -1083,7 +1085,8 @@ class LibreLinkUp  {
         }
     }
     
-    func getLastGlucoseData() async throws -> LibreLinkUpLastGlucoseEntry { // for AppIntent
+    // currently unused - to be removed in the future
+    func getLastGlucoseDataYYY() async throws -> LibreLinkUpLastGlucoseEntry { // for AppIntent
         if !(SharedData.libreLinkUpUserId.isEmpty ||
              SharedData.libreLinkUpToken.isEmpty) {
             var request = URLRequest(url: URL(string: "\(regionalSiteURL)/llu/connections")!)
@@ -1121,4 +1124,5 @@ class LibreLinkUp  {
         }
         return LibreLinkUpLastGlucoseEntry(date: Date(), glucoseMeasurement: GlucoseMeasurement(factoryTimestamp: "", timestamp: "", type: 0, alarmType: 3, valueInMgPerDl: 0, trendArrow: .stable, trendMessage: "", measurementColor: .green, glucoseUnits: 1, value: 0, isHigh: false, isLow: false), currentIOB: 0.0)
     }
+    #endif
 }

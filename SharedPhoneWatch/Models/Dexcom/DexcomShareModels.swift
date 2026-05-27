@@ -254,7 +254,22 @@ extension DexcomShareError: LocalizedError {
         case .malformedResponse(let detail):
             return "Unexpected Dexcom response: \(detail)"
         case .network(let error):
-            return error.localizedDescription
+            switch error.code {
+            case .timedOut:
+                return String(localized: "Dexcom request timed out.")
+            case .notConnectedToInternet,
+                 .internationalRoamingOff,
+                 .dataNotAllowed,
+                 .callIsActive:
+                return String(localized: "No internet connection.")
+            case .networkConnectionLost,
+                 .cannotConnectToHost,
+                 .cannotFindHost,
+                 .dnsLookupFailed:
+                return String(localized: "Could not reach Dexcom servers.")
+            default:
+                return error.localizedDescription
+            }
         case .http(let status, _, let message):
             return "Dexcom error (HTTP \(status)): \(message ?? "no body")"
         case .other(let code, let message):

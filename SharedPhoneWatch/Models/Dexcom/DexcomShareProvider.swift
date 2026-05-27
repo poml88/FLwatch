@@ -19,10 +19,8 @@ final class DexcomShareProvider: CGMProvider {
 
     let kind: CGMProviderKind = .dexcomShare
 
-    // Dexcom G7 / G6 / ONE+ all publish on a 5-min cadence (from the kind).
-    // Stale window is cadence + 3 min grace = 8 min — matches xdrip4ios's
-    // tolerance.
-    var staleReadingAfter: TimeInterval { 8 * 60 }
+    // Cadence and stale window come from `CGMProviderKind` (5 min cadence,
+    // 8 min stale = cadence + 3 min grace; matches xdrip4ios).
 
     // Throttle by cached-reading age, not call age. xdrip4ios uses the same
     // pattern: poll on triggers, but skip the network call if a reading
@@ -225,6 +223,7 @@ final class DexcomShareProvider: CGMProvider {
             )
             try DexcomShareTokenStore.save(newSessionId, kind: .sessionId)
             SharedData.dexcomShareSessionId = newSessionId
+            publishSessionIdToWatch(newSessionId)
             return
         }
 
@@ -234,6 +233,17 @@ final class DexcomShareProvider: CGMProvider {
         try DexcomShareTokenStore.save(accountId, kind: .accountId)
         try DexcomShareTokenStore.save(sessionId, kind: .sessionId)
         SharedData.dexcomShareSessionId = sessionId
+        publishSessionIdToWatch(sessionId)
+    }
+
+    /// Announce a freshly minted sessionId. The iOS side of
+    /// `WatchConnectivityManager` listens and forwards to the watch; on
+    /// watchOS (and in widget extensions that don't link WC) there's no
+    /// subscriber and the post is a no-op. Using NotificationCenter keeps
+    /// this provider free of any direct dependency on WC, the same pattern
+    /// `LibreWristUpdateNotifier` uses for data-change events.
+    private func publishSessionIdToWatch(_ sessionId: String) {
+        NotificationCenter.default.post(name: .dexcomShareSessionDidRefresh, object: sessionId)
     }
 
     /// Iterates through every Share region until one accepts the credentials.

@@ -43,14 +43,23 @@ struct LibreWristWidgetEntryView : View {
         }
     }
 
-    /// True when the active provider (Dexcom) has no usable session and the
-    /// widget can't refresh on its own. The widget process has no access to
-    /// the password, so the only useful action is "open the app" — which is
-    /// what a default complication tap does. We surface that by drawing just
-    /// a reload arrow and skipping any Button wrapper that would otherwise
+    /// True when the active provider has no credential the widget process can
+    /// use to fetch *and* the cached reading is already stale. The widget
+    /// can't re-auth itself (no keychain access, see `PasswordKeychain`), so
+    /// the only useful action then is "open the app" — which is what a
+    /// default complication tap does. We surface that by drawing just a
+    /// reload arrow and skipping any Button wrapper that would otherwise
     /// trigger a doomed reload intent.
+    ///
+    /// Freshness guard: while the phone is still pushing fresh snapshots over
+    /// WC, `LibreLinkUpHistory.lastReadingDate` keeps advancing even if the
+    /// watch's own token/session is empty. Showing the arrow in that window
+    /// would hide perfectly good data — so we only flip once history has
+    /// drifted past the provider's stale threshold (LLU 3 min, Dexcom 8 min).
     private var needsManualReauth: Bool {
-        SharedData.cgmProviderKind == .dexcomShare && !SharedData.canActiveProviderReload
+        guard !SharedData.canActiveProviderReload else { return false }
+        let staleAfter = SharedData.cgmProviderKind.staleReadingAfter
+        return Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) > staleAfter
     }
 
     @ViewBuilder

@@ -102,6 +102,7 @@ actor DexcomShareClient {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.timeoutInterval = 20
         // Match xdrip4ios's read-path shape exactly: only Accept + User-Agent;
         // no Content-Type; empty body. Some Share servers silently return `[]`
         // when given Content-Type: application/json with a stub `{}` body, so
@@ -177,6 +178,7 @@ actor DexcomShareClient {
     private func postAuthExpectingString(url: URL, body: [String: String]) async throws -> String {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.timeoutInterval = 20
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(DexcomShareConstants.userAgentAuth, forHTTPHeaderField: "User-Agent")
         request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])

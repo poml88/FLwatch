@@ -11,6 +11,14 @@ import OSLog
 
 extension Notification.Name {
     static let libreWristDataDidChange = Notification.Name("LibreWristDataDidChange")
+    /// Posted by `DexcomShareProvider` after a successful re-authentication.
+    /// `object` is the new sessionId (`String`). The iOS side of
+    /// `WatchConnectivityManager` subscribes and forwards it to the watch so
+    /// the watch widget's reload gate opens without waiting for the next
+    /// settings-snapshot send. Kept here (not in WC manager) so the provider
+    /// — which is compiled into widget targets that don't link WC — has no
+    /// compile-time dependency on WC.
+    static let dexcomShareSessionDidRefresh = Notification.Name("DexcomShareSessionDidRefresh")
 }
 
 enum LibreWristUpdateNotifier {

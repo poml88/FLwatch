@@ -27,6 +27,17 @@ enum CGMProviderKind: String, Codable {
         case .dexcomShare: return 5
         }
     }
+
+    /// Time after the last reading before consumers should consider data stale
+    /// and dim, warn, or hide it. Roughly `cadence + 3 min` grace. Sync and
+    /// non-isolated so widget extensions can use it (they only have the kind,
+    /// not a built provider instance).
+    var staleReadingAfter: TimeInterval {
+        switch self {
+        case .libreLinkUp: return 3 * 60
+        case .dexcomShare: return 8 * 60
+        }
+    }
 }
 
 // MARK: - Protocol
@@ -82,7 +93,7 @@ extension CGMProvider {
     // Libre-like defaults. LibreLinkUpProvider gets these for free,
     // preserving its previously-shipping behavior bit-for-bit.
     var cadenceMinutes: Int { kind.cadenceMinutes }
-    var staleReadingAfter: TimeInterval { 3 * 60 }
+    var staleReadingAfter: TimeInterval { kind.staleReadingAfter }
     var reloadThrottleByReadingAge: Bool { false }
     var reloadThrottleGraceSeconds: TimeInterval { 3 }
     var noDataReceivedHint: String { String(localized: "Check that Libre app is running.") }
