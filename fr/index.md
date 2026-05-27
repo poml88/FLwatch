@@ -102,12 +102,13 @@ D’autres types d’insuline peuvent être ajoutés sur demande.
 
 #### Intégration au système
 * Widgets iOS et widgets d’écran verrouillé avec et sans graphique(s)
-* Live Activities sur iPhone, y compris la recopie dans la pile intelligente de l’Apple Watch
+* Live Activities sur iPhone, y compris la recopie dans la pile intelligente de l’Apple Watch et dans CarPlay
 * Widget du mode veille
 * Widgets et complications watchOS
-* Prise en charge de CarPlay via les widgets et les Live Activities
+* Prise en charge de CarPlay via l’app CarPlay, les widgets et les Live Activities
 * Exportation des doses d’insuline et des données de glucose vers Apple Health
 * Prise en charge de Siri et Raccourcis pour afficher la glycémie, la lire à voix haute et enregistrer rapidement des doses d’insuline
+* Le heartbeat Bluetooth permet des mises à jour presque chaque minute ainsi que des alarmes de glycémie basse sur iPhone, Apple Watch et CarPlay
 
 ### Notes techniques
 FLwatch utilise le modèle exponentiel d’insuline de LoopKit. Le modèle utilise trois paramètres : `actionDuration`, `peakActivityTime` et `delay`.

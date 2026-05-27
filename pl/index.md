@@ -102,12 +102,13 @@ Na życzenie można dodać kolejne typy insuliny.
 
 #### Integracja systemowa
 * Widgety iOS oraz widgety ekranu blokady z wykresem i bez niego
-* Live Activities na iPhonie, w tym odzwierciedlenie w Smart Stack na Apple Watch
+* Live Activities na iPhonie, w tym odzwierciedlenie w Smart Stack na Apple Watch oraz w CarPlay
 * Widget trybu StandBy
 * Widgety i komplikacje watchOS
-* Obsługa CarPlay przez widgety i Live Activities
+* Obsługa CarPlay przez aplikację CarPlay, widgety i Live Activities
 * Eksport dawek insuliny i danych glukozy do Apple Health
 * Obsługa Siri i Skrótów do wyświetlania glukozy, odczytu glukozy na głos i szybkiego zapisywania dawek insuliny
+* Heartbeat Bluetooth umożliwia aktualizacje niemal co minutę oraz alarmy niskiej glukozy na iPhonie, Apple Watch i w CarPlay
 
 ### Uwagi techniczne
 FLwatch korzysta z wykładniczego modelu insuliny z LoopKit. Model używa trzech parametrów: `actionDuration`, `peakActivityTime` i `delay`.

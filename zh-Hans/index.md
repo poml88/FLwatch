@@ -102,12 +102,13 @@ FLwatch 还支持手动记录胰岛素，并内置碳水化合物换算胰岛素
 
 #### 系统集成
 * 带图表和不带图表的 iOS 小组件与锁屏小组件
-* iPhone 上的 Live Activities，包括镜像到 Apple Watch 智能叠放
+* iPhone 上的 Live Activities，包括镜像到 Apple Watch 智能叠放和 CarPlay
 * StandBy 模式小组件
 * watchOS 小组件和复杂功能
-* 通过小组件和 Live Activities 支持 CarPlay
+* 通过 CarPlay 应用、小组件和 Live Activities 支持 CarPlay
 * 将胰岛素剂量和血糖数据导出到 Apple Health
 * 支持 Siri 和快捷指令，用于显示血糖、朗读血糖，以及快速记录胰岛素剂量
+* Bluetooth 心跳功能可在 iPhone、Apple Watch 和 CarPlay 上实现近乎每分钟的更新以及低血糖警报
 
 ### 技术说明
 FLwatch 使用 LoopKit 的指数型胰岛素模型。该模型使用三个参数：`actionDuration`、`peakActivityTime` 和 `delay`。

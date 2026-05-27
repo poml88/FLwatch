@@ -102,12 +102,13 @@ FLwatch は手動でのインスリン記録にも対応しており、炭水化
 
 #### システム連携
 * グラフあり・なしの iOS ウィジェットとロック画面ウィジェット
-* iPhone の Live Activities と、Apple Watch Smart Stack へのミラーリング
+* iPhone の Live Activities と、Apple Watch Smart Stack および CarPlay へのミラーリング
 * StandBy モード用ウィジェット
 * watchOS ウィジェットとコンプリケーション
-* ウィジェットと Live Activities を通じた CarPlay 対応
+* CarPlay アプリ、ウィジェットおよび Live Activities を通じた CarPlay 対応
 * インスリン量と血糖値データの Apple Health への書き出し
 * 血糖値の表示、読み上げ、インスリン量の素早い記録に対応する Siri とショートカットのサポート
+* Bluetooth ハートビートにより、iPhone、Apple Watch、CarPlay でほぼ 1 分ごとの更新と低血糖アラームが可能になります
 
 ### 技術メモ
 FLwatch は LoopKit の指数インスリンモデルを使用しています。このモデルでは `actionDuration`、`peakActivityTime`、`delay` の 3 つのパラメータを使います。

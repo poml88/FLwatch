@@ -102,12 +102,13 @@ Weitere Insulintypen können auf Anfrage ergänzt werden.
 
 #### Systemintegration
 * iOS-Widgets und Sperrbildschirm-Widgets mit und ohne Diagramm(e)
-* Live Activities auf dem iPhone inklusive Smart-Stack-Spiegelung auf der Apple Watch
+* Live Activities auf dem iPhone inklusive Spiegelung in den Smart Stack der Apple Watch und in CarPlay
 * Widget für den StandBy-Modus
 * watchOS-Widgets und Komplikationen
-* CarPlay-Unterstützung über Widgets und Live Activities
+* CarPlay-Unterstützung über CarPlay-App, Widgets und Live Activities
 * Export von Insulindosen und Glukosedaten nach Apple Health
 * Unterstützung für Siri und Kurzbefehle zur Anzeige des Glukosewerts, zum Vorlesen des Glukosewerts und zur schnellen Erfassung von Insulindosen
+* Bluetooth-Heartbeat ermöglicht Aktualisierungen nahezu jede Minute sowie Alarme bei niedrigem Glukosewert auf iPhone, Apple Watch und CarPlay
 
 ### Technische Hinweise
 FLwatch verwendet das exponentielle Insulinmodell von LoopKit. Das Modell nutzt drei Parameter: `actionDuration`, `peakActivityTime` und `delay`.

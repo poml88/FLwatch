@@ -102,12 +102,13 @@ FLwatch также поддерживает ручной ввод доз инс�
 
 #### Системная интеграция
 * Виджеты iOS и виджеты экрана блокировки с графиком и без него
-* Live Activities на iPhone, включая зеркалирование в Smart Stack на Apple Watch
+* Live Activities на iPhone, включая зеркалирование в Smart Stack на Apple Watch и в CarPlay
 * Виджет режима StandBy
 * Виджеты и осложнения watchOS
-* Поддержка CarPlay через виджеты и Live Activities
+* Поддержка CarPlay через приложение CarPlay, виджеты и Live Activities
 * Экспорт доз инсулина и данных о глюкозе в Apple Health
 * Поддержка Siri и Команд для отображения глюкозы, озвучивания глюкозы и быстрого ввода доз инсулина
+* Bluetooth-heartbeat обеспечивает обновления почти каждую минуту и оповещения о низком уровне глюкозы на iPhone, Apple Watch и в CarPlay
 
 ### Технические заметки
 FLwatch использует экспоненциальную модель инсулина из LoopKit. Модель использует три параметра: `actionDuration`, `peakActivityTime` и `delay`.

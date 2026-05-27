@@ -102,12 +102,13 @@ Meer insulinetypen kunnen op verzoek worden toegevoegd.
 
 #### Systeemintegratie
 * iOS-widgets en widgets voor het vergrendelscherm met en zonder grafiek(en)
-* Live Activities op iPhone, inclusief mirroring naar de Smart Stack van Apple Watch
+* Live Activities op iPhone, inclusief mirroring naar de Smart Stack van Apple Watch en naar CarPlay
 * Widget voor StandBy-modus
 * watchOS-widgets en complicaties
-* CarPlay-ondersteuning via widgets en Live Activities
+* CarPlay-ondersteuning via CarPlay-app, widgets en Live Activities
 * Export van insulinedoses en glucosegegevens naar Apple Health
 * Ondersteuning voor Siri en Opdrachten om glucose weer te geven, voor te lezen en insulinedoses snel vast te leggen
+* Bluetooth-heartbeat maakt updates bijna elke minuut mogelijk, evenals alarmen bij lage glucose op iPhone, Apple Watch en CarPlay
 
 ### Technische notities
 FLwatch gebruikt het exponentiële insulinemodel van LoopKit. Dat model gebruikt drie parameters: `actionDuration`, `peakActivityTime` en `delay`.
