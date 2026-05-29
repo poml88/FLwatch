@@ -1,2 +1,2 @@
-* add Dexcom Share support
-* other bugfixes
+* completing Dexcom Share support
+* other small bugfixes
