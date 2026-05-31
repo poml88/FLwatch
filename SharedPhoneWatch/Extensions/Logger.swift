@@ -34,6 +34,9 @@ extension Logger {
     static let libreLinkUpService = Logger(subsystem: subsystem, category: "LibreLinkUpService")
 
     static let dexcomShare = Logger(subsystem: subsystem, category: "DexcomShare")
+
+    /// Libre 3 direct-BLE: NFC pairing, BLE session, auth, decode.
+    static let libre3 = Logger(subsystem: subsystem, category: "Libre3BLE")
     
     static let liveActivity = Logger(subsystem: subsystem, category: "LiveActivity")
 

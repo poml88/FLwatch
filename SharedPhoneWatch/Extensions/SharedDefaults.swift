@@ -101,6 +101,15 @@ enum DefaultsKey: String {
     case dexcomShareUsername = "dexcomShareUsernameKey"
     case dexcomShareRegion = "dexcomShareRegionKey"
     case dexcomShareSessionId = "dexcomShareSessionIdKey"
+
+    // Libre 3 direct BLE — non-secret sensor metadata (the BLE PIN is secret and
+    // lives in the keychain via `Libre3PINStore`, not here).
+    case libre3Serial = "libre3SerialKey"
+    case libre3BleAddress = "libre3BleAddressKey"
+    case libre3ReceiverIDHex = "libre3ReceiverIDHexKey"
+    case libre3FirmwareVersion = "libre3FirmwareVersionKey"
+    case libre3Mode = "libre3ModeKey"
+    case libre3LibreViewPatientId = "libre3LibreViewPatientIdKey"
 }
 
 // MARK: - Convenience typed helpers + Codable helpers
@@ -482,6 +491,80 @@ enum SharedData {
         !store.getString(.dexcomShareRegion, defaultValue: "").isEmpty
     }
 
+    // MARK: - Libre 3 direct BLE (non-secret sensor metadata)
+    //
+    // Written by `Libre3StateStore` on the phone after a successful NFC pair.
+    // Stored as plain primitives (not the LibreCRKit `Libre3SensorState` type)
+    // so shared gates like `hasActiveProviderAccount` can read "is a sensor
+    // paired?" from the watch/widget targets, which don't link LibreCRKit. The
+    // secret BLE PIN is NOT here — it lives in the keychain.
+
+    static var libre3Serial: String {
+        get { store.getString(.libre3Serial, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3Serial.rawValue) }
+            else { store.setString(newValue, forKey: .libre3Serial) }
+        }
+    }
+
+    static var libre3BleAddress: String {
+        get { store.getString(.libre3BleAddress, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3BleAddress.rawValue) }
+            else { store.setString(newValue, forKey: .libre3BleAddress) }
+        }
+    }
+
+    static var libre3FirmwareVersion: String {
+        get { store.getString(.libre3FirmwareVersion, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3FirmwareVersion.rawValue) }
+            else { store.setString(newValue, forKey: .libre3FirmwareVersion) }
+        }
+    }
+
+    /// Little-endian hex of FLwatch's receiver ID for this install. Generated
+    /// once on first pair and reused so the handshake/reconnect stay stable.
+    static var libre3ReceiverIDHex: String {
+        get { store.getString(.libre3ReceiverIDHex, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3ReceiverIDHex.rawValue) }
+            else { store.setString(newValue, forKey: .libre3ReceiverIDHex) }
+        }
+    }
+
+    /// LibreView **patient UUID** that activated the sensor. Its FNV-32a hash is
+    /// the receiver ID sent in the NFC takeover/parallel command — the sensor
+    /// only accepts a receiver ID matching the account/patient that activated
+    /// it, else it returns NFC error `0xB1`. Required for takeover/parallel;
+    /// fresh activation can use an accountless ID instead.
+    static var libre3LibreViewPatientId: String {
+        get { store.getString(.libre3LibreViewPatientId, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3LibreViewPatientId.rawValue) }
+            else { store.setString(newValue, forKey: .libre3LibreViewPatientId) }
+        }
+    }
+
+    /// Which pairing mode established the current sensor (for display + future
+    /// reconnect policy). `nil` when no Libre 3 sensor is paired.
+    static var libre3Mode: Libre3Mode? {
+        get {
+            let raw = store.getString(.libre3Mode, defaultValue: "")
+            return raw.isEmpty ? nil : Libre3Mode(rawValue: raw)
+        }
+        set {
+            if let newValue { store.setString(newValue.rawValue, forKey: .libre3Mode) }
+            else { store.removeObject(forKey: DefaultsKey.libre3Mode.rawValue) }
+        }
+    }
+
+    /// True once a Libre 3 sensor has been paired over BLE (has a serial +
+    /// stored PIN). Read by `hasActiveProviderAccount`.
+    static var libre3SensorIsPaired: Bool {
+        !libre3Serial.isEmpty
+    }
+
     // MARK: - Provider-agnostic credential gates
     //
     // The widgets, watch home view, and intents historically gated on
@@ -500,10 +583,10 @@ enum SharedData {
         case .dexcomShare:
             return !dexcomShareUsername.isEmpty
         case .libre3BLE:
-            // Phase 1: pairing state doesn't exist yet, so report "not set up".
-            // Phase 2 will gate this on a persisted Libre3SensorState (serial /
-            // BLE address) once NFC pairing lands.
-            return false
+            // A sensor is "set up" once it's been paired over NFC (serial + PIN
+            // persisted). The phone is the only device that pairs; watch/widgets
+            // read this flag from the app group.
+            return libre3SensorIsPaired
         }
     }
 
