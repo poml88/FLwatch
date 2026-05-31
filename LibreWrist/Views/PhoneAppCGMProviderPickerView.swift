@@ -61,6 +61,14 @@ struct PhoneAppCGMProviderPickerView: View {
                 ) {
                     pick(.dexcomShare)
                 }
+
+                providerCard(
+                    title: "FreeStyle Libre 3 (Bluetooth)",
+                    subtitle: "Connects directly to a Libre 3 / Libre 3 Plus sensor over Bluetooth — no follower account or cloud needed. You pair by holding your phone to the sensor.",
+                    systemImage: "sensor.tag.radiowaves.forward"
+                ) {
+                    pick(.libre3BLE)
+                }
             }
             .padding(.horizontal, 24)
 

@@ -19,6 +19,14 @@ extension Notification.Name {
     /// — which is compiled into widget targets that don't link WC — has no
     /// compile-time dependency on WC.
     static let dexcomShareSessionDidRefresh = Notification.Name("DexcomShareSessionDidRefresh")
+    /// Posted by `LibreLinkUpService.switchProvider` after the active CGM
+    /// provider changes. The phone-only `BluetoothHeartbeatManager` observes it
+    /// to reconcile BLE ownership (stand down for `.libre3BLE`, re-arm for the
+    /// cloud providers). Decoupled via NotificationCenter so this shared
+    /// orchestrator — compiled into the watch and iOS widget targets, which
+    /// don't include the heartbeat manager — has no compile-time dependency on
+    /// it. Same rationale as `dexcomShareSessionDidRefresh` above.
+    static let activeCGMProviderDidChange = Notification.Name("ActiveCGMProviderDidChange")
 }
 
 enum LibreWristUpdateNotifier {
@@ -76,11 +84,23 @@ final class LibreLinkUpService: ObservableObject {
             if !currentType.isADexcom {
                 _ = SensorSettingsStore.shared.updateSensorType(.dexcomG7)
             }
-        case .libreLinkUp:
+        case .libreLinkUp, .libre3BLE:
+            // Drop a stale Dexcom stamp; the real Libre model fills in on the
+            // first reading (cloud reload for LLU, connect-time stamp for BLE).
             if currentType.isADexcom {
                 _ = SensorSettingsStore.shared.updateSensorType(.unknown)
             }
         }
+
+        // Reconcile BLE ownership with the new provider. In `.libre3BLE` mode
+        // `Libre3DirectManager` owns the sensor link, so the heartbeat central
+        // must stand down (plan §4/§6); switching back to a cloud provider
+        // re-arms it if the user had it enabled. Posted rather than called
+        // directly: the phone app's `BluetoothHeartbeatManager` observes this,
+        // keeping this shared type (built into the watch + iOS widget targets,
+        // which don't include the manager) free of a compile-time dependency.
+        NotificationCenter.default.post(name: .activeCGMProviderDidChange, object: nil)
+
         Logger.libreLinkUpService.info("switched active provider to \(kind.rawValue, privacy: .public)")
     }
 

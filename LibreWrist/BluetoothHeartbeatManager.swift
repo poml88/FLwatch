@@ -156,6 +156,21 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
 
     private override init() {
         super.init()
+        // The active CGM provider can change at runtime (Settings picker, or a
+        // WC settings-snapshot from the phone). When it does, reconcile BLE
+        // ownership: stand down for `.libre3BLE` (the direct manager owns the
+        // single link), re-arm for the cloud providers if the user enabled the
+        // heartbeat. Decoupled via NotificationCenter so the shared orchestrator
+        // that posts it carries no dependency on this phone-only class.
+        NotificationCenter.default.addObserver(
+            forName: .activeCGMProviderDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.syncWithActiveProvider()
+            }
+        }
     }
 
     private var selectedPeripheralIdentifier: UUID? {
@@ -173,6 +188,33 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
 
     var isEnabled: Bool {
         SharedData.bluetoothHeartbeatEnabled
+    }
+
+    /// The heartbeat exists purely to harvest a BLE timing tick that schedules
+    /// a *cloud* poll. In `.libre3BLE` mode the sensor pushes the actual data
+    /// and `Libre3DirectManager` owns the single BLE connection, so the
+    /// heartbeat must never create a central or scan — it would fight the
+    /// direct manager for the link (plan §4/§6). Every start path gates on this.
+    private var isHeartbeatApplicableForActiveProvider: Bool {
+        SharedData.cgmProviderKind != .libre3BLE
+    }
+
+    /// Reconcile the heartbeat with the active provider after a provider
+    /// switch. Called from `LibreLinkUpService.switchProvider`: stand the
+    /// central down for direct-BLE, re-arm it for the cloud providers if the
+    /// user had the heartbeat enabled.
+    func syncWithActiveProvider() {
+        guard isHeartbeatApplicableForActiveProvider else {
+            stopMonitoring()
+            return
+        }
+        guard isEnabled else { return }
+        startIfNeeded()
+        if isCentralPoweredOn {
+            connectToSelectedDeviceIfAvailable()
+            startScanning()
+        }
+        startWatchdogIfNeeded()
     }
 
     var settingsDisplayStatus: ConnectionStatus {
@@ -196,6 +238,12 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
 
     func setEnabled(_ isEnabled: Bool) {
         SharedData.bluetoothHeartbeatEnabled = isEnabled
+        guard isHeartbeatApplicableForActiveProvider else {
+            // Direct-BLE provider owns the link; never run the heartbeat,
+            // regardless of the stored toggle.
+            stopMonitoring()
+            return
+        }
         if isEnabled {
             startIfNeeded()
             if isCentralPoweredOn {
@@ -209,6 +257,7 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
     }
 
     func startIfNeeded() {
+        guard isHeartbeatApplicableForActiveProvider else { return }
         guard centralManager == nil else { return }
         hasReceivedCentralStateUpdate = false
         Logger.connectivity.info("Creating CBCentralManager")
@@ -223,6 +272,10 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
     }
 
     func startScanning() {
+        guard isHeartbeatApplicableForActiveProvider else {
+            status = .disabled
+            return
+        }
         guard isEnabled else {
             status = .disabled
             return
@@ -303,12 +356,20 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
         connectionTimeoutTask = nil
         stopScanning()
         pendingReconnect = false
-        pendingConnectionPeripheralID = nil
-        if let connectedPeripheral {
-            if isCentralPoweredOn {
-                centralManager?.cancelPeripheralConnection(connectedPeripheral)
+        // Cancel any in-flight connect as well as an established one. A
+        // pending-connect sensor (Dexcom G7) sits in `.connecting` and is *not*
+        // tracked by `connectedPeripheral`, so without this the standing connect
+        // survives teardown and iOS keeps waking us to retry it after a switch.
+        if isCentralPoweredOn, let centralManager {
+            if let pendingID = pendingConnectionPeripheralID,
+               let pending = peripheralsByIdentifier[pendingID] {
+                centralManager.cancelPeripheralConnection(pending)
+            }
+            if let connectedPeripheral {
+                centralManager.cancelPeripheralConnection(connectedPeripheral)
             }
         }
+        pendingConnectionPeripheralID = nil
         connectedPeripheral = nil
         status = .disabled
     }
@@ -398,6 +459,12 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
 
     private func connect(_ peripheral: CBPeripheral, using centralManager: CBCentralManager) {
         guard isCentralPoweredOn else { return }
+        // Single chokepoint for *initiating* a connection. Gating it on the
+        // active provider neutralizes every re-arm path at once (disconnect,
+        // connect-timeout, connect-failure, rediscovery, poweredOn, restored-
+        // peripheral resume) so the heartbeat link can't be revived after a
+        // switch to `.libre3BLE`, where `Libre3DirectManager` owns the sensor.
+        guard isHeartbeatApplicableForActiveProvider else { return }
         guard isSelectedDevice(peripheral) else {
             Logger.connectivity.info("Ignoring connect to non-selected device \(self.effectiveName(for: peripheral).uppercased(), privacy: .public)")
             if peripheral.state == .connected || peripheral.state == .connecting {
@@ -626,6 +693,13 @@ extension BluetoothHeartbeatManager: @preconcurrency CBCentralManagerDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        // A connect already in flight when the user switched to `.libre3BLE`
+        // can still land here — drop it so the heartbeat doesn't grab the link
+        // the direct manager owns.
+        guard isHeartbeatApplicableForActiveProvider else {
+            central.cancelPeripheralConnection(peripheral)
+            return
+        }
         guard isSelectedDevice(peripheral) else {
             Logger.connectivity.info("Connected to non-selected device \(self.effectiveName(for: peripheral).uppercased(), privacy: .public); cancelling")
             central.cancelPeripheralConnection(peripheral)

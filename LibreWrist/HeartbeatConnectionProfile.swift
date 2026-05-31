@@ -71,6 +71,12 @@ enum HeartbeatConnectionProfileFactory {
             return LibreHeartbeatProfile()
         case .dexcomShare:
             return DexcomG7HeartbeatProfile()
+        case .libre3BLE:
+            // The heartbeat is disabled in direct-BLE mode (Libre3DirectManager
+            // owns the sensor link), so this profile is never actually
+            // consulted. Return the Libre profile as a harmless default to keep
+            // the switch exhaustive.
+            return LibreHeartbeatProfile()
         }
     }
 

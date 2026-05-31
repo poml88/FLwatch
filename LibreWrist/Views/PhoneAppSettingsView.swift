@@ -214,6 +214,7 @@ struct PhoneAppSettingsView: View {
                 ) {
                     Text("FreeStyle Libre (LibreLinkUp)").tag(CGMProviderKind.libreLinkUp)
                     Text("Dexcom (Share)").tag(CGMProviderKind.dexcomShare)
+                    Text("FreeStyle Libre 3 (Bluetooth)").tag(CGMProviderKind.libre3BLE)
                 } label: {
                     Text("CGM provider")
                 }
@@ -347,6 +348,13 @@ struct PhoneAppSettingsView: View {
                 Text("Permission is requested only when you turn this on. FLwatch exports insulin injections and glucose values, and tags samples with HealthKit sync identifiers to avoid duplicates.")
             }
 
+            // The Bluetooth heartbeat — and the low-glucose alert that rides on
+            // it — applies only to the cloud providers: there FLwatch relies on
+            // the vendor app for primary alarms, and the heartbeat merely
+            // schedules cloud polls. In direct-BLE mode there's no vendor app to
+            // alarm and nothing to poll, so the whole section is hidden. BLE
+            // gets its own purpose-built alarms (high/low/…) for the push model.
+            if cgmProviderKind != .libre3BLE {
             Section {
                 Text("Bluetooth heartbeat")
                     .font(.subheadline)
@@ -484,9 +492,8 @@ struct PhoneAppSettingsView: View {
             } footer: {
                 Text("FLwatch scans for devices nearby, reconnects to the selected device, and uses that Bluetooth activity to refresh glucose data, widgets, Live Activities, and background updates. Only nearby discoverable Bluetooth devices can appear here. This mode has very little impact on the battery.")
             }
-            
-            
-            
+            } // end `if cgmProviderKind != .libre3BLE` — heartbeat section hidden in BLE mode
+
             Section {
                 Toggle(isOn: $tapComplicationReloads) {
                     Text("Tap on circular watch complication: updates glucose value")

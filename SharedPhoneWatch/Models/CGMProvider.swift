@@ -17,6 +17,12 @@ import Foundation
 enum CGMProviderKind: String, Codable {
     case libreLinkUp
     case dexcomShare
+    /// FreeStyle Libre 3 read directly over Bluetooth LE (push model): the
+    /// sensor wakes the phone ~once/min with an encrypted notification that
+    /// `Libre3DirectManager` decrypts on-device and writes into the shared
+    /// store. Unlike the cloud kinds there is no network reload — see
+    /// `Libre3DirectProvider`.
+    case libre3BLE
 
     /// Source cadence in minutes. Single source of truth, readable without a
     /// provider instance so non-isolated consumers (widgets, Live Activity)
@@ -25,6 +31,7 @@ enum CGMProviderKind: String, Codable {
         switch self {
         case .libreLinkUp: return 1
         case .dexcomShare: return 5
+        case .libre3BLE: return 1
         }
     }
 
@@ -36,6 +43,7 @@ enum CGMProviderKind: String, Codable {
         switch self {
         case .libreLinkUp: return 3 * 60
         case .dexcomShare: return 8 * 60
+        case .libre3BLE: return 3 * 60
         }
     }
 }
@@ -109,6 +117,8 @@ enum CGMProviderRegistry {
             return LibreLinkUpProvider()
         case .dexcomShare:
             return DexcomShareProvider()
+        case .libre3BLE:
+            return Libre3DirectProvider()
         }
     }
 }

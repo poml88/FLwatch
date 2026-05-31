@@ -522,6 +522,12 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
                 dexcomShareAccountId = dxAccountId
                 dexcomShareSessionId = dxSessionId
             }
+        case .libre3BLE:
+            // Direct BLE is phone-only in v1: the watch can't run a BLE session,
+            // it just renders the glucose snapshots the phone pushes. There are
+            // no cloud credentials to forward, so leave `hasValidCredentials`
+            // false and send no secrets. (Watch mode is the future §13 work.)
+            break
         }
 
         let snapshot = SettingsSnapshotPayload(
@@ -717,6 +723,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
                 await self.applyDexcomShareCredentials(from: snapshot)
             case .libreLinkUp:
                 await self.applyLibreLinkUpCredentials(from: snapshot)
+            case .libre3BLE:
+                // No cloud credentials to apply for direct BLE — glucose arrives
+                // via the dedicated snapshot path. Just refresh the watch's
+                // derived graphs/IOB, matching the no-credentials branch above.
+                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
             }
         }
     }

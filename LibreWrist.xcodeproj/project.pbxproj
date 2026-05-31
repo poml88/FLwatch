@@ -148,6 +148,11 @@
 		7BADE01D2C73E4E70074A47F /* Int.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE01C2C73E4E70074A47F /* Int.swift */; };
 		7BADE0212C73EB060074A47F /* Double.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE0202C73EB060074A47F /* Double.swift */; };
 		7BADE0232C73EB450074A47F /* GlucoseUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE0222C73EB450074A47F /* GlucoseUnit.swift */; };
+		7BB142D62FCC747600F31802 /* LibreCRKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7BB142D52FCC747600F31802 /* LibreCRKit */; };
+		7BB143082FCC79A000F31802 /* Libre3DirectProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB143062FCC79A000F31802 /* Libre3DirectProvider.swift */; };
+		7BB143092FCC79A000F31802 /* Libre3DirectProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB143062FCC79A000F31802 /* Libre3DirectProvider.swift */; };
+		7BB1430A2FCC79A000F31802 /* Libre3DirectProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB143062FCC79A000F31802 /* Libre3DirectProvider.swift */; };
+		7BB1430B2FCC79A000F31802 /* Libre3DirectProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB143062FCC79A000F31802 /* Libre3DirectProvider.swift */; };
 		7BB435692F200D3F00EB8DD3 /* FLwatchGraphWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB435682F200D3100EB8DD3 /* FLwatchGraphWidget.swift */; };
 		7BB617F32DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */; };
 		7BB617F42DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */; };
@@ -365,6 +370,7 @@
 		7BADE01C2C73E4E70074A47F /* Int.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Int.swift; sourceTree = "<group>"; };
 		7BADE0202C73EB060074A47F /* Double.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Double.swift; sourceTree = "<group>"; };
 		7BADE0222C73EB450074A47F /* GlucoseUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseUnit.swift; sourceTree = "<group>"; };
+		7BB143062FCC79A000F31802 /* Libre3DirectProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Libre3DirectProvider.swift; sourceTree = "<group>"; };
 		7BB435682F200D3100EB8DD3 /* FLwatchGraphWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLwatchGraphWidget.swift; sourceTree = "<group>"; };
 		7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMessageSignleton.swift; sourceTree = "<group>"; };
 		7BB762FD2C8262E600C43600 /* WatchAppActionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAppActionView.swift; sourceTree = "<group>"; };
@@ -444,6 +450,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7BB142D62FCC747600F31802 /* LibreCRKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -528,6 +535,7 @@
 		7B3EA4FE2C6C0B1A0061F239 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				7BB143072FCC79A000F31802 /* Libre3 */,
 				7B62EDAD2FACD18200C9502B /* CGMProvider.swift */,
 				7B62ED7A2FACC97700C9502B /* Dexcom */,
 				7B299A0A2C90AF8C002A15C8 /* AuthTicket.swift */,
@@ -655,6 +663,14 @@
 				7B2E7EBC2CB59DEB00A3473B /* GlucoseMeasurementIOBEntry.swift */,
 			);
 			path = Widgets;
+			sourceTree = "<group>";
+		};
+		7BB143072FCC79A000F31802 /* Libre3 */ = {
+			isa = PBXGroup;
+			children = (
+				7BB143062FCC79A000F31802 /* Libre3DirectProvider.swift */,
+			);
+			path = Libre3;
 			sourceTree = "<group>";
 		};
 		7BC51F362C7C77B2009542D2 /* LibreWristWatch Watch App */ = {
@@ -793,6 +809,7 @@
 			);
 			name = FLwatch;
 			packageProductDependencies = (
+				7BB142D52FCC747600F31802 /* LibreCRKit */,
 			);
 			productName = LibreWrist;
 			productReference = 7BA0AE292C582F63004226FE /* FLwatch.app */;
@@ -910,6 +927,7 @@
 			);
 			mainGroup = 7BA0AE202C582F63004226FE;
 			packageReferences = (
+				7BB142D42FCC747600F31802 /* XCLocalSwiftPackageReference "../../GitHub/LibreCRKit" */,
 			);
 			productRefGroup = 7BA0AE2A2C582F63004226FE /* Products */;
 			projectDirPath = "";
@@ -989,6 +1007,7 @@
 				7BF0A0042F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */,
 				7BDF0A812DBB8B4500852BAD /* Glucose.swift in Sources */,
 				7B299A1D2C90DC43002A15C8 /* LibreLinkUpHistory.swift in Sources */,
+				7BB1430B2FCC79A000F31802 /* Libre3DirectProvider.swift in Sources */,
 				7B2ED6B12F4DD8780046F363 /* LibreLinkUpService.swift in Sources */,
 				7B1A7CA42C79E413006D603C /* LibreLinkUp.swift in Sources */,
 				7B299A0B2C90AF8C002A15C8 /* AuthTicket.swift in Sources */,
@@ -1065,6 +1084,7 @@
 				7B2E7EB12CB59C9300A3473B /* LibreWristWatchWidget.swift in Sources */,
 				7B2E7EC12CB59FCC00A3473B /* MeasurementColor.swift in Sources */,
 				7BA5679D2CBC1079003244EE /* GlucoseIOBTimelineProvider.swift in Sources */,
+				7BB143082FCC79A000F31802 /* Libre3DirectProvider.swift in Sources */,
 				7B2E7EC32CB59FFA00A3473B /* LLUHeaders.swift in Sources */,
 				7B9F09A62E731F210037B091 /* SharedDefaults.swift in Sources */,
 				7B2E7EC52CB5A04A00A3473B /* Data.swift in Sources */,
@@ -1085,6 +1105,7 @@
 				7B45C5392F756BC000203B4C /* BluetoothHeartbeatManager.swift in Sources */,
 				7BF0A0122FA4000200C0D001 /* CarPlaySceneDelegate.swift in Sources */,
 				7BF92A5D2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift in Sources */,
+				7BB1430A2FCC79A000F31802 /* Libre3DirectProvider.swift in Sources */,
 				7B096C9B2E33F2CA00B6744C /* PhoneAppGraphView.swift in Sources */,
 				7BF0A0022F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */,
 				7BA304172F5E30B0005384BF /* SensorType.swift in Sources */,
@@ -1196,6 +1217,7 @@
 				7BC51F5A2C7C8573009542D2 /* String.swift in Sources */,
 				7BA304302F5E30B0005384BF /* LibreLinkUpHistory.swift in Sources */,
 				7B8965432DC156E9003A50CE /* WatchConnectivityManager.swift in Sources */,
+				7BB143092FCC79A000F31802 /* Libre3DirectProvider.swift in Sources */,
 				7B299A152C90B06C002A15C8 /* GlucoseMeasurement.swift in Sources */,
 				7BC51F582C7C854F009542D2 /* Date.swift in Sources */,
 				7BA304312F5E30B0005384BF /* DebugMessageSignleton.swift in Sources */,
@@ -1796,6 +1818,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		7BB142D42FCC747600F31802 /* XCLocalSwiftPackageReference "../../GitHub/LibreCRKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../GitHub/LibreCRKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7BB142D52FCC747600F31802 /* LibreCRKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LibreCRKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7BA0AE212C582F63004226FE /* Project object */;
 }

@@ -35,6 +35,8 @@
 	<string>FLwatch writes glucose graph history and manual insulin injections to Apple Health after you grant permission.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>FLwatch connects to your sensor transmitter so its activity can trigger glucose refreshes.</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>FLwatch scans your Libre sensor to pair and read glucose directly over Bluetooth.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

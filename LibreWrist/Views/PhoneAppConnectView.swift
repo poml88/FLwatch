@@ -24,7 +24,32 @@ struct PhoneAppConnectView: View {
             LibreLinkUpConnectView()
         case .dexcomShare:
             PhoneAppDexcomShareConnectView()
+        case .libre3BLE:
+            // Phase 1: provider is selectable but the NFC pairing flow doesn't
+            // exist yet. Phase 2 replaces this with `PhoneAppLibre3ConnectView`
+            // (mode picker + "hold sensor to phone" NFC prompt + status).
+            Libre3BLEConnectPlaceholderView()
         }
+    }
+}
+
+/// Temporary stand-in for the Libre 3 direct-BLE connect screen until the NFC
+/// pairing coordinator + UI land in Phase 2.
+struct Libre3BLEConnectPlaceholderView: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "sensor.tag.radiowaves.forward")
+                .font(.largeTitle)
+                .foregroundStyle(.green)
+            Text("Libre 3 (Bluetooth)")
+                .font(.title2)
+            Text("Direct Bluetooth pairing is coming soon. For now, switch to a cloud provider in Settings to receive glucose.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+        }
+        .padding()
     }
 }
 

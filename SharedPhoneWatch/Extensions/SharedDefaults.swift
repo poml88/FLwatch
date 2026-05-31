@@ -499,6 +499,11 @@ enum SharedData {
             return !UserDefaults.group.username.isEmpty
         case .dexcomShare:
             return !dexcomShareUsername.isEmpty
+        case .libre3BLE:
+            // Phase 1: pairing state doesn't exist yet, so report "not set up".
+            // Phase 2 will gate this on a persisted Libre3SensorState (serial /
+            // BLE address) once NFC pairing lands.
+            return false
         }
     }
 
@@ -507,6 +512,12 @@ enum SharedData {
     /// widgets to bail out early instead of kicking off a doomed reload.
     static var canActiveProviderReload: Bool {
         switch cgmProviderKind {
+        case .libre3BLE:
+            // Direct BLE is push-only and phone-only: there is no reload to
+            // kick, and widgets/watch can't run a BLE session anyway — they
+            // only render the snapshot the phone pushes. Always false so no
+            // consumer attempts a doomed reload.
+            return false
         case .libreLinkUp:
             return !(libreLinkUpUserId.isEmpty || libreLinkUpToken.isEmpty)
         case .dexcomShare:
