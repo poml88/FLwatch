@@ -77,6 +77,7 @@ final class Libre3DirectManager: ObservableObject {
     private var lifecycleTask: Task<Void, Never>?
     private var restorationTask: Task<Void, Never>?
     private var stateTask: Task<Void, Never>?
+    private var connectionEventTask: Task<Void, Never>?
 
     /// Two parallel series mirroring the LibreLinkUp model (see `LibreLinkUp.swift`):
     ///
@@ -114,6 +115,11 @@ final class Libre3DirectManager: ObservableObject {
     /// Guards the once-per-connection historical backfill request, fired after the
     /// first data-plane packet yields a reliable current life count.
     private var didRequestBackfill = false
+
+    /// Set when a cached/direct reconnect is rejected (the sensor drops the
+    /// link), so the NEXT connect attempt skips the cached path and runs a full
+    /// handshake on its fresh connection. Reset whenever a full handshake runs.
+    private var skipCachedReconnectOnce = false
 
     /// The newest historical (5-min) lifeCount we already held when this
     /// connection started — i.e. the persisted-store seed, captured BEFORE the
@@ -199,6 +205,7 @@ final class Libre3DirectManager: ObservableObject {
         }
         observeRestorationIfNeeded()
         observeBluetoothStateIfNeeded()
+        observeConnectionEventsIfNeeded()
     }
 
     /// Tear down the connection and stop streaming (provider switched away, or
@@ -210,6 +217,8 @@ final class Libre3DirectManager: ObservableObject {
         restorationTask = nil
         stateTask?.cancel()
         stateTask = nil
+        connectionEventTask?.cancel()
+        connectionEventTask = nil
         if let scanner, let session {
             scanner.disconnect(session)
         }
@@ -298,6 +307,25 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
+    /// Observe CoreBluetooth connection events (registered per-peripheral in
+    /// `connectAuthorizeAndStream`). When the app is suspended the backoff
+    /// reconnect loop can't run, so a background range-loss recovery relies on
+    /// iOS waking us with a `.peerConnected` event for the known peripheral —
+    /// at which point we (re)start the lifecycle if it isn't already running.
+    private func observeConnectionEventsIfNeeded() {
+        guard connectionEventTask == nil, let scanner else { return }
+        connectionEventTask = Task { [weak self] in
+            for await event in scanner.connectionEvents() {
+                guard let self else { return }
+                guard event.event == .peerConnected else { continue }
+                if self.isActiveProvider, Libre3StateStore.isPaired, self.lifecycleTask == nil {
+                    Logger.libre3.info("Libre3 BLE: peripheral connection event — reconnecting")
+                    self.start()
+                }
+            }
+        }
+    }
+
     /// Cancel the in-flight session (otherwise stuck in `consumeNotifications`,
     /// since a Bluetooth power-off yields no disconnect) and drop session state,
     /// leaving the manager ready to reconnect on the next power-on. Unlike
@@ -370,13 +398,26 @@ final class Libre3DirectManager: ObservableObject {
         let peripheral = try await discoverPeripheral(scanner: scanner)
         SharedData.libre3PeripheralUUID = peripheral.identifier.uuidString
 
+        // First-attempt-drop fix (PLAN Phase 5): after a disconnect or state
+        // restoration iOS may still report the peripheral `.connected`, so
+        // `scanner.connect` skips `central.connect` and the handshake then runs
+        // over a half-dead link — which reliably drops right after
+        // StartAuthentication and only succeeds on the retry. Force a clean
+        // `.disconnected` state first (a no-op/quick return when already
+        // disconnected) so `connect` re-establishes a fresh link every time.
+        await scanner.ensureDisconnected(peripheralID: peripheral.identifier)
+
         connectionState = .connecting
         let session = try await scanner.connect(peripheral)
         self.session = session
+        // Ask iOS to wake us when it next sees this peripheral after a
+        // background range loss, so reconnect doesn't rely solely on the
+        // backoff loop running (it won't while suspended).
+        scanner.registerForConnectionEvents(peripheralIDs: [peripheral.identifier])
 
         connectionState = .authorizing
-        let handshake = try await runHandshake(session: session, blePIN: sensorState.blePIN)
-        let crypto = try DataPlaneCrypto(sessionMaterial: handshake.sessionMaterial)
+        let sessionMaterial = try await authorize(session: session, sensorState: sensorState)
+        let crypto = try DataPlaneCrypto(sessionMaterial: sessionMaterial)
         self.decoder = DataPlaneDecoder(crypto: crypto)
         assembler.reset()
 
@@ -512,13 +553,77 @@ final class Libre3DirectManager: ObservableObject {
         throw Libre3DirectError.sensorNotFound
     }
 
+    /// Authorize the freshly-connected session. Prefers the fast cached/direct
+    /// reconnect (PLAN Phase 5) when we hold a reconnect key from a prior full
+    /// pair, and falls back to the full command-gated first-pair handshake on
+    /// any failure before Phase 6. Returns the Phase-6 session material the
+    /// data-plane decoder needs.
+    private func authorize(session: SensorSession, sensorState: Libre3SensorState) async throws -> Phase6SessionMaterial {
+        if !skipCachedReconnectOnce, let reconnectKey = Libre3StateStore.loadReconnectKey() {
+            do {
+                let material = try await runCachedReconnect(
+                    session: session, blePIN: sensorState.blePIN, reconnectKey: reconnectKey
+                )
+                Logger.libre3.info("Libre3 BLE cached reconnect succeeded")
+                return material
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                // Cached reconnect rejected. The sensor DROPS the link on a bad
+                // Phase 5 (observed on hardware), so the full handshake can't run
+                // on this dead connection. Skip cached on the next attempt and
+                // rethrow so the lifecycle reconnects FRESH and runs a full pair
+                // (which re-establishes — and re-persists — the reconnect key).
+                Logger.libre3.info("Libre3 BLE cached reconnect failed (\(String(describing: error), privacy: .public)) — reconnecting fresh for a full handshake")
+                skipCachedReconnectOnce = true
+                throw error
+            }
+        }
+        skipCachedReconnectOnce = false
+        let result = try await runHandshake(session: session, blePIN: sensorState.blePIN)
+        // Persist this full pair's established Phase-5 raw key for the cached
+        // reconnect fast path. This is the key the sensor accepts on the
+        // cert/ephemeral-less reconnect — NOT the Phase-6 data-plane kEnc, which
+        // hardware rejected (the sensor disconnected). The cached/direct path
+        // skips the ephemeral ECDH precisely because this authorization key is
+        // already established on both sides, so it reuses the same rawKey.
+        Libre3StateStore.saveReconnectKey(result.phase5Material.rawKey)
+        return result.handshake.sessionMaterial
+    }
+
+    /// Cached/direct reconnect: `0x11 StartAuthorization` → R1/nonce notify →
+    /// Phase 5 → Phase 6, skipping the certificate + ephemeral exchange (PLAN
+    /// Phase 5; LibreCRKit `runCachedReconnectHandshake`). The persisted
+    /// Phase-6 kEnc is fed straight in as the Phase-5 raw key — matching
+    /// LibreCRKit's `runTakeoverHandshake` default (`{ $0.kEnc }`) and
+    /// Juggluco's reuse of its exported authorization material. We don't hold an
+    /// Android-style 149-byte kAuth blob (a first-pair never produces one), so
+    /// kEnc is the only cached key available — and the right one. Throws on
+    /// sensor rejection so `authorize` can fall back to the full handshake.
+    private func runCachedReconnect(session: SensorSession, blePIN: Data, reconnectKey: Data) async throws -> Phase6SessionMaterial {
+        let transport = SensorSessionTransport(session: session)
+        let flow = PairingFlow(
+            transport: transport,
+            eventLogger: { message in
+                Logger.libre3.debug("\(message, privacy: .public)")
+            }
+        )
+        let result = try await flow.runCachedReconnectHandshake(
+            tail4: blePIN,
+            phase5RawKey: reconnectKey
+        )
+        return result.sessionMaterial
+    }
+
     /// Phase 1–6 first-pair authorization. All three NFC pairing modes
     /// (takeover / fresh / parallel-join) leave FLwatch holding its own BLE PIN,
     /// so each runs the command-gated *first-pair* handshake to derive its own
-    /// session keys (the cached-reconnect / kAuth path is a Phase 5 optimization
-    /// for subsequent connects). Phase 5 material is derived in-package from the
-    /// bundled first-pair source plus our entropy.
-    private func runHandshake(session: SensorSession, blePIN: Data) async throws -> FirstPairHandshakeResult {
+    /// session keys. The cached-reconnect path above is the Phase 5 fast path
+    /// for subsequent connects. Phase 5 material is derived in-package from the
+    /// bundled first-pair source plus our entropy. Returns the full derived
+    /// result so the caller can persist `phase5Material.rawKey` — the
+    /// established Phase-5 authorization key reused by the cached reconnect.
+    private func runHandshake(session: SensorSession, blePIN: Data) async throws -> FirstPairDerivedHandshakeResult {
         let transport = SensorSessionTransport(session: session)
         // Use the v1 (`03 03`) app certificate from `Libre3SKBKeys`, NOT
         // LibreCRKit's bundled default `bundledFirstPair()` (the v0 `03 00`
@@ -566,7 +671,7 @@ final class Libre3DirectManager: ObservableObject {
                 try Self.fixedEntropy(nativeEphemeral.nullEntropy11A, count: count)
             }
         )
-        return result.handshake
+        return result
     }
 
     /// Fixed entropy source for the first-pair handshake: returns the exact

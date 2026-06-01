@@ -97,6 +97,7 @@ enum Libre3StateStore {
     /// receiver ID so a re-pair reuses the same identity.
     static func clear() {
         try? Libre3PINStore.delete()
+        try? Libre3PINStore.deleteReconnectKey()
         SharedData.libre3Serial = ""
         SharedData.libre3BleAddress = ""
         SharedData.libre3FirmwareVersion = ""
@@ -107,6 +108,24 @@ enum Libre3StateStore {
     }
 
     static var isPaired: Bool { SharedData.libre3SensorIsPaired }
+
+    // MARK: - Cached-reconnect key (Phase-6 kEnc)
+
+    /// Persist the 16-byte kEnc captured from a successful **full** first-pair
+    /// Phase 6, to be reused as the cached/direct reconnect Phase-5 key
+    /// (`runCachedReconnectHandshake`, PLAN Phase 5). Anchored to the last full
+    /// handshake — the value the sensor (re)authorized us with — not refreshed
+    /// from cached-reconnect Phase 6 responses, matching Juggluco's
+    /// export-once-at-pair model.
+    static func saveReconnectKey(_ kEnc: Data) {
+        try? Libre3PINStore.saveReconnectKey(kEnc)
+    }
+
+    /// The persisted cached-reconnect key, or `nil` if a full handshake hasn't
+    /// run since pairing (so the reconnect path must fall back to full auth).
+    static func loadReconnectKey() -> Data? {
+        (try? Libre3PINStore.readReconnectKey()) ?? nil
+    }
 
     /// SensorType derived from the persisted patch-info model fields
     /// (productType / generation), so the rest of FLwatch shows the right
