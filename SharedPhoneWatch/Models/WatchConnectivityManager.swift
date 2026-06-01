@@ -80,6 +80,12 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         // them here. Optional for older builds that didn't send them.
         let sensorSettings: SensorSettings?
         let sensorTypeRawValue: String?
+        // Libre 3 direct-BLE: the paired sensor serial. Direct BLE has no cloud
+        // credentials, but the watch's provider-account gate
+        // (`hasActiveProviderAccount` → `libre3SensorIsPaired`) needs to know a
+        // sensor is paired — app groups are per-device, so the phone forwards it.
+        // nil when not the active provider / not paired / from older builds.
+        let libre3Serial: String?
         let updatedAt: Date
     }
 
@@ -552,6 +558,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             // leave these nil to avoid clobbering them.
             sensorSettings: providerKind == .dexcomShare ? SensorSettingsStore.shared.sensorSettings : nil,
             sensorTypeRawValue: providerKind == .dexcomShare ? SensorSettingsStore.shared.sensorType.rawValue : nil,
+            libre3Serial: providerKind == .libre3BLE && SharedData.libre3SensorIsPaired ? SharedData.libre3Serial : nil,
             updatedAt: Date()
         )
 
@@ -724,9 +731,17 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             case .libreLinkUp:
                 await self.applyLibreLinkUpCredentials(from: snapshot)
             case .libre3BLE:
-                // No cloud credentials to apply for direct BLE — glucose arrives
-                // via the dedicated snapshot path. Just refresh the watch's
-                // derived graphs/IOB, matching the no-credentials branch above.
+                // No cloud credentials for direct BLE — glucose arrives via the
+                // dedicated snapshot path. But mirror the paired sensor serial so
+                // the watch's provider-account gate opens (app groups are
+                // per-device, so the watch only knows it's paired via this).
+                if let serial = snapshot.libre3Serial, !serial.isEmpty {
+                    SharedData.libre3Serial = serial
+                    UserDefaults.group.connected = .connected
+                } else {
+                    SharedData.libre3Serial = ""
+                    UserDefaults.group.connected = .disconnected
+                }
                 CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
             }
         }

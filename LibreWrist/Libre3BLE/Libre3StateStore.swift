@@ -60,8 +60,15 @@ enum Libre3StateStore {
         // `firmwareVersion` sits at a different offset — it's fresh-activation-
         // focused and never consumes that field; fall back to it if our parse
         // fails.)
-        SharedData.libre3FirmwareVersion = Libre3PatchFields(raw: patchInfo.raw)?.firmware
-            ?? patchInfo.firmwareVersion
+        let fields = Libre3PatchFields(raw: patchInfo.raw)
+        SharedData.libre3FirmwareVersion = fields?.firmware ?? patchInfo.firmwareVersion
+        // Lifecycle + model fields for warmup/expiry gating and SensorType
+        // stamping, parsed from the DiaBLE/Juggluco layout (LibreCRKit never
+        // consumes these). Persisted so reconnect needs no NFC re-scan.
+        SharedData.libre3WarmupMinutes = fields?.warmupMinutes ?? 60
+        SharedData.libre3WearDurationMinutes = Int(fields?.wearDurationMinutes ?? patchInfo.wearDurationMinutes)
+        SharedData.libre3Generation = Int(fields?.generation ?? 0)
+        SharedData.libre3ProductType = Int(fields?.productType ?? 4)
         if let receiverID = state.receiverID {
             SharedData.libre3ReceiverIDHex = receiverID.littleEndianHex
         }
@@ -94,8 +101,32 @@ enum Libre3StateStore {
         SharedData.libre3BleAddress = ""
         SharedData.libre3FirmwareVersion = ""
         SharedData.libre3Mode = nil
+        SharedData.libre3WearDurationMinutes = 0
+        SharedData.libre3Generation = 0
+        SharedData.libre3ProductType = 0
     }
 
     static var isPaired: Bool { SharedData.libre3SensorIsPaired }
+
+    /// SensorType derived from the persisted patch-info model fields
+    /// (productType / generation), so the rest of FLwatch shows the right
+    /// sensor name and `isALibre` behaviour, mirroring how DiaBLE/Juggluco read
+    /// the patch frame.
+    static var sensorType: SensorType {
+        switch SharedData.libre3ProductType {
+        case 9: return .lingo
+        default: return SharedData.libre3Generation >= 1 ? .libre3Plus : .libre3
+        }
+    }
+
+    /// Stamp the resolved `SensorType` into the shared settings store, like the
+    /// Dexcom/LibreLinkUp providers do on connect. Only writes when it actually
+    /// changes, so it never churns the persisted snapshot.
+    @MainActor
+    static func stampSensorType() {
+        let type = sensorType
+        guard SensorSettingsStore.shared.sensorType != type else { return }
+        _ = SensorSettingsStore.shared.updateSensorType(type)
+    }
 }
 #endif

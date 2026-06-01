@@ -61,6 +61,15 @@ struct GlucoseMeasurementIOBEntry: TimelineEntry {
     @MainActor
     private static func entryFromHistory() async -> GlucoseMeasurementIOBEntry? {
         let history = LibreLinkUpHistory.shared
+        // The widget is a separate process from the app. Cloud providers reload
+        // here, which updates the in-process store — leave them untouched. But
+        // push-only direct BLE never reloads in the widget: the app writes the
+        // store, so we must re-read it from disk or `shared` stays stale
+        // (currentGlucose 0) and the caller throws "Missing CGM credentials" →
+        // blank widget.
+        if SharedData.cgmProviderKind == .libre3BLE {
+            history.refreshFromPersistence(force: true)
+        }
         let sensor = SensorSettingsStore.shared
         guard history.currentGlucose > 0 else { return nil }
 

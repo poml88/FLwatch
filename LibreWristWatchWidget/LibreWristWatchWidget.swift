@@ -57,6 +57,11 @@ struct LibreWristWidgetEntryView : View {
     /// would hide perfectly good data — so we only flip once history has
     /// drifted past the provider's stale threshold (LLU 3 min, Dexcom 8 min).
     private var needsManualReauth: Bool {
+        // Direct BLE has no credentials to reauth and the watch can't fetch — only
+        // the phone's WatchConnectivity pushes refresh it. The "open the app"
+        // arrow is useless here (opening the watch app fetches nothing), so render
+        // the value (the body shows its own staleness) instead.
+        guard SharedData.cgmProviderKind != .libre3BLE else { return false }
         guard !SharedData.canActiveProviderReload else { return false }
         let staleAfter = SharedData.cgmProviderKind.staleReadingAfter
         return Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) > staleAfter

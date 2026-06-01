@@ -93,6 +93,12 @@ struct GraphGlucoseMeasurementIOBEntry: TimelineEntry {
     @MainActor
     private static func entryFromHistory() async -> GraphGlucoseMeasurementIOBEntry? {
         let history = LibreLinkUpHistory.shared
+        // Push-only BLE never reloads in the widget, so re-read the app's writes
+        // from disk; cloud providers refresh via their reload (see
+        // GlucoseMeasurementIOBEntry).
+        if SharedData.cgmProviderKind == .libre3BLE {
+            history.refreshFromPersistence(force: true)
+        }
         let sensor = SensorSettingsStore.shared
         guard history.currentGlucose > 0 else { return nil }
         guard let lastGlucose = latestHistoryValue(from: history) else { return nil }

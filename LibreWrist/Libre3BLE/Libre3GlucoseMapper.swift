@@ -88,5 +88,74 @@ enum Libre3GlucoseMapper {
             trendArrow: arrow
         )
     }
+
+    // MARK: - Historical backfill samples
+    //
+    // Historical pages carry 5-min-spaced samples (no trend / rate-of-change —
+    // those are realtime-only), used to seed the graph window on connect. `id`
+    // is the sample's `lifeCount` so it de-duplicates against realtime points
+    // on the same minute grid; `date` uses the same sensor-start anchor.
+    // Returns `nil` for samples outside the 39–501 display range
+    // (`glucoseMgDL` is the already-clamped display value, `nil` when
+    // unavailable).
+
+    static func makeGlucose(
+        fromHistorical sample: HistoricalReadingSample,
+        sensorStartDate: Date,
+        settings: SensorSettings
+    ) -> LibreLinkUpGlucose? {
+        guard let mgDL = sample.glucoseMgDL else { return nil }
+        let value = Int(mgDL)
+        let date = sensorStartDate.addingTimeInterval(Double(sample.lifeCount) * 60)
+        let glucose = Glucose(
+            value,
+            temperature: 0,
+            trendRate: 0,
+            trendArrow: .notDetermined,
+            id: Int(sample.lifeCount),
+            date: date,
+            source: "Libre3 BLE"
+        )
+        return LibreLinkUpGlucose(
+            glucose: glucose,
+            color: color(forMgDL: value, settings: settings),
+            trendArrow: .notDetermined
+        )
+    }
+
+    // MARK: - Embedded historical sample
+    //
+    // Every realtime reading also carries the sensor's most recent 5-minute
+    // historical sample (~15–20 min behind now). Folding it into the historical
+    // series extends the graph at realtime pace even when on-demand backfill
+    // returns nothing — it's the same 5-minute record the sensor commits. Mapped
+    // only when the reading marks it valid and its own data quality is good.
+
+    static func makeGlucose(
+        fromEmbeddedHistorical reading: RealtimeGlucoseReading,
+        sensorStartDate: Date,
+        settings: SensorSettings
+    ) -> LibreLinkUpGlucose? {
+        guard reading.isHistoricalGlucoseValid,
+              reading.isHistoricalDQGood,
+              reading.historicalLifeCount > 0,
+              let mgDL = reading.historicalGlucoseMgDL else { return nil }
+        let value = Int(mgDL)
+        let date = sensorStartDate.addingTimeInterval(Double(reading.historicalLifeCount) * 60)
+        let glucose = Glucose(
+            value,
+            temperature: 0,
+            trendRate: 0,
+            trendArrow: .notDetermined,
+            id: Int(reading.historicalLifeCount),
+            date: date,
+            source: "Libre3 BLE"
+        )
+        return LibreLinkUpGlucose(
+            glucose: glucose,
+            color: color(forMgDL: value, settings: settings),
+            trendArrow: .notDetermined
+        )
+    }
 }
 #endif

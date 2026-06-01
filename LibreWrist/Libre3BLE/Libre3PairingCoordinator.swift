@@ -152,6 +152,9 @@ final class Libre3PairingCoordinator: ObservableObject {
                 source: "NFC \(mode.rawValue)"
             )
             try Libre3StateStore.save(state: sensorState, mode: mode, patchInfo: result.patchInfo)
+            // Stamp the sensor model immediately so Settings/UI reflect it before
+            // the first reading (the manager re-stamps on connect too).
+            Libre3StateStore.stampSensorType()
 
             // Reflect "set up" for the rest of the app and kick off the BLE
             // engine: the credentials are now stored, so start connecting and
@@ -184,6 +187,9 @@ final class Libre3PairingCoordinator: ObservableObject {
         Libre3StateStore.clear()
         UserDefaults.group.connected = .disconnected
         state = .idle
+        // Tell the watch the sensor is gone so its provider-account gate closes
+        // (the snapshot now carries a nil libre3Serial).
+        WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()
         Logger.libre3.info("Disconnected Libre 3 sensor; cleared stored state")
     }
 

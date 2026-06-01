@@ -41,9 +41,6 @@ final class Libre3DirectManager: ObservableObject {
     /// collide; chosen in Phase 0.
     private static let restoreIdentifier = "de.poeml.philipp.LibreWrist.libre3Direct"
 
-    /// 12 h of 1-min points is plenty for the home graph window; bounds memory.
-    private static let maxBufferedReadings = 12 * 60
-
     // MARK: - Published state
 
     /// Drives the SwiftUI connect view. Every mutation also mirrors the engine's
@@ -56,6 +53,13 @@ final class Libre3DirectManager: ObservableObject {
     /// Freshest displayable value (mg/dL), for the connect screen. `nil` until a
     /// reading is decoded.
     @Published private(set) var currentGlucoseMgDL: Int?
+    /// Minutes left in the ~60-min warm-up while the sensor is warming up; `nil`
+    /// once warm-up completes (or before the first lifecycle is known). Drives the
+    /// "warming up" countdown in the connect view and gates display of garbage
+    /// warm-up readings.
+    @Published private(set) var warmupRemainingMinutes: Int?
+    /// True once the sensor has passed its rated wear duration.
+    @Published private(set) var sensorIsExpired = false
 
     // MARK: - Engine
 
@@ -72,11 +76,52 @@ final class Libre3DirectManager: ObservableObject {
     /// connection attempt or live stream is in flight.
     private var lifecycleTask: Task<Void, Never>?
     private var restorationTask: Task<Void, Never>?
+    private var stateTask: Task<Void, Never>?
 
-    /// Rolling buffer of decoded realtime points (oldest → newest), keyed by
-    /// `lifeCount` for de-duplication. Backfill of historical pages is Phase 4.
-    private var recent: [LibreLinkUpGlucose] = []
+    /// Two parallel series mirroring the LibreLinkUp model (see `LibreLinkUp.swift`):
+    ///
+    /// * `historicalByLifeCount` — the 5-minute graph series (sensor's downsampled
+    ///   record), seeded by backfill pages and extended by the embedded historical
+    ///   sample carried in each realtime reading (~15–20 min behind now). This is
+    ///   the persistent graph base, filtered to the 6 h 10 m display window.
+    /// * `minuteByLifeCount` — the per-minute realtime readings that fill the gap
+    ///   between the last historical point (~20 min old) and now. Trimmed to those
+    ///   newer than the last historical point, exactly like LibreLinkUp's `trend`.
+    ///
+    /// Both keyed by `lifeCount` (minutes since activation) for de-duplication.
+    private var historicalByLifeCount: [Int: LibreLinkUpGlucose] = [:]
+    private var minuteByLifeCount: [Int: LibreLinkUpGlucose] = [:]
     private var sensorStartDate: Date?
+
+    /// Display window we keep + show: 6 h 10 m, matching the LibreLinkUp graph
+    /// filter (`dateSixHoursTenAgo`).
+    private static let displayWindowSeconds: TimeInterval = 6 * 60 * 60 + 10 * 60
+    /// Bound the persisted historical series to ~12 h so the buffer can't grow
+    /// without limit while still covering the display window after trimming.
+    private static let historicalRetentionSeconds: TimeInterval = 12 * 60 * 60
+    /// How long per-minute points are retained (bounds the buffer). The minute
+    /// overlay shows points newer than the last historical sample; this only caps
+    /// memory — it must NOT be used to drop recent points when history lags, which
+    /// would wipe the whole overlay.
+    private static let minuteRetentionMinutes = 90
+
+    /// Accumulates patch status + realtime + historical pages and computes the
+    /// per-reading quality assessment + lifecycle (warm-up / expiry) used to gate
+    /// what we surface. Created per connection from the persisted sensor
+    /// lifecycle fields. `nil` until the handshake completes.
+    private var dataPlaneState: Libre3DataPlaneState?
+
+    /// Guards the once-per-connection historical backfill request, fired after the
+    /// first data-plane packet yields a reliable current life count.
+    private var didRequestBackfill = false
+
+    /// The newest historical (5-min) lifeCount we already held when this
+    /// connection started — i.e. the persisted-store seed, captured BEFORE the
+    /// realtime stream begins folding in fresh embedded historical samples. This
+    /// is the backfill resume point ("gap since the last history reading"); using
+    /// the live buffer max instead would resume from a sample harvested seconds
+    /// ago and fetch almost nothing.
+    private var backfillResumeLifeCount: UInt16?
 
     private init() {
         // Observe runtime provider switches (Settings picker, or a WC settings
@@ -145,10 +190,15 @@ final class Libre3DirectManager: ObservableObject {
         }
         guard lifecycleTask == nil else { return }   // already running
         ensureScanner()
-        observeRestorationIfNeeded()
+        // Assign the lifecycle task BEFORE wiring the observers: the state
+        // observer yields the current power state immediately on subscribe and
+        // may re-enter `start()`, which must see a non-nil task and no-op rather
+        // than spawn a duplicate.
         lifecycleTask = Task { [weak self] in
             await self?.runLifecycle()
         }
+        observeRestorationIfNeeded()
+        observeBluetoothStateIfNeeded()
     }
 
     /// Tear down the connection and stop streaming (provider switched away, or
@@ -156,11 +206,17 @@ final class Libre3DirectManager: ObservableObject {
     func stop() {
         lifecycleTask?.cancel()
         lifecycleTask = nil
+        restorationTask?.cancel()
+        restorationTask = nil
+        stateTask?.cancel()
+        stateTask = nil
         if let scanner, let session {
             scanner.disconnect(session)
         }
         session = nil
         decoder = nil
+        dataPlaneState = nil
+        didRequestBackfill = false
         assembler.reset()
         connectionState = .idle
     }
@@ -177,9 +233,13 @@ final class Libre3DirectManager: ObservableObject {
     /// (Credential clearing itself is `Libre3StateStore.clear()`.)
     func forgetSensor() {
         stop()
-        recent.removeAll()
+        historicalByLifeCount.removeAll()
+        minuteByLifeCount.removeAll()
+        backfillResumeLifeCount = nil
         sensorStartDate = nil
         currentGlucoseMgDL = nil
+        warmupRemainingMinutes = nil
+        sensorIsExpired = false
         SharedData.libre3SensorStartDate = nil
     }
 
@@ -214,6 +274,51 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
+    /// Observe Bluetooth power transitions. This is essential for reconnect:
+    /// when the user turns Bluetooth OFF, iOS transitions the central to
+    /// `poweredOff` but does NOT deliver a peripheral disconnect, so the
+    /// `notifications()` stream never finishes and `consumeNotifications` would
+    /// hang forever — streaming silently dies with no recovery. So we tear the
+    /// stuck session down on power-loss and restart it when power returns.
+    private func observeBluetoothStateIfNeeded() {
+        guard stateTask == nil, let scanner else { return }
+        stateTask = Task { [weak self] in
+            for await state in scanner.stateEvents() {
+                guard let self else { return }
+                if state == .poweredOn {
+                    if self.isActiveProvider, Libre3StateStore.isPaired, self.lifecycleTask == nil {
+                        Logger.libre3.info("Libre3 BLE: Bluetooth powered on — reconnecting")
+                        self.start()
+                    }
+                } else if self.lifecycleTask != nil {
+                    Logger.libre3.info("Libre3 BLE: Bluetooth unavailable (\(String(describing: state), privacy: .public)) — tearing down session")
+                    self.teardownForReconnect()
+                }
+            }
+        }
+    }
+
+    /// Cancel the in-flight session (otherwise stuck in `consumeNotifications`,
+    /// since a Bluetooth power-off yields no disconnect) and drop session state,
+    /// leaving the manager ready to reconnect on the next power-on. Unlike
+    /// `stop()` it keeps the restoration/state observers alive so we can come
+    /// back automatically.
+    private func teardownForReconnect() {
+        lifecycleTask?.cancel()
+        lifecycleTask = nil
+        if let scanner, let session {
+            scanner.disconnect(session)
+        }
+        session = nil
+        decoder = nil
+        dataPlaneState = nil
+        didRequestBackfill = false
+        assembler.reset()
+        currentGlucoseMgDL = nil
+        warmupRemainingMinutes = nil
+        connectionState = .failed(String(localized: "Bluetooth is turned off."))
+    }
+
     /// Runs the full connect loop, retrying with a bounded backoff until the
     /// task is cancelled (provider switch / disconnect). One iteration =
     /// connect → handshake → subscribe → stream-until-disconnect.
@@ -235,7 +340,13 @@ final class Libre3DirectManager: ObservableObject {
             }
             guard isActiveProvider, Libre3StateStore.isPaired else { break }
         }
-        lifecycleTask = nil
+        // Only clear when we exited on our own terms (unpaired / provider
+        // switch). When cancelled by `stop()` / `teardownForReconnect()` those
+        // callers own `lifecycleTask` and may have already assigned a fresh task
+        // — clearing here would clobber it.
+        if !Task.isCancelled {
+            lifecycleTask = nil
+        }
     }
 
     private func connectAuthorizeAndStream() async throws {
@@ -264,19 +375,122 @@ final class Libre3DirectManager: ObservableObject {
         self.session = session
 
         connectionState = .authorizing
-        let material = try await runHandshake(session: session, blePIN: sensorState.blePIN)
-        let crypto = try DataPlaneCrypto(sessionMaterial: material)
+        let handshake = try await runHandshake(session: session, blePIN: sensorState.blePIN)
+        let crypto = try DataPlaneCrypto(sessionMaterial: handshake.sessionMaterial)
         self.decoder = DataPlaneDecoder(crypto: crypto)
         assembler.reset()
 
-        // Re-arm the data-plane CCCDs — the sensor stays silent until each
-        // notify characteristic is cycled after the handshake.
+        // Seed the data-plane state with the persisted lifecycle (warm-up /
+        // wear) + last accepted reading so quality gating and reconnect backfill
+        // work from the first packet.
+        let savedLastLifeCount = SharedData.libre3LastLifeCount > 0
+            ? UInt16(clamping: SharedData.libre3LastLifeCount) : nil
+        dataPlaneState = Libre3DataPlaneState(
+            warmupDurationMinutes: SharedData.libre3WarmupMinutes,
+            wearDurationMinutes: SharedData.libre3WearDurationMinutes > 0
+                ? SharedData.libre3WearDurationMinutes : nil,
+            lastAcceptedGlucoseLifeCount: savedLastLifeCount,
+            lastAcceptedGlucoseMgDL: SharedData.libre3LastGlucoseMgDL > 0
+                ? UInt16(clamping: SharedData.libre3LastGlucoseMgDL) : nil
+        )
+
+        // Seed BOTH series from the persisted store so the first push after a
+        // relaunch / reconnect doesn't overwrite the store with empty arrays (the
+        // buffers are empty on a fresh manager — e.g. an app restart often pushes
+        // a backfill page before any realtime reading, which would otherwise wipe
+        // the persisted minute glucose). Backfill + realtime then merge on top.
+        // Restricted to our own source so a previous provider's points are never
+        // resurfaced.
+        let persistedMinute = LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose
+            .filter { $0.glucose.source == "Libre3 BLE" }
+        if historicalByLifeCount.isEmpty {
+            // `fullLibreLinkUpGlucose` carries the injected live minute reading as
+            // its newest element (see pushHistory). Exclude anything that's a minute
+            // point so the pure 5-min series isn't polluted with a 1-min point no
+            // future 5-min sample would replace.
+            let minuteIDs = Set(persistedMinute.map { $0.glucose.id })
+            for point in LibreLinkUpHistory.shared.fullLibreLinkUpGlucose
+            where point.glucose.source == "Libre3 BLE" && !minuteIDs.contains(point.glucose.id) {
+                historicalByLifeCount[point.glucose.id] = point
+            }
+        }
+        if minuteByLifeCount.isEmpty {
+            for point in persistedMinute {
+                minuteByLifeCount[point.glucose.id] = point
+            }
+        }
+        // Capture the resume point now, before realtime readings start adding
+        // their embedded (~16-min-old) historical samples — otherwise the backfill
+        // would resume from one of those and fetch only the last page.
+        backfillResumeLifeCount = historicalByLifeCount.keys.max().map { UInt16(clamping: $0) }
+
+        // Re-arm the data-plane CCCDs — the sensor stays silent until each notify
+        // characteristic is cycled after the handshake. This is LibreCRKit's
+        // validated default set (the config that completes Phase 6 and streams on
+        // our test sensor). historicData/clinicalData are armed transiently inside
+        // the backfill path only, so the baseline handshake/stream is untouched.
         try await session.refreshDataPlaneNotifications()
+
+        // Stamp the sensor model now that we're authorized (mirrors how the
+        // Dexcom/LLU providers set the type on connect).
+        Libre3StateStore.stampSensorType()
+
+        // Backfill is fired from `handle(...)` after the FIRST data-plane packet,
+        // once we know the real current life count (matching the sample, which
+        // fires from its notification handler). Firing here with a guessed life
+        // count produced `from=0`, which the patch ignores.
+        didRequestBackfill = false
 
         connectionState = .streaming
         Logger.libre3.info("Libre3 BLE streaming started for serial=\(sensorState.serialNumber ?? "?", privacy: .public)")
 
+        // Tell the watch the BLE sensor is paired + active (provider kind +
+        // serial), so its provider-account gate opens and it renders the glucose
+        // snapshots we push. Covers pair / reconnect / state restoration.
+        WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()
+
         try await consumeNotifications(session: session)
+    }
+
+    /// On-demand historical backfill (the `patchControl` write), modelled on
+    /// Juggluco's `fillHistory` (`Libre3GattCallback.receivedpatchstatus` →
+    /// `Natives.libre3ControlHistory(1, max(lastReceived, 5))`, byte-identical to
+    /// our command).
+    ///
+    /// The earlier breakage was NOT this write: it was adding `historicData`/
+    /// `clinicalData` to LibreCRKit's off→on *refresh cycle* (disable-then-enable),
+    /// which Juggluco never does — it only plain-enables them. That's reverted, so
+    /// the historic channel is now plain-enabled transiently inside the backfill
+    /// path (matching Juggluco), and an earlier run with exactly this shape
+    /// streamed fine. Fired once after the first patch status, `from = max(5, …)`.
+    private static let onDemandBackfillEnabled = true
+
+    /// Request the one-shot historical backfill once, after the first data-plane
+    /// packet has given us a reliable current life count. `from` resumes at the
+    /// saved last reading (gap fill; the rest is seeded from the persisted store)
+    /// or 6 h back on a first-ever connect — never 0 (the patch ignores that).
+    private func requestBackfillIfNeeded(currentLifeCount: Int) {
+        guard Self.onDemandBackfillEnabled else { return }
+        guard !didRequestBackfill, currentLifeCount > 0,
+              let session, let crypto = decoder?.crypto else { return }
+        didRequestBackfill = true
+        // Resume from the history we held at connect time (the persisted seed),
+        // NOT the live buffer — which already contains this session's freshly
+        // harvested embedded samples. Fetch only the gap, capped at 6 h 10 m.
+        let from = Libre3BackfillImporter.backfillStartLifeCount(
+            lastHistoricalLifeCount: backfillResumeLifeCount,
+            currentLifeCount: UInt16(clamping: currentLifeCount)
+        )
+        Task { [weak self] in
+            do {
+                try await Libre3BackfillImporter.requestHistoricalBackfill(
+                    session: session, crypto: crypto, fromLifeCount: from
+                )
+            } catch {
+                self?.didRequestBackfill = false   // allow a retry on the next packet
+                Logger.libre3.error("Libre3 BLE historical backfill request failed: \(String(describing: error), privacy: .public)")
+            }
+        }
     }
 
     /// Find the paired sensor: prefer the saved peripheral identifier (no scan
@@ -304,7 +518,7 @@ final class Libre3DirectManager: ObservableObject {
     /// session keys (the cached-reconnect / kAuth path is a Phase 5 optimization
     /// for subsequent connects). Phase 5 material is derived in-package from the
     /// bundled first-pair source plus our entropy.
-    private func runHandshake(session: SensorSession, blePIN: Data) async throws -> Phase6SessionMaterial {
+    private func runHandshake(session: SensorSession, blePIN: Data) async throws -> FirstPairHandshakeResult {
         let transport = SensorSessionTransport(session: session)
         // Use the v1 (`03 03`) app certificate from `Libre3SKBKeys`, NOT
         // LibreCRKit's bundled default `bundledFirstPair()` (the v0 `03 00`
@@ -352,7 +566,7 @@ final class Libre3DirectManager: ObservableObject {
                 try Self.fixedEntropy(nativeEphemeral.nullEntropy11A, count: count)
             }
         )
-        return result.handshake.sessionMaterial
+        return result.handshake
     }
 
     /// Fixed entropy source for the first-pair handshake: returns the exact
@@ -376,6 +590,15 @@ final class Libre3DirectManager: ObservableObject {
             guard let channel = DataPlaneChannel(uuidString: event.characteristic.uuidString) else {
                 continue
             }
+            // Diagnostic: surface the rarer channels (history/clinical/event/
+            // factory) so we can confirm a backfill burst actually arrives,
+            // separately from whether it decodes into a page below.
+            switch channel {
+            case .glucoseData, .patchStatus:
+                break
+            default:
+                Logger.libre3.info("Libre3 BLE notify on \(channel.rawValue, privacy: .public): \(event.fragment.count, privacy: .public)B")
+            }
             guard let assembled = assembler.feed(fragment: event.fragment, channel: channel) else {
                 continue   // waiting for the glucose suffix fragment
             }
@@ -384,17 +607,40 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     private func handle(assembled: Data, channel: DataPlaneChannel) {
-        guard let decoder else { return }
+        guard let decoder, var state = dataPlaneState else { return }
         do {
             let frame = try DataFrame.parse(assembled)
             let packet = try decoder.decrypt(frame: frame, channel: channel)
-            switch packet.payload {
-            case .realtimeGlucose(let reading):
-                ingest(reading)
-            case .patchStatus(let status):
-                seedAnchorIfNeeded(lifeCount: Int(status.currentLifeCount))
-            default:
-                break   // historical / clinical pages are Phase 4
+            let update = state.record(packet)
+            dataPlaneState = state
+            // Patch status carries the authoritative lifecycle; until the first
+            // one arrives, fall back to one derived from the sensor-start anchor
+            // so warm-up gating works from the very first realtime reading.
+            let lifecycle = state.latestLifecycle ?? fallbackLifecycle()
+            if let lifecycle { applyLifecycle(lifecycle) }
+            switch update {
+            case .realtimeGlucose(let reading, let recordedAssessment):
+                // Re-assess with the fallback lifecycle when patch status hasn't
+                // landed yet (record()'s assessment then lacks warm-up/expiry).
+                let assessment = state.latestLifecycle != nil
+                    ? recordedAssessment
+                    : reading.currentGlucoseQualityAssessment(lifecycle: lifecycle)
+                ingest(reading, assessment: assessment)
+            case .historicalReadingPage(let page):
+                ingestHistorical(page)
+            case .patchStatus, .clinicalReadingRecord, .raw:
+                break
+            }
+            // Once we have a real current life count (from patch status, else the
+            // latest realtime reading), fire the one-shot backfill — mirroring the
+            // sample, which requests it from its notification handler rather than
+            // up front with a guessed life count.
+            if !didRequestBackfill {
+                let currentLifeCount = state.latestPatchStatus.map { Int($0.currentLifeCount) }
+                    ?? state.latestRealtimeGlucose.map { Int($0.lifeCount) }
+                if let currentLifeCount {
+                    requestBackfillIfNeeded(currentLifeCount: currentLifeCount)
+                }
             }
         } catch {
             Logger.libre3.error("Libre3 BLE decode failed on \(channel.rawValue, privacy: .public): \(String(describing: error), privacy: .public)")
@@ -403,26 +649,83 @@ final class Libre3DirectManager: ObservableObject {
 
     // MARK: - Reading → history
 
-    private func ingest(_ reading: RealtimeGlucoseReading) {
+    /// Quality-gated realtime ingest. Readings the library flags as not usable
+    /// (warm-up, sensor error, out of range, not actionable) update the lifecycle
+    /// UI but are NOT surfaced — that's the "suppress garbage during warm-up"
+    /// rule (PLAN Phase 4).
+    private func ingest(_ reading: RealtimeGlucoseReading, assessment: Libre3GlucoseQualityAssessment) {
         seedAnchorIfNeeded(lifeCount: Int(reading.lifeCount))
         guard let anchor = sensorStartDate else { return }
-
         let settings = SensorSettingsStore.shared.sensorSettings
+
+        // The embedded 5-minute historical sample (~15–20 min behind now) extends
+        // the graph series even when no on-demand backfill arrives. It carries its
+        // own data-quality, independent of the current value's usability.
+        if let historical = Libre3GlucoseMapper.makeGlucose(
+            fromEmbeddedHistorical: reading,
+            sensorStartDate: anchor,
+            settings: settings
+        ) {
+            historicalByLifeCount[historical.glucose.id] = historical
+        }
+
+        guard assessment.isUsable else {
+            Logger.libre3.info("Libre3 BLE reading not usable (lifeCount=\(reading.lifeCount, privacy: .public)): \(String(describing: assessment.issues), privacy: .public)")
+            // Still push so the embedded historical point (if any) reaches the graph.
+            pushHistory()
+            return
+        }
         guard let mapped = Libre3GlucoseMapper.makeGlucose(
             from: reading,
             sensorStartDate: anchor,
             settings: settings
-        ) else {
-            // Not displayable (warm-up / error / out of range): keep the link up
-            // but don't surface a value.
-            Logger.libre3.info("Libre3 BLE reading not displayable (lifeCount=\(reading.lifeCount, privacy: .public))")
-            return
-        }
+        ) else { return }
 
-        appendDeduped(mapped)
+        minuteByLifeCount[mapped.glucose.id] = mapped
         currentGlucoseMgDL = mapped.glucose.value
         persistLastAccepted(reading)
-        pushToHistory(latest: mapped)
+        pushHistory()
+    }
+
+    /// Fold an on-demand backfill page (5-min-spaced samples) into the historical
+    /// series to seed the graph window. Displayable samples only.
+    private func ingestHistorical(_ page: HistoricalReadingPage) {
+        guard let anchor = sensorStartDate else {
+            Logger.libre3.info("Libre3 BLE backfill page dropped (no anchor yet): lc \(page.startLifeCount, privacy: .public)..\(page.endLifeCount, privacy: .public)")
+            return
+        }
+        let settings = SensorSettingsStore.shared.sensorSettings
+        var added = 0
+        for sample in page.samples {
+            if let mapped = Libre3GlucoseMapper.makeGlucose(fromHistorical: sample, sensorStartDate: anchor, settings: settings) {
+                historicalByLifeCount[mapped.glucose.id] = mapped
+                added += 1
+            }
+        }
+        Logger.libre3.info("Libre3 BLE backfill page lc \(page.startLifeCount, privacy: .public)..\(page.endLifeCount, privacy: .public): \(page.values.count, privacy: .public) samples, \(added, privacy: .public) displayable")
+        guard added > 0 else { return }
+        pushHistory()
+    }
+
+    /// Apply the decoded lifecycle to the published warm-up / expiry state.
+    private func applyLifecycle(_ lifecycle: SensorLifecycle) {
+        seedAnchorIfNeeded(lifeCount: lifecycle.currentLifeCountMinutes)
+        warmupRemainingMinutes = lifecycle.isWarmingUp ? lifecycle.remainingWarmupMinutes : nil
+        sensorIsExpired = lifecycle.isExpired
+    }
+
+    /// Lifecycle derived from the wall-clock anchor + persisted warm-up/wear
+    /// durations, used to gate readings until the sensor's first patch status
+    /// (which carries the authoritative life count) arrives.
+    private func fallbackLifecycle() -> SensorLifecycle? {
+        guard let anchor = sensorStartDate else { return nil }
+        let elapsed = Int(Date().timeIntervalSince(anchor) / 60)
+        let wear = SharedData.libre3WearDurationMinutes
+        return SensorLifecycle(
+            currentLifeCountMinutes: max(0, elapsed),
+            warmupDurationMinutes: SharedData.libre3WarmupMinutes,
+            wearDurationMinutes: wear > 0 ? wear : nil
+        )
     }
 
     /// Derive the wall-clock sensor-start anchor once (`now − lifeCount·60s`) and
@@ -434,34 +737,69 @@ final class Libre3DirectManager: ObservableObject {
         SharedData.libre3SensorStartDate = anchor
     }
 
-    /// Insert keeping the buffer sorted oldest→newest and de-duplicated by id
-    /// (`lifeCount`): a repeated reading replaces in place rather than appending.
-    private func appendDeduped(_ point: LibreLinkUpGlucose) {
-        if let last = recent.last, last.glucose.id == point.glucose.id {
-            recent[recent.count - 1] = point
-        } else {
-            recent.append(point)
-        }
-        if recent.count > Self.maxBufferedReadings {
-            recent.removeFirst(recent.count - Self.maxBufferedReadings)
-        }
-    }
-
     private func persistLastAccepted(_ reading: RealtimeGlucoseReading) {
         SharedData.libre3LastLifeCount = Int(reading.lifeCount)
         SharedData.libre3LastGlucoseMgDL = reading.currentGlucoseMgDL.map(Int.init) ?? 0
     }
 
-    /// Write the rolling buffer into the universal sink, mirroring
-    /// `DexcomShareProvider.applyEntries`. Libre is 1-min cadence so — unlike
-    /// Dexcom — the minute stream is populated (smooth overlay). The graph
-    /// window is the last 12 h held in `recent`.
-    private func pushToHistory(latest: LibreLinkUpGlucose) {
-        let maxBG = recent.map { $0.glucose.value }.max() ?? 250
+    /// Build the two display series and write them into the universal sink,
+    /// mirroring the LibreLinkUp model (see `LibreLinkUp.swift`):
+    ///
+    /// * `fullLibreLinkUpGlucose` / `libreLinkUpGlucose` — the 5-minute historical
+    ///   series (the graph), the latter filtered to the 6 h 10 m display window.
+    /// * `libreLinkUpMinuteGlucose` — the per-minute realtime points filling the
+    ///   gap from the last historical point (~20 min old) to now, trimmed to those
+    ///   newer than it (and within a 60-minute cap), so nothing duplicates the
+    ///   graph once history catches up.
+    /// * latest / current = the freshest realtime minute value (else newest
+    ///   historical, before any realtime has arrived).
+    private func pushHistory() {
+        pruneBuffers()
+
+        // ALL arrays are stored NEWEST-FIRST (descending), matching the
+        // Dexcom/LibreLinkUp convention (`fullHistoryNewestFirst`,
+        // `graphHistoryReversed`, `lastMeasurement = [0]`). The watch's
+        // `mergeMinuteGlucose` and other consumers index `[0]`/`[1]` as the
+        // newest/second-newest; storing ascending here broke that (it left a
+        // stale minute point because `[1]` was the second-OLDEST graph point).
+        let historicalNewestFirst = historicalByLifeCount.values.sorted { $0.glucose.id > $1.glucose.id }
+        let newestHistoricalID = historicalNewestFirst.first?.glucose.id
+        let windowStart = Date().addingTimeInterval(-Self.displayWindowSeconds)
+
+        // Minute overlay: 1-min points newer than the newest 5-min historical
+        // value (older ones are covered by the 5-min line). Memory is bounded by
+        // `pruneBuffers`.
+        let minuteNewestFirst: [LibreLinkUpGlucose]
+        if let newestHistoricalID {
+            minuteNewestFirst = minuteByLifeCount.values
+                .filter { $0.glucose.id > newestHistoricalID }
+                .sorted { $0.glucose.id > $1.glucose.id }
+        } else {
+            // No historical series yet (cold start before backfill / embedded
+            // history): show the realtime minute points alone.
+            minuteNewestFirst = minuteByLifeCount.values
+                .filter { $0.glucose.date > windowStart }
+                .sorted { $0.glucose.id > $1.glucose.id }
+        }
+
+        // LLU/Dexcom shape: the history array's newest element [0] is the LIVE
+        // reading, so consumers that treat [0] as "current" (the graph-line
+        // widgets, the watch's minute-merge boundary `libreLinkUpGlucose[1]`)
+        // behave correctly and the graph line reaches "now" instead of stopping at
+        // the ~17-min-old 5-min point. Prepend the latest minute reading; it's
+        // replaced by a newer one on each push. The internal `historicalByLifeCount`
+        // stays PURE 5-min, and the seed-from-store step skips this injected point.
+        let latestMinute = minuteNewestFirst.first
+        var fullNewestFirst = historicalNewestFirst
+        if let latestMinute { fullNewestFirst.insert(latestMinute, at: 0) }
+        let graph = fullNewestFirst.filter { $0.glucose.date > windowStart }
+
+        guard let latest = latestMinute ?? graph.first ?? historicalNewestFirst.first else { return }
+        let maxBG = (graph + minuteNewestFirst).map { $0.glucose.value }.max() ?? 250
         _ = LibreLinkUpHistory.shared.replaceCacheAndPersist(
-            fullLibreLinkUpGlucose: recent,
-            libreLinkUpGlucose: recent,
-            libreLinkUpMinuteGlucose: recent,
+            fullLibreLinkUpGlucose: fullNewestFirst,
+            libreLinkUpGlucose: graph,
+            libreLinkUpMinuteGlucose: minuteNewestFirst,
             latestLibreLinkUpGlucose: latest,
             lastReadingDate: latest.glucose.date,
             currentGlucose: latest.glucose.value,
@@ -469,6 +807,22 @@ final class Libre3DirectManager: ObservableObject {
             maxBG: maxBG,
             lastSuccessfulLibreLinkUpAPICall: Date()
         )
+
+        // Push the updated history to the watch. The watch runs no BLE in v1; it
+        // renders the snapshot we send (PLAN §2). Uses application-context under
+        // the hood, so the rapid calls during a backfill burst coalesce to the
+        // latest.
+        WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
+    }
+
+    /// Bound both buffers by wall clock: keep ~12 h of historical (covers the
+    /// display window after trimming) and only the most recent hour of minute
+    /// points (the gap-fill never needs more).
+    private func pruneBuffers() {
+        let historicalCutoff = Date().addingTimeInterval(-Self.historicalRetentionSeconds)
+        historicalByLifeCount = historicalByLifeCount.filter { $0.value.glucose.date > historicalCutoff }
+        let minuteCutoff = Date().addingTimeInterval(-Double(Self.minuteRetentionMinutes) * 60)
+        minuteByLifeCount = minuteByLifeCount.filter { $0.value.glucose.date > minuteCutoff }
     }
 
     // MARK: - Helpers

@@ -114,6 +114,13 @@ enum DefaultsKey: String {
     case libre3SensorStartDate = "libre3SensorStartDateKey"
     case libre3LastLifeCount = "libre3LastLifeCountKey"
     case libre3LastGlucoseMgDL = "libre3LastGlucoseMgDLKey"
+    // Sensor lifecycle + model, parsed from the NFC patch info at pair time and
+    // reused on reconnect (no NFC re-scan) to drive warmup/expiry quality gating
+    // and SensorType stamping.
+    case libre3WarmupMinutes = "libre3WarmupMinutesKey"
+    case libre3WearDurationMinutes = "libre3WearDurationMinutesKey"
+    case libre3Generation = "libre3GenerationKey"
+    case libre3ProductType = "libre3ProductTypeKey"
     // BLE engine status, published by the phone-only `Libre3DirectManager` and
     // read by the shared `Libre3DirectProvider` (which must not name that
     // phone-only type — it compiles into the watch + widget targets too).
@@ -611,6 +618,35 @@ enum SharedData {
     static var libre3LastGlucoseMgDL: Int {
         get { store.getInt(.libre3LastGlucoseMgDL) }
         set { store.setInt(newValue, forKey: .libre3LastGlucoseMgDL) }
+    }
+
+    /// Warm-up duration in minutes (Libre 3 = 60), parsed from the NFC patch
+    /// frame at pair time. Feeds `SensorLifecycle` so quality gating suppresses
+    /// readings until warm-up completes. Defaults to 60 when unparsed.
+    static var libre3WarmupMinutes: Int {
+        get { store.getInt(.libre3WarmupMinutes, defaultValue: 60) }
+        set { store.setInt(newValue, forKey: .libre3WarmupMinutes) }
+    }
+
+    /// Rated total wear in minutes (≈14 days Libre 3 / 15 days Libre 3 Plus),
+    /// parsed from the NFC patch frame. Feeds `SensorLifecycle` expiry. 0 = unknown
+    /// (treated as never-expiring by the lifecycle).
+    static var libre3WearDurationMinutes: Int {
+        get { store.getInt(.libre3WearDurationMinutes) }
+        set { store.setInt(newValue, forKey: .libre3WearDurationMinutes) }
+    }
+
+    /// Sensor generation from the patch frame: 0 = Libre 3, 1 = Libre 3 Plus.
+    /// Used (with `libre3ProductType`) for SensorType stamping.
+    static var libre3Generation: Int {
+        get { store.getInt(.libre3Generation) }
+        set { store.setInt(newValue, forKey: .libre3Generation) }
+    }
+
+    /// Product type from the patch frame: 4 = Libre 3, 9 = Lingo.
+    static var libre3ProductType: Int {
+        get { store.getInt(.libre3ProductType) }
+        set { store.setInt(newValue, forKey: .libre3ProductType) }
     }
 
     /// Whether the BLE engine is currently in an error state. Written by the
