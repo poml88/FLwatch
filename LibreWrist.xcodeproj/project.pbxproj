@@ -38,6 +38,7 @@
 		7B299A1B2C90B0A1002A15C8 /* LibreLinkUpAlarm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B299A192C90B0A1002A15C8 /* LibreLinkUpAlarm.swift */; };
 		7B299A1D2C90DC43002A15C8 /* LibreLinkUpHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B299A1C2C90DC43002A15C8 /* LibreLinkUpHistory.swift */; };
 		7B299A1E2C90DC43002A15C8 /* LibreLinkUpHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B299A1C2C90DC43002A15C8 /* LibreLinkUpHistory.swift */; };
+		7B2DED132FCD8F5000CE33B2 /* Libre3SKBKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2DED122FCD8F5000CE33B2 /* Libre3SKBKeys.swift */; };
 		7B2E7EAD2CB59C9300A3473B /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B022C9A2CADDBE800CA64B4 /* WidgetKit.framework */; };
 		7B2E7EAE2CB59C9300A3473B /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B022C9C2CADDBE800CA64B4 /* SwiftUI.framework */; };
 		7B2E7EB12CB59C9300A3473B /* LibreWristWatchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2E7EB02CB59C9300A3473B /* LibreWristWatchWidget.swift */; };
@@ -161,6 +162,9 @@
 		7BB143162FCC839F00F31802 /* Libre3PINStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB143122FCC839F00F31802 /* Libre3PINStore.swift */; };
 		7BB143172FCC839F00F31802 /* Libre3PairingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB143112FCC839F00F31802 /* Libre3PairingCoordinator.swift */; };
 		7BB143192FCC83BF00F31802 /* PhoneAppLibre3ConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB143182FCC83BF00F31802 /* PhoneAppLibre3ConnectView.swift */; };
+		7BB1431C2FCCD47100F31802 /* Libre3DirectManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB1431A2FCCD47100F31802 /* Libre3DirectManager.swift */; };
+		7BB1431D2FCCD47100F31802 /* Libre3GlucoseMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB1431B2FCCD47100F31802 /* Libre3GlucoseMapper.swift */; };
+		7BB1431E2FCCD47100F31802 /* Libre3DirectConnectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB1431F2FCCD47100F31802 /* Libre3DirectConnectionState.swift */; };
 		7BB435692F200D3F00EB8DD3 /* FLwatchGraphWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB435682F200D3100EB8DD3 /* FLwatchGraphWidget.swift */; };
 		7BB617F32DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */; };
 		7BB617F42DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */; };
@@ -321,6 +325,7 @@
 		7B2DCA2D2F685415001709B0 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7B2DCA2E2F685418001709B0 /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7B2DCA2F2F68541B001709B0 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		7B2DED122FCD8F5000CE33B2 /* Libre3SKBKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Libre3SKBKeys.swift; sourceTree = "<group>"; };
 		7B2E7EAC2CB59C9300A3473B /* FlwatchWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FlwatchWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B2E7EB02CB59C9300A3473B /* LibreWristWatchWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreWristWatchWidget.swift; sourceTree = "<group>"; };
 		7B2E7EB22CB59C9500A3473B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -384,6 +389,9 @@
 		7BB143122FCC839F00F31802 /* Libre3PINStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Libre3PINStore.swift; sourceTree = "<group>"; };
 		7BB143132FCC839F00F31802 /* Libre3StateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Libre3StateStore.swift; sourceTree = "<group>"; };
 		7BB143182FCC83BF00F31802 /* PhoneAppLibre3ConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppLibre3ConnectView.swift; sourceTree = "<group>"; };
+		7BB1431A2FCCD47100F31802 /* Libre3DirectManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Libre3DirectManager.swift; sourceTree = "<group>"; };
+		7BB1431B2FCCD47100F31802 /* Libre3GlucoseMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Libre3GlucoseMapper.swift; sourceTree = "<group>"; };
+		7BB1431F2FCCD47100F31802 /* Libre3DirectConnectionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Libre3DirectConnectionState.swift; sourceTree = "<group>"; };
 		7BB435682F200D3100EB8DD3 /* FLwatchGraphWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLwatchGraphWidget.swift; sourceTree = "<group>"; };
 		7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMessageSignleton.swift; sourceTree = "<group>"; };
 		7BB762FD2C8262E600C43600 /* WatchAppActionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAppActionView.swift; sourceTree = "<group>"; };
@@ -682,6 +690,7 @@
 		7BB143072FCC79A000F31802 /* Libre3 */ = {
 			isa = PBXGroup;
 			children = (
+				7B2DED122FCD8F5000CE33B2 /* Libre3SKBKeys.swift */,
 				7BB143062FCC79A000F31802 /* Libre3DirectProvider.swift */,
 				7BB1430C2FCC837200F31802 /* Libre3Mode.swift */,
 			);
@@ -691,6 +700,9 @@
 		7BB143142FCC839F00F31802 /* Libre3BLE */ = {
 			isa = PBXGroup;
 			children = (
+				7BB1431A2FCCD47100F31802 /* Libre3DirectManager.swift */,
+				7BB1431B2FCCD47100F31802 /* Libre3GlucoseMapper.swift */,
+				7BB1431F2FCCD47100F31802 /* Libre3DirectConnectionState.swift */,
 				7BB143112FCC839F00F31802 /* Libre3PairingCoordinator.swift */,
 				7BB143122FCC839F00F31802 /* Libre3PINStore.swift */,
 				7BB143132FCC839F00F31802 /* Libre3StateStore.swift */,
@@ -1133,6 +1145,7 @@
 				7B45C5392F756BC000203B4C /* BluetoothHeartbeatManager.swift in Sources */,
 				7BF0A0122FA4000200C0D001 /* CarPlaySceneDelegate.swift in Sources */,
 				7BF92A5D2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift in Sources */,
+				7B2DED132FCD8F5000CE33B2 /* Libre3SKBKeys.swift in Sources */,
 				7BB1430A2FCC79A000F31802 /* Libre3DirectProvider.swift in Sources */,
 				7B096C9B2E33F2CA00B6744C /* PhoneAppGraphView.swift in Sources */,
 				7BF0A0022F8A000100C0D001 /* AppleHealthExportManager.swift in Sources */,
@@ -1188,6 +1201,9 @@
 				7B8965422DC156E9003A50CE /* WatchConnectivityManager.swift in Sources */,
 				7B096C9E2E33FB0900B6744C /* WatchAppGraphView.swift in Sources */,
 				7B62EDB32FACD8E000C9502B /* PhoneAppCGMProviderPickerView.swift in Sources */,
+				7BB1431C2FCCD47100F31802 /* Libre3DirectManager.swift in Sources */,
+				7BB1431D2FCCD47100F31802 /* Libre3GlucoseMapper.swift in Sources */,
+				7BB1431E2FCCD47100F31802 /* Libre3DirectConnectionState.swift in Sources */,
 				7BA304222F5E30B0005384BF /* LibreLinkUpAlarm.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

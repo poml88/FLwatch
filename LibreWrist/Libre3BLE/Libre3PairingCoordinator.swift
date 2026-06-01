@@ -153,10 +153,11 @@ final class Libre3PairingCoordinator: ObservableObject {
             )
             try Libre3StateStore.save(state: sensorState, mode: mode, patchInfo: result.patchInfo)
 
-            // Reflect "set up" for the rest of the app. Live streaming + a real
-            // connection state arrive in Phase 3; for now this marks the sensor
-            // as paired (mirrors how the cloud connect screens flip `connected`).
+            // Reflect "set up" for the rest of the app and kick off the BLE
+            // engine: the credentials are now stored, so start connecting and
+            // streaming live readings (Phase 3).
             UserDefaults.group.connected = .connected
+            Libre3DirectManager.shared.start()
 
             Logger.libre3.info("Paired via \(mode.rawValue, privacy: .public): serial=\(result.patchInfo.serialNumber, privacy: .public) fw=\(result.patchInfo.firmwareVersion, privacy: .public) addr=\(activation.bleAddressDisplay, privacy: .private)")
 
@@ -179,6 +180,7 @@ final class Libre3PairingCoordinator: ObservableObject {
 
     /// Forget the paired sensor and clear stored credentials.
     func disconnect() {
+        Libre3DirectManager.shared.forgetSensor()
         Libre3StateStore.clear()
         UserDefaults.group.connected = .disconnected
         state = .idle

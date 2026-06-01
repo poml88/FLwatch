@@ -45,19 +45,21 @@ final class Libre3DirectProvider: CGMProvider {
     // MARK: - CGMProvider
 
     func reload() async {
-        // Direct BLE is push, not pull — there is nothing to fetch here.
+        // Direct BLE is push, not pull — there is nothing to fetch here. On the
+        // phone app, "reload" just *kicks* the BLE engine (ensure a connection
+        // attempt is in flight) and mirrors its status; it never does network
+        // I/O. Other targets that build the provider registry (watch + the iOS
+        // widget/Live-Activity extensions) don't run the engine — the kick is a
+        // harmless no-op there (nobody is listening).
         //
-        // Phase 1 (current): the BLE engine doesn't exist yet, so this is an
-        // intentional no-op. The provider is selectable but inert; data starts
-        // flowing in Phase 3 when `Libre3DirectManager` lands.
-        //
-        // Phase 3 (planned): delegate to the manager on the phone —
-        //   #if os(iOS)
-        //   await Libre3DirectManager.shared.ensureConnected()
-        //   lastReloadDidFail = Libre3DirectManager.shared.isInErrorState
-        //   lastReloadResponseMessage = Libre3DirectManager.shared.statusMessage
-        //   #endif
-        // and never a network call.
-        lastReloadDidFail = false
+        // This file is SHARED (it compiles into watch + widget targets), so it
+        // must not name the phone-only `Libre3DirectManager` type — that's the
+        // `Cannot find 'Libre3DirectManager' in scope` trap. Instead it talks to
+        // the engine the same decoupled way `BluetoothHeartbeatManager` is
+        // reached from shared code: post a NotificationCenter request, and read
+        // the engine's status back from the app group (which the manager writes).
+        NotificationCenter.default.post(name: .libre3DirectReloadRequested, object: nil)
+        lastReloadDidFail = SharedData.libre3EngineDidFail
+        lastReloadResponseMessage = SharedData.libre3EngineStatusMessage
     }
 }

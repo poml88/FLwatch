@@ -27,6 +27,13 @@ extension Notification.Name {
     /// don't include the heartbeat manager — has no compile-time dependency on
     /// it. Same rationale as `dexcomShareSessionDidRefresh` above.
     static let activeCGMProviderDidChange = Notification.Name("ActiveCGMProviderDidChange")
+
+    /// Posted by the shared `Libre3DirectProvider.reload()` to ask the phone-only
+    /// `Libre3DirectManager` to ensure it's connected. Decoupled via
+    /// NotificationCenter (same rationale as `activeCGMProviderDidChange`) so the
+    /// shared provider — compiled into the watch + widget targets, which don't
+    /// link the BLE engine — never names the phone-only manager type.
+    static let libre3DirectReloadRequested = Notification.Name("Libre3DirectReloadRequested")
 }
 
 enum LibreWristUpdateNotifier {

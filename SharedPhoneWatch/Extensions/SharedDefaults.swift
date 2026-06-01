@@ -110,6 +110,15 @@ enum DefaultsKey: String {
     case libre3FirmwareVersion = "libre3FirmwareVersionKey"
     case libre3Mode = "libre3ModeKey"
     case libre3LibreViewPatientId = "libre3LibreViewPatientIdKey"
+    case libre3PeripheralUUID = "libre3PeripheralUUIDKey"
+    case libre3SensorStartDate = "libre3SensorStartDateKey"
+    case libre3LastLifeCount = "libre3LastLifeCountKey"
+    case libre3LastGlucoseMgDL = "libre3LastGlucoseMgDLKey"
+    // BLE engine status, published by the phone-only `Libre3DirectManager` and
+    // read by the shared `Libre3DirectProvider` (which must not name that
+    // phone-only type — it compiles into the watch + widget targets too).
+    case libre3EngineDidFail = "libre3EngineDidFailKey"
+    case libre3EngineStatusMessage = "libre3EngineStatusMessageKey"
 }
 
 // MARK: - Convenience typed helpers + Codable helpers
@@ -563,6 +572,59 @@ enum SharedData {
     /// stored PIN). Read by `hasActiveProviderAccount`.
     static var libre3SensorIsPaired: Bool {
         !libre3Serial.isEmpty
+    }
+
+    /// CoreBluetooth peripheral identifier (UUID string) of the paired sensor, so
+    /// `Libre3DirectManager` reconnect can `retrievePeripherals(withIdentifiers:)`
+    /// instead of waiting for a fresh scan advertisement. Empty until first seen.
+    static var libre3PeripheralUUID: String {
+        get { store.getString(.libre3PeripheralUUID, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3PeripheralUUID.rawValue) }
+            else { store.setString(newValue, forKey: .libre3PeripheralUUID) }
+        }
+    }
+
+    /// Wall-clock anchor for the sensor start (≈ now − currentLifeCount·60s),
+    /// derived once from the first decoded reading and reused to date all
+    /// readings stably across reconnects (PLAN §8). `nil` (epoch-0 sentinel)
+    /// until seeded.
+    static var libre3SensorStartDate: Date? {
+        get {
+            let date = store.getDate(.libre3SensorStartDate)
+            return date.timeIntervalSince1970 == 0 ? nil : date
+        }
+        set {
+            if let newValue { store.setDate(newValue, forKey: .libre3SensorStartDate) }
+            else { store.removeObject(forKey: DefaultsKey.libre3SensorStartDate.rawValue) }
+        }
+    }
+
+    /// Life count (minutes since activation) of the last accepted reading, for
+    /// seeding bounded reconnect backfill (Phase 5). 0 = none yet.
+    static var libre3LastLifeCount: Int {
+        get { store.getInt(.libre3LastLifeCount) }
+        set { store.setInt(newValue, forKey: .libre3LastLifeCount) }
+    }
+
+    /// Last accepted glucose value (mg/dL) for quick display/seeding. 0 = none.
+    static var libre3LastGlucoseMgDL: Int {
+        get { store.getInt(.libre3LastGlucoseMgDL) }
+        set { store.setInt(newValue, forKey: .libre3LastGlucoseMgDL) }
+    }
+
+    /// Whether the BLE engine is currently in an error state. Written by the
+    /// phone-only `Libre3DirectManager`; read by the shared `Libre3DirectProvider`
+    /// so the provider need not reference the phone-only manager type.
+    static var libre3EngineDidFail: Bool {
+        get { store.getBool(.libre3EngineDidFail) }
+        set { store.setBool(newValue, forKey: .libre3EngineDidFail) }
+    }
+
+    /// User-visible status string from the BLE engine (same decoupling as above).
+    static var libre3EngineStatusMessage: String {
+        get { store.getString(.libre3EngineStatusMessage, defaultValue: "[...]") }
+        set { store.setString(newValue, forKey: .libre3EngineStatusMessage) }
     }
 
     // MARK: - Provider-agnostic credential gates

@@ -13,6 +13,7 @@ import SwiftUI
 
 struct PhoneAppLibre3ConnectView: View {
     @StateObject private var coordinator = Libre3PairingCoordinator()
+    @ObservedObject private var directManager = Libre3DirectManager.shared
     @State private var selectedMode: Libre3Mode = .takeover
     @State private var showFreshActivationConfirm = false
 
@@ -192,8 +193,10 @@ struct PhoneAppLibre3ConnectView: View {
         } header: {
             Text("Sensor")
         } footer: {
-            Text("Pairing is complete. Live glucose over Bluetooth is being built — it isn't streaming yet.")
+            Text("Pairing is complete. Keep your phone near the sensor — readings arrive about once a minute over Bluetooth.")
         }
+
+        liveSection
 
         Section {
             Button(role: .destructive) {
@@ -204,6 +207,38 @@ struct PhoneAppLibre3ConnectView: View {
         } footer: {
             Text("Forgets this sensor and its stored credentials. You'll need to scan again to re-pair.")
         }
+    }
+
+    // MARK: - Live connection (Phase 3)
+
+    private var liveSection: some View {
+        Section {
+            HStack {
+                Image(systemName: liveIcon)
+                    .foregroundStyle(liveTint)
+                Text(directManager.statusMessage)
+                Spacer()
+                if let mgdl = directManager.currentGlucoseMgDL {
+                    Text("\(mgdl) mg/dL")
+                        .font(.headline)
+                        .monospacedDigit()
+                }
+            }
+        } header: {
+            Text("Connection")
+        }
+    }
+
+    private var liveIcon: String {
+        if directManager.isInErrorState { return "exclamationmark.triangle.fill" }
+        return directManager.connectionState == .streaming
+            ? "dot.radiowaves.left.and.right"
+            : "antenna.radiowaves.left.and.right"
+    }
+
+    private var liveTint: Color {
+        if directManager.isInErrorState { return .orange }
+        return directManager.connectionState == .streaming ? .green : .secondary
     }
 
     // MARK: - Actions

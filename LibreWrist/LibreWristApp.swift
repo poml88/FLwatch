@@ -36,6 +36,12 @@ struct LibreWristApp: App {
         if SharedData.bluetoothHeartbeatEnabled {
             BluetoothHeartbeatManager.shared.startScanning()
         }
+        // Direct-BLE engine for the `.libre3BLE` provider. Creates its central
+        // early (only when that provider is active) so CoreBluetooth state
+        // restoration can deliver the sensor after a background relaunch; a
+        // no-op for the cloud providers. The heartbeat above gates itself off
+        // for `.libre3BLE`, so only one central ever owns the sensor.
+        Libre3DirectManager.shared.startIfNeeded()
         // alternatively the session could be started in AppDelegate see https://developer.apple.com/documentation/swiftui/migrating-to-the-swiftui-life-cycle
         appRefreshScheduler.register()
         appRefreshScheduler.scheduleNextRefresh()
