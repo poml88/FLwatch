@@ -37,12 +37,13 @@ struct SensorSettings: Codable, Equatable {
 
     var hasDrawableLowAlarm: Bool { alarmLow >= Self.minDrawableAlarmMgDl }
 
-    /// The alarm pair to store for a Dexcom session. When low-glucose alerts are
-    /// enabled the low alarm tracks the notification threshold so the red line
-    /// appears there; otherwise the low sentinel keeps it hidden (Dexcom carries
-    /// no real alarm thresholds). The high alarm is a fixed out-of-range value
-    /// that's never drawn and always above the low alarm.
-    static func dexcomAlarms(notificationsEnabled: Bool, threshold: Int) -> (low: Int, high: Int) {
+    /// The alarm pair to store for a provider that carries no real alarm
+    /// thresholds of its own — Dexcom Share and Libre 3 direct BLE. When
+    /// low-glucose alerts are enabled the low alarm tracks the notification
+    /// threshold so the red line appears there; otherwise the low sentinel keeps
+    /// it hidden. The high alarm is a fixed out-of-range value that's never drawn
+    /// and always above the low alarm.
+    static func manualAlarms(notificationsEnabled: Bool, threshold: Int) -> (low: Int, high: Int) {
         let low = notificationsEnabled && threshold >= minDrawableAlarmMgDl ? threshold : dexcomAlarmLowSentinel
         return (low, dexcomAlarmHigh)
     }

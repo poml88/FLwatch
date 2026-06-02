@@ -46,6 +46,7 @@ enum DefaultsKey: String {
     case bluetoothHeartbeatLastRefreshDate = "bluetoothHeartbeatLastRefreshDateKey"
     case watchPeerSnapshotLastReceivedDate = "watchPeerSnapshotLastReceivedDateKey"
     case lowGlucoseNotificationsEnabled = "lowGlucoseNotificationsEnabledKey"
+    case lowGlucoseCriticalAlertsEnabled = "lowGlucoseCriticalAlertsEnabledKey"
     case lowGlucoseNotificationThreshold = "lowGlucoseNotificationThresholdKey"
     case lowGlucoseNotificationLastSentDate = "lowGlucoseNotificationLastSentDateKey"
     case lowGlucoseNotificationPendingRepeat = "lowGlucoseNotificationPendingRepeatKey"
@@ -354,6 +355,15 @@ enum SharedData {
     static var lowGlucoseNotificationsEnabled: Bool {
         get { store.getBool(.lowGlucoseNotificationsEnabled, defaultValue: false) }
         set { store.setBool(newValue, forKey: .lowGlucoseNotificationsEnabled) }
+    }
+
+    /// When on, low-glucose alerts are delivered as *critical* notifications
+    /// (override silent mode / Focus / Do Not Disturb) instead of the default
+    /// time-sensitive level. Off by default; requires the critical-alert
+    /// entitlement + the user granting critical-alert authorization.
+    static var lowGlucoseCriticalAlertsEnabled: Bool {
+        get { store.getBool(.lowGlucoseCriticalAlertsEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .lowGlucoseCriticalAlertsEnabled) }
     }
 
     static var lowGlucoseNotificationThreshold: Int {

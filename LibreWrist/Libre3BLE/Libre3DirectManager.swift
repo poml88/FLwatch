@@ -487,6 +487,10 @@ final class Libre3DirectManager: ObservableObject {
         // Stamp the sensor model now that we're authorized (mirrors how the
         // Dexcom/LLU providers set the type on connect).
         Libre3StateStore.stampSensorType()
+        // Wire the graph's red low-alarm line from the notification settings,
+        // like the Dexcom login path — the direct stream carries no alarm
+        // thresholds of its own.
+        applyManualAlarmWiring()
 
         // Backfill is fired from `handle(...)` after the FIRST data-plane packet,
         // once we know the real current life count (matching the sample, which
@@ -814,6 +818,25 @@ final class Libre3DirectManager: ObservableObject {
         persistLastAccepted(reading)
         pushHistory()
         refreshLiveActivityForNewReading()
+        evaluateLowGlucoseForNewReading()
+    }
+
+    /// Drive the low-glucose alert from the push model's data tick. In BLE mode
+    /// there's no heartbeat coordinator to call `evaluateCurrentReading` (the
+    /// cloud path's trigger — `BluetoothHeartbeatManager`), so we fire it here
+    /// the moment a fresh *usable* minute reading has been written into the
+    /// shared `LibreLinkUpHistory` store by `pushHistory()`.
+    ///
+    /// `LowGlucoseNotificationManager` is provider-agnostic — it reads the shared
+    /// history + `activeProvider.staleReadingAfter` (3 min for `.libre3BLE`) and
+    /// self-gates on the enabled flag and its own 5-minute repeat throttle — so
+    /// it needs no Libre-3-specific knowledge. Only called on a usable reading
+    /// (not warm-up/garbage, not per backfill page), mirroring
+    /// `refreshLiveActivityForNewReading`.
+    private func evaluateLowGlucoseForNewReading() {
+        Task {
+            await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
+        }
     }
 
     /// Refresh the phone's Live Activity the moment a new usable minute reading
@@ -885,6 +908,32 @@ final class Libre3DirectManager: ObservableObject {
         let anchor = Date().addingTimeInterval(-Double(lifeCount) * 60)
         sensorStartDate = anchor
         SharedData.libre3SensorStartDate = anchor
+    }
+
+    /// Wire the graph's red low-alarm line from the low-glucose notification
+    /// settings, mirroring the Dexcom login path (`DexcomShareProvider`): the
+    /// direct BLE stream carries no alarm thresholds of its own, so the alarm
+    /// line tracks the notification threshold when low alerts are on and is
+    /// hidden (sentinel) otherwise. The user's unit + target choices (set in
+    /// Settings) are preserved. Run on each connect so the line is correct even
+    /// before the user opens Settings — e.g. right after switching to
+    /// `.libre3BLE` with settings left over from another provider. The Settings
+    /// UI keeps it live afterwards (`persistManualSensorSettings`).
+    private func applyManualAlarmWiring() {
+        let existing = SensorSettingsStore.shared.sensorSettings
+        let alarms = SensorSettings.manualAlarms(
+            notificationsEnabled: SharedData.lowGlucoseNotificationsEnabled,
+            threshold: SharedData.lowGlucoseNotificationThreshold
+        )
+        let updated = SensorSettings(
+            uom: existing.uom,
+            targetLow: existing.targetLow,
+            targetHigh: existing.targetHigh,
+            alarmLow: alarms.low,
+            alarmHigh: alarms.high
+        )
+        guard updated != existing else { return }
+        _ = SensorSettingsStore.shared.updateSensorSettings(updated)
     }
 
     private func persistLastAccepted(_ reading: RealtimeGlucoseReading) {

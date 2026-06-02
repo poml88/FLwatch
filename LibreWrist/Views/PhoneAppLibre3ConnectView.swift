@@ -74,6 +74,19 @@ struct PhoneAppLibre3ConnectView: View {
 
     @ViewBuilder
     private var setupSections: some View {
+        
+        Section {
+            
+            Text("Support for Libre 3 BLE is still in early testing.\nTo pair an already-activated sensor you need your LibreView Account ID. The section below helps you retrieve it.\nThere are three pairing modes. I recommend Parallel mode, so you can use both apps (Libre 3 and FLwatch) — just not at the same time. Only one may run at a time; the other must be force-closed, otherwise the two apps steal the sensor connection from each other.\nAfter you switch apps, it takes 2–3 minutes for the other one to regain control.\n\nNote: while the Libre 3 app is closed, it gives no alarms. FLwatch provides a low-glucose alarm, but it is still being tested.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+        } header: {
+            Text("Libre 3 BLE notes")
+        }
+        
+        
         Section {
             TextField("LibreView email", text: $libreViewEmail)
                 .textContentType(.username)
@@ -359,9 +372,9 @@ struct PhoneAppLibre3ConnectView: View {
     private func modeDescription(_ mode: Libre3Mode) -> LocalizedStringKey {
         switch mode {
         case .takeover:
-            return "Take over a sensor you already started in the Libre 3 app. FLwatch becomes the sensor's receiver; the Libre app and LibreView sharing stop. Recommended."
+            return "Take over a sensor you already started in the Libre 3 app. FLwatch becomes the sensor's receiver; the Libre app and LibreView sharing stop."
         case .parallelJoin:
-            return "Join a sensor you already started in the Libre 3 app without taking it over, so the Libre app and LibreView keep working alongside FLwatch."
+            return "Join a sensor you already started in the Libre 3 app without taking it over, so the Libre app and LibreView keep working alongside FLwatch. Recommended."
         case .activateFresh:
             return "Activate a brand-new, unused sensor with FLwatch. With a LibreView Patient ID above, the sensor stays tied to that account (LibreView keeps working); without one it's activated with a random receiver — FLwatch-only, no LibreView."
         }
@@ -385,4 +398,9 @@ struct PhoneAppLibre3ConnectView: View {
         }
     }
 }
+
+#Preview {
+    PhoneAppLibre3ConnectView()
+}
+
 #endif

@@ -86,6 +86,12 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         // sensor is paired — app groups are per-device, so the phone forwards it.
         // nil when not the active provider / not paired / from older builds.
         let libre3Serial: String?
+        // Whether low-glucose alerts should be delivered as *critical*
+        // notifications. A global user setting (set in the phone's Libre 3
+        // section), mirrored so the watch's backup local alert can match the
+        // phone's level and pre-request critical-alert authorization. Optional
+        // for older builds that didn't send it (treated as false).
+        let lowGlucoseCriticalAlertsEnabled: Bool?
         let updatedAt: Date
     }
 
@@ -559,6 +565,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             sensorSettings: providerKind == .dexcomShare ? SensorSettingsStore.shared.sensorSettings : nil,
             sensorTypeRawValue: providerKind == .dexcomShare ? SensorSettingsStore.shared.sensorType.rawValue : nil,
             libre3Serial: providerKind == .libre3BLE && SharedData.libre3SensorIsPaired ? SharedData.libre3Serial : nil,
+            lowGlucoseCriticalAlertsEnabled: SharedData.lowGlucoseCriticalAlertsEnabled,
             updatedAt: Date()
         )
 
@@ -698,6 +705,21 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         SharedData.showActivityCurveWatch = snapshot.showActivityCurveWatch
         SharedData.widgetUpdateFrequency = snapshot.widgetUpdateFrequency
         SharedData.tapComplicationReloads = snapshot.tapComplicationReloads
+
+        // Mirror the critical-alert preference so the watch's backup low-glucose
+        // notification matches the phone's level. When it flips on, (re)request
+        // authorization including `.criticalAlert` now, so the grant is in place
+        // before the next alert rather than prompting mid-low.
+        let wantsCritical = snapshot.lowGlucoseCriticalAlertsEnabled ?? false
+#if os(watchOS)
+        let criticalWasEnabled = SharedData.lowGlucoseCriticalAlertsEnabled
+#endif
+        SharedData.lowGlucoseCriticalAlertsEnabled = wantsCritical
+#if os(watchOS)
+        if wantsCritical && !criticalWasEnabled {
+            requestWatchLowGlucoseNotificationAuthorization()
+        }
+#endif
 
         // Mirror the phone's sensor settings (unit, target range, sensor type).
         // The phone is authoritative; Share never returns these on the watch.
@@ -953,12 +975,23 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             return false
         }
 
-        if [.authorized, .provisional].contains(settings.authorizationStatus) {
+        // When the user wants critical alerts we must still request even if the
+        // base alert grant exists, so iOS prompts for the incremental
+        // critical-alert permission. Skip the request only when already
+        // authorized AND the critical grant is satisfied (or not wanted).
+        let wantsCritical = SharedData.lowGlucoseCriticalAlertsEnabled
+        let criticalSatisfied = !wantsCritical || settings.criticalAlertSetting == .enabled
+        if [.authorized, .provisional].contains(settings.authorizationStatus), criticalSatisfied {
             return true
         }
 
+        var options: UNAuthorizationOptions = [.alert, .sound, .badge]
+        if wantsCritical {
+            options.insert(.criticalAlert)
+        }
+
         do {
-            return try await watchNotificationCenter.requestAuthorization(options: [.alert, .sound, .badge])
+            return try await watchNotificationCenter.requestAuthorization(options: options)
         } catch {
             Logger.connectivity.error("Watch low glucose notification authorization failed: \(error.localizedDescription)")
             return false
@@ -1010,10 +1043,20 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         content.title = payload.title
         content.subtitle = payload.subtitle
         content.body = payload.body
-        if settings.soundSetting == .enabled {
-            content.sound = .default
+        // Match the phone: critical delivery (overrides silent mode / Focus / Do
+        // Not Disturb, plays a sound even when muted) when the user opted in AND
+        // the watch granted the critical-alert permission; otherwise the default
+        // time-sensitive level.
+        let useCritical = SharedData.lowGlucoseCriticalAlertsEnabled && settings.criticalAlertSetting == .enabled
+        if useCritical {
+            content.sound = .defaultCritical
+            content.interruptionLevel = .critical
+        } else {
+            if settings.soundSetting == .enabled {
+                content.sound = .default
+            }
+            content.interruptionLevel = .timeSensitive
         }
-        content.interruptionLevel = .timeSensitive
         content.relevanceScore = 1
 
         let requestIdentifier = "\(Self.watchLowGlucoseNotificationIdentifierPrefix)-\(Int(now.timeIntervalSince1970))"

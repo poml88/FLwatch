@@ -56,19 +56,15 @@ enum Libre3StateStore {
         try Libre3PINStore.save(state.blePIN)
         SharedData.libre3Serial = state.serialNumber ?? patchInfo.serialNumber
         SharedData.libre3BleAddress = state.bleAddress ?? ""
-        // Firmware parsed from the DiaBLE/Juggluco layout. (LibreCRKit's
-        // `firmwareVersion` sits at a different offset — it's fresh-activation-
-        // focused and never consumes that field; fall back to it if our parse
-        // fails.)
-        let fields = Libre3PatchFields(raw: patchInfo.raw)
-        SharedData.libre3FirmwareVersion = fields?.firmware ?? patchInfo.firmwareVersion
-        // Lifecycle + model fields for warmup/expiry gating and SensorType
-        // stamping, parsed from the DiaBLE/Juggluco layout (LibreCRKit never
-        // consumes these). Persisted so reconnect needs no NFC re-scan.
-        SharedData.libre3WarmupMinutes = fields?.warmupMinutes ?? 60
-        SharedData.libre3WearDurationMinutes = Int(fields?.wearDurationMinutes ?? patchInfo.wearDurationMinutes)
-        SharedData.libre3Generation = Int(fields?.generation ?? 0)
-        SharedData.libre3ProductType = Int(fields?.productType ?? 4)
+        // Firmware + lifecycle/model fields come straight from LibreCRKit's
+        // patch-info parser (offsets fixed upstream in d96c914 to match what we
+        // validated against DiaBLE/Juggluco). Persisted so reconnect needs no
+        // NFC re-scan.
+        SharedData.libre3FirmwareVersion = patchInfo.firmwareVersion
+        SharedData.libre3WarmupMinutes = Int(patchInfo.warmupMinutes)
+        SharedData.libre3WearDurationMinutes = Int(patchInfo.wearDurationMinutes)
+        SharedData.libre3Generation = Int(patchInfo.generation)
+        SharedData.libre3ProductType = Int(patchInfo.productType)
         if let receiverID = state.receiverID {
             SharedData.libre3ReceiverIDHex = receiverID.littleEndianHex
         }

@@ -159,7 +159,7 @@ final class DexcomShareProvider: CGMProvider {
         // notification threshold when enabled, otherwise stays at the hidden
         // sentinel. The user's unit and target choices are kept as-is.
         let existing = SensorSettingsStore.shared.sensorSettings
-        let alarms = SensorSettings.dexcomAlarms(
+        let alarms = SensorSettings.manualAlarms(
             notificationsEnabled: SharedData.lowGlucoseNotificationsEnabled,
             threshold: SharedData.lowGlucoseNotificationThreshold
         )

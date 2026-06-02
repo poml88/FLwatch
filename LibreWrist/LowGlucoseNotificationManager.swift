@@ -56,7 +56,13 @@ final class LowGlucoseNotificationManager: NSObject {
             return false
         }
 
-        let options: UNAuthorizationOptions = [.alert, .badge, .sound, .carPlay]
+        var options: UNAuthorizationOptions = [.alert, .badge, .sound, .carPlay]
+        // Fold in the critical-alert grant when the user has opted into critical
+        // delivery, so enabling low alerts while critical is already on prompts
+        // for both in one go.
+        if SharedData.lowGlucoseCriticalAlertsEnabled {
+            options.insert(.criticalAlert)
+        }
 
         do {
             return try await notificationCenter.requestAuthorization(options: options)
@@ -64,6 +70,27 @@ final class LowGlucoseNotificationManager: NSObject {
             Logger.connectivity.error("Low glucose notification authorization failed: \(error.localizedDescription, privacy: .public)")
             return false
         }
+    }
+
+    /// Request the critical-alert grant on top of the standard authorization
+    /// (iOS authorizes incrementally). Returns whether the system now reports
+    /// critical alerts as enabled, so the Settings toggle can revert itself if
+    /// the user declines the prompt.
+    func requestCriticalAuthorizationIfNeeded() async -> Bool {
+        let settings = await notificationCenter.notificationSettings()
+        guard settings.authorizationStatus != .denied else {
+            return false
+        }
+
+        let options: UNAuthorizationOptions = [.alert, .badge, .sound, .carPlay, .criticalAlert]
+        do {
+            _ = try await notificationCenter.requestAuthorization(options: options)
+        } catch {
+            Logger.connectivity.error("Critical alert authorization failed: \(error.localizedDescription, privacy: .public)")
+            return false
+        }
+        let updated = await notificationCenter.notificationSettings()
+        return updated.criticalAlertSetting == .enabled
     }
 
     func evaluateCurrentReading(now: Date = Date()) async {
@@ -124,12 +151,23 @@ final class LowGlucoseNotificationManager: NSObject {
         content.title = String(localized: "Glucose is low")
         content.subtitle = compactTrendSummary
         content.body = String(format: String(localized: "Your alert level is %@."), thresholdValue)
-        if settings.soundSetting == .enabled {
-            content.sound = .default
+        // Critical delivery (overrides silent mode / Focus / Do Not Disturb) when
+        // the user opted in AND the system granted the critical-alert permission;
+        // otherwise fall back to the default time-sensitive level. A critical
+        // alert plays its sound even when the ringer is muted, so it ignores the
+        // system sound setting.
+        let useCritical = SharedData.lowGlucoseCriticalAlertsEnabled && settings.criticalAlertSetting == .enabled
+        if useCritical {
+            content.sound = .defaultCritical
+            content.interruptionLevel = .critical
         } else {
-            Logger.connectivity.info("Low glucose notification scheduled without sound because sounds are disabled in system settings")
+            if settings.soundSetting == .enabled {
+                content.sound = .default
+            } else {
+                Logger.connectivity.info("Low glucose notification scheduled without sound because sounds are disabled in system settings")
+            }
+            content.interruptionLevel = .timeSensitive
         }
-        content.interruptionLevel = .timeSensitive
         content.relevanceScore = 1
         content.categoryIdentifier = LowGlucoseNotificationConfig.categoryIdentifier
 

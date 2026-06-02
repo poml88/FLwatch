@@ -37,25 +37,22 @@ final class Libre3PairingCoordinator: ObservableObject {
         let serial: String
         /// Libre 3 / Libre 3 Plus / Lingo, from productType + generation.
         let model: String
-        /// Firmware parsed from the DiaBLE/Juggluco layout (LibreCRKit's
-        /// `firmwareVersion` is fresh-activation-incidental and sits elsewhere).
         let firmware: String
         let stateByte: UInt8
         let wearDurationMinutes: UInt16
-        /// Warm-up duration in minutes (Libre 3 = 60); `nil` if unparsable.
+        /// Warm-up duration in minutes (Libre 3 = 60).
         let warmupMinutes: Int?
         /// True when the sensor is fresh (state 0x01) so the recommended command
         /// is activate; false when it's already active (takeover/parallel apply).
         let isFresh: Bool
 
         init(patchInfo: Libre3NFCPatchInfo) {
-            let fields = Libre3PatchFields(raw: patchInfo.raw)
-            serial = (fields?.serial).flatMap { $0.isEmpty ? nil : $0 } ?? patchInfo.serialNumber
-            model = fields?.modelName ?? "Libre 3"
-            firmware = fields?.firmware ?? patchInfo.firmwareVersion
+            serial = patchInfo.serialNumber
+            model = patchInfo.modelName
+            firmware = patchInfo.firmwareVersion
             stateByte = patchInfo.stateByte
             wearDurationMinutes = patchInfo.wearDurationMinutes
-            warmupMinutes = fields?.warmupMinutes
+            warmupMinutes = Int(patchInfo.warmupMinutes)
             isFresh = patchInfo.recommendedCommandCode == .activate
         }
     }
@@ -278,47 +275,14 @@ final class Libre3PairingCoordinator: ObservableObject {
     }
 }
 
-/// Libre 3 patch-info fields needed for the takeover path.
-///
-/// LibreCRKit is built for fresh activation + recovery, which only needs the
-/// state byte (A0 vs A8), serial, wear duration, and the activation response's
-/// PIN/address — all of which it parses correctly. It also surfaces
-/// `firmwareVersion`/`productType`/`generation`, but never consumes them, so
-/// they sit at different offsets than the takeover path needs. We therefore
-/// parse those fields ourselves, using the byte layout that **DiaBLE
-/// (`Libre3.swift:586-627`) and Juggluco (`libre3/nfc.cpp` `firstnfc`) agree
-/// on** (two independent sources), reading LibreCRKit's normalized `raw`
-/// (`00 a5 X <26-byte struct…>`; struct at offset 3, anchored by wearDuration@9
-/// and state@17 — where LibreCRKit reads them too).
-struct Libre3PatchFields: Equatable {
-    let generation: UInt16          // 0 = Libre 3, 1 = Libre 3+ / Instinct
-    let wearDurationMinutes: UInt16
-    let firmware: String            // DiaBLE display order: b3.b2.b1.b0
-    let productType: UInt8          // 4 = Libre 3, 9 = Lingo
-    let warmupMinutes: Int
-    let stateByte: UInt8
-    let serial: String
-
-    private static let structBase = 3
-    private static let structSize = 26
-
-    init?(raw: Data) {
-        let b = [UInt8](raw)
-        let base = Self.structBase
-        guard b.count >= base + Self.structSize else { return nil }
-        func u16(_ o: Int) -> UInt16 { UInt16(b[base + o]) | (UInt16(b[base + o + 1]) << 8) }
-        generation = u16(4)
-        wearDurationMinutes = u16(6)
-        let fw = Array(b[(base + 8)..<(base + 12)])
-        firmware = "\(fw[3]).\(fw[2]).\(fw[1]).\(fw[0])"
-        productType = b[base + 12]
-        warmupMinutes = Int(b[base + 13]) * 5
-        stateByte = b[base + 14]
-        let serialBytes = Array(b[(base + 15)..<(base + 24)])
-        serial = String(bytes: serialBytes, encoding: .ascii) ?? ""
-    }
-
-    /// Human model name from productType + generation.
+extension Libre3NFCPatchInfo {
+    /// Human model name from LibreCRKit's `productType` + `generation`.
+    ///
+    /// (We used to parse these fields ourselves because LibreCRKit's patch-info
+    /// offsets were off by the 3-byte prefix; that was fixed upstream in
+    /// `d96c914`, so we now read `productType`/`generation`/`firmwareVersion`/
+    /// `warmupMinutes` straight from `Libre3NFCPatchInfo`. Only this model-name
+    /// mapping remains ours — the package exposes the codes, not a label.)
     var modelName: String {
         switch productType {
         case 9: return "Lingo"

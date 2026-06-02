@@ -24,6 +24,7 @@ struct PhoneAppSettingsView: View {
     @AppStorage(DefaultsKey.tapComplicationReloads.rawValue, store: UserDefaults.group) private var tapComplicationReloads: Bool = false
     @AppStorage(DefaultsKey.useLiveActivities.rawValue, store: UserDefaults.group) private var useLiveActivities: Bool = true
     @AppStorage(DefaultsKey.lowGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationsEnabled: Bool = false
+    @AppStorage(DefaultsKey.lowGlucoseCriticalAlertsEnabled.rawValue, store: UserDefaults.group) private var lowGlucoseCriticalAlertsEnabled: Bool = false
     @AppStorage(DefaultsKey.lowGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationThreshold: Int = 70
     
     
@@ -33,9 +34,9 @@ struct PhoneAppSettingsView: View {
     @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
     @State private var pendingProviderSwitch: CGMProviderKind? = nil
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
-    @State private var dexcomUom: Int = SensorSettingsStore.shared.sensorSettings.uom
-    @State private var dexcomTargetLow: Int = SensorSettingsStore.shared.sensorSettings.targetLow
-    @State private var dexcomTargetHigh: Int = SensorSettingsStore.shared.sensorSettings.targetHigh
+    @State private var manualUom: Int = SensorSettingsStore.shared.sensorSettings.uom
+    @State private var manualTargetLow: Int = SensorSettingsStore.shared.sensorSettings.targetLow
+    @State private var manualTargetHigh: Int = SensorSettingsStore.shared.sensorSettings.targetHigh
     @State private var dexcomSensorType: SensorType = {
         let current = SensorSettingsStore.shared.sensorType
         return current.isADexcom ? current : .dexcomG7
@@ -48,8 +49,8 @@ struct PhoneAppSettingsView: View {
     let lowGlucoseThresholdOptions: [Int] = Array(stride(from: 60, through: 200, by: 5))
     // Stored in mg/dL; displayed in the selected unit. Ranges kept disjoint so
     // targetLow stays below targetHigh and never trips SensorSettings normalization.
-    let dexcomTargetLowOptions: [Int] = Array(stride(from: 50, through: 120, by: 5))
-    let dexcomTargetHighOptions: [Int] = Array(stride(from: 125, through: 250, by: 5))
+    let targetLowOptions: [Int] = Array(stride(from: 50, through: 120, by: 5))
+    let targetHighOptions: [Int] = Array(stride(from: 125, through: 250, by: 5))
     private var bgAppRefreshExecutionTimestamps: [Date] {
         (UserDefaults.group.array(forKey: "bgAppRefreshExecutionTimestamps") as? [TimeInterval] ?? [])
             .map(Date.init(timeIntervalSince1970:))
@@ -116,7 +117,27 @@ struct PhoneAppSettingsView: View {
             }
         }
     }
-    
+
+    /// Enabling critical delivery needs the critical-alert permission on top of
+    /// the standard grant; if the user declines the system prompt, revert the
+    /// toggle so it reflects reality. Re-evaluates so a currently-low reading is
+    /// re-delivered at the new level.
+    private func handleCriticalAlertsChanged(_ isEnabled: Bool) {
+        Task {
+            if isEnabled {
+                let granted = await LowGlucoseNotificationManager.shared.requestCriticalAuthorizationIfNeeded()
+                if !granted {
+                    await MainActor.run { lowGlucoseCriticalAlertsEnabled = false }
+                }
+            }
+            // Mirror the (possibly reverted) preference to the watch so its
+            // backup low-glucose alert matches the phone's level, then
+            // re-evaluate so a current low is re-delivered at the new level.
+            watchConnector.sendSettingsSnapshotToWatch()
+            await LowGlucoseNotificationManager.shared.enableNotifications()
+        }
+    }
+
     private var cgmProviderKind: CGMProviderKind {
         CGMProviderKind(rawValue: cgmProviderKindRaw) ?? .libreLinkUp
     }
@@ -214,7 +235,7 @@ struct PhoneAppSettingsView: View {
                 ) {
                     Text("FreeStyle Libre (LibreLinkUp)").tag(CGMProviderKind.libreLinkUp)
                     Text("Dexcom (Share)").tag(CGMProviderKind.dexcomShare)
-                    Text("FreeStyle Libre 3 (Bluetooth)").tag(CGMProviderKind.libre3BLE)
+                    Text("FreeStyle Libre 3 (Bluetooth) EXPERIMENTAL").tag(CGMProviderKind.libre3BLE)
                 } label: {
                     Text("CGM provider")
                 }
@@ -254,31 +275,67 @@ struct PhoneAppSettingsView: View {
                         watchConnector.sendSettingsSnapshotToWatch()
                     }
 
-                    Picker("Glucose unit", selection: $dexcomUom) {
+                    Picker("Glucose unit", selection: $manualUom) {
                         Text("mg/dL").tag(1)
                         Text("mmol/L").tag(0)
                     }
-                    .onChange(of: dexcomUom) { _, _ in persistDexcomSensorSettings() }
+                    .onChange(of: manualUom) { _, _ in persistManualSensorSettings() }
 
-                    Picker("Target low", selection: $dexcomTargetLow) {
-                        ForEach(dexcomTargetLowOptions, id: \.self) { value in
-                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: dexcomUom), withUnit: true))
+                    Picker("Target low", selection: $manualTargetLow) {
+                        ForEach(targetLowOptions, id: \.self) { value in
+                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: manualUom), withUnit: true))
                                 .tag(value)
                         }
                     }
-                    .onChange(of: dexcomTargetLow) { _, _ in persistDexcomSensorSettings() }
+                    .onChange(of: manualTargetLow) { _, _ in persistManualSensorSettings() }
 
-                    Picker("Target high", selection: $dexcomTargetHigh) {
-                        ForEach(dexcomTargetHighOptions, id: \.self) { value in
-                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: dexcomUom), withUnit: true))
+                    Picker("Target high", selection: $manualTargetHigh) {
+                        ForEach(targetHighOptions, id: \.self) { value in
+                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: manualUom), withUnit: true))
                                 .tag(value)
                         }
                     }
-                    .onChange(of: dexcomTargetHigh) { _, _ in persistDexcomSensorSettings() }
+                    .onChange(of: manualTargetHigh) { _, _ in persistManualSensorSettings() }
                 } header: {
                     Text("Dexcom Sensor Settings")
                 } footer: {
                     Text("Dexcom Share doesn't send these settings, so set them here. Values are shown in the selected unit and used for the graph target range and reading colors.")
+                }
+            }
+
+            // Like Dexcom Share, the Libre 3 direct stream carries no unit /
+            // target / alarm preferences, so the user sets them here. Same
+            // manual plumbing (`persistManualSensorSettings`). The red low-alarm
+            // line is wired from the low-glucose alert level in the Notifications
+            // section below; there's no sensor-model picker because the model is
+            // detected on connect.
+            if cgmProviderKind == .libre3BLE {
+                Section {
+                    Picker("Glucose unit", selection: $manualUom) {
+                        Text("mg/dL").tag(1)
+                        Text("mmol/L").tag(0)
+                    }
+                    .onChange(of: manualUom) { _, _ in persistManualSensorSettings() }
+
+                    Picker("Target low", selection: $manualTargetLow) {
+                        ForEach(targetLowOptions, id: \.self) { value in
+                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: manualUom), withUnit: true))
+                                .tag(value)
+                        }
+                    }
+                    .onChange(of: manualTargetLow) { _, _ in persistManualSensorSettings() }
+
+                    Picker("Target high", selection: $manualTargetHigh) {
+                        ForEach(targetHighOptions, id: \.self) { value in
+                            Text(value.asGlucose(glucoseUnit: GlucoseUnit(uom: manualUom), withUnit: true))
+                                .tag(value)
+                        }
+                    }
+                    .onChange(of: manualTargetHigh) { _, _ in persistManualSensorSettings() }
+                } header: {
+                    Text("Libre 3 Sensor Settings")
+                } footer: {
+                    Text("The direct Bluetooth connection doesn't carry these, so set them here. Values are shown in the selected unit and used for the graph target range and reading colors. The red low-alarm line follows your low-glucose alert level.")
                 }
             }
 
@@ -457,7 +514,7 @@ struct PhoneAppSettingsView: View {
                             return
                         }
                         if cgmProviderKind == .dexcomShare {
-                            persistDexcomSensorSettings()
+                            persistManualSensorSettings()
                         }
                         handleLowGlucoseAlertsChanged(isEnabled)
                     }
@@ -472,7 +529,7 @@ struct PhoneAppSettingsView: View {
                     }
                     .onChange(of: lowGlucoseNotificationThreshold) { _, _ in
                         if cgmProviderKind == .dexcomShare {
-                            persistDexcomSensorSettings()
+                            persistManualSensorSettings()
                         }
                         Task {
                             await LowGlucoseNotificationManager.shared.enableNotifications()
@@ -493,6 +550,62 @@ struct PhoneAppSettingsView: View {
                 Text("FLwatch scans for devices nearby, reconnects to the selected device, and uses that Bluetooth activity to refresh glucose data, widgets, Live Activities, and background updates. Only nearby discoverable Bluetooth devices can appear here. This mode has very little impact on the battery.")
             }
             } // end `if cgmProviderKind != .libre3BLE` — heartbeat section hidden in BLE mode
+
+            // Direct-BLE has no vendor app to poll and no heartbeat to ride on:
+            // the sensor pushes readings and `Libre3DirectManager` drives the
+            // low-glucose alert from that push tick. So BLE gets its own, simpler
+            // Notifications section — no heartbeat toggle to gate on, otherwise
+            // identical to the cloud one and backed by the same provider-agnostic
+            // `LowGlucoseNotificationManager`.
+            if cgmProviderKind == .libre3BLE {
+            Section {
+                Toggle("Low glucose alerts", isOn: $lowGlucoseNotificationsEnabled)
+                    .onChange(of: lowGlucoseNotificationsEnabled) { _, isEnabled in
+                        // Re-wire the graph's red low-alarm line: it tracks the
+                        // threshold while alerts are on, hidden otherwise.
+                        persistManualSensorSettings()
+                        handleLowGlucoseAlertsChanged(isEnabled)
+                    }
+
+                if lowGlucoseNotificationsEnabled {
+                    Picker("Alert me below", selection: $lowGlucoseNotificationThreshold) {
+                        ForEach(lowGlucoseThresholdOptions, id: \.self) { threshold in
+                            Text(lowGlucoseThresholdText(for: threshold))
+                                .tag(threshold)
+                        }
+                    }
+                    .onChange(of: lowGlucoseNotificationThreshold) { _, _ in
+                        // Move the red low-alarm line to the new threshold.
+                        persistManualSensorSettings()
+                        Task {
+                            await LowGlucoseNotificationManager.shared.enableNotifications()
+                        }
+                    }
+
+                    Toggle("Critical alerts", isOn: $lowGlucoseCriticalAlertsEnabled)
+                        .onChange(of: lowGlucoseCriticalAlertsEnabled) { _, isEnabled in
+                            handleCriticalAlertsChanged(isEnabled)
+                        }
+
+                    Text("Critical alerts play a sound and appear even when your phone is in silent mode, a Focus, or Do Not Disturb. You'll be asked for permission the first time you turn this on.")
+                        .font(.subheadline)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(.secondary)
+                } else {
+                    LabeledContent("Alert me below", value: lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold))
+                        .foregroundStyle(.secondary)
+                }
+
+                Text("You’ll get a notification when a new reading is below \(lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold)). Alerts repeat at most every 5 minutes while glucose stays low. Alerts depend on a stable Bluetooth connection to your sensor. Always rely on the manufacturer's alerts first.")
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundStyle(.secondary)
+            } header: {
+                Text("Notifications")
+            } footer: {
+                Text("FLwatch alerts you when a new sensor reading is below your alert level. The alert is delivered as your sensor pushes readings over Bluetooth.")
+            }
+            } // end `if cgmProviderKind == .libre3BLE` — BLE notifications section
 
             Section {
                 Toggle(isOn: $tapComplicationReloads) {
@@ -633,19 +746,21 @@ struct PhoneAppSettingsView: View {
         watchConnector.sendMessageToPairedDevice(message)
     }
 
-    /// Persists the manually-entered Dexcom sensor settings (stored in mg/dL) and
-    /// mirrors them to the watch. Coloring runs off the target range; the red alarm
-    /// line tracks the low-glucose notification threshold when alerts are enabled,
-    /// otherwise it stays hidden at the sentinel.
-    private func persistDexcomSensorSettings() {
-        let alarms = SensorSettings.dexcomAlarms(
+    /// Persists the manually-entered sensor settings (stored in mg/dL) and
+    /// mirrors them to the watch. Shared by the providers that carry no settings
+    /// of their own — Dexcom Share and Libre 3 direct BLE. Coloring runs off the
+    /// target range; the red alarm line tracks the low-glucose notification
+    /// threshold when alerts are enabled, otherwise it stays hidden at the
+    /// sentinel.
+    private func persistManualSensorSettings() {
+        let alarms = SensorSettings.manualAlarms(
             notificationsEnabled: lowGlucoseNotificationsEnabled,
             threshold: lowGlucoseNotificationThreshold
         )
         let updated = SensorSettings(
-            uom: dexcomUom,
-            targetLow: dexcomTargetLow,
-            targetHigh: dexcomTargetHigh,
+            uom: manualUom,
+            targetLow: manualTargetLow,
+            targetHigh: manualTargetHigh,
             alarmLow: alarms.low,
             alarmHigh: alarms.high
         )
