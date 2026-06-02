@@ -56,14 +56,31 @@ struct LibreWristWidgetEntryView : View {
     /// watch's own token/session is empty. Showing the arrow in that window
     /// would hide perfectly good data — so we only flip once history has
     /// drifted past the provider's stale threshold (LLU 3 min, Dexcom 8 min).
+    /// How long the watch may go without a fresh reading before the BLE widget
+    /// shows "Open FLwatch" instead of the (now clearly stale) value. Much longer
+    /// than the 3-min provider stale threshold ON PURPOSE: the watch runs no BLE
+    /// in v1 and can't refresh in place while backgrounded (it doesn't process WC
+    /// there; the widget process never does), so at 3 min the prompt would hide
+    /// the last value almost permanently. Up to this point we keep showing the
+    /// value — `normalBody` already marks it stale (strikethrough past 5 min +
+    /// a counting "N min ago" timer) — and only escalate to the open-the-app
+    /// prompt once data is genuinely dead. (Entitlement pending — PLAN §13/M7;
+    /// drop this once the watch streams in the background.)
+    private static let libre3BLEReauthThreshold: TimeInterval = 10 * 60
+
     private var needsManualReauth: Bool {
-        // Direct BLE has no credentials to reauth and the watch can't fetch — only
-        // the phone's WatchConnectivity pushes refresh it. The "open the app"
-        // arrow is useless here (opening the watch app fetches nothing), so render
-        // the value (the body shows its own staleness) instead.
-        guard SharedData.cgmProviderKind != .libre3BLE else { return false }
+        // Cloud followers self-reload in the widget process, so they stay on the
+        // `canActiveProviderReload`-gated path (arrow only when they have no
+        // usable credential AND data is stale). `.libre3BLE` can't reload in the
+        // widget (push-only, phone-only) so `canActiveProviderReload` is false and
+        // it always reaches the staleness check — but with its OWN longer
+        // threshold, so the last value stays visible (and visibly stale) until the
+        // feed is clearly dead, at which point "Open FLwatch" is the genuinely
+        // actionable step (opening the app drains pending WC pushes).
         guard !SharedData.canActiveProviderReload else { return false }
-        let staleAfter = SharedData.cgmProviderKind.staleReadingAfter
+        let staleAfter: TimeInterval = SharedData.cgmProviderKind == .libre3BLE
+            ? Self.libre3BLEReauthThreshold
+            : SharedData.cgmProviderKind.staleReadingAfter
         return Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) > staleAfter
     }
 
