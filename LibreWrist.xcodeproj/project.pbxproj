@@ -65,7 +65,9 @@
 		7B462BFE2C7FC46A003FEDC3 /* MeasurementColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */; };
 		7B4855DF2DB58DC90089409E /* TimeDifferencePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */; };
 		7B5A9CD22E704F250076716A /* PasswordKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5A9CD12E704F200076716A /* PasswordKeychain.swift */; };
+		7BD15EA70000000000000002 /* LibreViewAccountClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD15EA70000000000000001 /* LibreViewAccountClient.swift */; };
 		7B5A9CD32E704F250076716A /* PasswordKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5A9CD12E704F200076716A /* PasswordKeychain.swift */; };
+		7BD15EA70000000000000003 /* LibreViewAccountClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD15EA70000000000000001 /* LibreViewAccountClient.swift */; };
 		7B5CD22A2C946D330066B92B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */; };
 		7B5CD22B2C946D340066B92B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */; };
 		7B62EDAE2FACD18900C9502B /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B62EDAD2FACD18200C9502B /* CGMProvider.swift */; };
@@ -106,6 +108,7 @@
 		7BA0AE5D2C5AEB89004226FE /* PhoneAppDonateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA0AE5C2C5AEB89004226FE /* PhoneAppDonateView.swift */; };
 		7BA304152F5E30B0005384BF /* SensorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCA58682C8A292600C50F11 /* SensorSettings.swift */; };
 		7BA304162F5E30B0005384BF /* PasswordKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5A9CD12E704F200076716A /* PasswordKeychain.swift */; };
+		7BD15EA70000000000000004 /* LibreViewAccountClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD15EA70000000000000001 /* LibreViewAccountClient.swift */; };
 		7BA304172F5E30B0005384BF /* SensorType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE0112C73E3440074A47F /* SensorType.swift */; };
 		7BA304182F5E30B0005384BF /* Int.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE01C2C73E4E70074A47F /* Int.swift */; };
 		7BA304192F5E30B0005384BF /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CCB2C6D46DF006F6E53 /* Logger.swift */; };
@@ -126,6 +129,7 @@
 		7BA304282F5E30B0005384BF /* AuthTicket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B299A0A2C90AF8C002A15C8 /* AuthTicket.swift */; };
 		7BA304292F5E30B0005384BF /* LibreLinkUpGlucose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B299A162C90B089002A15C8 /* LibreLinkUpGlucose.swift */; };
 		7BA3042A2F5E30B0005384BF /* PasswordKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5A9CD12E704F200076716A /* PasswordKeychain.swift */; };
+		7BD15EA70000000000000005 /* LibreViewAccountClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD15EA70000000000000001 /* LibreViewAccountClient.swift */; };
 		7BA3042B2F5E30B0005384BF /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CCB2C6D46DF006F6E53 /* Logger.swift */; };
 		7BA3042C2F5E30B0005384BF /* SensorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCA58682C8A292600C50F11 /* SensorSettings.swift */; };
 		7BA3042D2F5E30B0005384BF /* GlucoseUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE0222C73EB450074A47F /* GlucoseUnit.swift */; };
@@ -343,6 +347,7 @@
 		7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasurementColor.swift; sourceTree = "<group>"; };
 		7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeDifferencePicker.swift; sourceTree = "<group>"; };
 		7B5A9CD12E704F200076716A /* PasswordKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordKeychain.swift; sourceTree = "<group>"; };
+		7BD15EA70000000000000001 /* LibreViewAccountClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreViewAccountClient.swift; sourceTree = "<group>"; };
 		7B5CD2292C946D010066B92B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7B62EDAD2FACD18200C9502B /* CGMProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGMProvider.swift; sourceTree = "<group>"; };
 		7B62EDB22FACD8CD00C9502B /* PhoneAppCGMProviderPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppCGMProviderPickerView.swift; sourceTree = "<group>"; };
@@ -581,6 +586,7 @@
 				7BA567962CBA9584003244EE /* MailView.swift */,
 				7B462BFC2C7FBAC8003FEDC3 /* MeasurementColor.swift */,
 				7B5A9CD12E704F200076716A /* PasswordKeychain.swift */,
+				7BD15EA70000000000000001 /* LibreViewAccountClient.swift */,
 				7BCA58682C8A292600C50F11 /* SensorSettings.swift */,
 				7BADE0112C73E3440074A47F /* SensorType.swift */,
 				7BC51F502C7C8413009542D2 /* TrendArrow.swift */,
@@ -1058,6 +1064,7 @@
 				7BCA58692C8A292600C50F11 /* SensorSettings.swift in Sources */,
 				7BADE0122C73E3440074A47F /* SensorType.swift in Sources */,
 				7B5A9CD22E704F250076716A /* PasswordKeychain.swift in Sources */,
+				7BD15EA70000000000000002 /* LibreViewAccountClient.swift in Sources */,
 				7BB617F42DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */,
 				7B435CCC2C6D46DF006F6E53 /* Logger.swift in Sources */,
 				7BADE0232C73EB450074A47F /* GlucoseUnit.swift in Sources */,
@@ -1112,6 +1119,7 @@
 				7BC51F5B2C7C8589009542D2 /* SensorType.swift in Sources */,
 				7BB1430E2FCC837200F31802 /* Libre3Mode.swift in Sources */,
 				7B5A9CD32E704F250076716A /* PasswordKeychain.swift in Sources */,
+				7BD15EA70000000000000003 /* LibreViewAccountClient.swift in Sources */,
 				7BB617F32DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */,
 				7BC51F572C7C853B009542D2 /* Logger.swift in Sources */,
 				7BC51F532C7C84B6009542D2 /* GlucoseUnit.swift in Sources */,
@@ -1145,6 +1153,7 @@
 				7BA0AE572C5834F6004226FE /* PhoneAppConnectView.swift in Sources */,
 				7BA304152F5E30B0005384BF /* SensorSettings.swift in Sources */,
 				7BA304162F5E30B0005384BF /* PasswordKeychain.swift in Sources */,
+				7BD15EA70000000000000004 /* LibreViewAccountClient.swift in Sources */,
 				7B45C5392F756BC000203B4C /* BluetoothHeartbeatManager.swift in Sources */,
 				7BF0A0122FA4000200C0D001 /* CarPlaySceneDelegate.swift in Sources */,
 				7BF92A5D2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift in Sources */,
@@ -1256,6 +1265,7 @@
 				7BB143102FCC837200F31802 /* Libre3Mode.swift in Sources */,
 				7B462BFE2C7FC46A003FEDC3 /* MeasurementColor.swift in Sources */,
 				7BA3042A2F5E30B0005384BF /* PasswordKeychain.swift in Sources */,
+				7BD15EA70000000000000005 /* LibreViewAccountClient.swift in Sources */,
 				7BB762FE2C8262E600C43600 /* WatchAppActionView.swift in Sources */,
 				7BA3042B2F5E30B0005384BF /* Logger.swift in Sources */,
 				7BDB81332CB09AF800F4A60F /* LLUHeaders.swift in Sources */,

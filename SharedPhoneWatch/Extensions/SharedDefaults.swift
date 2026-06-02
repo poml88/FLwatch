@@ -110,6 +110,11 @@ enum DefaultsKey: String {
     case libre3FirmwareVersion = "libre3FirmwareVersionKey"
     case libre3Mode = "libre3ModeKey"
     case libre3LibreViewPatientId = "libre3LibreViewPatientIdKey"
+    // LibreView (FreeStyle LibreLink) account lookup, used to fetch the
+    // AccountId for takeover. The password is a secret kept in the keychain
+    // (`LibreViewPasswordKeychain`); only the email + device id live here.
+    case libre3LibreViewEmail = "libre3LibreViewEmailKey"
+    case libre3LibreViewDeviceId = "libre3LibreViewDeviceIdKey"
     case libre3PeripheralUUID = "libre3PeripheralUUIDKey"
     case libre3SensorStartDate = "libre3SensorStartDateKey"
     case libre3LastLifeCount = "libre3LastLifeCountKey"
@@ -559,6 +564,17 @@ enum SharedData {
         set {
             if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3LibreViewPatientId.rawValue) }
             else { store.setString(newValue, forKey: .libre3LibreViewPatientId) }
+        }
+    }
+
+    /// LibreView (FreeStyle LibreLink) account email used to look up the
+    /// AccountId for takeover. Stored so the field survives app restarts; the
+    /// matching password is a keychain secret (`LibreViewPasswordKeychain`).
+    static var libre3LibreViewEmail: String {
+        get { store.getString(.libre3LibreViewEmail, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3LibreViewEmail.rawValue) }
+            else { store.setString(newValue, forKey: .libre3LibreViewEmail) }
         }
     }
 

@@ -22,6 +22,16 @@ struct PhoneAppLibre3ConnectView: View {
     @AppStorage(DefaultsKey.libre3LibreViewPatientId.rawValue, store: UserDefaults.group)
     private var libreViewPatientId: String = ""
 
+    /// LibreView (FreeStyle LibreLink) email used to fetch the Account ID.
+    @AppStorage(DefaultsKey.libre3LibreViewEmail.rawValue, store: UserDefaults.group)
+    private var libreViewEmail: String = ""
+
+    /// Password is a keychain secret, loaded on appear and never persisted in
+    /// the app group.
+    @State private var libreViewPassword: String = ""
+    @State private var isFetchingAccountID = false
+    @State private var accountIDFetchError: String?
+
     /// Takeover / parallel join need a patient ID that matches the activating
     /// account, or the sensor returns 0xB1. Block the scan until it's provided.
     private var patientIdMissingForMode: Bool {
@@ -39,6 +49,13 @@ struct PhoneAppLibre3ConnectView: View {
             }
         }
         .navigationTitle("Libre 3 (Bluetooth)")
+        .onAppear {
+            // Password is a keychain secret, never the app group — load it into
+            // the editable field when the screen opens.
+            if libreViewPassword.isEmpty, let stored = try? LibreViewPasswordKeychain.read() {
+                libreViewPassword = stored ?? ""
+            }
+        }
         .confirmationDialog(
             "Activate a new sensor?",
             isPresented: $showFreshActivationConfirm,
@@ -58,15 +75,54 @@ struct PhoneAppLibre3ConnectView: View {
     @ViewBuilder
     private var setupSections: some View {
         Section {
-            TextField("LibreView Patient UUID", text: $libreViewPatientId)
+            TextField("LibreView email", text: $libreViewEmail)
+                .textContentType(.username)
+                .keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .disabled(coordinator.state == .scanning || isFetchingAccountID)
+
+            SecureField("LibreView password", text: $libreViewPassword)
+                .textContentType(.password)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .disabled(coordinator.state == .scanning || isFetchingAccountID)
+
+            Button {
+                fetchAccountID()
+            } label: {
+                HStack {
+                    Image(systemName: "person.badge.key")
+                    Text(isFetchingAccountID ? "Getting Account ID…" : "Get Account ID")
+                    if isFetchingAccountID {
+                        Spacer()
+                        ProgressView()
+                    }
+                }
+            }
+            .disabled(
+                coordinator.state == .scanning
+                    || isFetchingAccountID
+                    || libreViewEmail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    || libreViewPassword.isEmpty
+            )
+
+            if let accountIDFetchError {
+                Label(accountIDFetchError, systemImage: "xmark.circle")
+                    .font(.subheadline)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            TextField("Account ID", text: $libreViewPatientId)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(.system(.body, design: .monospaced))
-                .disabled(coordinator.state == .scanning)
+                .disabled(coordinator.state == .scanning || isFetchingAccountID)
         } header: {
             Text("LibreView account")
         } footer: {
-            Text("The patient UUID of the LibreView account that activated this sensor. Its hash becomes the receiver ID — takeover and parallel join only work when it matches the activating account, otherwise the sensor rejects pairing (error 0xB1).")
+            Text("Sign in with the LibreView (FreeStyle Libre 3 app) account that activated this sensor and tap Get Account ID to fill it in automatically. Its hash becomes the receiver ID — takeover and parallel join only work when it matches the activating account, otherwise the sensor rejects pairing (error 0xB1).")
         }
 
         Section {
@@ -259,6 +315,43 @@ struct PhoneAppLibre3ConnectView: View {
 
     private func startScan(mode: Libre3Mode) {
         Task { await coordinator.pair(mode: mode) }
+    }
+
+    /// Look up the LibreView AccountId for the entered credentials and write it
+    /// into the Account ID field (persisted via `@AppStorage`). Persists the
+    /// email + password too so a later re-fetch needs no re-entry.
+    private func fetchAccountID() {
+        let email = libreViewEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+        let password = libreViewPassword
+        guard !email.isEmpty, !password.isEmpty else { return }
+
+        accountIDFetchError = nil
+        isFetchingAccountID = true
+        libreViewEmail = email
+        try? LibreViewPasswordKeychain.save(password)
+
+        Task {
+            let result: Result<String, Error>
+            do {
+                let accountID = try await LibreViewAccountClient().fetchAccountID(
+                    email: email, password: password
+                )
+                result = .success(accountID)
+            } catch {
+                result = .failure(error)
+            }
+            await MainActor.run {
+                isFetchingAccountID = false
+                switch result {
+                case .success(let accountID):
+                    libreViewPatientId = accountID
+                    accountIDFetchError = nil
+                case .failure(let error):
+                    accountIDFetchError = (error as? LibreViewAccountError)?.errorDescription
+                        ?? error.localizedDescription
+                }
+            }
+        }
     }
 
     // MARK: - Copy
