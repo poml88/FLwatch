@@ -334,9 +334,13 @@ final class Libre3DirectManager: ObservableObject {
     private func teardownForReconnect() {
         lifecycleTask?.cancel()
         lifecycleTask = nil
-        if let scanner, let session {
-            scanner.disconnect(session)
-        }
+        // Don't call `scanner.disconnect(session)` here: this runs only when
+        // Bluetooth has gone UN-available (the state observer's non-poweredOn
+        // branch), so the OS has already dropped the link and
+        // `cancelPeripheralConnection` on a powered-off central is an API misuse
+        // ("can only accept this command while in the powered on state"). Just
+        // drop our references; the next power-on reconnect's `ensureDisconnected`
+        // clears any phantom peripheral state.
         session = nil
         decoder = nil
         dataPlaneState = nil
@@ -383,15 +387,6 @@ final class Libre3DirectManager: ObservableObject {
             throw Libre3DirectError.notPaired
         }
 
-        // Keep the app alive long enough to complete the connect + auth burst if
-        // iOS woke us in the background. Always ended (success / throw / expiry).
-        let bgTask = UIApplication.shared.beginBackgroundTask(withName: "Libre3DirectAuth")
-        defer {
-            if bgTask != .invalid {
-                UIApplication.shared.endBackgroundTask(bgTask)
-            }
-        }
-
         try await scanner.waitUntilReady()
 
         connectionState = .scanning
@@ -414,6 +409,23 @@ final class Libre3DirectManager: ObservableObject {
         // background range loss, so reconnect doesn't rely solely on the
         // backoff loop running (it won't while suspended).
         scanner.registerForConnectionEvents(peripheralIDs: [peripheral.identifier])
+
+        // Wrap ONLY the auth handshake burst in a background task — NOT the slow
+        // `scanner.connect` above, which can wait ~30s for the Libre 3's
+        // once-per-minute connection window. bluetooth-central keeps the pending
+        // connect alive and wakes us on didConnect, so the wait needs no task;
+        // holding one across it just trips iOS's 30s "risk of termination"
+        // warning. Auth is a few seconds of paced BLE round-trips plus the
+        // one-time Phase-5 scalar derivation, which must run without suspension.
+        // Ended the moment streaming starts (below); the defer is the safety net
+        // for the early-throw paths.
+        var bgTask = UIApplication.shared.beginBackgroundTask(withName: "Libre3DirectAuth")
+        defer {
+            if bgTask != .invalid {
+                UIApplication.shared.endBackgroundTask(bgTask)
+                bgTask = .invalid
+            }
+        }
 
         connectionState = .authorizing
         let sessionMaterial = try await authorize(session: session, sensorState: sensorState)
@@ -489,6 +501,17 @@ final class Libre3DirectManager: ObservableObject {
         // serial), so its provider-account gate opens and it renders the glucose
         // snapshots we push. Covers pair / reconnect / state restoration.
         WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()
+
+        // End the connect/auth background task BEFORE the long-lived streaming
+        // loop. Streaming is sustained by the `bluetooth-central` background mode
+        // (each glucoseData notification wakes the app), NOT by a UIBackgroundTask
+        // — which iOS expires after a few minutes and then flags the app for
+        // termination ("Background task still not ended after expiration handlers
+        // were called"). Holding it across the whole session was the bug.
+        if bgTask != .invalid {
+            UIApplication.shared.endBackgroundTask(bgTask)
+            bgTask = .invalid
+        }
 
         try await consumeNotifications(session: session)
     }
@@ -790,6 +813,28 @@ final class Libre3DirectManager: ObservableObject {
         currentGlucoseMgDL = mapped.glucose.value
         persistLastAccepted(reading)
         pushHistory()
+        refreshLiveActivityForNewReading()
+    }
+
+    /// Refresh the phone's Live Activity the moment a new usable minute reading
+    /// lands (the push-model "data tick"), instead of waiting for the home
+    /// view's independent ~63 s foreground timer — which drifts against the
+    /// sensor's ~60 s cadence and made the Live Activity skip a reading
+    /// ("updates at minute 2"), and doesn't run at all while backgrounded. This
+    /// mirrors the cloud path, where the heartbeat refreshes the Live Activity
+    /// on each data tick (`BluetoothHeartbeatManager`). Only called on a usable
+    /// realtime reading — NOT per backfill page (a burst would refresh many
+    /// times) and NOT for warm-up/garbage readings. Live Activity updates are
+    /// local (`Activity.update`), not budget-limited like push updates, so the
+    /// per-minute cadence is fine; we deliberately do NOT `reloadAllTimelines()`
+    /// here (that WOULD burn the widget budget — see `BluetoothHeartbeatManager`).
+    private func refreshLiveActivityForNewReading() {
+        Task {
+            await LiveActivityManager.shared.refreshFromCurrentHistory(
+                useLiveActivities: SharedData.useLiveActivities,
+                refreshIOB: false
+            )
+        }
     }
 
     /// Fold an on-demand backfill page (5-min-spaced samples) into the historical
