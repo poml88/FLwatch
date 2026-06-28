@@ -148,6 +148,7 @@ final class Libre3PairingCoordinator: ObservableObject {
                 receiverID: receiverID,
                 source: "NFC \(mode.rawValue)"
             )
+            Libre3DirectManager.shared.forgetSensor()
             try Libre3StateStore.save(state: sensorState, mode: mode, patchInfo: result.patchInfo)
             // Stamp the sensor model immediately so Settings/UI reflect it before
             // the first reading (the manager re-stamps on connect too).

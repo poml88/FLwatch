@@ -957,28 +957,33 @@ final class Libre3DirectManager: ObservableObject {
 
         // ALL arrays are stored NEWEST-FIRST (descending), matching the
         // Dexcom/LibreLinkUp convention (`fullHistoryNewestFirst`,
-        // `graphHistoryReversed`, `lastMeasurement = [0]`). The watch's
-        // `mergeMinuteGlucose` and other consumers index `[0]`/`[1]` as the
-        // newest/second-newest; storing ascending here broke that (it left a
-        // stale minute point because `[1]` was the second-OLDEST graph point).
-        let historicalNewestFirst = historicalByLifeCount.values.sorted { $0.glucose.id > $1.glucose.id }
-        let newestHistoricalID = historicalNewestFirst.first?.glucose.id
+        // `graphHistoryReversed`, `lastMeasurement = [0]`). Order by wall-clock
+        // date because Libre 3 lifeCount resets to 0 on each new sensor; use
+        // lifeCount only as a stable tie-breaker for equal timestamps.
+        let newestFirst: (LibreLinkUpGlucose, LibreLinkUpGlucose) -> Bool = { lhs, rhs in
+            if lhs.glucose.date == rhs.glucose.date {
+                return lhs.glucose.id > rhs.glucose.id
+            }
+            return lhs.glucose.date > rhs.glucose.date
+        }
+        let historicalNewestFirst = historicalByLifeCount.values.sorted(by: newestFirst)
+        let newestHistoricalDate = historicalNewestFirst.first?.glucose.date
         let windowStart = Date().addingTimeInterval(-Self.displayWindowSeconds)
 
         // Minute overlay: 1-min points newer than the newest 5-min historical
         // value (older ones are covered by the 5-min line). Memory is bounded by
         // `pruneBuffers`.
         let minuteNewestFirst: [LibreLinkUpGlucose]
-        if let newestHistoricalID {
+        if let newestHistoricalDate {
             minuteNewestFirst = minuteByLifeCount.values
-                .filter { $0.glucose.id > newestHistoricalID }
-                .sorted { $0.glucose.id > $1.glucose.id }
+                .filter { $0.glucose.date > newestHistoricalDate }
+                .sorted(by: newestFirst)
         } else {
             // No historical series yet (cold start before backfill / embedded
             // history): show the realtime minute points alone.
             minuteNewestFirst = minuteByLifeCount.values
                 .filter { $0.glucose.date > windowStart }
-                .sorted { $0.glucose.id > $1.glucose.id }
+                .sorted(by: newestFirst)
         }
 
         // LLU/Dexcom shape: the history array's newest element [0] is the LIVE
