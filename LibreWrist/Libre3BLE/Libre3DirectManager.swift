@@ -652,23 +652,10 @@ final class Libre3DirectManager: ObservableObject {
     /// established Phase-5 authorization key reused by the cached reconnect.
     private func runHandshake(session: SensorSession, blePIN: Data) async throws -> FirstPairDerivedHandshakeResult {
         let transport = SensorSessionTransport(session: session)
-        // Use the v1 (`03 03`) app certificate from `Libre3SKBKeys`, NOT
-        // LibreCRKit's bundled default `bundledFirstPair()` (the v0 `03 00`
-        // cert). On a v1 sensor (fw 1.4.2.30, our test unit) the `03 00` cert is
-        // rejected at the first gate (`CertificateAccepted` → immediate
-        // disconnect) because `03 00`/`03 03` are version-keyed to the sensor's
-        // security generation. Feeding the `03 03` cert also auto-selects the
-        // matching index-1 Phase-5 static scalar (LibreCRKit's
-        // `PhoneCert.phase5StaticScalarWindowOverride` keys off the `03 03`
-        // prefix → `firstPairIndex1`). Verified end-to-end on hardware
-        // (handshake → Phase 6 → live glucose). v0 sensors are NOT yet supported
-        // (would need LibreCRKit's unfinished generic `03 00` derivation).
-        //
-        // `Libre3SKBKeys` is gitignored (extracted vendor key material), so it is
-        // present locally but never committed. This file IS committed — keep the
-        // only reference behind `#if canImport`-free direct use, which compiles
-        // as long as the keys file exists in the target.
-        let phoneCert = try PhoneCert(raw: Data(Libre3SKBKeys.appCertificateV1))
+        // Use LibreCRKit's bundled v1 (`03 03`) app certificate for first-pair.
+        // LibreCRKit owns the matching certificate material and auto-selects the
+        // index-1 Phase-5 static scalar from the `03 03` prefix.
+        let phoneCert = try PhoneCert.bundled162b()
 
         // The Phase 3 phone ephemeral and the Phase 5 null entropy must come from
         // the SAME sampled entropy — first-pair derives the ephemeral keypair

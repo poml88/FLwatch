@@ -16,5 +16,4 @@ vendor/bundle/
 dexcom-api-docs/
 smartguide-integration/
 libre3-ble-integration/
-SharedPhoneWatch/Models/Libre3/Libre3SKBKeys.swift
 AGENTS.md
