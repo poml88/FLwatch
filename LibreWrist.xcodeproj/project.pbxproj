@@ -80,6 +80,7 @@
 		7B7D08812CB9C64E00FC1973 /* ExponentialInsulinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD835D2C84E48E00A9B195 /* ExponentialInsulinModel.swift */; };
 		7B7D08822CB9C6BA00FC1973 /* InsulinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD835A2C84E48800A9B195 /* InsulinModel.swift */; };
 		7B7D08832CB9C6BA00FC1973 /* InsulinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD835A2C84E48800A9B195 /* InsulinModel.swift */; };
+		7B8802FB300505310065D90B /* SensorAlertNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8802FA300505310065D90B /* SensorAlertNotificationManager.swift */; };
 		7B895E942F61E6D10034A79D /* RefreshLiveActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B895E932F61E6B70034A79D /* RefreshLiveActivityIntent.swift */; };
 		7B895E962F61E7620034A79D /* RefreshLiveActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B895E932F61E6B70034A79D /* RefreshLiveActivityIntent.swift */; };
 		7B895E972F61E7D50034A79D /* GlucoseActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2F59E62E8C8249008CAB1B /* GlucoseActivityManager.swift */; };
@@ -356,6 +357,7 @@
 		7B7790BB2E599BA200DE6B01 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7B7790BC2E599BA300DE6B01 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		7B7F221C2E82D036005E3A72 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		7B8802FA300505310065D90B /* SensorAlertNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorAlertNotificationManager.swift; sourceTree = "<group>"; };
 		7B895E932F61E6B70034A79D /* RefreshLiveActivityIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefreshLiveActivityIntent.swift; sourceTree = "<group>"; };
 		7B8965412DC156DD003A50CE /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
 		7B8965442DC17399003A50CE /* PhoneAppSiriSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSiriSheetView.swift; sourceTree = "<group>"; };
@@ -651,6 +653,7 @@
 				7BA0AE302C582F64004226FE /* Assets.xcassets */,
 				7BA0AE322C582F64004226FE /* Preview Content */,
 				7BD2C65B2DC3BE6D0079EE4A /* InfoPlist.strings */,
+				7B8802FA300505310065D90B /* SensorAlertNotificationManager.swift */,
 			);
 			path = LibreWrist;
 			sourceTree = "<group>";
@@ -1188,6 +1191,7 @@
 				7B9F09A32E73075B0037B091 /* AddInsulinSiri.swift in Sources */,
 				7B299A172C90B089002A15C8 /* LibreLinkUpGlucose.swift in Sources */,
 				7B435CD42C6D57F5006F6E53 /* String.swift in Sources */,
+				7B8802FB300505310065D90B /* SensorAlertNotificationManager.swift in Sources */,
 				7BA3041D2F5E30B0005384BF /* LibreLinkUp.swift in Sources */,
 				7BC51F512C7C8413009542D2 /* TrendArrow.swift in Sources */,
 				7B435CD02C6D5103006F6E53 /* Date.swift in Sources */,

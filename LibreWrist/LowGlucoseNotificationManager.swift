@@ -34,6 +34,7 @@ final class LowGlucoseNotificationManager: NSObject {
     }
 
     func configureForegroundPresentation() {
+        // This is the app's single UNUserNotificationCenter delegate. New notification types add a prefix branch here and merge categories into this one setNotificationCategories call — never reassign the delegate or call setNotificationCategories elsewhere.
         notificationCenter.delegate = self
         notificationCenter.setNotificationCategories([
             UNNotificationCategory(
@@ -290,11 +291,14 @@ extension LowGlucoseNotificationManager: UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        guard notification.request.identifier.hasPrefix("low-glucose-alert") else {
+        let identifier = notification.request.identifier
+        if identifier.hasPrefix(LowGlucoseNotificationConfig.notificationIdentifierPrefix) {
+            completionHandler([.banner, .list, .sound])
+        } else if identifier.hasPrefix(SensorAlertNotificationManager.identifierPrefix) {
+            completionHandler([.banner, .list, .sound])
+        } else {
             completionHandler([])
-            return
         }
-        completionHandler([.banner, .list, .sound])
     }
 
     nonisolated func userNotificationCenter(

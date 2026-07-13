@@ -280,6 +280,7 @@ final class Libre3DirectManager: ObservableObject {
         didRequestBackfill = false
         assembler.reset()
         clearReadingStatus()
+        Task { await SensorAlertNotificationManager.shared.retract() }
         connectionState = .idle
     }
 
@@ -558,6 +559,10 @@ final class Libre3DirectManager: ObservableObject {
 
         connectionState = .streaming
         Logger.libre3.info("Libre3 BLE streaming started for serial=\(sensorState.serialNumber ?? "?", privacy: .public)")
+        await SensorAlertNotificationManager.shared.requestAuthorizationIfNeeded()
+        if !sensorNeedsReplacement {
+            await SensorAlertNotificationManager.shared.retract()
+        }
 
         // Tell the watch the BLE sensor is paired + active (provider kind +
         // serial), so its provider-account gate opens and it renders the glucose
@@ -926,6 +931,12 @@ final class Libre3DirectManager: ObservableObject {
         DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
     }
 
+#if DEBUG
+    func debugUpdateSensorAttention(_ attention: Libre3SensorAttention) {
+        updateSensorAttention(attention)
+    }
+#endif
+
     private func updateSensorAttention(_ attention: Libre3SensorAttention) {
         guard attention != lastSensorAttention else { return }
         lastSensorAttention = attention
@@ -936,6 +947,8 @@ final class Libre3DirectManager: ObservableObject {
             sensorNeedsReplacement = needsReplacement
             SharedData.libre3SensorNeedsReplacement = needsReplacement
         }
+
+        Task { await SensorAlertNotificationManager.shared.update(for: attention) }
 
         switch attention {
         case .replaceSensor, .sensorEnded:
