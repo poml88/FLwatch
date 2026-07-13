@@ -4,6 +4,21 @@
     "" : {
 
     },
+    "Glucose temporarily unavailable" : {
+
+    },
+    "Glucose temporarily unavailable. This is normal; it will resume on its own." : {
+
+    },
+    "No new readings for about %d min. This is normal; it will resume on its own." : {
+
+    },
+    "Sensor data quality issue" : {
+
+    },
+    "Sensor recalibrating" : {
+
+    },
     "\nInsulin history:" : {
       "localizations" : {
         "de" : {

@@ -31,6 +31,42 @@ import UIKit
 import OSLog
 import LibreCRKit
 
+struct Libre3ReadingStatus: Equatable {
+    enum Kind: Equatable {
+        case recalibrating(minutes: Int)
+        case dataQuality
+        case unavailable
+    }
+
+    let kind: Kind
+    let episodeID: Int
+
+    var title: String {
+        switch kind {
+        case .recalibrating:
+            String(localized: "Sensor recalibrating")
+        case .dataQuality:
+            String(localized: "Sensor data quality issue")
+        case .unavailable:
+            String(localized: "Glucose temporarily unavailable")
+        }
+    }
+
+    var message: String {
+        switch kind {
+        case .recalibrating(let minutes):
+            String.localizedStringWithFormat(
+                String(localized: "No new readings for about %d min. This is normal; it will resume on its own."),
+                minutes
+            )
+        case .dataQuality, .unavailable:
+            String(localized: "Glucose temporarily unavailable. This is normal; it will resume on its own.")
+        }
+    }
+
+    var symbol: String { "exclamationmark.triangle.fill" }
+}
+
 @MainActor
 final class Libre3DirectManager: ObservableObject {
 
@@ -60,6 +96,9 @@ final class Libre3DirectManager: ObservableObject {
     @Published private(set) var warmupRemainingMinutes: Int?
     /// True once the sensor has passed its rated wear duration.
     @Published private(set) var sensorIsExpired = false
+    /// Transient Libre 3 realtime status for decoded frames that are temporarily
+    /// unusable for sensor data-quality reasons.
+    @Published private(set) var currentReadingStatus: Libre3ReadingStatus?
 
     // MARK: - Engine
 
@@ -128,6 +167,7 @@ final class Libre3DirectManager: ObservableObject {
     /// the live buffer max instead would resume from a sample harvested seconds
     /// ago and fetch almost nothing.
     private var backfillResumeLifeCount: UInt16?
+    private var readingStatusEpisodeID = 0
 
     private init() {
         // Observe runtime provider switches (Settings picker, or a WC settings
@@ -172,7 +212,12 @@ final class Libre3DirectManager: ObservableObject {
     private func activeProviderChanged() {
         if isActiveProvider {
             start()
-        } else {
+        } else if lifecycleTask != nil ||
+                    restorationTask != nil ||
+                    stateTask != nil ||
+                    connectionEventTask != nil ||
+                    session != nil ||
+                    currentReadingStatus != nil {
             stop()
         }
     }
@@ -227,6 +272,7 @@ final class Libre3DirectManager: ObservableObject {
         dataPlaneState = nil
         didRequestBackfill = false
         assembler.reset()
+        clearReadingStatus()
         connectionState = .idle
     }
 
@@ -249,6 +295,7 @@ final class Libre3DirectManager: ObservableObject {
         currentGlucoseMgDL = nil
         warmupRemainingMinutes = nil
         sensorIsExpired = false
+        clearReadingStatus()
         SharedData.libre3SensorStartDate = nil
     }
 
@@ -790,6 +837,7 @@ final class Libre3DirectManager: ObservableObject {
 
         guard assessment.isUsable else {
             Logger.libre3.info("Libre3 BLE reading not usable (lifeCount=\(reading.lifeCount, privacy: .public)): \(String(describing: assessment.issues), privacy: .public)")
+            updateReadingStatus(for: reading, assessment: assessment)
             // Still push so the embedded historical point (if any) reaches the graph.
             pushHistory()
             return
@@ -802,10 +850,68 @@ final class Libre3DirectManager: ObservableObject {
 
         minuteByLifeCount[mapped.glucose.id] = mapped
         currentGlucoseMgDL = mapped.glucose.value
+        clearReadingStatus()
         persistLastAccepted(reading)
         pushHistory()
         refreshLiveActivityForNewReading()
         evaluateLowGlucoseForNewReading()
+    }
+
+    private func updateReadingStatus(
+        for reading: RealtimeGlucoseReading,
+        assessment: Libre3GlucoseQualityAssessment
+    ) {
+        guard let kind = readingStatusKind(for: assessment.blockingIssues, esaDuration: reading.esaDuration) else {
+            clearReadingStatus()
+            return
+        }
+
+        if currentReadingStatus == nil {
+            readingStatusEpisodeID += 1
+        }
+
+        let status = Libre3ReadingStatus(kind: kind, episodeID: readingStatusEpisodeID)
+        currentReadingStatus = status
+        DebugMessageSingleton.shared.libreLinkUpOverlayError = status.message
+    }
+
+    private func readingStatusKind(
+        for issues: [Libre3GlucoseQualityIssue],
+        esaDuration: UInt16
+    ) -> Libre3ReadingStatus.Kind? {
+        for issue in issues {
+            if case .sensorWarmup = issue {
+                return nil
+            }
+            if case .sensorExpired = issue {
+                return nil
+            }
+        }
+
+        for issue in issues {
+            if case .sensorCondition(.esa) = issue {
+                return .recalibrating(minutes: Int(esaDuration))
+            }
+        }
+
+        for issue in issues {
+            if case .currentDataQuality(_) = issue {
+                return .dataQuality
+            }
+        }
+
+        for issue in issues {
+            if case .currentGlucoseUnavailable(_) = issue {
+                return .unavailable
+            }
+        }
+
+        return nil
+    }
+
+    private func clearReadingStatus() {
+        currentReadingStatus = nil
+        DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
     }
 
     /// Drive the low-glucose alert from the push model's data tick. In BLE mode

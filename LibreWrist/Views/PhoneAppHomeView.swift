@@ -86,16 +86,19 @@ struct PhoneAppHomeView: View {
     
 //    private let libreLinkUp = LibreLinkUp()
     @StateObject private var lluService = LibreLinkUpService.shared
+    @ObservedObject private var libre3 = Libre3DirectManager.shared
      
     private static let foregroundReloadInterval: TimeInterval = 63
     private let timer = Timer.publish(every: Self.foregroundReloadInterval, tolerance: 1, on: .main, in: .common).autoconnect()
+    @State private var acknowledgedReadingWarningEpisodeID = 0
+    @State private var showReadingWarning = false
     
     var body: some View {
         VStack {
             if colorScheme == .dark {
-                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: libreLinkUpHistory.libreLinkUpGlucose[0].color.color, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton)
+                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: libreLinkUpHistory.libreLinkUpGlucose[0].color.color, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: readingWarning)
             } else {
-                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: Color.primary, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton)
+                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: Color.primary, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: readingWarning)
                 .background(Color(libreLinkUpHistory.libreLinkUpGlucose[0].color.color))
 //                .frame(maxWidth: .infinity)
                 .cornerRadius(30)
@@ -164,6 +167,14 @@ struct PhoneAppHomeView: View {
             Text("Your feedback helps us improve and makes it easier for others with diabetes to discover the app. And it motivates to continue the work. 😊\nWould you like to leave a quick review?")
         }
 
+        .alert(readingWarning?.title ?? "", isPresented: $showReadingWarning) {
+            Button("OK", role: .cancel) {
+                acknowledgedReadingWarningEpisodeID = readingWarning?.episodeID ?? acknowledgedReadingWarningEpisodeID
+            }
+        } message: {
+            Text(readingWarning?.message ?? "")
+        }
+
         // First-launch CGM picker. Presented only after the welcome/disclaimer/
         // update-note alerts have all been dismissed (see evaluateProviderPicker).
         .fullScreenCover(isPresented: $showsProviderPicker) {
@@ -178,9 +189,22 @@ struct PhoneAppHomeView: View {
         }
         // Each startup alert chains to the next via SwiftUI's one-at-a-time
         // presentation; the picker waits until the last one closes.
-        .onChange(of: isShowingWelcomeMessage) { evaluateProviderPicker() }
-        .onChange(of: isShowingDisclaimer)     { evaluateProviderPicker() }
-        .onChange(of: isShowingNotification)   { evaluateProviderPicker() }
+        .onChange(of: isShowingWelcomeMessage) {
+            evaluateProviderPicker()
+            evaluateReadingWarningAlert()
+        }
+        .onChange(of: isShowingDisclaimer) {
+            evaluateProviderPicker()
+            evaluateReadingWarningAlert()
+        }
+        .onChange(of: isShowingNotification) {
+            evaluateProviderPicker()
+            evaluateReadingWarningAlert()
+        }
+        .onChange(of: showsProviderPicker) {
+            evaluateReadingWarningAlert()
+        }
+        .onChange(of: libre3.currentReadingStatus) { evaluateReadingWarningAlert() }
 
         .onReceive(timer) { time in
             Logger.viewDebug.debug("Timer") // Timer fires as well when on a different tab, for example settings tab
@@ -216,6 +240,7 @@ struct PhoneAppHomeView: View {
             // away; otherwise the onChange handlers trigger it after the last
             // alert is dismissed.
             evaluateProviderPicker()
+            evaluateReadingWarningAlert()
 
             //MARK: Skip the following on app start
             if onAppearNotToDoFirstStart == false { // not to do on first start
@@ -269,6 +294,7 @@ struct PhoneAppHomeView: View {
                     trigger: "scenePhase.active",
                     liveActivityRestartThreshold: LiveActivityManager.shared.foregroundRestartAgeThreshold
                 )
+                evaluateReadingWarningAlert()
 
                 
             } else if newPhase == .inactive {
@@ -285,7 +311,7 @@ struct PhoneAppHomeView: View {
                     ProgressView().tint(.white)
                 }
             }
-            
+
             let secondsSinceLastReadingOverlay = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate)
             if secondsSinceLastReadingOverlay >= lluService.activeProvider.staleReadingAfter && lluService.isReloading == false {
                 ZStack {
@@ -297,7 +323,7 @@ struct PhoneAppHomeView: View {
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 100)
                             .padding()
-                        
+
                         Text("No data received since \(minutesSinceLastReading) min.\n\n\(overlayConnectionMessage)")
                             .multilineTextAlignment(.center)
                             .padding()
@@ -343,6 +369,11 @@ struct PhoneAppHomeView: View {
     private var overlayConnectionMessage: String {
         let localizedNetworkError = DebugMessageSingleton.shared.libreLinkUpOverlayError.trimmingCharacters(in: .whitespacesAndNewlines)
         return localizedNetworkError.isEmpty ? defaultOverlayConnectionMessage : localizedNetworkError
+    }
+
+    private var readingWarning: Libre3ReadingStatus? {
+        guard SharedData.cgmProviderKind == .libre3BLE else { return nil }
+        return libre3.currentReadingStatus
     }
 
     private var shouldShowReloadFailedAlert: Bool {
@@ -435,6 +466,17 @@ struct PhoneAppHomeView: View {
         DispatchQueue.main.async { showsProviderPicker = true }
     }
 
+    private func evaluateReadingWarningAlert() {
+        guard let warning = readingWarning else { return }
+        guard warning.episodeID > acknowledgedReadingWarningEpisodeID else { return }
+        guard !isShowingWelcomeMessage,
+              !isShowingDisclaimer,
+              !isShowingNotification,
+              !showsProviderPicker else { return }
+        guard !Self.shouldShowFirstLaunchPicker() else { return }
+        showReadingWarning = true
+    }
+
     private func reloadAndUpdateMinutes(
         refreshLiveActivity: Bool = false,
         trigger: String,
@@ -464,6 +506,9 @@ struct GlucoseValueView: View {
     var foregroundStyleColor: Color
     @Binding var isShowingInsulinDeliverySheet: Bool
     var currentIOBSingleton: CurrentIOBSingleton
+    var warning: Libre3ReadingStatus?
+    @State private var showWarningDetail = false
+
     var body: some View {
         HStack {
             Text("\(libreLinkUpHistory.currentGlucose.units)")
@@ -474,10 +519,25 @@ struct GlucoseValueView: View {
                 .padding()
             
             VStack(spacing: 4) {
-                Text("\(libreLinkUpHistory.currentTrendArrow)")
-                    .font(.system(size: 50, weight: .bold))
-                    .foregroundStyle(foregroundStyleColor)
-//                    .border(.red)
+                HStack {
+                    Text("\(libreLinkUpHistory.currentTrendArrow)")
+                        .font(.system(size: 50, weight: .bold))
+                        .foregroundStyle(foregroundStyleColor)
+                    //                    .border(.red)
+                    if let warning {
+                        Image(systemName: warning.symbol)
+                            .font(.system(size: 40))
+                            .foregroundStyle(.orange)
+                            .onTapGesture {
+                                showWarningDetail = true
+                            }
+                    }
+//                    if true {
+//                        Image(systemName: "exclamationmark.triangle.fill")
+//                            .font(.system(size: 40))
+//                            .foregroundStyle(.orange)
+//                    }
+                }
                 Button {
                     isShowingInsulinDeliverySheet.toggle()
                 } label: {
@@ -497,6 +557,11 @@ struct GlucoseValueView: View {
                 .sheet(isPresented: $isShowingInsulinDeliverySheet, content: {
                     PhoneAppInsulinDeliveryView()
                 })
+            }
+            .alert(warning?.title ?? "", isPresented: $showWarningDetail) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(warning?.message ?? "")
             }
             .padding()
 //            .border(.red)
