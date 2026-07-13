@@ -99,6 +99,11 @@ final class Libre3DirectManager: ObservableObject {
     /// Transient Libre 3 realtime status for decoded frames that are temporarily
     /// unusable for sensor data-quality reasons.
     @Published private(set) var currentReadingStatus: Libre3ReadingStatus?
+    /// Sensor-reported attention state from patch status. Soft states only hint;
+    /// terminal states are mirrored into `sensorNeedsReplacement`.
+    @Published private(set) var sensorAttention: Libre3SensorAttention = .none
+    /// Persistent terminal attention state for phone UI relaunch seeding.
+    @Published private(set) var sensorNeedsReplacement = false
 
     // MARK: - Engine
 
@@ -168,6 +173,7 @@ final class Libre3DirectManager: ObservableObject {
     /// ago and fetch almost nothing.
     private var backfillResumeLifeCount: UInt16?
     private var readingStatusEpisodeID = 0
+    private var lastSensorAttention: Libre3SensorAttention = .none
 
     private init() {
         // Observe runtime provider switches (Settings picker, or a WC settings
@@ -194,6 +200,7 @@ final class Libre3DirectManager: ObservableObject {
             }
         }
         sensorStartDate = SharedData.libre3SensorStartDate
+        sensorNeedsReplacement = SharedData.libre3SensorNeedsReplacement
         publishStatusToAppGroup()
     }
 
@@ -296,7 +303,11 @@ final class Libre3DirectManager: ObservableObject {
         warmupRemainingMinutes = nil
         sensorIsExpired = false
         clearReadingStatus()
+        sensorNeedsReplacement = false
+        sensorAttention = .none
+        lastSensorAttention = .none
         SharedData.libre3SensorStartDate = nil
+        SharedData.libre3SensorNeedsReplacement = false
     }
 
     // MARK: - Status surfaced to the provider
@@ -784,6 +795,7 @@ final class Libre3DirectManager: ObservableObject {
             // so warm-up gating works from the very first realtime reading.
             let lifecycle = state.latestLifecycle ?? fallbackLifecycle()
             if let lifecycle { applyLifecycle(lifecycle) }
+            updateSensorAttention(state.latestSensorAttention)
             switch update {
             case .realtimeGlucose(let reading, let recordedAssessment):
                 // Re-assess with the fallback lifecycle when patch status hasn't
@@ -912,6 +924,29 @@ final class Libre3DirectManager: ObservableObject {
     private func clearReadingStatus() {
         currentReadingStatus = nil
         DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
+    }
+
+    private func updateSensorAttention(_ attention: Libre3SensorAttention) {
+        guard attention != lastSensorAttention else { return }
+        lastSensorAttention = attention
+        sensorAttention = attention
+
+        let needsReplacement = attention == .replaceSensor || attention == .sensorEnded
+        if sensorNeedsReplacement != needsReplacement {
+            sensorNeedsReplacement = needsReplacement
+            SharedData.libre3SensorNeedsReplacement = needsReplacement
+        }
+
+        switch attention {
+        case .replaceSensor, .sensorEnded:
+            Logger.libre3.info("Libre3 BLE attention terminal \(String(describing: attention), privacy: .public)")
+        case .checkSensor:
+            Logger.libre3.info("Libre3 BLE attention checkSensor")
+        case .unknown(let code):
+            Logger.libre3.info("Libre3 BLE attention unknown \(code, privacy: .public)")
+        case .none:
+            break
+        }
     }
 
     /// Drive the low-glucose alert from the push model's data tick. In BLE mode

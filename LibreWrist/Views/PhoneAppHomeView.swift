@@ -11,6 +11,13 @@ import Charts
 import WidgetKit
 import StoreKit
 
+struct HomeSensorWarning: Equatable {
+    let color: Color
+    let symbol: String
+    let title: String
+    let message: String
+    let episodeID: Int?
+}
 
 struct PhoneAppHomeView: View {
     private struct StartupUpdateNote {
@@ -96,9 +103,9 @@ struct PhoneAppHomeView: View {
     var body: some View {
         VStack {
             if colorScheme == .dark {
-                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: libreLinkUpHistory.libreLinkUpGlucose[0].color.color, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: readingWarning)
+                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: libreLinkUpHistory.libreLinkUpGlucose[0].color.color, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: homeWarning)
             } else {
-                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: Color.primary, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: readingWarning)
+                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: Color.primary, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: homeWarning)
                 .background(Color(libreLinkUpHistory.libreLinkUpGlucose[0].color.color))
 //                .frame(maxWidth: .infinity)
                 .cornerRadius(30)
@@ -167,12 +174,12 @@ struct PhoneAppHomeView: View {
             Text("Your feedback helps us improve and makes it easier for others with diabetes to discover the app. And it motivates to continue the work. 😊\nWould you like to leave a quick review?")
         }
 
-        .alert(readingWarning?.title ?? "", isPresented: $showReadingWarning) {
+        .alert(homeWarning?.title ?? "", isPresented: $showReadingWarning) {
             Button("OK", role: .cancel) {
-                acknowledgedReadingWarningEpisodeID = readingWarning?.episodeID ?? acknowledgedReadingWarningEpisodeID
+                acknowledgedReadingWarningEpisodeID = homeWarning?.episodeID ?? acknowledgedReadingWarningEpisodeID
             }
         } message: {
-            Text(readingWarning?.message ?? "")
+            Text(homeWarning?.message ?? "")
         }
 
         // First-launch CGM picker. Presented only after the welcome/disclaimer/
@@ -371,9 +378,27 @@ struct PhoneAppHomeView: View {
         return localizedNetworkError.isEmpty ? defaultOverlayConnectionMessage : localizedNetworkError
     }
 
-    private var readingWarning: Libre3ReadingStatus? {
+    private var homeWarning: HomeSensorWarning? {
         guard SharedData.cgmProviderKind == .libre3BLE else { return nil }
-        return libre3.currentReadingStatus
+        if libre3.sensorNeedsReplacement {
+            return HomeSensorWarning(
+                color: .red,
+                symbol: "exclamationmark.triangle.fill",
+                title: String(localized: "Replace sensor"),
+                message: String(localized: "Your sensor has stopped working and needs to be replaced to resume readings."),
+                episodeID: nil
+            )
+        }
+        if let status = libre3.currentReadingStatus {
+            return HomeSensorWarning(
+                color: .orange,
+                symbol: status.symbol,
+                title: status.title,
+                message: status.message,
+                episodeID: status.episodeID
+            )
+        }
+        return nil
     }
 
     private var shouldShowReloadFailedAlert: Bool {
@@ -467,8 +492,8 @@ struct PhoneAppHomeView: View {
     }
 
     private func evaluateReadingWarningAlert() {
-        guard let warning = readingWarning else { return }
-        guard warning.episodeID > acknowledgedReadingWarningEpisodeID else { return }
+        guard let episodeID = homeWarning?.episodeID else { return }
+        guard episodeID > acknowledgedReadingWarningEpisodeID else { return }
         guard !isShowingWelcomeMessage,
               !isShowingDisclaimer,
               !isShowingNotification,
@@ -506,7 +531,7 @@ struct GlucoseValueView: View {
     var foregroundStyleColor: Color
     @Binding var isShowingInsulinDeliverySheet: Bool
     var currentIOBSingleton: CurrentIOBSingleton
-    var warning: Libre3ReadingStatus?
+    var warning: HomeSensorWarning?
     @State private var showWarningDetail = false
 
     var body: some View {
@@ -527,7 +552,7 @@ struct GlucoseValueView: View {
                     if let warning {
                         Image(systemName: warning.symbol)
                             .font(.system(size: 40))
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(warning.color)
                             .onTapGesture {
                                 showWarningDetail = true
                             }

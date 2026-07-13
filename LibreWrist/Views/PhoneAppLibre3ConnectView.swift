@@ -295,14 +295,24 @@ struct PhoneAppLibre3ConnectView: View {
                 }
             }
 
-            if let remaining = directManager.warmupRemainingMinutes {
+            if directManager.sensorNeedsReplacement {
+                Label("Sensor needs replacing — replace it and pair the new one.", systemImage: "exclamationmark.triangle.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if directManager.sensorIsExpired {
+                Label("Sensor expired — replace it and pair the new one.", systemImage: "exclamationmark.triangle")
+                    .font(.subheadline)
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if let remaining = directManager.warmupRemainingMinutes {
                 // The sensor reports unusable readings until warm-up finishes, so
                 // we suppress the value and show the countdown instead.
                 Label("Warming up — about \(remaining) min left", systemImage: "hourglass")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-            } else if directManager.sensorIsExpired {
-                Label("Sensor expired — replace it and pair the new one.", systemImage: "exclamationmark.triangle")
+            } else if directManager.sensorAttention == .checkSensor {
+                Label("Check sensor", systemImage: "exclamationmark.circle")
                     .font(.subheadline)
                     .foregroundStyle(.orange)
                     .fixedSize(horizontal: false, vertical: true)

@@ -132,6 +132,7 @@ enum DefaultsKey: String {
     // phone-only type — it compiles into the watch + widget targets too).
     case libre3EngineDidFail = "libre3EngineDidFailKey"
     case libre3EngineStatusMessage = "libre3EngineStatusMessageKey"
+    case libre3SensorNeedsReplacement = "libre3SensorNeedsReplacementKey"
 }
 
 // MARK: - Convenience typed helpers + Codable helpers
@@ -687,6 +688,13 @@ enum SharedData {
     static var libre3EngineStatusMessage: String {
         get { store.getString(.libre3EngineStatusMessage, defaultValue: "[...]") }
         set { store.setString(newValue, forKey: .libre3EngineStatusMessage) }
+    }
+
+    /// Phone-only persisted echo of a terminal sensor attention state. This seeds
+    /// the phone UI after relaunch; watch targets do not consume it.
+    static var libre3SensorNeedsReplacement: Bool {
+        get { store.getBool(.libre3SensorNeedsReplacement) }
+        set { store.setBool(newValue, forKey: .libre3SensorNeedsReplacement) }
     }
 
     // MARK: - Provider-agnostic credential gates
