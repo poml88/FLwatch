@@ -174,6 +174,7 @@ final class Libre3DirectManager: ObservableObject {
     private var backfillResumeLifeCount: UInt16?
     private var readingStatusEpisodeID = 0
     private var lastSensorAttention: Libre3SensorAttention = .none
+    private var lastScheduledExpiryAnchor: Date?
 
     private init() {
         // Observe runtime provider switches (Settings picker, or a WC settings
@@ -307,6 +308,8 @@ final class Libre3DirectManager: ObservableObject {
         sensorNeedsReplacement = false
         sensorAttention = .none
         lastSensorAttention = .none
+        lastScheduledExpiryAnchor = nil
+        Task { await SensorAlertNotificationManager.shared.cancelExpiryReminders() }
         SharedData.libre3SensorStartDate = nil
         SharedData.libre3SensorNeedsReplacement = false
     }
@@ -563,6 +566,7 @@ final class Libre3DirectManager: ObservableObject {
         if !sensorNeedsReplacement {
             await SensorAlertNotificationManager.shared.retract()
         }
+        refreshExpiryReminders()
 
         // Tell the watch the BLE sensor is paired + active (provider kind +
         // serial), so its provider-account gate opens and it renders the glucose
@@ -1042,6 +1046,16 @@ final class Libre3DirectManager: ObservableObject {
         )
     }
 
+    private func refreshExpiryReminders() {
+        guard let anchor = sensorStartDate else { return }
+        let wear = SharedData.libre3WearDurationMinutes
+        guard wear > 0 else { return }
+        guard lastScheduledExpiryAnchor != anchor else { return }
+        lastScheduledExpiryAnchor = anchor
+        Task { await SensorAlertNotificationManager.shared.scheduleExpiryReminders(
+            sensorStartDate: anchor, wearDurationMinutes: wear) }
+    }
+
     /// Derive the wall-clock sensor-start anchor once (`now − lifeCount·60s`) and
     /// persist it so timestamps stay stable across reconnects (PLAN §8).
     private func seedAnchorIfNeeded(lifeCount: Int) {
@@ -1049,6 +1063,7 @@ final class Libre3DirectManager: ObservableObject {
         let anchor = Date().addingTimeInterval(-Double(lifeCount) * 60)
         sensorStartDate = anchor
         SharedData.libre3SensorStartDate = anchor
+        refreshExpiryReminders()
     }
 
     /// Wire the graph's red low-alarm line from the low-glucose notification
