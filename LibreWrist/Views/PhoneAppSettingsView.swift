@@ -8,10 +8,12 @@
 import SwiftUI
 import MessageUI
 import ActivityKit
+import UserNotifications
 
 struct PhoneAppSettingsView: View {
     
     @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
     
     @AppStorage(DefaultsKey.cgmProviderKind.rawValue, store: UserDefaults.group) private var cgmProviderKindRaw: String = CGMProviderKind.libreLinkUp.rawValue
     @AppStorage(DefaultsKey.showInsulinDeliveryMarksPhone.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksPhone: Bool = false
@@ -26,6 +28,8 @@ struct PhoneAppSettingsView: View {
     @AppStorage(DefaultsKey.lowGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationsEnabled: Bool = false
     @AppStorage(DefaultsKey.lowGlucoseCriticalAlertsEnabled.rawValue, store: UserDefaults.group) private var lowGlucoseCriticalAlertsEnabled: Bool = false
     @AppStorage(DefaultsKey.lowGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationThreshold: Int = 70
+    @AppStorage(DefaultsKey.libre3SignalLossAlertEnabled.rawValue, store: UserDefaults.group) private var libre3SignalLossAlertEnabled: Bool = true
+    @AppStorage(DefaultsKey.libre3SignalLossCritical.rawValue, store: UserDefaults.group) private var libre3SignalLossCritical: Bool = false
     
     
     @State private var isScreenAlwaysOn = false
@@ -43,6 +47,7 @@ struct PhoneAppSettingsView: View {
     }()
     @State private var appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
     @State private var appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
+    @State private var notificationAuthorizationDenied = false
     @StateObject private var bluetoothHeartbeatManager = BluetoothHeartbeatManager.shared
     private var watchConnector = WatchConnectivityManager.shared
     let updateFrequencyOptions: [Int] = [1, 5, 10, 15, 20]
@@ -135,6 +140,39 @@ struct PhoneAppSettingsView: View {
             // re-evaluate so a current low is re-delivered at the new level.
             watchConnector.sendSettingsSnapshotToWatch()
             await LowGlucoseNotificationManager.shared.enableNotifications()
+        }
+    }
+
+    private func handleSignalLossAlertChanged(_ isEnabled: Bool) {
+        // Apply off immediately; when enabling, this also grace-arms immediately
+        // if lifecycle is already known. Re-apply after the authorization request
+        // so the executor sees the system's updated notification settings.
+        Libre3DirectManager.shared.signalLossSettingsChanged()
+        guard isEnabled else {
+            refreshNotificationAuthorizationStatus()
+            return
+        }
+        Task {
+            _ = await LowGlucoseNotificationManager.shared.requestAuthorizationIfNeeded()
+            await MainActor.run {
+                Libre3DirectManager.shared.signalLossSettingsChanged()
+            }
+            refreshNotificationAuthorizationStatus()
+        }
+    }
+
+    private func handleSignalLossCriticalChanged(_ isEnabled: Bool) {
+        // Preserve the deadline while immediately applying an off transition.
+        // After an on prompt completes, re-apply at that same deadline so a newly
+        // granted critical setting takes effect on the pending request.
+        Libre3DirectManager.shared.signalLossSettingsChanged()
+        guard isEnabled else { return }
+        Task {
+            _ = await LowGlucoseNotificationManager.shared.requestCriticalAuthorizationIfNeeded()
+            await MainActor.run {
+                Libre3DirectManager.shared.signalLossSettingsChanged()
+            }
+            refreshNotificationAuthorizationStatus()
         }
     }
 
@@ -540,6 +578,13 @@ struct PhoneAppSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                if notificationAuthorizationDenied {
+                    Text("Notifications are off — glucose alerts can't be delivered")
+                        .font(.subheadline)
+                        .foregroundStyle(.red)
+                    Link("Open app settings", destination: URL(string: UIApplication.openSettingsURLString)!)
+                }
+
                 Text("You’ll get a notification when a new reading is below \(lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold)). Alerts repeat at most every 5 minutes while glucose stays low. Alerts depend on a stable Bluetooth connection to your sensor and an internet connection. Always rely on the manufacturer's alerts first.")
                     .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)
@@ -596,6 +641,27 @@ struct PhoneAppSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                Divider()
+
+                Toggle("Signal loss alert", isOn: $libre3SignalLossAlertEnabled)
+                    .onChange(of: libre3SignalLossAlertEnabled) { _, isEnabled in
+                        handleSignalLossAlertChanged(isEnabled)
+                    }
+
+                Toggle("Critical alert", isOn: $libre3SignalLossCritical)
+                    .padding(.leading, 20)
+                    .disabled(!libre3SignalLossAlertEnabled)
+                    .onChange(of: libre3SignalLossCritical) { _, isEnabled in
+                        handleSignalLossCriticalChanged(isEnabled)
+                    }
+
+                if notificationAuthorizationDenied {
+                    Text("Notifications are off — glucose alerts can't be delivered")
+                        .font(.subheadline)
+                        .foregroundStyle(.red)
+                    Link("Open app settings", destination: URL(string: UIApplication.openSettingsURLString)!)
+                }
+
                 Text("You’ll get a notification when a new reading is below \(lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold)). Alerts repeat at most every 5 minutes while glucose stays low. Alerts depend on a stable Bluetooth connection to your sensor. Always rely on the manufacturer's alerts first.")
                     .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)
@@ -603,7 +669,10 @@ struct PhoneAppSettingsView: View {
             } header: {
                 Text("Notifications")
             } footer: {
-                Text("FLwatch alerts you when a new sensor reading is below your alert level. The alert is delivered as your sensor pushes readings over Bluetooth.")
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("FLwatch alerts you when a new sensor reading is below your alert level. The alert is delivered as your sensor pushes readings over Bluetooth.")
+                    Text("Notifies you when no readings have arrived for 20 minutes. Requires your phone to be near the sensor.")
+                }
             }
             } // end `if cgmProviderKind == .libre3BLE` — BLE notifications section
 
@@ -738,7 +807,12 @@ struct PhoneAppSettingsView: View {
         }
         .onAppear {
             refreshAppleHealthStatus()
+            refreshNotificationAuthorizationStatus()
             bluetoothHeartbeatManager.startIfNeeded()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active else { return }
+            refreshNotificationAuthorizationStatus()
         }
         
     }
@@ -786,6 +860,15 @@ struct PhoneAppSettingsView: View {
     private func refreshAppleHealthStatus() {
         appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
         appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
+    }
+
+    private func refreshNotificationAuthorizationStatus() {
+        Task {
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            await MainActor.run {
+                notificationAuthorizationDenied = settings.authorizationStatus == .denied
+            }
+        }
     }
 
     private func lowGlucoseThresholdText(for value: Int) -> String {

@@ -51,6 +51,8 @@ enum DefaultsKey: String {
     case lowGlucoseNotificationLastSentDate = "lowGlucoseNotificationLastSentDateKey"
     case lowGlucoseNotificationPendingRepeat = "lowGlucoseNotificationPendingRepeatKey"
     case lowGlucoseNotificationSnoozeUntilDate = "lowGlucoseNotificationSnoozeUntilDateKey"
+    case libre3SignalLossAlertEnabled = "libre3SignalLossAlertEnabledKey"
+    case libre3SignalLossCritical = "libre3SignalLossCriticalKey"
     case icrGramsPerUnit = "icrGramsPerUnitKey"
     case roundingStep = "roundingStepKey"
     case carbsPer100g = "carbsPer100gKey"
@@ -385,6 +387,20 @@ enum SharedData {
     static var lowGlucoseNotificationSnoozeUntilDate: Date {
         get { store.getDate(.lowGlucoseNotificationSnoozeUntilDate, defaultValue: .distantPast) }
         set { store.setDate(newValue, forKey: .lowGlucoseNotificationSnoozeUntilDate) }
+    }
+
+    /// Enables the Libre 3 direct-BLE signal-loss dead-man notification. This is
+    /// default-on even before the preference has ever been written.
+    static var libre3SignalLossAlertEnabled: Bool {
+        get { store.getBool(.libre3SignalLossAlertEnabled, defaultValue: true) }
+        set { store.setBool(newValue, forKey: .libre3SignalLossAlertEnabled) }
+    }
+
+    /// Requests critical delivery for signal-loss alerts. Actual critical use
+    /// is additionally gated by the system critical-alert authorization.
+    static var libre3SignalLossCritical: Bool {
+        get { store.getBool(.libre3SignalLossCritical, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .libre3SignalLossCritical) }
     }
     
     static var libreLinkUpScrapingLogbook: Bool {

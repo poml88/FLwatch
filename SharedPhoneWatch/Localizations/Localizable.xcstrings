@@ -4,6 +4,9 @@
     "" : {
 
     },
+    "Critical alert" : {
+
+    },
     "Glucose temporarily unavailable" : {
 
     },
@@ -13,10 +16,25 @@
     "No new readings for about %d min. This is normal; it will resume on its own." : {
 
     },
+    "No glucose data" : {
+
+    },
+    "Notifies you when no readings have arrived for 20 minutes. Requires your phone to be near the sensor." : {
+
+    },
+    "Notifications are off — glucose alerts can't be delivered" : {
+
+    },
     "Sensor data quality issue" : {
 
     },
     "Sensor recalibrating" : {
+
+    },
+    "Signal loss alert" : {
+
+    },
+    "Your phone hasn't received readings for 20 minutes. Move closer to your sensor or check it." : {
 
     },
     "\nInsulin history:" : {

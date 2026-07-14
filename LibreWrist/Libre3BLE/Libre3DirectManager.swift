@@ -127,6 +127,13 @@ final class Libre3DirectManager: ObservableObject {
     /// traffic; a future CCCD re-arm fast path must use its own timestamp so it
     /// cannot starve reconnect escalation.
     private var lastGlucoseAt: Date?
+    /// Latest advancing life count that moved the signal-loss deadline.
+    private var lastArmedLifeCount: UInt16?
+    /// Manager-side mirror of the executor's desired deadline. Settings changes
+    /// re-apply this exact value so they never restart the 20-minute clock.
+    private var currentSignalLossDeadline: Date?
+    private var signalLossDeadlineRecoveryStarted = false
+    private var signalLossDeadlineRecovered = false
 
     /// The single connect → authorize → stream driver. While non-nil a
     /// connection attempt or live stream is in flight.
@@ -159,6 +166,7 @@ final class Libre3DirectManager: ObservableObject {
     /// Six minutes allows roughly two missed reload opportunities beyond the
     /// normal three-minute stale-reading window before escalating to reconnect.
     private static let recoveryStaleThreshold: TimeInterval = 6 * 60
+    private static let signalLossThreshold: TimeInterval = 20 * 60
     /// How long per-minute points are retained (bounds the buffer). The minute
     /// overlay shows points newer than the last historical sample; this only caps
     /// memory — it must NOT be used to drop recent points when history lags, which
@@ -264,6 +272,11 @@ final class Libre3DirectManager: ObservableObject {
             connectionState = .idle
             return
         }
+        // Recover before any lifecycle-driven grace arm. This runs only when the
+        // paired direct-BLE provider starts, so a cloud-provider relaunch cannot
+        // arm a signal-loss alert from an old persisted Libre 3 anchor.
+        recoverSignalLossDeadlineIfNeeded()
+        reconcileSignalLossArming()
         // Shared `connected` is the provider-configured/paired gate for the
         // reload path (like LLU's login state), NOT transport status — transport
         // lives in Libre3DirectConnectionState. Do not wire this to BLE link
@@ -289,6 +302,7 @@ final class Libre3DirectManager: ObservableObject {
     /// Tear down the connection and stop streaming (provider switched away, or
     /// the user disconnected the sensor).
     func stop() {
+        setSignalLossState(deadline: nil)
         lifecycleTask?.cancel()
         lifecycleTask = nil
         restorationTask?.cancel()
@@ -363,6 +377,13 @@ final class Libre3DirectManager: ObservableObject {
         sensorAttention = .none
         lastSensorAttention = .none
         lastScheduledExpiryAnchor = nil
+        // A replacement sensor starts near lifeCount zero. Clear both the
+        // persisted data-plane seed and the advancing-lifeCount arm seed, or the
+        // old sensor's ~20,000-minute value would suppress arming for the new
+        // sensor's entire wear.
+        SharedData.libre3LastLifeCount = 0
+        SharedData.libre3LastGlucoseMgDL = 0
+        lastArmedLifeCount = nil
         // Forgetting the sensor must clear both pending and delivered expiry
         // reminders so a prior sensor cannot alert after unpairing.
         Task { await SensorAlertNotificationManager.shared.cancelExpiryReminders() }
@@ -450,6 +471,9 @@ final class Libre3DirectManager: ObservableObject {
     /// `stop()` it keeps the restoration/state observers alive so we can come
     /// back automatically.
     private func teardownForReconnect() {
+        // Deliberately do NOT cancel signal loss here. Bluetooth-off means hypo
+        // protection is genuinely offline, so the OS-scheduled alert must remain
+        // armed while this process may be suspended.
         lifecycleTask?.cancel()
         lifecycleTask = nil
         // Don't call `scanner.disconnect(session)` here: this runs only when
@@ -556,6 +580,7 @@ final class Libre3DirectManager: ObservableObject {
         // work from the first packet.
         let savedLastLifeCount = SharedData.libre3LastLifeCount > 0
             ? UInt16(clamping: SharedData.libre3LastLifeCount) : nil
+        lastArmedLifeCount = savedLastLifeCount
         dataPlaneState = Libre3DataPlaneState(
             warmupDurationMinutes: SharedData.libre3WarmupMinutes,
             wearDurationMinutes: SharedData.libre3WearDurationMinutes > 0
@@ -945,6 +970,7 @@ final class Libre3DirectManager: ObservableObject {
         pushHistory()
         refreshLiveActivityForNewReading()
         evaluateLowGlucoseForNewReading()
+        armSignalLossForAdvancingReading(reading)
     }
 
     private func updateReadingStatus(
@@ -1035,6 +1061,10 @@ final class Libre3DirectManager: ObservableObject {
 
         switch attention {
         case .replaceSensor, .sensorEnded:
+            // Terminal sensor attention owns the recovery action. Prevent a
+            // correct replacement alert being followed by a bogus proximity
+            // alert 20 minutes later.
+            setSignalLossState(deadline: nil)
             Logger.libre3.info("Libre3 BLE attention terminal \(String(describing: attention), privacy: .public)")
         case .checkSensor:
             Logger.libre3.info("Libre3 BLE attention checkSensor")
@@ -1061,6 +1091,18 @@ final class Libre3DirectManager: ObservableObject {
         Task {
             await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
         }
+    }
+
+    private func armSignalLossForAdvancingReading(_ reading: RealtimeGlucoseReading) {
+        // This is an OS-scheduled dead-man switch, not an in-process watchdog:
+        // a suspended or killed app cannot execute code to detect the silence it
+        // is supposed to report, while Notification Center can fire autonomously.
+        // Only an advancing lifeCount proves a new minute arrived. Duplicate
+        // frames must not postpone the deadline; this comparison depends on
+        // `forgetSensor()` resetting the old sensor's much larger life count.
+        guard reading.lifeCount > (lastArmedLifeCount ?? 0) else { return }
+        lastArmedLifeCount = reading.lifeCount
+        setSignalLossState(deadline: Date().addingTimeInterval(Self.signalLossThreshold))
     }
 
     /// Refresh the phone's Live Activity the moment a new usable minute reading
@@ -1109,6 +1151,82 @@ final class Libre3DirectManager: ObservableObject {
         seedAnchorIfNeeded(lifeCount: lifecycle.currentLifeCountMinutes)
         warmupRemainingMinutes = lifecycle.isWarmingUp ? lifecycle.remainingWarmupMinutes : nil
         sensorIsExpired = lifecycle.isExpired
+        reconcileSignalLossArming()
+    }
+
+    /// Reconciles lifecycle and user policy with the manager's current
+    /// signal-loss deadline. This is the single grace-arm policy site; realtime
+    /// advancing readings remain the only path that moves an existing deadline.
+    private func reconcileSignalLossArming() {
+        // Deadline recovery must complete before grace arming. Otherwise a
+        // relaunch could replace an earlier, nearer OS deadline with a fresh
+        // 20-minute window. Recovery explicitly re-enters this method afterward.
+        guard signalLossDeadlineRecovered else { return }
+
+        guard SharedData.libre3SignalLossAlertEnabled else {
+            setSignalLossState(deadline: nil)
+            return
+        }
+
+        if sensorNeedsReplacement {
+            setSignalLossState(deadline: nil)
+            return
+        }
+
+        let lifecycle = dataPlaneState?.latestLifecycle ?? fallbackLifecycle()
+        // A nil lifecycle is unknown, not proof that the sensor is active.
+        // Fresh pairs can be warming before either patch status or a persisted
+        // anchor can classify them, so preserve the current state and do not
+        // grace-arm or cancel until classification exists.
+        guard let lifecycle else { return }
+        guard !lifecycle.isWarmingUp, !lifecycle.isExpired else {
+            setSignalLossState(deadline: nil)
+            return
+        }
+
+        if currentSignalLossDeadline == nil {
+            setSignalLossState(deadline: Date().addingTimeInterval(Self.signalLossThreshold))
+        }
+    }
+
+    /// Reconciles a signal-loss settings change, then bumps the executor revision
+    /// with the unchanged deadline so critical-level changes replace the pending
+    /// request without restarting its clock.
+    func signalLossSettingsChanged() {
+        reconcileSignalLossArming()
+        // A theoretical settings change before startup recovery completes cannot
+        // re-apply the pending request here. Recovery completion remains
+        // authoritative and reconciles immediately afterward; in normal use it
+        // finishes during launch, before Settings can be changed.
+        guard signalLossDeadlineRecovered else { return }
+        SensorAlertNotificationManager.shared.setSignalLossState(
+            deadline: currentSignalLossDeadline
+        )
+    }
+
+    private func setSignalLossState(deadline: Date?) {
+        currentSignalLossDeadline = deadline
+        SensorAlertNotificationManager.shared.setSignalLossState(deadline: deadline)
+    }
+
+    private func recoverSignalLossDeadlineIfNeeded() {
+        guard !signalLossDeadlineRecoveryStarted else { return }
+        signalLossDeadlineRecoveryStarted = true
+        Task { [weak self] in
+            let deadline = await SensorAlertNotificationManager.shared.pendingSignalLossDeadline()
+            guard let self else { return }
+            // Mirror only: adopting an existing request must not reschedule it.
+            if let deadline {
+                self.currentSignalLossDeadline = deadline
+            }
+            self.signalLossDeadlineRecovered = true
+            // Deliberate repeat policy: if an outage notification already fired,
+            // a process relaunch finds no pending request and may grace-arm one
+            // more 20-minute warning. A warm resume is not guaranteed to repeat.
+            // This favors another warning over silently remaining offline without
+            // persisting per-outage bookkeeping.
+            self.reconcileSignalLossArming()
+        }
     }
 
     /// Lifecycle derived from the wall-clock anchor + persisted warm-up/wear

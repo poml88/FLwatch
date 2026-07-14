@@ -23,7 +23,11 @@ final class SensorAlertNotificationManager {
     }
 
     private static let requestIdentifier = "libre3-sensor-alert.terminal"
+    private static let signalLossIdentifier = "libre3-sensor-alert.signal-loss"
     private let notificationCenter = UNUserNotificationCenter.current()
+    private var desiredSignalLossDeadline: Date?
+    private var signalLossRevision = 0
+    private var signalLossReconciliationTask: Task<Void, Never>?
 
     private init() { }
 
@@ -36,6 +40,96 @@ final class SensorAlertNotificationManager {
             _ = try await notificationCenter.requestAuthorization(options: [.alert, .badge, .sound])
         } catch {
             Logger.connectivity.error("Sensor alert notification authorization failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Sets the desired signal-loss deadline, or disarms the alert with `nil`.
+    ///
+    /// This synchronous entry point only records intent. A single serialized
+    /// worker reconciles that intent with Notification Center so callers never
+    /// race one another while replacing or cancelling the fixed-ID request.
+    func setSignalLossState(deadline: Date?) {
+        desiredSignalLossDeadline = deadline
+        signalLossRevision &+= 1
+        ensureSignalLossReconciliationWorker()
+    }
+
+    /// Returns the OS-scheduled signal-loss deadline, if one is still pending.
+    /// Used once at manager startup so an earlier, nearer dead-man deadline is
+    /// adopted without being replaced by a fresh grace window.
+    func pendingSignalLossDeadline() async -> Date? {
+        let requests = await notificationCenter.pendingNotificationRequests()
+        let trigger = requests
+            .first { $0.identifier == Self.signalLossIdentifier }?
+            .trigger as? UNTimeIntervalNotificationTrigger
+        return trigger?.nextTriggerDate()
+    }
+
+    private func ensureSignalLossReconciliationWorker() {
+        guard signalLossReconciliationTask == nil else { return }
+        signalLossReconciliationTask = Task { [weak self] in
+            await self?.runSignalLossReconciliationWorker()
+        }
+    }
+
+    private func runSignalLossReconciliationWorker() async {
+        // A revision check before `add` is insufficient: `add` itself is async,
+        // so a cancel can arrive during that await and the stale add can commit
+        // afterward. The one worker must finish each apply, then loop whenever
+        // its snapshot is stale, and exit only after the latest revision lands.
+        while !Task.isCancelled {
+            let revision = signalLossRevision
+            let deadline = desiredSignalLossDeadline
+            await applySignalLossState(deadline: deadline)
+            guard revision == signalLossRevision else { continue }
+            signalLossReconciliationTask = nil
+            return
+        }
+        signalLossReconciliationTask = nil
+    }
+
+    private func applySignalLossState(deadline: Date?) async {
+        let ids = [Self.signalLossIdentifier]
+        guard let deadline, SharedData.libre3SignalLossAlertEnabled else {
+            notificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
+            notificationCenter.removeDeliveredNotifications(withIdentifiers: ids)
+            return
+        }
+
+        let settings = await notificationCenter.notificationSettings()
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "No glucose data")
+        content.body = String(localized: "Your phone hasn't received readings for 20 minutes. Move closer to your sensor or check it.")
+        // The preference alone cannot authorize critical delivery. Gate it on
+        // the system's current critical-alert setting and otherwise fall back to
+        // a time-sensitive notification.
+        let useCritical = SharedData.libre3SignalLossCritical &&
+            settings.criticalAlertSetting == .enabled
+        if useCritical {
+            content.interruptionLevel = .critical
+            content.sound = .defaultCritical
+        } else {
+            content.interruptionLevel = .timeSensitive
+            if settings.soundSetting == .enabled {
+                content.sound = .default
+            }
+        }
+
+        // Reusing an identifier replaces only a pending request. Retract an
+        // already-delivered outage banner when a new reading resumes the stream.
+        notificationCenter.removeDeliveredNotifications(withIdentifiers: ids)
+        let request = UNNotificationRequest(
+            identifier: Self.signalLossIdentifier,
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(
+                timeInterval: max(1, deadline.timeIntervalSinceNow),
+                repeats: false
+            )
+        )
+        do {
+            try await notificationCenter.add(request)
+        } catch {
+            Logger.connectivity.error("Signal-loss notification scheduling failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
