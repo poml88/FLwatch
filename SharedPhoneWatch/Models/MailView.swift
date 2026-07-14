@@ -44,11 +44,12 @@ struct MailView: UIViewControllerRepresentable {
 //        let model = UIDevice.current.model
         let name = UIDevice.current.name
         
+        let cgmProvider = SharedData.cgmProviderKind.displayName
         let sensorType = SensorSettingsStore.shared.sensorType.description
         
         let libreLinkUpDebug = DebugMessageSingleton.shared.libreLinkUpResponseError
         
-        let messageBody: LocalizedStringResource = "Hello,\n\n*** write your message here ***\n\n\n\nKind regards\n\n\n\n--\nDebug info:\nApp Version: \(versionNumber) Build: \(buildNumber)\nDevice Info: \(systemName) \(systemVersion) on \(name)\nSensor: \(sensorType)\nError Message: \(libreLinkUpDebug)\n\n"
+        let messageBody: LocalizedStringResource = "Hello,\n\n*** write your message here ***\n\n\n\nKind regards\n\n\n\n--\nDebug info:\nApp Version: \(versionNumber) Build: \(buildNumber)\nDevice Info: \(systemName) \(systemVersion) on \(name)\nCGM Provider: \(cgmProvider)\nSensor: \(sensorType)\nError Message: \(libreLinkUpDebug)\n\n"
         let messageBodyString: String = String(localized: messageBody)
 
         let vc = MFMailComposeViewController()

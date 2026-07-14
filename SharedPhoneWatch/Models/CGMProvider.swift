@@ -24,6 +24,14 @@ enum CGMProviderKind: String, Codable {
     /// `Libre3DirectProvider`.
     case libre3BLE
 
+    var displayName: String {
+        switch self {
+        case .libreLinkUp: return "FreeStyle Libre (LibreLinkUp)"
+        case .dexcomShare: return "Dexcom (Share)"
+        case .libre3BLE: return "FreeStyle Libre 3 (Bluetooth)"
+        }
+    }
+
     /// Source cadence in minutes. Single source of truth, readable without a
     /// provider instance so non-isolated consumers (widgets, Live Activity)
     /// that only know the kind can derive cadence-aware timing.

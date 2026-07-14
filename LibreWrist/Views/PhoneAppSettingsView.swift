@@ -789,6 +789,8 @@ struct PhoneAppSettingsView: View {
                 let name = UIDevice.current.name
                 Text("\(systemName) \(systemVersion) on \(name)")
                 
+                Text(verbatim: "CGM Provider: \(cgmProviderKind.displayName)")
+
                 Text(verbatim: "Sensor: \(SensorSettingsStore.shared.sensorType)")
                 
                 Text("Error message: \(DebugMessageSingleton.shared.libreLinkUpResponseError)")
