@@ -120,6 +120,14 @@ final class Libre3DirectManager: ObservableObject {
     private var decoder: DataPlaneDecoder?
     private let assembler = DataPlaneNotificationAssembler()
 
+    /// Receipt time of the latest glucose-channel fragment, including warm-up
+    /// and undecodable frames. This is channel liveness, distinct from tracking
+    /// the latest usable reading. Apart from the fresh-stream grace seed, it must
+    /// never be bumped by recovery actions or anything except real glucose
+    /// traffic; a future CCCD re-arm fast path must use its own timestamp so it
+    /// cannot starve reconnect escalation.
+    private var lastGlucoseAt: Date?
+
     /// The single connect → authorize → stream driver. While non-nil a
     /// connection attempt or live stream is in flight.
     private var lifecycleTask: Task<Void, Never>?
@@ -148,6 +156,9 @@ final class Libre3DirectManager: ObservableObject {
     /// Bound the persisted historical series to ~12 h so the buffer can't grow
     /// without limit while still covering the display window after trimming.
     private static let historicalRetentionSeconds: TimeInterval = 12 * 60 * 60
+    /// Six minutes allows roughly two missed reload opportunities beyond the
+    /// normal three-minute stale-reading window before escalating to reconnect.
+    private static let recoveryStaleThreshold: TimeInterval = 6 * 60
     /// How long per-minute points are retained (bounds the buffer). The minute
     /// overlay shows points newer than the last historical sample; this only caps
     /// memory — it must NOT be used to drop recent points when history lags, which
@@ -203,7 +214,7 @@ final class Libre3DirectManager: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated {
-                self?.ensureConnected()
+                self?.recoverIfStale()
             }
         }
         sensorStartDate = SharedData.libre3SensorStartDate
@@ -253,6 +264,14 @@ final class Libre3DirectManager: ObservableObject {
             connectionState = .idle
             return
         }
+        // Shared `connected` is the provider-configured/paired gate for the
+        // reload path (like LLU's login state), NOT transport status — transport
+        // lives in Libre3DirectConnectionState. Do not wire this to BLE link
+        // state. Reopens the gate after a provider round-trip (switchProvider
+        // sets `.disconnected`).
+        if UserDefaults.group.connected != .connected {
+            UserDefaults.group.connected = .connected
+        }
         guard lifecycleTask == nil else { return }   // already running
         ensureScanner()
         // Assign the lifecycle task BEFORE wiring the observers: the state
@@ -293,12 +312,39 @@ final class Libre3DirectManager: ObservableObject {
         connectionState = .idle
     }
 
-    /// Cheap "kick" entry point for `Libre3DirectProvider.reload()` — never does
-    /// network I/O. Ensures a connection attempt is in flight; if already
-    /// streaming, it's a no-op.
-    func ensureConnected() {
+    /// Reload-hook recovery: called on every foreground (63 s) and BGAppRefresh
+    /// (~8–10 min) reload kick. Restarts a dropped lifecycle, and force-reconnects
+    /// a session that is nominally streaming but has received no glucose-channel
+    /// traffic for `recoveryStaleThreshold`. Initiates only — the reconnect itself
+    /// is carried by runLifecycle + CoreBluetooth.
+    func recoverIfStale() {
         guard isActiveProvider else { return }
-        if lifecycleTask == nil { start() }
+        // Preserve the old reload-kick behavior when the lifecycle has dropped:
+        // `start()` creates the scanner and begins a fresh connection attempt.
+        guard lifecycleTask != nil else {
+            start()
+            return
+        }
+        // `session` is assigned before authorization, so a reload arriving while
+        // connecting/authorizing must not kill that fresh session based on the
+        // previous stream's stale liveness timestamp.
+        guard connectionState == .streaming,
+              // Glucose can be legitimately silent during warm-up; nil also means
+              // the lifecycle is not yet classified. Both are safe to skip: at
+              // worst recovery waits for the next kick, without disconnecting a
+              // warming sensor.
+              warmupRemainingMinutes == nil,
+              !sensorIsExpired,
+              !sensorNeedsReplacement,
+              let session,
+              let scanner,
+              let lastGlucoseAt else { return }
+        let quiet = Date().timeIntervalSince(lastGlucoseAt)
+        guard quiet >= Self.recoveryStaleThreshold else { return }
+        Logger.libre3.info("Libre3 BLE: glucose quiet \(Int(quiet), privacy: .public)s on reload kick — forcing reconnect")
+        // Disconnecting ends `notifications()`, allowing the existing lifecycle
+        // loop to reconnect. Coincident kicks may repeat this harmless request.
+        scanner.disconnect(session)
     }
 
     /// Forget the in-memory session state after the stored sensor is cleared.
@@ -571,6 +617,9 @@ final class Libre3DirectManager: ObservableObject {
         didRequestBackfill = false
 
         connectionState = .streaming
+        // Give a newly authorized stream a full recovery window; subsequent
+        // liveness advances come only from actual glucose-channel fragments.
+        lastGlucoseAt = Date()
         Logger.libre3.info("Libre3 BLE streaming started for serial=\(sensorState.serialNumber ?? "?", privacy: .public)")
         // Request app-wide notification auth before a terminal sensor state occurs;
         // if this stream is healthy, also clear any terminal alert from a prior run.
@@ -787,6 +836,11 @@ final class Libre3DirectManager: ObservableObject {
             try Task.checkCancellation()
             guard let channel = DataPlaneChannel(uuidString: event.characteristic.uuidString) else {
                 continue
+            }
+            // Stamp every glucose fragment before assembly/decode: warm-up and
+            // malformed frames still prove that the glucose channel is alive.
+            if channel == .glucoseData {
+                lastGlucoseAt = event.receivedAt
             }
             // Diagnostic: surface the rarer channels (history/clinical/event/
             // factory) so we can confirm a backfill burst actually arrives,
