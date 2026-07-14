@@ -292,6 +292,8 @@ extension LowGlucoseNotificationManager: UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         let identifier = notification.request.identifier
+        // Shared foreground router: add new notification families here instead of
+        // assigning another UNUserNotificationCenter delegate.
         if identifier.hasPrefix(LowGlucoseNotificationConfig.notificationIdentifierPrefix) {
             completionHandler([.banner, .list, .sound])
         } else if identifier.hasPrefix(SensorAlertNotificationManager.identifierPrefix) {

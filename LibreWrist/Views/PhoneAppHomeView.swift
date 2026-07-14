@@ -11,6 +11,8 @@ import Charts
 import WidgetKit
 import StoreKit
 
+/// Phone-home rendering descriptor that merges Layer A replacement state and
+/// Layer B reading-quality episodes into the single reserved warning slot.
 struct HomeSensorWarning: Equatable {
     let color: Color
     let symbol: String
@@ -174,6 +176,8 @@ struct PhoneAppHomeView: View {
             Text("Your feedback helps us improve and makes it easier for others with diabetes to discover the app. And it motivates to continue the work. 😊\nWould you like to leave a quick review?")
         }
 
+        // The icon follows current sensor state, but this alert is episode-gated
+        // so transient Layer B warnings acknowledge only once per episode.
         .alert(homeWarning?.title ?? "", isPresented: $showReadingWarning) {
             Button("OK", role: .cancel) {
                 acknowledgedReadingWarningEpisodeID = homeWarning?.episodeID ?? acknowledgedReadingWarningEpisodeID
@@ -378,6 +382,9 @@ struct PhoneAppHomeView: View {
         return localizedNetworkError.isEmpty ? defaultOverlayConnectionMessage : localizedNetworkError
     }
 
+    /// Home screen warning merger for Libre 3 BLE only. Red replacement state
+    /// takes precedence over orange Layer B reading-quality state.
+    /// Only warnings with an episode ID are allowed to auto-present the alert.
     private var homeWarning: HomeSensorWarning? {
         guard SharedData.cgmProviderKind == .libre3BLE else { return nil }
         if libre3.sensorNeedsReplacement {
@@ -549,6 +556,8 @@ struct GlucoseValueView: View {
                         .font(.system(size: 50, weight: .bold))
                         .foregroundStyle(foregroundStyleColor)
                     //                    .border(.red)
+                    // Render only while a warning is active; when nil, the
+                    // triangle takes no layout space next to the trend arrow.
                     if let warning {
                         Image(systemName: warning.symbol)
                             .font(.system(size: 40))

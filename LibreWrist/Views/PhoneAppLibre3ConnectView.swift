@@ -295,6 +295,8 @@ struct PhoneAppLibre3ConnectView: View {
                 }
             }
 
+            // Terminal replacement state wins over expiry/warm-up/soft attention
+            // so an early-failed sensor never reads as merely expired or warming up.
             if directManager.sensorNeedsReplacement {
                 Label("Sensor needs replacing — replace it and pair the new one.", systemImage: "exclamationmark.triangle.fill")
                     .font(.subheadline)

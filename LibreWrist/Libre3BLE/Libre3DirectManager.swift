@@ -31,6 +31,9 @@ import UIKit
 import OSLog
 import LibreCRKit
 
+/// Layer B: transient realtime-reading status for decoded Libre 3 frames that
+/// are temporarily unusable for sensor data-quality reasons. This is separate
+/// from connection state, warm-up/expiry lifecycle, and Layer A replacement.
 struct Libre3ReadingStatus: Equatable {
     enum Kind: Equatable {
         case recalibrating(minutes: Int)
@@ -99,8 +102,9 @@ final class Libre3DirectManager: ObservableObject {
     /// Transient Libre 3 realtime status for decoded frames that are temporarily
     /// unusable for sensor data-quality reasons.
     @Published private(set) var currentReadingStatus: Libre3ReadingStatus?
-    /// Sensor-reported attention state from patch status. Soft states only hint;
-    /// terminal states are mirrored into `sensorNeedsReplacement`.
+    /// Layer A: sensor-reported attention from patch status. Kept separate from
+    /// Layer B reading-quality episodes; views merge them only for display.
+    /// Soft states only hint; terminal states mirror into `sensorNeedsReplacement`.
     @Published private(set) var sensorAttention: Libre3SensorAttention = .none
     /// Persistent terminal attention state for phone UI relaunch seeding.
     @Published private(set) var sensorNeedsReplacement = false
@@ -174,6 +178,8 @@ final class Libre3DirectManager: ObservableObject {
     private var backfillResumeLifeCount: UInt16?
     private var readingStatusEpisodeID = 0
     private var lastSensorAttention: Libre3SensorAttention = .none
+    /// Prevents reconnects for the same sensor anchor from repeatedly replacing
+    /// the same OS-scheduled expiry reminders.
     private var lastScheduledExpiryAnchor: Date?
 
     private init() {
@@ -281,6 +287,8 @@ final class Libre3DirectManager: ObservableObject {
         didRequestBackfill = false
         assembler.reset()
         clearReadingStatus()
+        // A stop means the direct sensor is no longer active here, so remove any
+        // standing terminal sensor alert that would now be stale.
         Task { await SensorAlertNotificationManager.shared.retract() }
         connectionState = .idle
     }
@@ -309,6 +317,8 @@ final class Libre3DirectManager: ObservableObject {
         sensorAttention = .none
         lastSensorAttention = .none
         lastScheduledExpiryAnchor = nil
+        // Forgetting the sensor must clear both pending and delivered expiry
+        // reminders so a prior sensor cannot alert after unpairing.
         Task { await SensorAlertNotificationManager.shared.cancelExpiryReminders() }
         SharedData.libre3SensorStartDate = nil
         SharedData.libre3SensorNeedsReplacement = false
@@ -562,6 +572,8 @@ final class Libre3DirectManager: ObservableObject {
 
         connectionState = .streaming
         Logger.libre3.info("Libre3 BLE streaming started for serial=\(sensorState.serialNumber ?? "?", privacy: .public)")
+        // Request app-wide notification auth before a terminal sensor state occurs;
+        // if this stream is healthy, also clear any terminal alert from a prior run.
         await SensorAlertNotificationManager.shared.requestAuthorizationIfNeeded()
         if !sensorNeedsReplacement {
             await SensorAlertNotificationManager.shared.retract()
@@ -858,6 +870,9 @@ final class Libre3DirectManager: ObservableObject {
 
         guard assessment.isUsable else {
             Logger.libre3.info("Libre3 BLE reading not usable (lifeCount=\(reading.lifeCount, privacy: .public)): \(String(describing: assessment.issues), privacy: .public)")
+            // Layer B is updated at the single realtime suppress site. Embedded
+            // history is still pushed below, but no unusable current value is
+            // surfaced into the main glucose history.
             updateReadingStatus(for: reading, assessment: assessment)
             // Still push so the embedded historical point (if any) reaches the graph.
             pushHistory()
@@ -900,6 +915,8 @@ final class Libre3DirectManager: ObservableObject {
         for issues: [Libre3GlucoseQualityIssue],
         esaDuration: UInt16
     ) -> Libre3ReadingStatus.Kind? {
+        // Warm-up and expiry own their UI. They can coexist with
+        // `.currentGlucoseUnavailable`, so bail out before Layer B matching.
         for issue in issues {
             if case .sensorWarmup = issue {
                 return nil
@@ -909,6 +926,8 @@ final class Libre3DirectManager: ObservableObject {
             }
         }
 
+        // Precedence within Layer B: ESA/recalibration is most specific, then
+        // data-quality, then generic glucose-unavailable.
         for issue in issues {
             if case .sensorCondition(.esa) = issue {
                 return .recalibrating(minutes: Int(esaDuration))
@@ -941,6 +960,10 @@ final class Libre3DirectManager: ObservableObject {
     }
 #endif
 
+    /// Change-gated patch-status attention classifier. Only terminal attention
+    /// (`replaceSensor` / `sensorEnded`) persists the replacement flag; unknown
+    /// and soft states are logged or surfaced conservatively without affecting
+    /// reconnect, credentials, watch snapshots, or notification delivery.
     private func updateSensorAttention(_ attention: Libre3SensorAttention) {
         guard attention != lastSensorAttention else { return }
         lastSensorAttention = attention
@@ -952,6 +975,8 @@ final class Libre3DirectManager: ObservableObject {
             SharedData.libre3SensorNeedsReplacement = needsReplacement
         }
 
+        // This is the single change-gated notification trigger for sensor-reported
+        // attention transitions; terminal states post, recovery/soft states retract.
         Task { await SensorAlertNotificationManager.shared.update(for: attention) }
 
         switch attention {
@@ -1048,8 +1073,12 @@ final class Libre3DirectManager: ObservableObject {
 
     private func refreshExpiryReminders() {
         guard let anchor = sensorStartDate else { return }
+        // Wear duration is the sensor-reported value persisted at pairing; skip
+        // scheduling until it is known instead of guessing a default lifetime.
         let wear = SharedData.libre3WearDurationMinutes
         guard wear > 0 else { return }
+        // A new sensor gets a new start anchor; reconnects to the same sensor keep
+        // the existing one-shot notification requests untouched.
         guard lastScheduledExpiryAnchor != anchor else { return }
         lastScheduledExpiryAnchor = anchor
         Task { await SensorAlertNotificationManager.shared.scheduleExpiryReminders(
@@ -1063,6 +1092,8 @@ final class Libre3DirectManager: ObservableObject {
         let anchor = Date().addingTimeInterval(-Double(lifeCount) * 60)
         sensorStartDate = anchor
         SharedData.libre3SensorStartDate = anchor
+        // First reliable anchor derivation is the earliest point where expiry
+        // reminders can be scheduled for a newly paired sensor.
         refreshExpiryReminders()
     }
 

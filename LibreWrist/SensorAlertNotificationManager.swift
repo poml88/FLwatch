@@ -14,6 +14,8 @@ final class SensorAlertNotificationManager {
     static let shared = SensorAlertNotificationManager()
     nonisolated static let identifierPrefix = "libre3-sensor-alert"
 
+    /// Fixed IDs keep rescheduling idempotent and share the sensor-alert prefix
+    /// so the existing foreground notification router presents these reminders.
     enum ExpiryReminder: String, CaseIterable {
         case warning24h = "libre3-sensor-alert.expiry-24h"
         case warning2h = "libre3-sensor-alert.expiry-2h"
@@ -43,6 +45,8 @@ final class SensorAlertNotificationManager {
     ) async {
         switch attention {
         case .replaceSensor:
+            // Sensor-reported terminal state is authoritative; the scheduled
+            // expiry-ended reminder is only a silent-sensor fallback.
             removeEndedExpiryReminder()
             await post(
                 title: String(localized: "Replace sensor"),
@@ -50,6 +54,8 @@ final class SensorAlertNotificationManager {
                 interruptionLevel: interruptionLevel
             )
         case .sensorEnded:
+            // Sensor-reported terminal state is authoritative; the scheduled
+            // expiry-ended reminder is only a silent-sensor fallback.
             removeEndedExpiryReminder()
             await post(
                 title: String(localized: "Sensor ended"),
@@ -62,6 +68,8 @@ final class SensorAlertNotificationManager {
     }
 
     func scheduleExpiryReminders(sensorStartDate: Date, wearDurationMinutes: Int, now: Date = Date()) async {
+        // Clean slate avoids stale fire times when a new sensor has a different
+        // start anchor or wear duration.
         await cancelExpiryReminders()
         let expiresAt = sensorStartDate.addingTimeInterval(TimeInterval(wearDurationMinutes) * 60)
         let expiryDateTime = expiresAt.formatted(date: .abbreviated, time: .shortened)
@@ -124,6 +132,8 @@ final class SensorAlertNotificationManager {
         title: String,
         body: String
     ) async {
+        // Do not enqueue catch-up notifications for reminders that are already
+        // in the past, such as when pairing an older active sensor.
         guard fireAt > now else { return }
 
         let dateComponents = Calendar.current.dateComponents(
