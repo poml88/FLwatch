@@ -173,6 +173,10 @@ final class Libre3DirectManager: ObservableObject {
     /// normal three-minute stale-reading window before escalating to reconnect.
     private static let recoveryStaleThreshold: TimeInterval = 6 * 60
     private static let signalLossThreshold: TimeInterval = 20 * 60
+    private static let reconnectBackoffCapSeconds: UInt64 = 60
+    private static let reconnectBackoffEscalatedCapSeconds: UInt64 = 300
+    private static let reconnectBackoffEscalateAfter = 3
+    private static let reconnectEscalateUserAfter = 6
     /// How long per-minute points are retained (bounds the buffer). The minute
     /// overlay shows points newer than the last historical sample; this only caps
     /// memory — it must NOT be used to drop recent points when history lags, which
@@ -402,8 +406,9 @@ final class Libre3DirectManager: ObservableObject {
         SharedData.libre3LastLifeCount = 0
         SharedData.libre3LastGlucoseMgDL = 0
         lastArmedLifeCount = nil
-        // Forgetting the sensor must clear both pending and delivered expiry
-        // reminders so a prior sensor cannot alert after unpairing.
+        // Forgetting follows the re-pair advice, so retract that banner. Also
+        // clear expiry reminders so the prior sensor cannot alert after unpairing.
+        SensorAlertNotificationManager.shared.retractReconnectFailing()
         Task { await SensorAlertNotificationManager.shared.cancelExpiryReminders() }
         SharedData.libre3SensorStartDate = nil
         SharedData.libre3SensorNeedsReplacement = false
@@ -516,26 +521,58 @@ final class Libre3DirectManager: ObservableObject {
     /// task is cancelled (provider switch / disconnect). One iteration =
     /// connect → handshake → subscribe → stream-until-disconnect.
     private func runLifecycle() async {
+        // One `runLifecycle` invocation owns one failure streak. A fresh
+        // `start()` creates a fresh task and therefore starts a new streak.
         var backoff: UInt64 = 5
+        var consecutiveFailures = 0
+        var didNotifyReconnectFailing = false
         while !Task.isCancelled {
             do {
                 try await connectAuthorizeAndStream()
-                // Returns when the notification stream ends (disconnect):
-                // reset backoff and reconnect promptly.
+                // A return means this attempt reached `.streaming` before its
+                // notification stream ended. Reset even after an instant drop:
+                // streamed-then-drop loops are link-quality failures and are
+                // deliberately excluded from credential-style escalation.
+                consecutiveFailures = 0
                 backoff = 5
+                if didNotifyReconnectFailing {
+                    SensorAlertNotificationManager.shared.retractReconnectFailing()
+                    didNotifyReconnectFailing = false
+                }
             } catch is CancellationError {
                 break
             } catch {
+                consecutiveFailures += 1
                 Logger.libre3.error("Libre3 BLE lifecycle error: \(String(describing: error), privacy: .public)")
-                connectionState = .failed(Self.friendlyMessage(for: error))
+                if consecutiveFailures >= Self.reconnectEscalateUserAfter {
+                    // Repeated handshake failures can be permanent credentials
+                    // or marginal range, so the guidance deliberately covers both.
+                    connectionState = .failed(String(localized: "Can't connect to the sensor. Keep your phone nearby — or if the sensor was replaced or re-scanned with another app, re-pair it in the Connect tab."))
+                } else {
+                    connectionState = .failed(Self.friendlyMessage(for: error))
+                }
                 // This field is shared across providers by design: it supplies
                 // Debug Info and both support-mail templates. Libre 3 follows
                 // Dexcom's stage-prefix convention and clears only on provider
                 // entry, a new lifecycle, or recovery — never on no-op kicks.
                 DebugMessageSingleton.shared.libreLinkUpResponseError =
                     "Libre3 BLE: \(Self.supportSafeDescription(for: error))"
+
+                // Crossing-only gating keeps both outputs once per streak; later
+                // retries remain intentionally absent from the rare-event ring.
+                if consecutiveFailures == Self.reconnectEscalateUserAfter {
+                    await SensorAlertNotificationManager.shared.postReconnectFailing()
+                    didNotifyReconnectFailing = true
+                    Libre3DiagnosticsLog.record(
+                        "reconnect-escalation failures=\(consecutiveFailures)"
+                    )
+                }
+
                 try? await Task.sleep(nanoseconds: backoff * 1_000_000_000)
-                backoff = min(backoff * 2, 60)
+                let cap = consecutiveFailures >= Self.reconnectBackoffEscalateAfter
+                    ? Self.reconnectBackoffEscalatedCapSeconds
+                    : Self.reconnectBackoffCapSeconds
+                backoff = min(backoff * 2, cap)
             }
             guard isActiveProvider, Libre3StateStore.isPaired else { break }
         }
@@ -685,9 +722,11 @@ final class Libre3DirectManager: ObservableObject {
         lastGlucoseAt = streamingStartedAt
         lastAnyChannelAt = streamingStartedAt
         Logger.libre3.info("Libre3 BLE streaming started for serial=\(sensorState.serialNumber ?? "?", privacy: .public)")
-        // Request app-wide notification auth before a terminal sensor state occurs;
-        // if this stream is healthy, also clear any terminal alert from a prior run.
+        // Request app-wide notification auth before a terminal sensor state occurs.
+        // Streaming always clears stale reconnect advice from this or a prior process;
+        // if the sensor is healthy, also clear any terminal alert from a prior run.
         await SensorAlertNotificationManager.shared.requestAuthorizationIfNeeded()
+        SensorAlertNotificationManager.shared.retractReconnectFailing()
         if !sensorNeedsReplacement {
             await SensorAlertNotificationManager.shared.retract()
         }
@@ -794,6 +833,10 @@ final class Libre3DirectManager: ObservableObject {
     /// pair, and falls back to the full command-gated first-pair handshake on
     /// any failure before Phase 6. Returns the Phase-6 session material the
     /// data-plane decoder needs.
+    ///
+    /// Deliberate divergence from LibreLoop `50ea2de`: it removed this fallback,
+    /// but FLwatch's Phase-5 validation log captured the full-handshake fallback
+    /// succeeding on active sensor hardware, so that recovery path stays intact.
     private func authorize(session: SensorSession, sensorState: Libre3SensorState) async throws -> Phase6SessionMaterial {
         if !skipCachedReconnectOnce, let reconnectKey = Libre3StateStore.loadReconnectKey() {
             do {

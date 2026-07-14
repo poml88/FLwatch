@@ -24,6 +24,7 @@ final class SensorAlertNotificationManager {
 
     private static let requestIdentifier = "libre3-sensor-alert.terminal"
     nonisolated static let signalLossIdentifier = "libre3-sensor-alert.signal-loss"
+    private static let reconnectFailingIdentifier = "libre3-sensor-alert.reconnect-failing"
     private let notificationCenter = UNUserNotificationCenter.current()
     private var desiredSignalLossDeadline: Date?
     private var signalLossRevision = 0
@@ -41,6 +42,31 @@ final class SensorAlertNotificationManager {
         } catch {
             Logger.connectivity.error("Sensor alert notification authorization failed: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    func postReconnectFailing() async {
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "Sensor connection failing")
+        content.body = String(localized: "FLwatch can't reconnect to your sensor. If the sensor was replaced or re-scanned with another app, re-pair it in the Connect tab.")
+        content.interruptionLevel = .timeSensitive
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: Self.reconnectFailingIdentifier,
+            content: content,
+            trigger: nil
+        )
+        do {
+            try await notificationCenter.add(request)
+        } catch {
+            Logger.connectivity.error("Reconnect-failing notification scheduling failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    func retractReconnectFailing() {
+        let ids = [Self.reconnectFailingIdentifier]
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
+        notificationCenter.removeDeliveredNotifications(withIdentifiers: ids)
     }
 
     /// Sets the desired signal-loss deadline, or disarms the alert with `nil`.
