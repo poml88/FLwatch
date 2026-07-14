@@ -166,6 +166,7 @@
 		7BB1431D2FCCD47100F31802 /* Libre3GlucoseMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB1431B2FCCD47100F31802 /* Libre3GlucoseMapper.swift */; };
 		7BB1431E2FCCD47100F31802 /* Libre3DirectConnectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB1431F2FCCD47100F31802 /* Libre3DirectConnectionState.swift */; };
 		7BB1432A2FCCD47100F31802 /* Libre3BackfillImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB1432B2FCCD47100F31802 /* Libre3BackfillImporter.swift */; };
+		7BB1432D2FCCD47100F31802 /* Libre3DiagnosticsLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB1432C2FCCD47100F31802 /* Libre3DiagnosticsLog.swift */; };
 		7BB435692F200D3F00EB8DD3 /* FLwatchGraphWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB435682F200D3100EB8DD3 /* FLwatchGraphWidget.swift */; };
 		7BB617F32DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */; };
 		7BB617F42DB26F1400D69225 /* DebugMessageSignleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */; };
@@ -398,6 +399,7 @@
 		7BB1431B2FCCD47100F31802 /* Libre3GlucoseMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Libre3GlucoseMapper.swift; sourceTree = "<group>"; };
 		7BB1431F2FCCD47100F31802 /* Libre3DirectConnectionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Libre3DirectConnectionState.swift; sourceTree = "<group>"; };
 		7BB1432B2FCCD47100F31802 /* Libre3BackfillImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Libre3BackfillImporter.swift; sourceTree = "<group>"; };
+		7BB1432C2FCCD47100F31802 /* Libre3DiagnosticsLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Libre3DiagnosticsLog.swift; sourceTree = "<group>"; };
 		7BB435682F200D3100EB8DD3 /* FLwatchGraphWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLwatchGraphWidget.swift; sourceTree = "<group>"; };
 		7BB617F22DB26EFD00D69225 /* DebugMessageSignleton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMessageSignleton.swift; sourceTree = "<group>"; };
 		7BB762FD2C8262E600C43600 /* WatchAppActionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAppActionView.swift; sourceTree = "<group>"; };
@@ -709,6 +711,7 @@
 			isa = PBXGroup;
 			children = (
 				7BB1431A2FCCD47100F31802 /* Libre3DirectManager.swift */,
+				7BB1432C2FCCD47100F31802 /* Libre3DiagnosticsLog.swift */,
 				7BB1431B2FCCD47100F31802 /* Libre3GlucoseMapper.swift */,
 				7BB1432B2FCCD47100F31802 /* Libre3BackfillImporter.swift */,
 				7BB1431F2FCCD47100F31802 /* Libre3DirectConnectionState.swift */,
@@ -1216,6 +1219,7 @@
 				7BB1431C2FCCD47100F31802 /* Libre3DirectManager.swift in Sources */,
 				7BB1431D2FCCD47100F31802 /* Libre3GlucoseMapper.swift in Sources */,
 				7BB1432A2FCCD47100F31802 /* Libre3BackfillImporter.swift in Sources */,
+				7BB1432D2FCCD47100F31802 /* Libre3DiagnosticsLog.swift in Sources */,
 				7BB1431E2FCCD47100F31802 /* Libre3DirectConnectionState.swift in Sources */,
 				7BA304222F5E30B0005384BF /* LibreLinkUpAlarm.swift in Sources */,
 			);

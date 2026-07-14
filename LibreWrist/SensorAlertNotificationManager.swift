@@ -23,7 +23,7 @@ final class SensorAlertNotificationManager {
     }
 
     private static let requestIdentifier = "libre3-sensor-alert.terminal"
-    private static let signalLossIdentifier = "libre3-sensor-alert.signal-loss"
+    nonisolated static let signalLossIdentifier = "libre3-sensor-alert.signal-loss"
     private let notificationCenter = UNUserNotificationCenter.current()
     private var desiredSignalLossDeadline: Date?
     private var signalLossRevision = 0

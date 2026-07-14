@@ -50,7 +50,13 @@ struct MailView: UIViewControllerRepresentable {
         let libreLinkUpDebug = DebugMessageSingleton.shared.libreLinkUpResponseError
         
         let messageBody: LocalizedStringResource = "Hello,\n\n*** write your message here ***\n\n\n\nKind regards\n\n\n\n--\nDebug info:\nApp Version: \(versionNumber) Build: \(buildNumber)\nDevice Info: \(systemName) \(systemVersion) on \(name)\nCGM Provider: \(cgmProvider)\nSensor: \(sensorType)\nError Message: \(libreLinkUpDebug)\n\n"
-        let messageBodyString: String = String(localized: messageBody)
+        var messageBodyString: String = String(localized: messageBody)
+        if SharedData.cgmProviderKind == .libre3BLE {
+            let diagnostics = Libre3DiagnosticsLog.supportEmailBlock()
+            if !diagnostics.isEmpty {
+                messageBodyString += "\(diagnostics)\n"
+            }
+        }
 
         let vc = MFMailComposeViewController()
         vc.mailComposeDelegate = context.coordinator

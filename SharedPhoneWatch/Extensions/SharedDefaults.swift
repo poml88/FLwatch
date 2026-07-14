@@ -135,6 +135,8 @@ enum DefaultsKey: String {
     case libre3EngineDidFail = "libre3EngineDidFailKey"
     case libre3EngineStatusMessage = "libre3EngineStatusMessageKey"
     case libre3SensorNeedsReplacement = "libre3SensorNeedsReplacementKey"
+    case libre3DiagnosticEvents = "libre3DiagnosticEventsKey"
+    case libre3LastRecordedSignalLossDeliveryDate = "libre3LastRecordedSignalLossDeliveryDateKey"
 }
 
 // MARK: - Convenience typed helpers + Codable helpers
@@ -711,6 +713,24 @@ enum SharedData {
     static var libre3SensorNeedsReplacement: Bool {
         get { store.getBool(.libre3SensorNeedsReplacement) }
         set { store.setBool(newValue, forKey: .libre3SensorNeedsReplacement) }
+    }
+
+    static var libre3DiagnosticEvents: [String] {
+        get { store.getStringArray(.libre3DiagnosticEvents) }
+        set { store.setStringArray(newValue, forKey: .libre3DiagnosticEvents) }
+    }
+
+    static var libre3LastRecordedSignalLossDeliveryDate: Date? {
+        get {
+            guard store.object(forKey: DefaultsKey.libre3LastRecordedSignalLossDeliveryDate.rawValue) != nil else {
+                return nil
+            }
+            return store.getDate(.libre3LastRecordedSignalLossDeliveryDate)
+        }
+        set {
+            if let newValue { store.setDate(newValue, forKey: .libre3LastRecordedSignalLossDeliveryDate) }
+            else { store.removeObject(forKey: DefaultsKey.libre3LastRecordedSignalLossDeliveryDate.rawValue) }
+        }
     }
 
     // MARK: - Provider-agnostic credential gates

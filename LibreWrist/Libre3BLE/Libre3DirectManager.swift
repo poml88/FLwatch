@@ -29,6 +29,7 @@ import CoreBluetooth
 import Security
 import UIKit
 import OSLog
+import UserNotifications
 import LibreCRKit
 
 /// Layer B: transient realtime-reading status for decoded Libre 3 frames that
@@ -127,6 +128,11 @@ final class Libre3DirectManager: ObservableObject {
     /// traffic; a future CCCD re-arm fast path must use its own timestamp so it
     /// cannot starve reconnect escalation.
     private var lastGlucoseAt: Date?
+    /// Build B3 (targeted glucose CCCD re-arm) only if field diagnostics show
+    /// forced reconnects with any-channel quiet < ~90 s while glucose quiet ≥
+    /// threshold, more than rarely. Both stale together = the link died = B2 +
+    /// the signal-loss alert are the complete answer.
+    private var lastAnyChannelAt: Date?
     /// Latest advancing life count that moved the signal-loss deadline.
     private var lastArmedLifeCount: UInt16?
     /// Manager-side mirror of the executor's desired deadline. Settings changes
@@ -356,10 +362,18 @@ final class Libre3DirectManager: ObservableObject {
               !sensorNeedsReplacement,
               let session,
               let scanner,
-              let lastGlucoseAt else { return }
-        let quiet = Date().timeIntervalSince(lastGlucoseAt)
-        guard quiet >= Self.recoveryStaleThreshold else { return }
-        Logger.libre3.info("Libre3 BLE: glucose quiet \(Int(quiet), privacy: .public)s on reload kick — forcing reconnect")
+              let lastGlucoseAt,
+              let lastAnyChannelAt else { return }
+        let now = Date()
+        let glucoseQuiet = now.timeIntervalSince(lastGlucoseAt)
+        let anyChannelQuiet = now.timeIntervalSince(lastAnyChannelAt)
+        guard glucoseQuiet >= Self.recoveryStaleThreshold else { return }
+        // `.notice` has better retention odds than `.info` in the unified-log
+        // store and collected archives; it is still not a delivery guarantee.
+        Logger.libre3.notice("Libre3 BLE: glucose quiet \(Int(glucoseQuiet), privacy: .public)s, any-channel quiet \(Int(anyChannelQuiet), privacy: .public)s — forcing reconnect")
+        Libre3DiagnosticsLog.record(
+            "forced-reconnect glucoseQuiet=\(Int(glucoseQuiet))s anyChannelQuiet=\(Int(anyChannelQuiet))s"
+        )
         // Disconnecting ends `notifications()`, allowing the existing lifecycle
         // loop to reconnect. Coincident kicks may repeat this harmless request.
         scanner.disconnect(session)
@@ -656,7 +670,9 @@ final class Libre3DirectManager: ObservableObject {
         DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
         // Give a newly authorized stream a full recovery window; subsequent
         // liveness advances come only from actual glucose-channel fragments.
-        lastGlucoseAt = Date()
+        let streamingStartedAt = Date()
+        lastGlucoseAt = streamingStartedAt
+        lastAnyChannelAt = streamingStartedAt
         Logger.libre3.info("Libre3 BLE streaming started for serial=\(sensorState.serialNumber ?? "?", privacy: .public)")
         // Request app-wide notification auth before a terminal sensor state occurs;
         // if this stream is healthy, also clear any terminal alert from a prior run.
@@ -889,6 +905,7 @@ final class Libre3DirectManager: ObservableObject {
             guard let channel = DataPlaneChannel(uuidString: event.characteristic.uuidString) else {
                 continue
             }
+            lastAnyChannelAt = event.receivedAt
             // Stamp every glucose fragment before assembly/decode: warm-up and
             // malformed frames still prove that the glucose channel is alive.
             if channel == .glucoseData {
@@ -1082,21 +1099,36 @@ final class Libre3DirectManager: ObservableObject {
             SharedData.libre3SensorNeedsReplacement = needsReplacement
         }
 
+        switch attention {
+        case .replaceSensor:
+            Libre3DiagnosticsLog.record("attention-replaceSensor")
+        case .sensorEnded:
+            Libre3DiagnosticsLog.record("attention-sensorEnded")
+        case .checkSensor:
+            Libre3DiagnosticsLog.record("attention-checkSensor")
+        case .unknown(let code):
+            Libre3DiagnosticsLog.record("attention-unknown code=\(code)")
+        case .none:
+            Libre3DiagnosticsLog.record("attention-none")
+        }
+
         // This is the single change-gated notification trigger for sensor-reported
         // attention transitions; terminal states post, recovery/soft states retract.
         Task { await SensorAlertNotificationManager.shared.update(for: attention) }
 
+        // Terminal and unknown states use `.notice` because it is retained more
+        // reliably than `.info` in unified-log archives — better odds, not a guarantee.
         switch attention {
         case .replaceSensor, .sensorEnded:
             // Terminal sensor attention owns the recovery action. Prevent a
             // correct replacement alert being followed by a bogus proximity
             // alert 20 minutes later.
             setSignalLossState(deadline: nil)
-            Logger.libre3.info("Libre3 BLE attention terminal \(String(describing: attention), privacy: .public)")
+            Logger.libre3.notice("Libre3 BLE attention terminal \(String(describing: attention), privacy: .public)")
         case .checkSensor:
             Logger.libre3.info("Libre3 BLE attention checkSensor")
         case .unknown(let code):
-            Logger.libre3.info("Libre3 BLE attention unknown \(code, privacy: .public)")
+            Logger.libre3.notice("Libre3 BLE attention unknown \(code, privacy: .public)")
         case .none:
             break
         }
@@ -1241,7 +1273,17 @@ final class Libre3DirectManager: ObservableObject {
         signalLossDeadlineRecoveryStarted = true
         Task { [weak self] in
             let deadline = await SensorAlertNotificationManager.shared.pendingSignalLossDeadline()
+            let deliveredNotifications = await UNUserNotificationCenter.current().deliveredNotifications()
             guard let self else { return }
+            // Best-effort observation with date-keyed deduplication: a banner the
+            // user taps or clears before this query is missed, and a re-fired alert
+            // may coalesce. This is not a definitive count of alerts users saw.
+            if let delivered = deliveredNotifications.first(where: {
+                $0.request.identifier == SensorAlertNotificationManager.signalLossIdentifier
+            }), SharedData.libre3LastRecordedSignalLossDeliveryDate != delivered.date {
+                Libre3DiagnosticsLog.record("signal-loss-delivered")
+                SharedData.libre3LastRecordedSignalLossDeliveryDate = delivered.date
+            }
             // Mirror only: adopting an existing request must not reschedule it.
             if let deadline {
                 self.currentSignalLossDeadline = deadline
