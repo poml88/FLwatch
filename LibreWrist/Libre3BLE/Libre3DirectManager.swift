@@ -645,12 +645,23 @@ final class Libre3DirectManager: ObservableObject {
         // would resume from one of those and fetch only the last page.
         backfillResumeLifeCount = historicalByLifeCount.keys.max().map { UInt16(clamping: $0) }
 
-        // Re-arm the data-plane CCCDs — the sensor stays silent until each notify
-        // characteristic is cycled after the handshake. This is LibreCRKit's
-        // validated default set (the config that completes Phase 6 and streams on
-        // our test sensor). historicData/clinicalData are armed transiently inside
-        // the backfill path only, so the baseline handshake/stream is untouched.
-        try await session.refreshDataPlaneNotifications()
+        // Backfill-ready CCCD set (LibreLoop's validated fix for ATT 0xFD): the sensor
+        // checks data-plane response CCCDs before accepting a patchControl command, and
+        // historicData/clinicalData are NOT in dataPlaneNotifying — so without a real
+        // off→on here, iOS's cached CCCD state makes the importer's plain enable a
+        // no-op after any reconnect and every backfill write fails with 0xFD.
+        // One-time per handshake; this is NOT the per-retry churn that broke streaming
+        // before (see the onDemandBackfillEnabled note below). Arming historicData may
+        // trigger an automatic post-auth historical burst — that's backfill data we
+        // want, and ingestHistorical already handles the pages.
+        let backfillReadyChars = LibreSensorGATT.Char.dataPlaneNotifying + [
+            LibreSensorGATT.Char.historicData,
+            LibreSensorGATT.Char.clinicalData,
+        ]
+        try await session.refreshDataPlaneNotifications(
+            characteristics: backfillReadyChars,
+            forceReArm: Set(backfillReadyChars)
+        )
 
         // Stamp the sensor model now that we're authorized (mirrors how the
         // Dexcom/LLU providers set the type on connect).
@@ -706,12 +717,14 @@ final class Libre3DirectManager: ObservableObject {
     /// `Natives.libre3ControlHistory(1, max(lastReceived, 5))`, byte-identical to
     /// our command).
     ///
-    /// The earlier breakage was NOT this write: it was adding `historicData`/
-    /// `clinicalData` to LibreCRKit's off→on *refresh cycle* (disable-then-enable),
-    /// which Juggluco never does — it only plain-enables them. That's reverted, so
-    /// the historic channel is now plain-enabled transiently inside the backfill
-    /// path (matching Juggluco), and an earlier run with exactly this shape
-    /// streamed fine. Fired once after the first patch status, `from = max(5, …)`.
+    /// The importer's transient plain-enable remains as belt-and-suspenders, but
+    /// the real arming now happens in the one-time post-handshake backfill-ready
+    /// off→on cycle above. Field diagnostics showed that relying on the plain
+    /// enable after reconnect let iOS's cached CCCD state turn it into a no-op,
+    /// causing every `patchControl` write to fail with ATT 0xFD. The earlier
+    /// streaming breakage matches LibreLoop's backed-out per-retry churn; its
+    /// production-validated configuration re-arms this wider set once per
+    /// handshake. Fired once after the first patch status, `from = max(5, …)`.
     private static let onDemandBackfillEnabled = true
 
     /// Request the one-shot historical backfill once, after the first data-plane
