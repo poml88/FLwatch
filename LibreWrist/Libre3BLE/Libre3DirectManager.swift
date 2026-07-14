@@ -244,6 +244,7 @@ final class Libre3DirectManager: ObservableObject {
 
     private func activeProviderChanged() {
         if isActiveProvider {
+            DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
             start()
         } else if lifecycleTask != nil ||
                     restorationTask != nil ||
@@ -286,6 +287,9 @@ final class Libre3DirectManager: ObservableObject {
             UserDefaults.group.connected = .connected
         }
         guard lifecycleTask == nil else { return }   // already running
+        // This clear deliberately follows the idempotency guard: reload kicks
+        // must not erase a useful error from a lifecycle that is still running.
+        DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
         ensureScanner()
         // Assign the lifecycle task BEFORE wiring the observers: the state
         // observer yields the current power state immediately on subscribe and
@@ -491,6 +495,7 @@ final class Libre3DirectManager: ObservableObject {
         currentGlucoseMgDL = nil
         warmupRemainingMinutes = nil
         connectionState = .failed(String(localized: "Bluetooth is turned off."))
+        DebugMessageSingleton.shared.libreLinkUpResponseError = "Libre3 BLE: Bluetooth unavailable"
     }
 
     /// Runs the full connect loop, retrying with a bounded backoff until the
@@ -509,6 +514,12 @@ final class Libre3DirectManager: ObservableObject {
             } catch {
                 Logger.libre3.error("Libre3 BLE lifecycle error: \(String(describing: error), privacy: .public)")
                 connectionState = .failed(Self.friendlyMessage(for: error))
+                // This field is shared across providers by design: it supplies
+                // Debug Info and both support-mail templates. Libre 3 follows
+                // Dexcom's stage-prefix convention and clears only on provider
+                // entry, a new lifecycle, or recovery — never on no-op kicks.
+                DebugMessageSingleton.shared.libreLinkUpResponseError =
+                    "Libre3 BLE: \(Self.supportSafeDescription(for: error))"
                 try? await Task.sleep(nanoseconds: backoff * 1_000_000_000)
                 backoff = min(backoff * 2, 60)
             }
@@ -642,6 +653,7 @@ final class Libre3DirectManager: ObservableObject {
         didRequestBackfill = false
 
         connectionState = .streaming
+        DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
         // Give a newly authorized stream a full recovery window; subsequent
         // liveness advances come only from actual glucose-channel fragments.
         lastGlucoseAt = Date()
@@ -693,7 +705,7 @@ final class Libre3DirectManager: ObservableObject {
     private func requestBackfillIfNeeded(currentLifeCount: Int) {
         guard Self.onDemandBackfillEnabled else { return }
         guard !didRequestBackfill, currentLifeCount > 0,
-              let session, let crypto = decoder?.crypto else { return }
+              let capturedSession = session, let crypto = decoder?.crypto else { return }
         didRequestBackfill = true
         // Resume from the history we held at connect time (the persisted seed),
         // NOT the live buffer — which already contains this session's freshly
@@ -705,11 +717,26 @@ final class Libre3DirectManager: ObservableObject {
         Task { [weak self] in
             do {
                 try await Libre3BackfillImporter.requestHistoricalBackfill(
-                    session: session, crypto: crypto, fromLifeCount: from
+                    session: capturedSession, crypto: crypto, fromLifeCount: from
                 )
+                // An unstructured request can finish after disconnect or during
+                // a replacement session. Only its originating live stream may
+                // reconcile the shared diagnostic field.
+                guard let self,
+                      self.session === capturedSession,
+                      self.connectionState == .streaming else { return }
+                if DebugMessageSingleton.shared.libreLinkUpResponseError
+                    .hasPrefix("Libre3 BLE backfill") {
+                    DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
+                }
             } catch {
                 self?.didRequestBackfill = false   // allow a retry on the next packet
                 Logger.libre3.error("Libre3 BLE historical backfill request failed: \(String(describing: error), privacy: .public)")
+                guard let self,
+                      self.session === capturedSession,
+                      self.connectionState == .streaming else { return }
+                DebugMessageSingleton.shared.libreLinkUpResponseError =
+                    "Libre3 BLE backfill: \(Self.supportSafeDescription(for: error))"
             }
         }
     }
@@ -1397,6 +1424,114 @@ final class Libre3DirectManager: ObservableObject {
             throw Libre3DirectError.entropyUnavailable(status)
         }
         return Data(bytes)
+    }
+
+    /// Produces support-safe diagnostics while retaining error type/case names,
+    /// ATT/CoreBluetooth codes, and characteristic UUIDs. Every associated
+    /// `Data` value is represented only by its byte count; unknown error types
+    /// omit associated values. This is the same content policy intended for the
+    /// upcoming `Libre3DiagnosticsLog`.
+    private static func supportSafeDescription(for error: Error) -> String {
+        switch error {
+        case let error as PairingFlowError:
+            switch error {
+            case .sessionKeyDerivationNotImplemented:
+                return "sessionKeyDerivationNotImplemented"
+            case .commandTransportRequired:
+                return "commandTransportRequired"
+            case .phoneCertRequired:
+                return "phoneCertRequired"
+            case .unexpectedCommandResponse(let label, let expectedPrefix, let actual):
+                return "unexpectedCommandResponse(label=\(label), expectedPrefixBytes=\(expectedPrefix.count), actualBytes=\(actual.count))"
+            case .sensorR1WrongSize(let count):
+                return "sensorR1WrongSize(\(count))"
+            case .blePINWrongSize(let count):
+                return "blePINWrongSize(\(count))"
+            case .tail4WrongSize(let count):
+                return "tail4WrongSize(\(count))"
+            case .phase6VerificationFailed(let message):
+                return "phase6VerificationFailed(\(message))"
+            case .phase5MaterialUnavailable:
+                return "phase5MaterialUnavailable"
+            case .phase5EphemeralPublicKeyMismatch(let expected, let actual):
+                return "phase5EphemeralPublicKeyMismatch(expectedBytes=\(expected.count), actualBytes=\(actual.count))"
+            case .randomFailed(let status):
+                return "randomFailed(\(status))"
+            case .writeTimeout(let label, let seconds):
+                return "writeTimeout(label=\(label), seconds=\(seconds))"
+            case .sensorCertificateVerificationFailed:
+                return "sensorCertificateVerificationFailed"
+            @unknown default:
+                return supportSafeUnknownDescription(for: error)
+            }
+
+        case let error as Libre3NFCError:
+            switch error {
+            case .readerUnavailable:
+                return "readerUnavailable"
+            case .sessionAlreadyActive:
+                return "sessionAlreadyActive"
+            case .noTag:
+                return "noTag"
+            case .multipleTags:
+                return "multipleTags"
+            case .nonISO15693Tag:
+                return "nonISO15693Tag"
+            case .invalidPatchInfo(let data):
+                return "invalidPatchInfo(bytes=\(data.count))"
+            case .invalidActivationResponse(let data):
+                return "invalidActivationResponse(bytes=\(data.count))"
+            case .invalidActivationResponseForPatch(let commandCode, let patchInfo, let raw):
+                return "invalidActivationResponseForPatch(commandCode=\(commandCode), stateByte=\(patchInfo.stateByte), rawBytes=\(raw.count), patchRawBytes=\(patchInfo.raw.count), patchInputRawBytes=\(patchInfo.inputRaw.count))"
+            case .unexpectedSensorState(let patchInfo):
+                return "unexpectedSensorState(stateByte=\(patchInfo.stateByte), patchRawBytes=\(patchInfo.raw.count), patchInputRawBytes=\(patchInfo.inputRaw.count))"
+            @unknown default:
+                return supportSafeUnknownDescription(for: error)
+            }
+
+        case is CancellationError,
+             is Libre3DirectError,
+             is SensorScannerError,
+             is SensorSessionError,
+             is SensorSessionTransportError,
+             is Libre3ReceiverIDError,
+             is Libre3PatchContextError,
+             is Libre3SensorStateError,
+             is DataFrameError,
+             is BleFramingError,
+             is DataPlaneCryptoError,
+             is HistoricalReadingPageError,
+             is RealtimeGlucoseReadingError,
+             is ClinicalReadingRecordError,
+             is PatchStatusError,
+             is PatchControlCommandError,
+             is CipherFnError,
+             is Phase5SessionDataError,
+             is Phase5KeyScheduleError,
+             is Phase6ResponseError,
+             is EphemeralExchangeError,
+             is ChallengeError,
+             is PhoneCertError,
+             is SensorCertError,
+             is SessionKeyError,
+             is KAuthError,
+             is AESCCMError,
+             is LibAESError,
+             is FirstPairSourceSliceError,
+             is Child23KAuthImportError:
+            return String(describing: error)
+
+        default:
+            return supportSafeUnknownDescription(for: error)
+        }
+    }
+
+    private static func supportSafeUnknownDescription(for error: Error) -> String {
+        let typeName = String(describing: type(of: error))
+        if let caseName = Mirror(reflecting: error).children.first?.label {
+            return "\(typeName).\(caseName)"
+        }
+        return typeName
     }
 
     private static func friendlyMessage(for error: Error) -> String {
