@@ -148,8 +148,9 @@ final class LowGlucoseNotificationManager: NSObject {
         let trendArrow = history.currentTrendArrow == "---" ? "-" : history.currentTrendArrow
         let compactTrendSummary = "\(compactCurrentValue) \(trendArrow)"
 
+        let notificationTitle = String(localized: "Glucose is low")
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Glucose is low")
+        content.title = "\(notificationTitle) 📱"
         content.subtitle = compactTrendSummary
         content.body = String(format: String(localized: "Your alert level is %@."), thresholdValue)
         // Critical delivery (overrides silent mode / Focus / Do Not Disturb) when
@@ -185,7 +186,7 @@ final class LowGlucoseNotificationManager: NSObject {
             SharedData.lowGlucoseNotificationPendingRepeat = false
             SharedData.lowGlucoseNotificationSnoozeUntilDate = .distantPast
             WatchConnectivityManager.shared.sendLowGlucoseAlertToWatch(
-                title: content.title,
+                title: "\(notificationTitle) ⌚",
                 subtitle: content.subtitle,
                 body: content.body,
                 sentAt: now

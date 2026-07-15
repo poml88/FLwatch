@@ -30,11 +30,15 @@ struct PhoneAppSettingsView: View {
     @AppStorage(DefaultsKey.lowGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationThreshold: Int = 70
     @AppStorage(DefaultsKey.libre3SignalLossAlertEnabled.rawValue, store: UserDefaults.group) private var libre3SignalLossAlertEnabled: Bool = true
     @AppStorage(DefaultsKey.libre3SignalLossCritical.rawValue, store: UserDefaults.group) private var libre3SignalLossCritical: Bool = false
+    @AppStorage("developerModeEnabled") private var developerModeEnabled: Bool = false
     
     
     @State private var isScreenAlwaysOn = false
     @State private var showingMailView = false
     @State private var isShowingSiriSheet = false
+    @State private var isShowingDeveloperAlert = false
+    @State private var developerAlertRequiresCode = true
+    @State private var enteredDeveloperCode = ""
     @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
     @State private var pendingProviderSwitch: CGMProviderKind? = nil
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
@@ -782,6 +786,42 @@ struct PhoneAppSettingsView: View {
                 let versionNumber: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
                 let buildNumber: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as! String
                 Text("V\(versionNumber).\(buildNumber)")
+                    // Seven taps reveal the code prompt for this device-local
+                    // gate, or disable it when already active. Future
+                    // developer-only UI can use the same flag.
+                    .onTapGesture(count: 7) {
+                        enteredDeveloperCode = ""
+                        if developerModeEnabled {
+                            developerModeEnabled = false
+                            developerAlertRequiresCode = false
+                        } else {
+                            developerAlertRequiresCode = true
+                        }
+                        isShowingDeveloperAlert = true
+                    }
+                    .alert(
+                        developerAlertRequiresCode ? "Developer Access" : "Developer Mode",
+                        isPresented: $isShowingDeveloperAlert
+                    ) {
+                        if developerAlertRequiresCode {
+                            SecureField("Code", text: $enteredDeveloperCode)
+                            Button("Cancel", role: .cancel) {
+                                enteredDeveloperCode = ""
+                            }
+                            Button("Unlock") {
+                                developerModeEnabled = enteredDeveloperCode == "1234"
+                                enteredDeveloperCode = ""
+                            }
+                        } else {
+                            Button("OK") { }
+                        }
+                    } message: {
+                        Text(
+                            developerAlertRequiresCode
+                                ? "Enter the developer code."
+                                : "Developer mode is now off."
+                        )
+                    }
                 
                 let systemVersion = UIDevice.current.systemVersion
                 let systemName = UIDevice.current.systemName
@@ -795,8 +835,8 @@ struct PhoneAppSettingsView: View {
                 
                 Text("Error message: \(DebugMessageSingleton.shared.libreLinkUpResponseError)")
                 
-                if UserDefaults.group.username == "librewidget@cmdline.net" {
-                Text("BG task executions last 12 hours (total): \(bgAppRefreshExecutionTimestamps.count)")
+                if developerModeEnabled {
+                    Text("BG task executions last 12 hours (total): \(bgAppRefreshExecutionTimestamps.count)")
                     ForEach(Array(bgAppRefreshExecutionTimestamps.enumerated()), id: \.offset) { _, timestamp in
                         Text(timestamp.formatted(date: .abbreviated, time: .standard))
                     }
