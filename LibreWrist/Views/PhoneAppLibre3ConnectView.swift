@@ -305,6 +305,20 @@ struct PhoneAppLibre3ConnectView: View {
                 }
             }
 
+            if directManager.connectionRequiresUserAction {
+                Label(
+                    "Repeated sensor authorization failures need your attention.",
+                    systemImage: "key.fill"
+                )
+                .font(.subheadline)
+                .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
+
+                Button("Retry connection") {
+                    directManager.retryConnection()
+                }
+            }
+
             // Terminal replacement state wins over expiry/warm-up/soft attention
             // so an early-failed sensor never reads as merely expired or warming up.
             if directManager.sensorNeedsReplacement {

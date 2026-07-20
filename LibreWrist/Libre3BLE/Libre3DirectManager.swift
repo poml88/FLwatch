@@ -109,6 +109,12 @@ final class Libre3DirectManager: ObservableObject {
     @Published private(set) var sensorAttention: Libre3SensorAttention = .none
     /// Persistent terminal attention state for phone UI relaunch seeding.
     @Published private(set) var sensorNeedsReplacement = false
+    /// Repeated credential-shaped failures deliberately stop the otherwise
+    /// relentless reconnect owner until the user retries, re-pairs, or toggles
+    /// the provider. Transport failures never enter this state.
+    @Published private(set) var connectionRequiresUserAction = false {
+        didSet { SharedData.libre3ConnectionRequiresUserAction = connectionRequiresUserAction }
+    }
 
     // MARK: - Engine
 
@@ -144,9 +150,36 @@ final class Libre3DirectManager: ObservableObject {
     /// The single connect → authorize → stream driver. While non-nil a
     /// connection attempt or live stream is in flight.
     private var lifecycleTask: Task<Void, Never>?
+    /// User/provider intent. Recoverable CoreBluetooth callbacks may start a new
+    /// attempt only while this remains true; `stop()` clears it before issuing
+    /// any cancellation whose disconnect callback could otherwise reconnect.
+    private var shouldMaintainConnection = false
+    /// Identifies the currently-owned attempt so a cancelled/stale task cannot
+    /// clear or clean up a newer attempt after suspension resumes it late.
+    private var lifecycleAttemptID: UUID?
+    /// Peripheral currently being adopted, connected, or streamed. Unlike
+    /// `session`, this is available while an indefinite connect is still pending.
+    private var lifecyclePeripheral: CBPeripheral?
+    /// True only when this attempt adopted a peripheral CoreBluetooth already
+    /// reported as connected. A transport failure on that potentially phantom
+    /// link earns one cached-handshake retry after a real reconnect.
+    private var attemptAdoptedConnectedPeripheral = false
+    /// A failed connected setup is cancelled before another attempt. During that
+    /// interval the cancellation itself is the standing CoreBluetooth operation;
+    /// `didDisconnect` clears this gate and immediately rearms connection intent.
+    private var waitingForDisconnectBeforeRearm = false
     /// Unified CoreBluetooth event consumer. `SensorScannerNG` broadcasts every
     /// central callback through this one stream, including state restoration.
     private var scannerEventTask: Task<Void, Never>?
+
+    /// A failure streak spans attempts and is reset only by the first usable
+    /// realtime glucose, never by authorization or entering `.streaming`.
+    private var consecutiveReconnectFailures = 0
+    private var consecutiveCredentialFailures = 0
+    private var didNotifyReconnectFailing = false
+    /// The next attempt must bypass the retrieved-peripheral fast path after a
+    /// repeated connected-without-glucose livelock.
+    private var forceFreshDiscoveryNextAttempt = false
 
     /// Diagnostic-only attempt state. MainActor serialization makes plain
     /// properties sufficient for the sequential connect lifecycle.
@@ -156,6 +189,12 @@ final class Libre3DirectManager: ObservableObject {
     private var sessionProducedGlucose = false
     private var rearmCompletedAt: Date?
     private var didTraceFirstPacket = false
+    /// Nonessential CCCDs still awaiting a successful arm. Their initial serial
+    /// pass runs beside the essential stream; failures get one retry after the
+    /// first actual data-plane packet proves the authorized link is alive.
+    private var failedBestEffortRearmCharacteristics = Set<CBUUID>()
+    private var bestEffortRearmTask: Task<Void, Never>?
+    private var bestEffortRearmPassID: UUID?
     /// Setup success is not proof of health: only usable realtime glucose resets
     /// this counter, matching the connect-without-stream livelock lesson.
     private var consecutiveNoStreamCycles = 0
@@ -185,10 +224,19 @@ final class Libre3DirectManager: ObservableObject {
     /// normal three-minute stale-reading window before escalating to reconnect.
     private static let recoveryStaleThreshold: TimeInterval = 6 * 60
     private static let signalLossThreshold: TimeInterval = 20 * 60
-    private static let reconnectBackoffCapSeconds: UInt64 = 60
-    private static let reconnectBackoffEscalatedCapSeconds: UInt64 = 300
-    private static let reconnectBackoffEscalateAfter = 3
     private static let reconnectEscalateUserAfter = 6
+    private static let terminalCredentialFailureAfter = 12
+    private static let freshDiscoveryNoStreamCycles = 3
+    private static let maxBackfillFailuresPerSession = 3
+    private static var bestEffortRearmCharacteristics: [CBUUID] {
+        [
+            LibreSensorGATT.Char.eventLog,
+            LibreSensorGATT.Char.factoryData,
+            LibreSensorGATT.Char.patchStatus,
+            LibreSensorGATT.Char.historicData,
+            LibreSensorGATT.Char.clinicalData,
+        ]
+    }
     /// How long per-minute points are retained (bounds the buffer). The minute
     /// overlay shows points newer than the last historical sample; this only caps
     /// memory — it must NOT be used to drop recent points when history lags, which
@@ -201,9 +249,10 @@ final class Libre3DirectManager: ObservableObject {
     /// lifecycle fields. `nil` until the handshake completes.
     private var dataPlaneState: Libre3DataPlaneState?
 
-    /// Guards the once-per-connection historical backfill request, fired after the
-    /// first data-plane packet yields a reliable current life count.
+    /// Guards the historical backfill request once a usable realtime glucose and
+    /// both response-channel CCCDs are ready. Failed requests are bounded below.
     private var didRequestBackfill = false
+    private var backfillFailuresThisSession = 0
 
     /// Set when a cached/direct reconnect is rejected (the sensor drops the
     /// link), so the NEXT connect attempt skips the cached path and runs a full
@@ -249,6 +298,10 @@ final class Libre3DirectManager: ObservableObject {
         }
         sensorStartDate = SharedData.libre3SensorStartDate
         sensorNeedsReplacement = SharedData.libre3SensorNeedsReplacement
+        connectionRequiresUserAction = SharedData.libre3ConnectionRequiresUserAction
+        if connectionRequiresUserAction {
+            connectionState = .failed(String(localized: "Sensor authorization keeps failing. Retry the connection, or re-pair the sensor in the Connect tab."))
+        }
         publishStatusToAppGroup()
     }
 
@@ -268,7 +321,9 @@ final class Libre3DirectManager: ObservableObject {
         if isActiveProvider {
             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
             start()
-        } else if lifecycleTask != nil ||
+        } else if shouldMaintainConnection ||
+                    connectionRequiresUserAction ||
+                    lifecycleTask != nil ||
                     scannerEventTask != nil ||
                     session != nil ||
                     currentReadingStatus != nil {
@@ -288,11 +343,17 @@ final class Libre3DirectManager: ObservableObject {
 
     /// Begin (or continue) connecting to the paired sensor and streaming.
     func start() {
-        guard isActiveProvider else { return }
+        guard isActiveProvider else {
+            shouldMaintainConnection = false
+            return
+        }
         guard Libre3StateStore.isPaired else {
+            shouldMaintainConnection = false
             connectionState = .idle
             return
         }
+        guard !connectionRequiresUserAction else { return }
+        shouldMaintainConnection = true
         // Recover before any lifecycle-driven grace arm. This runs only when the
         // paired direct-BLE provider starts, so a cloud-provider relaunch cannot
         // arm a signal-loss alert from an old persisted Libre 3 anchor.
@@ -306,39 +367,68 @@ final class Libre3DirectManager: ObservableObject {
         if UserDefaults.group.connected != .connected {
             UserDefaults.group.connected = .connected
         }
-        guard lifecycleTask == nil else { return }   // already running
-        // This clear deliberately follows the idempotency guard: reload kicks
-        // must not erase a useful error from a lifecycle that is still running.
-        DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
         ensureScanner()
         // Subscribe before the lifecycle creates any short-lived event waiter.
         // NG buffers restoration only until its first subscriber, so the long-
         // lived owner must always be that first subscriber.
         observeScannerEventsIfNeeded()
-        Libre3DiagnosticsLog.traceReconnect("lifecycle-start")
-        lifecycleTask = Task { [weak self] in
-            await self?.runLifecycle()
-        }
+        ensureLifecycleAttempt(reason: "start")
+    }
+
+    /// Explicitly leave the terminal credential state and start a fresh streak.
+    /// Ordinary reload kicks call `start()` and cannot clear the terminal gate.
+    func retryConnection() {
+        guard isActiveProvider, Libre3StateStore.isPaired else { return }
+        connectionRequiresUserAction = false
+        consecutiveReconnectFailures = 0
+        consecutiveCredentialFailures = 0
+        didNotifyReconnectFailing = false
+        forceFreshDiscoveryNextAttempt = true
+        SensorAlertNotificationManager.shared.retractReconnectFailing()
+        start()
     }
 
     /// Tear down the connection and stop streaming (provider switched away, or
     /// the user disconnected the sensor).
     func stop() {
+        // Clear intent first: cancelling the CoreBluetooth request/session below
+        // can synchronously enqueue a disconnect callback, and that callback must
+        // not resurrect a provider the user just left.
+        shouldMaintainConnection = false
+        waitingForDisconnectBeforeRearm = false
         setSignalLossState(deadline: nil)
+        lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
+        bestEffortRearmPassID = nil
+        bestEffortRearmTask?.cancel()
+        bestEffortRearmTask = nil
+        failedBestEffortRearmCharacteristics.removeAll()
+        let peripheralToCancel = session?.peripheral
+            ?? lifecyclePeripheral
+            ?? savedPeripheralID.flatMap { scanner?.retrievePeripherals(withIdentifiers: [$0]).first }
         scannerEventTask?.cancel()
         scannerEventTask = nil
-        if let scanner, let session {
-            session.handleDisconnect(error: nil)
-            scanner.cancelConnection(session.peripheral)
+        session?.handleDisconnect(error: nil)
+        if let scanner,
+           scanner.centralState == .poweredOn,
+           let peripheral = peripheralToCancel {
+            scanner.cancelConnection(peripheral)
         }
         session = nil
+        lifecyclePeripheral = nil
         decoder = nil
         dataPlaneState = nil
         didRequestBackfill = false
+        backfillFailuresThisSession = 0
         assembler.reset()
         clearReadingStatus()
+        consecutiveReconnectFailures = 0
+        consecutiveCredentialFailures = 0
+        didNotifyReconnectFailing = false
+        forceFreshDiscoveryNextAttempt = false
+        connectionRequiresUserAction = false
+        SensorAlertNotificationManager.shared.retractReconnectFailing()
         // A stop means the direct sensor is no longer active here, so remove any
         // standing terminal sensor alert that would now be stale.
         Task { await SensorAlertNotificationManager.shared.retract() }
@@ -349,7 +439,7 @@ final class Libre3DirectManager: ObservableObject {
     /// (~8–10 min) reload kick. Restarts a dropped lifecycle, and force-reconnects
     /// a session that is nominally streaming but has received no glucose-channel
     /// traffic for `recoveryStaleThreshold`. Initiates only — the reconnect itself
-    /// is carried by runLifecycle + CoreBluetooth.
+    /// is carried by the event-driven owner + CoreBluetooth.
     func recoverIfStale() {
         guard isActiveProvider else { return }
         // Preserve the old reload-kick behavior when the lifecycle has dropped:
@@ -457,12 +547,12 @@ final class Libre3DirectManager: ObservableObject {
             Libre3DiagnosticsLog.traceReconnect("cb-state value=\(state.rawValue)")
             switch state {
             case .poweredOn:
-                if isActiveProvider, Libre3StateStore.isPaired, lifecycleTask == nil {
+                if isActiveProvider, Libre3StateStore.isPaired {
                     Logger.libre3.info("Libre3 BLE: Bluetooth powered on — reconnecting")
                     start()
                 }
             case .poweredOff, .unauthorized, .unsupported, .resetting:
-                if lifecycleTask != nil {
+                if shouldMaintainConnection || lifecycleTask != nil {
                     Logger.libre3.info("Libre3 BLE: Bluetooth unavailable (\(String(describing: state), privacy: .public)) — tearing down session")
                     teardownForReconnect()
                 }
@@ -482,11 +572,20 @@ final class Libre3DirectManager: ObservableObject {
         case .didConnect(let peripheral):
             Libre3DiagnosticsLog.traceReconnect("cb-did-connect")
             Logger.libre3.info("Libre3 BLE didConnect: \(peripheral.identifier.uuidString, privacy: .private(mask: .hash))")
+            if isSavedPeripheral(peripheral), lifecycleTask == nil {
+                waitingForDisconnectBeforeRearm = false
+                lifecyclePeripheral = peripheral
+                ensureLifecycleAttempt(reason: "did-connect")
+            }
 
         case .didFailToConnect(let peripheral, let error):
             let errorName = error.map { Self.compactErrorName(for: $0) } ?? "nil"
             Libre3DiagnosticsLog.traceReconnect("cb-connect-failed error=\(errorName)")
             Logger.libre3.info("Libre3 BLE didFailToConnect: \(peripheral.identifier.uuidString, privacy: .private(mask: .hash)) error=\(errorName, privacy: .public)")
+            if isSavedPeripheral(peripheral), lifecycleTask == nil {
+                waitingForDisconnectBeforeRearm = false
+                ensureLifecycleAttempt(reason: "did-fail-to-connect")
+            }
 
         case .didDisconnect(let peripheral, let error):
             let errorName = error.map { Self.compactErrorName(for: $0) } ?? "nil"
@@ -494,17 +593,27 @@ final class Libre3DirectManager: ObservableObject {
             if session?.peripheral.identifier == peripheral.identifier {
                 session?.handleDisconnect(error: error)
             }
+            if matchesSavedPeripheral(peripheral) {
+                waitingForDisconnectBeforeRearm = false
+            }
+            if isSavedPeripheral(peripheral), lifecycleTask == nil {
+                ensureLifecycleAttempt(reason: "did-disconnect")
+            }
 
         case .connectionEvent(let connectionEvent, let peripheral):
             Libre3DiagnosticsLog.traceReconnect("cb-connection-event value=\(connectionEvent.rawValue)")
-            guard connectionEvent == .peerConnected else { return }
-            if let savedPeripheralID,
-               peripheral.identifier == savedPeripheralID,
-               isActiveProvider,
-               Libre3StateStore.isPaired,
-               lifecycleTask == nil {
-                Logger.libre3.info("Libre3 BLE: peripheral connection event — reconnecting")
-                start()
+            guard isSavedPeripheral(peripheral), lifecycleTask == nil else { return }
+            switch connectionEvent {
+            case .peerConnected:
+                Logger.libre3.info("Libre3 BLE: peripheral connected event — adopting")
+                waitingForDisconnectBeforeRearm = false
+                lifecyclePeripheral = peripheral
+                ensureLifecycleAttempt(reason: "peer-connected")
+            case .peerDisconnected:
+                waitingForDisconnectBeforeRearm = false
+                ensureLifecycleAttempt(reason: "peer-disconnected")
+            @unknown default:
+                break
             }
 
         case .willRestoreState(let restoration):
@@ -520,6 +629,18 @@ final class Libre3DirectManager: ObservableObject {
         UUID(uuidString: SharedData.libre3PeripheralUUID)
     }
 
+    private func matchesSavedPeripheral(_ peripheral: CBPeripheral) -> Bool {
+        guard let savedPeripheralID else { return false }
+        return peripheral.identifier == savedPeripheralID
+    }
+
+    private func isSavedPeripheral(_ peripheral: CBPeripheral) -> Bool {
+        guard shouldMaintainConnection,
+              isActiveProvider,
+              Libre3StateStore.isPaired else { return false }
+        return matchesSavedPeripheral(peripheral)
+    }
+
     /// Cancel the in-flight session (otherwise stuck in `consumeNotifications`,
     /// since a Bluetooth power-off yields no disconnect) and drop session state,
     /// leaving the manager ready to reconnect on the next power-on. Unlike
@@ -529,8 +650,14 @@ final class Libre3DirectManager: ObservableObject {
         // Deliberately do NOT cancel signal loss here. Bluetooth-off means hypo
         // protection is genuinely offline, so the OS-scheduled alert must remain
         // armed while this process may be suspended.
+        lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
+        bestEffortRearmPassID = nil
+        bestEffortRearmTask?.cancel()
+        bestEffortRearmTask = nil
+        failedBestEffortRearmCharacteristics.removeAll()
+        waitingForDisconnectBeforeRearm = false
         finishConnectedAttempt(traceStreamEnd: lastAttemptStage == "streaming")
         // NG clients own session invalidation. Power-off does not reliably emit
         // didDisconnect, so fail outstanding GATT work explicitly before dropping
@@ -541,12 +668,14 @@ final class Libre3DirectManager: ObservableObject {
         // branch), so the OS has already dropped the link and
         // `cancelPeripheralConnection` on a powered-off central is an API misuse
         // ("can only accept this command while in the powered on state"). Just
-        // drop our references; the next power-on reconnect's clean-disconnect step
-        // clears any phantom peripheral state.
+        // drop our references; the next power-on attempt adopts restored state
+        // first and cleans up only if its bounded setup fails.
         session = nil
+        lifecyclePeripheral = nil
         decoder = nil
         dataPlaneState = nil
         didRequestBackfill = false
+        backfillFailuresThisSession = 0
         assembler.reset()
         currentGlucoseMgDL = nil
         warmupRemainingMinutes = nil
@@ -554,90 +683,147 @@ final class Libre3DirectManager: ObservableObject {
         DebugMessageSingleton.shared.libreLinkUpResponseError = "Libre3 BLE: Bluetooth unavailable"
     }
 
-    /// Runs the full connect loop, retrying with a bounded backoff until the
-    /// task is cancelled (provider switch / disconnect). One iteration =
-    /// connect → handshake → subscribe → stream-until-disconnect.
-    private func runLifecycle() async {
-        // One `runLifecycle` invocation owns one failure streak. A fresh
-        // `start()` creates a fresh task and therefore starts a new streak.
-        var backoff: UInt64 = 5
-        var consecutiveFailures = 0
-        var didNotifyReconnectFailing = false
-        while !Task.isCancelled {
+    /// Start one connect → authorize → stream attempt. Recovery is driven by
+    /// completion and CoreBluetooth callbacks, not a retry loop: whenever no
+    /// attempt is running, either an indefinite connect or a disconnect cleanup
+    /// request is owned by CoreBluetooth before this process may suspend.
+    private func ensureLifecycleAttempt(reason: String) {
+        guard shouldMaintainConnection,
+              isActiveProvider,
+              Libre3StateStore.isPaired,
+              lifecycleTask == nil,
+              !waitingForDisconnectBeforeRearm,
+              let scanner,
+              scanner.centralState == .poweredOn else { return }
+
+        let attemptID = UUID()
+        lifecycleAttemptID = attemptID
+        Libre3DiagnosticsLog.traceReconnect("lifecycle-start reason=\(reason)")
+        lifecycleTask = Task { [weak self] in
+            guard let self else { return }
             do {
-                try await connectAuthorizeAndStream()
-                // A return means this attempt reached `.streaming` before its
-                // notification stream ended. Reset even after an instant drop:
-                // streamed-then-drop loops are link-quality failures and are
-                // deliberately excluded from credential-style escalation.
-                consecutiveFailures = 0
-                backoff = 5
-                if didNotifyReconnectFailing {
-                    SensorAlertNotificationManager.shared.retractReconnectFailing()
-                    didNotifyReconnectFailing = false
-                }
+                try await self.connectAuthorizeAndStream()
+                self.completeLifecycleAttempt(id: attemptID, error: nil)
             } catch is CancellationError {
-                break
+                self.completeCancelledLifecycleAttempt(id: attemptID)
             } catch {
-                consecutiveFailures += 1
-                let failureClass = Self.failureClass(for: error)
-                let errorName = Self.compactErrorName(for: error)
-                Libre3DiagnosticsLog.traceReconnect(
-                    "setup-failed stage=\(lastAttemptStage) class=\(failureClass) error=\(errorName)"
-                )
-                finishConnectedAttempt(traceStreamEnd: false)
-                Logger.libre3.error("Libre3 BLE lifecycle error: \(String(describing: error), privacy: .public)")
-                if consecutiveFailures >= Self.reconnectEscalateUserAfter {
-                    // Repeated handshake failures can be permanent credentials
-                    // or marginal range, so the guidance deliberately covers both.
-                    connectionState = .failed(String(localized: "Can't connect to the sensor. Keep your phone nearby — or if the sensor was replaced or re-scanned with another app, re-pair it in the Connect tab."))
-                } else {
-                    connectionState = .failed(Self.friendlyMessage(for: error))
-                }
-                // This field is shared across providers by design: it supplies
-                // Debug Info and both support-mail templates. Libre 3 follows
-                // Dexcom's stage-prefix convention and clears only on provider
-                // entry, a new lifecycle, or recovery — never on no-op kicks.
-                DebugMessageSingleton.shared.libreLinkUpResponseError =
-                    "Libre3 BLE: \(Self.supportSafeDescription(for: error))"
-
-                // Crossing-only gating keeps both outputs once per streak; later
-                // retries remain intentionally absent from the rare-event ring.
-                if consecutiveFailures == Self.reconnectEscalateUserAfter {
-                    await SensorAlertNotificationManager.shared.postReconnectFailing()
-                    didNotifyReconnectFailing = true
-                    Libre3DiagnosticsLog.record(
-                        "reconnect-escalation failures=\(consecutiveFailures) stage=\(lastAttemptStage) class=\(failureClass) lastError=\(errorName)"
-                    )
-                }
-
-                // An outage trace ending here identifies the current dead-state
-                // window: no CoreBluetooth connect is pending while this sleeps.
-                Libre3DiagnosticsLog.traceReconnect("backoff-sleep seconds=\(backoff)")
-                let backoffStartedAt = Date()
-                try? await Task.sleep(nanoseconds: backoff * 1_000_000_000)
-                let actualBackoff = Date().timeIntervalSince(backoffStartedAt)
-                // A large overshoot means the app was suspended during the
-                // dead-state sleep and later resumed by some external wake.
-                if actualBackoff > Double(backoff) + 30 {
-                    Libre3DiagnosticsLog.traceReconnect(
-                        "backoff-overshoot requested=\(backoff)s actual=\(Int(actualBackoff.rounded()))s"
-                    )
-                }
-                let cap = consecutiveFailures >= Self.reconnectBackoffEscalateAfter
-                    ? Self.reconnectBackoffEscalatedCapSeconds
-                    : Self.reconnectBackoffCapSeconds
-                backoff = min(backoff * 2, cap)
+                self.completeLifecycleAttempt(id: attemptID, error: error)
             }
-            guard isActiveProvider, Libre3StateStore.isPaired else { break }
         }
-        // Only clear when we exited on our own terms (unpaired / provider
-        // switch). When cancelled by `stop()` / `teardownForReconnect()` those
-        // callers own `lifecycleTask` and may have already assigned a fresh task
-        // — clearing here would clobber it.
-        if !Task.isCancelled {
-            lifecycleTask = nil
+    }
+
+    private func completeCancelledLifecycleAttempt(id: UUID) {
+        guard lifecycleAttemptID == id else { return }
+        lifecycleAttemptID = nil
+        lifecycleTask = nil
+        // Intentional stop and Bluetooth-unavailable teardown clear or defer
+        // intent themselves. Any other cancellation must still restore it.
+        ensureLifecycleAttempt(reason: "cancelled-attempt")
+    }
+
+    private func completeLifecycleAttempt(id: UUID, error: Error?) {
+        guard lifecycleAttemptID == id else { return }
+        lifecycleAttemptID = nil
+        lifecycleTask = nil
+
+        let endedStage = lastAttemptStage
+        let failureClass = error.map { Self.failureClass(for: $0) } ?? "transport"
+        let errorName = error.map { Self.compactErrorName(for: $0) } ?? "notificationStreamEnded"
+        if let error {
+            Libre3DiagnosticsLog.traceReconnect(
+                "setup-failed stage=\(endedStage) class=\(failureClass) error=\(errorName)"
+            )
+            Logger.libre3.error("Libre3 BLE lifecycle error: \(String(describing: error), privacy: .public)")
         }
+        finishConnectedAttempt(traceStreamEnd: endedStage == "streaming")
+
+        if !sessionProducedGlucose {
+            consecutiveReconnectFailures += 1
+            if failureClass == "credential" {
+                consecutiveCredentialFailures += 1
+            } else {
+                consecutiveCredentialFailures = 0
+            }
+        }
+        if let error {
+            connectionState = .failed(Self.friendlyMessage(for: error))
+        } else {
+            connectionState = .failed(String(localized: "Connection lost. Reconnecting…"))
+        }
+        if let error {
+            DebugMessageSingleton.shared.libreLinkUpResponseError =
+                "Libre3 BLE: \(Self.supportSafeDescription(for: error))"
+        } else {
+            DebugMessageSingleton.shared.libreLinkUpResponseError =
+                "Libre3 BLE: notification stream ended"
+        }
+
+        // Keep transport/other escalation diagnostic-only. The signal-loss
+        // dead-man already tells the user that glucose is unavailable; only a
+        // credential streak may post re-pair guidance or stop reconnecting.
+        if consecutiveReconnectFailures == Self.reconnectEscalateUserAfter {
+            Libre3DiagnosticsLog.record(
+                "reconnect-escalation failures=\(consecutiveReconnectFailures) stage=\(endedStage) class=\(failureClass) lastError=\(errorName)"
+            )
+        }
+
+        if consecutiveCredentialFailures >= Self.terminalCredentialFailureAfter {
+            shouldMaintainConnection = false
+            connectionRequiresUserAction = true
+            connectionState = .failed(String(localized: "Sensor authorization keeps failing. Retry the connection, or re-pair the sensor in the Connect tab."))
+            if !didNotifyReconnectFailing {
+                didNotifyReconnectFailing = true
+                Libre3DiagnosticsLog.record(
+                    "credential-terminal failures=\(consecutiveCredentialFailures) stage=\(endedStage) lastError=\(errorName)"
+                )
+                Task { await SensorAlertNotificationManager.shared.postReconnectFailing() }
+            }
+        }
+
+        prepareForNextAttempt()
+    }
+
+    /// Tear down a failed authorized/connected session. If CoreBluetooth still
+    /// owns a live or pending link, its cancellation is the standing operation
+    /// and `didDisconnect` performs the re-arm. If already disconnected, issue
+    /// the next indefinite connect before returning.
+    private func prepareForNextAttempt() {
+        bestEffortRearmPassID = nil
+        bestEffortRearmTask?.cancel()
+        bestEffortRearmTask = nil
+        failedBestEffortRearmCharacteristics.removeAll()
+
+        let peripheral = session?.peripheral ?? lifecyclePeripheral
+        session?.handleDisconnect(error: nil)
+        session = nil
+        lifecyclePeripheral = nil
+        decoder = nil
+        dataPlaneState = nil
+        didRequestBackfill = false
+        backfillFailuresThisSession = 0
+        assembler.reset()
+
+        if let scanner,
+           scanner.centralState == .poweredOn,
+           let peripheral,
+           peripheral.state != .disconnected {
+            waitingForDisconnectBeforeRearm = true
+            Libre3DiagnosticsLog.traceReconnect(
+                "disconnect-before-rearm state=\(peripheral.state.rawValue)"
+            )
+            scanner.cancelConnection(peripheral)
+            if peripheral.state == .disconnected {
+                waitingForDisconnectBeforeRearm = false
+                ensureLifecycleAttempt(reason: "cleanup-already-disconnected")
+            }
+            return
+        }
+
+        waitingForDisconnectBeforeRearm = false
+        guard shouldMaintainConnection,
+              isActiveProvider,
+              Libre3StateStore.isPaired else { return }
+        ensureLifecycleAttempt(reason: "attempt-ended")
     }
 
     private func connectAuthorizeAndStream() async throws {
@@ -645,8 +831,13 @@ final class Libre3DirectManager: ObservableObject {
         attemptReachedDidConnect = false
         attemptEndRecorded = false
         sessionProducedGlucose = false
+        attemptAdoptedConnectedPeripheral = false
         rearmCompletedAt = nil
         didTraceFirstPacket = false
+        failedBestEffortRearmCharacteristics.removeAll()
+        bestEffortRearmPassID = nil
+        bestEffortRearmTask?.cancel()
+        bestEffortRearmTask = nil
         Libre3DiagnosticsLog.traceReconnect("connect-start")
 
         guard let scanner else { throw Libre3DirectError.notStarted }
@@ -658,22 +849,15 @@ final class Libre3DirectManager: ObservableObject {
 
         connectionState = .scanning
         let peripheral = try await discoverPeripheral(scanner: scanner)
+        lifecyclePeripheral = peripheral
+        attemptAdoptedConnectedPeripheral = peripheral.state == .connected
         SharedData.libre3PeripheralUUID = peripheral.identifier.uuidString
-
-        // First-attempt-drop fix (PLAN Phase 5): after a disconnect or state
-        // restoration iOS may still report the peripheral `.connected`, so
-        // an already-connected fast path skips `central.connect` and the handshake runs
-        // over a half-dead link — which reliably drops right after
-        // StartAuthentication and only succeeds on the retry. Force a clean
-        // `.disconnected` state first (a no-op/quick return when already
-        // disconnected) so `connect` re-establishes a fresh link every time.
-        try await ensureDisconnected(scanner: scanner, peripheral: peripheral)
 
         connectionState = .connecting
         let session = try await connectAndBuildSession(scanner: scanner, peripheral: peripheral)
         // Ask iOS to wake us when it next sees this peripheral after a
-        // background range loss, so reconnect doesn't rely solely on the
-        // backoff loop running (it won't while suspended).
+        // background range loss. The disconnect callback immediately restores
+        // an indefinite connect intent while its background wake is still live.
         scanner.registerForConnectionEvents(peripheralIDs: [peripheral.identifier])
 
         // Wrap ONLY the auth handshake burst in a background task — NOT the slow
@@ -745,24 +929,14 @@ final class Libre3DirectManager: ObservableObject {
         // would resume from one of those and fetch only the last page.
         backfillResumeLifeCount = historicalByLifeCount.keys.max().map { UInt16(clamping: $0) }
 
-        // Backfill-ready CCCD set (LibreLoop's validated fix for ATT 0xFD): the sensor
-        // checks data-plane response CCCDs before accepting a patchControl command, and
-        // historicData/clinicalData are NOT in dataPlaneNotifying — so without a real
-        // off→on here, iOS's cached CCCD state makes the importer's plain enable a
-        // no-op after any reconnect and every backfill write fails with 0xFD.
-        // One-time per handshake; this is NOT the per-retry churn that broke streaming
-        // before (see the onDemandBackfillEnabled note below). Arming historicData may
-        // trigger an automatic post-auth historical burst — that's backfill data we
-        // want, and ingestHistorical already handles the pages.
-        let backfillReadyChars = LibreSensorGATT.Char.dataPlaneNotifying + [
-            LibreSensorGATT.Char.historicData,
-            LibreSensorGATT.Char.clinicalData,
-        ]
+        // Rearm serially rather than as one concurrent all-or-nothing burst. The
+        // field failures on glucoseData and factoryData both followed successful
+        // authorization on marginal/restored links, so one missing nonessential
+        // CCCD must not discard valid session keys. glucoseData and patchControl
+        // are fatal; the remaining response/status channels are best effort and
+        // get one opportunistic retry after real data proves the stream alive.
         lastAttemptStage = "rearm"
-        try await session.refreshDataPlaneNotifications(
-            characteristics: backfillReadyChars,
-            forceReArm: Set(backfillReadyChars)
-        )
+        try await rearmDataPlaneNotifications(session: session)
         rearmCompletedAt = Date()
 
         // Stamp the sensor model now that we're authorized (mirrors how the
@@ -773,16 +947,16 @@ final class Libre3DirectManager: ObservableObject {
         // thresholds of its own.
         applyManualAlarmWiring()
 
-        // Backfill is fired from `handle(...)` after the FIRST data-plane packet,
-        // once we know the real current life count (matching the sample, which
-        // fires from its notification handler). Firing here with a guessed life
-        // count produced `from=0`, which the patch ignores.
+        // Backfill waits for both a usable realtime glucose (real lifeCount) and
+        // successful historicData/clinicalData arming. This avoids both the old
+        // `from=0` request and a known ATT 0xFD readiness race.
         didRequestBackfill = false
+        backfillFailuresThisSession = 0
 
         lastAttemptStage = "streaming"
         connectionState = .streaming
         Libre3DiagnosticsLog.traceReconnect("stream-start")
-        DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
+        startBestEffortRearmPass(session: session, isRetry: false)
         // Give a newly authorized stream a full recovery window; subsequent
         // liveness advances come only from actual glucose-channel fragments.
         let streamingStartedAt = Date()
@@ -790,10 +964,10 @@ final class Libre3DirectManager: ObservableObject {
         lastAnyChannelAt = streamingStartedAt
         Logger.libre3.info("Libre3 BLE streaming started for serial=\(sensorState.serialNumber ?? "?", privacy: .public)")
         // Request app-wide notification auth before a terminal sensor state occurs.
-        // Streaming always clears stale reconnect advice from this or a prior process;
-        // if the sensor is healthy, also clear any terminal alert from a prior run.
+        // Setup success is not the health point: reconnect advice and its streak
+        // remain until the first usable realtime glucose is ingested below. If
+        // the sensor is otherwise healthy, clear only stale terminal attention.
         await SensorAlertNotificationManager.shared.requestAuthorizationIfNeeded()
-        SensorAlertNotificationManager.shared.retractReconnectFailing()
         if !sensorNeedsReplacement {
             await SensorAlertNotificationManager.shared.retract()
         }
@@ -819,6 +993,83 @@ final class Libre3DirectManager: ObservableObject {
         finishConnectedAttempt(traceStreamEnd: true)
     }
 
+    private func rearmDataPlaneNotifications(session: SensorSession) async throws {
+        let essential = [
+            LibreSensorGATT.Char.glucoseData,
+            LibreSensorGATT.Char.patchControl,
+        ]
+        for characteristic in essential {
+            try await session.refreshDataPlaneNotifications(
+                characteristics: [characteristic],
+                forceReArm: [characteristic]
+            )
+        }
+        failedBestEffortRearmCharacteristics = Set(Self.bestEffortRearmCharacteristics)
+    }
+
+    private func retryBestEffortRearmsIfNeeded(session: SensorSession) {
+        startBestEffortRearmPass(session: session, isRetry: true)
+    }
+
+    /// Nonessential CCCDs are armed serially beside the already-live essential
+    /// stream. This keeps a run of 8-second best-effort timeouts from consuming
+    /// the whole auth background task or delaying glucose delivery. Failed
+    /// channels remain in the set for one pass after the first real packet.
+    private func startBestEffortRearmPass(session: SensorSession, isRetry: Bool) {
+        guard bestEffortRearmTask == nil,
+              !failedBestEffortRearmCharacteristics.isEmpty,
+              self.session === session else { return }
+
+        let characteristics = failedBestEffortRearmCharacteristics.sorted {
+            $0.uuidString < $1.uuidString
+        }
+        let passID = UUID()
+        let passName = isRetry ? "retry" : "start"
+        bestEffortRearmPassID = passID
+        Libre3DiagnosticsLog.traceReconnect(
+            "rearm-best-effort-\(passName) count=\(characteristics.count)"
+        )
+        bestEffortRearmTask = Task { [weak self] in
+            guard let self else { return }
+            for characteristic in characteristics {
+                guard !Task.isCancelled, self.session === session else { return }
+                let channel = Self.dataPlaneChannelName(for: characteristic)
+                do {
+                    try await session.refreshDataPlaneNotifications(
+                        characteristics: [characteristic],
+                        forceReArm: [characteristic]
+                    )
+                    guard self.session === session else { return }
+                    self.failedBestEffortRearmCharacteristics.remove(characteristic)
+                    if isRetry {
+                        Libre3DiagnosticsLog.traceReconnect(
+                            "rearm-best-effort-recovered channel=\(channel)"
+                        )
+                    }
+                } catch is CancellationError {
+                    return
+                } catch {
+                    let errorName = Self.compactErrorName(for: error)
+                    let failureName = isRetry ? "retry-failed" : "failed"
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "rearm-best-effort-\(failureName) channel=\(channel) error=\(errorName)"
+                    )
+                    Logger.libre3.info("Libre3 BLE best-effort re-arm failed on \(channel, privacy: .public): \(String(describing: error), privacy: .public)")
+                }
+            }
+            guard self.bestEffortRearmPassID == passID else { return }
+            self.bestEffortRearmPassID = nil
+            self.bestEffortRearmTask = nil
+            Libre3DiagnosticsLog.traceReconnect(
+                "rearm-best-effort-complete pass=\(passName) pending=\(self.failedBestEffortRearmCharacteristics.count)"
+            )
+            self.requestBackfillWhenReady()
+            if !isRetry, self.didTraceFirstPacket {
+                self.startBestEffortRearmPass(session: session, isRetry: true)
+            }
+        }
+    }
+
     /// On-demand historical backfill (the `patchControl` write), modelled on
     /// Juggluco's `fillHistory` (`Libre3GattCallback.receivedpatchstatus` →
     /// `Natives.libre3ControlHistory(1, max(lastReceived, 5))`, byte-identical to
@@ -831,16 +1082,37 @@ final class Libre3DirectManager: ObservableObject {
     /// causing every `patchControl` write to fail with ATT 0xFD. The earlier
     /// streaming breakage matches LibreLoop's backed-out per-retry churn; its
     /// production-validated configuration re-arms this wider set once per
-    /// handshake. Fired once after the first patch status, `from = max(5, …)`.
+    /// handshake. Fired after the first usable realtime glucose and response-
+    /// channel readiness, `from = max(5, …)`.
     private static let onDemandBackfillEnabled = true
 
-    /// Request the one-shot historical backfill once, after the first data-plane
-    /// packet has given us a reliable current life count. `from` resumes at the
-    /// saved last reading (gap fill; the rest is seeded from the persisted store)
-    /// or 6 h back on a first-ever connect — never 0 (the patch ignores that).
+    private var backfillResponseChannelsReady: Bool {
+        !failedBestEffortRearmCharacteristics.contains(LibreSensorGATT.Char.historicData)
+            && !failedBestEffortRearmCharacteristics.contains(LibreSensorGATT.Char.clinicalData)
+    }
+
+    /// Backfill needs both a real realtime-glucose anchor and its response CCCDs.
+    /// Either may arrive first; both the ingest path and CCCD-pass completion call
+    /// here, so whichever becomes ready second launches the request immediately.
+    private func requestBackfillWhenReady() {
+        let latestRealtime = dataPlaneState?.latestRealtimeGlucose
+        guard sessionProducedGlucose,
+              backfillResponseChannelsReady,
+              let latestRealtime else {
+            return
+        }
+        requestBackfillIfNeeded(currentLifeCount: Int(latestRealtime.lifeCount))
+    }
+
+    /// Request the one-shot historical backfill once readiness is proven. `from`
+    /// resumes at the saved last reading (gap fill; the rest is seeded from the
+    /// persisted store) or 6 h back on a first-ever connect — never 0.
     private func requestBackfillIfNeeded(currentLifeCount: Int) {
         guard Self.onDemandBackfillEnabled else { return }
-        guard !didRequestBackfill, currentLifeCount > 0,
+        guard !didRequestBackfill,
+              backfillFailuresThisSession < Self.maxBackfillFailuresPerSession,
+              backfillResponseChannelsReady,
+              currentLifeCount > 0,
               let capturedSession = session, let crypto = decoder?.crypto else { return }
         didRequestBackfill = true
         // Resume from the history we held at connect time (the persisted seed),
@@ -866,11 +1138,23 @@ final class Libre3DirectManager: ObservableObject {
                     DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
                 }
             } catch {
-                self?.didRequestBackfill = false   // allow a retry on the next packet
                 Logger.libre3.error("Libre3 BLE historical backfill request failed: \(String(describing: error), privacy: .public)")
                 guard let self,
                       self.session === capturedSession,
                       self.connectionState == .streaming else { return }
+                self.backfillFailuresThisSession += 1
+                let failureCount = self.backfillFailuresThisSession
+                let errorName = Self.compactErrorName(for: error)
+                Libre3DiagnosticsLog.traceReconnect(
+                    "backfill-failed attempt=\(failureCount) error=\(errorName)"
+                )
+                if failureCount < Self.maxBackfillFailuresPerSession {
+                    self.didRequestBackfill = false
+                } else {
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "backfill-give-up failures=\(failureCount)"
+                    )
+                }
                 DebugMessageSingleton.shared.libreLinkUpResponseError =
                     "Libre3 BLE backfill: \(Self.supportSafeDescription(for: error))"
             }
@@ -878,15 +1162,21 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     /// Find the paired sensor: prefer the saved peripheral identifier (no scan
-    /// wait on reconnect); otherwise scan for the first sensor advertising the
-    /// Libre service.
+    /// wait on reconnect). After repeated connected-without-glucose cycles,
+    /// deliberately bypass that cached path and rediscover the saved peripheral
+    /// through a standing CoreBluetooth scan.
     private func discoverPeripheral(scanner: SensorScannerNG) async throws -> CBPeripheral {
         let savedUUID = SharedData.libre3PeripheralUUID
-        if !savedUUID.isEmpty, let id = UUID(uuidString: savedUUID) {
+        let savedID = UUID(uuidString: savedUUID)
+        if !forceFreshDiscoveryNextAttempt, let id = savedID {
             let known = scanner.retrievePeripherals(withIdentifiers: [id])
             if let peripheral = known.first {
                 return peripheral
             }
+        }
+
+        if forceFreshDiscoveryNextAttempt {
+            Libre3DiagnosticsLog.traceReconnect("fresh-discovery-start")
         }
 
         // Subscribe before starting the scan: both operations serialize onto
@@ -896,7 +1186,10 @@ final class Libre3DirectManager: ObservableObject {
         defer { scanner.stopScan() }
         for await event in events {
             try Task.checkCancellation()
-            if case .didDiscover(let found) = event {
+            if case .didDiscover(let found) = event,
+               savedID.map({ found.peripheral.identifier == $0 }) ?? true {
+                forceFreshDiscoveryNextAttempt = false
+                Libre3DiagnosticsLog.traceReconnect("fresh-discovery-found")
                 return found.peripheral
             }
         }
@@ -939,29 +1232,10 @@ final class Libre3DirectManager: ObservableObject {
         throw SensorScannerError.bluetoothUnavailable
     }
 
-    /// Stage-1 compatibility with the old scanner's first-attempt-drop guard.
-    /// Stage 2 will replace this unconditional cleanup with adopt-first handling.
-    private func ensureDisconnected(
-        scanner: SensorScannerNG,
-        peripheral: CBPeripheral
-    ) async throws {
-        guard peripheral.state != .disconnected else { return }
-        Libre3DiagnosticsLog.traceReconnect(
-            "clean-disconnect state=\(peripheral.state.rawValue)"
-        )
-        scanner.cancelConnection(peripheral)
-
-        let deadline = Date().addingTimeInterval(2)
-        while Date() < deadline {
-            try await Task.sleep(nanoseconds: 100_000_000)
-            if peripheral.state == .disconnected { return }
-        }
-        Libre3DiagnosticsLog.traceReconnect(
-            "clean-disconnect-timeout state=\(peripheral.state.rawValue)"
-        )
-    }
-
-    /// Indefinite NG connection followed by a fresh `SensorSession` discovery.
+    /// Adopt an already-connected/restored peripheral, or leave an indefinite
+    /// NG connection request standing until CoreBluetooth reaches it. A phantom
+    /// restored link is allowed to fail its bounded discovery/auth work; the
+    /// attempt cleanup then cancels it and rearms from `didDisconnect`.
     /// The CoreBluetooth request has no application timeout, so it remains a
     /// background wake source until connection or explicit cancellation.
     private func connectAndBuildSession(
@@ -1044,9 +1318,10 @@ final class Libre3DirectManager: ObservableObject {
 
     /// Authorize the freshly-connected session. Prefers the fast cached/direct
     /// reconnect (PLAN Phase 5) when we hold a reconnect key from a prior full
-    /// pair, and falls back to the full command-gated first-pair handshake on
-    /// any failure before Phase 6. Returns the Phase-6 session material the
-    /// data-plane decoder needs.
+    /// pair. A transport failure on an adopted/restored connection retries the
+    /// short cached path once after a real reconnect; other cached failures fall
+    /// back to the full command-gated first-pair handshake on the next fresh
+    /// connection. Returns the Phase-6 session material the decoder needs.
     ///
     /// Deliberate divergence from LibreLoop `50ea2de`: it removed this fallback,
     /// but FLwatch's Phase-5 validation log captured the full-handshake fallback
@@ -1062,13 +1337,21 @@ final class Libre3DirectManager: ObservableObject {
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
-                // Cached reconnect rejected. The sensor DROPS the link on a bad
-                // Phase 5 (observed on hardware), so the full handshake can't run
-                // on this dead connection. Skip cached on the next attempt and
-                // rethrow so the lifecycle reconnects FRESH and runs a full pair
-                // (which re-establishes — and re-persists — the reconnect key).
-                Logger.libre3.info("Libre3 BLE cached reconnect failed (\(String(describing: error), privacy: .public)) — reconnecting fresh for a full handshake")
-                skipCachedReconnectOnce = true
+                // A restored `.connected` peripheral can be a half-dead link.
+                // If that adopted link fails for transport reasons, preserve the
+                // cached key and try the short handshake once more after cleanup
+                // produces a real didConnect. Any failure on that fresh attempt,
+                // or an explicitly credential-shaped failure now, selects the
+                // hardware-validated full-handshake fallback next time.
+                let retryCachedFresh = attemptAdoptedConnectedPeripheral
+                    && Self.failureClass(for: error) == "transport"
+                skipCachedReconnectOnce = !retryCachedFresh
+                let nextPathToken = retryCachedFresh ? "cached" : "full"
+                let nextPath = retryCachedFresh ? "cached handshake" : "full handshake"
+                Libre3DiagnosticsLog.traceReconnect(
+                    "cached-reconnect-failed adopted=\(attemptAdoptedConnectedPeripheral) next=\(nextPathToken)"
+                )
+                Logger.libre3.info("Libre3 BLE cached reconnect failed (\(String(describing: error), privacy: .public)) — reconnecting fresh for \(nextPath, privacy: .public)")
                 throw error
             }
         }
@@ -1180,6 +1463,7 @@ final class Libre3DirectManager: ObservableObject {
                 Libre3DiagnosticsLog.traceReconnect(
                     "first-packet delay=\(Self.reconnectDelay(from: rearmCompletedAt, to: event.receivedAt))"
                 )
+                retryBestEffortRearmsIfNeeded(session: session)
             }
             lastAnyChannelAt = event.receivedAt
             // Stamp every glucose fragment before assembly/decode: warm-up and
@@ -1228,17 +1512,6 @@ final class Libre3DirectManager: ObservableObject {
                 ingestHistorical(page)
             case .patchStatus, .clinicalReadingRecord, .raw:
                 break
-            }
-            // Once we have a real current life count (from patch status, else the
-            // latest realtime reading), fire the one-shot backfill — mirroring the
-            // sample, which requests it from its notification handler rather than
-            // up front with a guessed life count.
-            if !didRequestBackfill {
-                let currentLifeCount = state.latestPatchStatus.map { Int($0.currentLifeCount) }
-                    ?? state.latestRealtimeGlucose.map { Int($0.lifeCount) }
-                if let currentLifeCount {
-                    requestBackfillIfNeeded(currentLifeCount: currentLifeCount)
-                }
             }
         } catch {
             Logger.libre3.error("Libre3 BLE decode failed on \(channel.rawValue, privacy: .public): \(String(describing: error), privacy: .public)")
@@ -1290,7 +1563,14 @@ final class Libre3DirectManager: ObservableObject {
                     "first-glucose delay=\(Self.reconnectDelay(from: rearmCompletedAt, to: Date()))"
                 )
             }
+            consecutiveReconnectFailures = 0
+            consecutiveCredentialFailures = 0
+            forceFreshDiscoveryNextAttempt = false
+            DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
+            SensorAlertNotificationManager.shared.retractReconnectFailing()
+            didNotifyReconnectFailing = false
         }
+        requestBackfillWhenReady()
         // Only an accepted usable realtime reading proves the connection is
         // healthy; authorization/re-arm/streaming transitions never reset this.
         consecutiveNoStreamCycles = 0
@@ -1751,8 +2031,11 @@ final class Libre3DirectManager: ObservableObject {
 
         if !sessionProducedGlucose {
             consecutiveNoStreamCycles += 1
-            if consecutiveNoStreamCycles == 3 {
-                Libre3DiagnosticsLog.record("no-stream-livelock cycles=3")
+            if consecutiveNoStreamCycles == Self.freshDiscoveryNoStreamCycles {
+                forceFreshDiscoveryNextAttempt = true
+                Libre3DiagnosticsLog.record(
+                    "no-stream-livelock cycles=\(Self.freshDiscoveryNoStreamCycles) action=fresh-discovery"
+                )
             }
         }
 
@@ -1769,8 +2052,13 @@ final class Libre3DirectManager: ObservableObject {
         String(format: "%.1fs", max(0, end.timeIntervalSince(start)))
     }
 
-    /// Diagnostic classification only in Stage 0. Notification policy remains
-    /// unchanged until Stage 2/3.
+    private static func dataPlaneChannelName(for characteristic: CBUUID) -> String {
+        DataPlaneChannel(uuidString: characteristic.uuidString)?.rawValue
+            ?? characteristic.uuidString
+    }
+
+    /// Recovery disposition is deliberately per case, not per enum type:
+    /// `writeTimeout` remains transport even though PairingFlow owns the case.
     private static func failureClass(for error: Error) -> String {
         if let pairingError = error as? PairingFlowError {
             switch pairingError {

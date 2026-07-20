@@ -135,6 +135,7 @@ enum DefaultsKey: String {
     case libre3EngineDidFail = "libre3EngineDidFailKey"
     case libre3EngineStatusMessage = "libre3EngineStatusMessageKey"
     case libre3SensorNeedsReplacement = "libre3SensorNeedsReplacementKey"
+    case libre3ConnectionRequiresUserAction = "libre3ConnectionRequiresUserActionKey"
     case libre3DiagnosticEvents = "libre3DiagnosticEventsKey"
     case libre3ReconnectTrace = "libre3ReconnectTraceKey"
     case libre3LastRecordedSignalLossDeliveryDate = "libre3LastRecordedSignalLossDeliveryDateKey"
@@ -714,6 +715,13 @@ enum SharedData {
     static var libre3SensorNeedsReplacement: Bool {
         get { store.getBool(.libre3SensorNeedsReplacement) }
         set { store.setBool(newValue, forKey: .libre3SensorNeedsReplacement) }
+    }
+
+    /// Persists the deliberate terminal credential gate so a foreground relaunch
+    /// cannot silently restart a connection intent that was stopped for repair.
+    static var libre3ConnectionRequiresUserAction: Bool {
+        get { store.getBool(.libre3ConnectionRequiresUserAction) }
+        set { store.setBool(newValue, forKey: .libre3ConnectionRequiresUserAction) }
     }
 
     static var libre3DiagnosticEvents: [String] {

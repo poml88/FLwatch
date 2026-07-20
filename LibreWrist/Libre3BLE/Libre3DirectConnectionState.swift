@@ -26,7 +26,8 @@ enum Libre3DirectConnectionState: Equatable {
     /// Authorized and subscribed; decoding live glucose notifications.
     case streaming
     /// A connect/auth/decode step failed; carries a user-facing reason. The
-    /// manager schedules a bounded retry from here.
+    /// manager normally keeps an event-driven CoreBluetooth intent standing;
+    /// repeated credential failures are the explicit user-action exception.
     case failed(String)
 
     var isError: Bool {
