@@ -259,6 +259,16 @@ struct PhoneAppLibre3ConnectView: View {
             if let mode = SharedData.libre3Mode {
                 LabeledContent("Paired via", value: modeShortName(mode))
             }
+            if let sensorEndDate {
+                LabeledContent(
+                    "Remaining",
+                    value: remainingSensorLifeText(until: sensorEndDate, now: Date())
+                )
+                LabeledContent(
+                    "Ends",
+                    value: sensorEndDate.formatted(date: .abbreviated, time: .shortened)
+                )
+            }
         } header: {
             Text("Sensor")
         } footer: {
@@ -400,6 +410,34 @@ struct PhoneAppLibre3ConnectView: View {
             return String(localized: "\(totalHours / 24) days")
         }
         return String(localized: "\(totalHours) h")
+    }
+
+    /// Uses the same persisted start anchor and sensor-reported wear duration as
+    /// the end-of-life notification schedule.
+    private var sensorEndDate: Date? {
+        guard let startDate = SharedData.libre3SensorStartDate else { return nil }
+        let wearDurationMinutes = SharedData.libre3WearDurationMinutes
+        guard wearDurationMinutes > 0 else { return nil }
+        return startDate.addingTimeInterval(TimeInterval(wearDurationMinutes) * 60)
+    }
+
+    private func remainingSensorLifeText(until endDate: Date, now: Date) -> String {
+        let remainingSeconds = endDate.timeIntervalSince(now)
+        guard remainingSeconds > 0 else { return String(localized: "Ended") }
+
+        // Round up so the UI does not report zero minutes before the actual end.
+        let totalMinutes = Int((remainingSeconds + 59) / 60)
+        let days = totalMinutes / (24 * 60)
+        let hours = (totalMinutes % (24 * 60)) / 60
+        let minutes = totalMinutes % 60
+
+        if days > 0 {
+            return String(localized: "\(days) d \(hours) h")
+        }
+        if hours > 0 {
+            return String(localized: "\(hours) h \(minutes) min")
+        }
+        return String(localized: "\(minutes) min")
     }
 
     private func modeShortName(_ mode: Libre3Mode) -> String {
