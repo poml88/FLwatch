@@ -3,7 +3,7 @@
 //  FLwatch
 //
 //  The long-lived, phone-only BLE engine for the `.libre3BLE` provider. It owns
-//  LibreCRKit's `SensorScanner` / `SensorSession` / `PairingFlow` / data-plane
+//  LibreCRKit's `SensorScannerNG` / `SensorSession` / `PairingFlow` / data-plane
 //  decoder and, when it decodes a realtime reading, writes straight into the
 //  shared `LibreLinkUpHistory` store — exactly like `DexcomShareProvider`, but
 //  triggered by a BLE notification instead of a network call (PLAN §4).
@@ -116,7 +116,7 @@ final class Libre3DirectManager: ObservableObject {
     /// `.libre3BLE`) is never prompted for Bluetooth permission and never gets a
     /// second restoring central. Mirrors the heartbeat manager, which likewise
     /// only builds its `CBCentralManager` once enabled.
-    private var scanner: SensorScanner?
+    private var scanner: SensorScannerNG?
     private var session: SensorSession?
     private var decoder: DataPlaneDecoder?
     private let assembler = DataPlaneNotificationAssembler()
@@ -144,9 +144,9 @@ final class Libre3DirectManager: ObservableObject {
     /// The single connect → authorize → stream driver. While non-nil a
     /// connection attempt or live stream is in flight.
     private var lifecycleTask: Task<Void, Never>?
-    private var restorationTask: Task<Void, Never>?
-    private var stateTask: Task<Void, Never>?
-    private var connectionEventTask: Task<Void, Never>?
+    /// Unified CoreBluetooth event consumer. `SensorScannerNG` broadcasts every
+    /// central callback through this one stream, including state restoration.
+    private var scannerEventTask: Task<Void, Never>?
 
     /// Diagnostic-only attempt state. MainActor serialization makes plain
     /// properties sufficient for the sequential connect lifecycle.
@@ -269,9 +269,7 @@ final class Libre3DirectManager: ObservableObject {
             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
             start()
         } else if lifecycleTask != nil ||
-                    restorationTask != nil ||
-                    stateTask != nil ||
-                    connectionEventTask != nil ||
+                    scannerEventTask != nil ||
                     session != nil ||
                     currentReadingStatus != nil {
             stop()
@@ -313,17 +311,14 @@ final class Libre3DirectManager: ObservableObject {
         // must not erase a useful error from a lifecycle that is still running.
         DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
         ensureScanner()
-        // Assign the lifecycle task BEFORE wiring the observers: the state
-        // observer yields the current power state immediately on subscribe and
-        // may re-enter `start()`, which must see a non-nil task and no-op rather
-        // than spawn a duplicate.
+        // Subscribe before the lifecycle creates any short-lived event waiter.
+        // NG buffers restoration only until its first subscriber, so the long-
+        // lived owner must always be that first subscriber.
+        observeScannerEventsIfNeeded()
         Libre3DiagnosticsLog.traceReconnect("lifecycle-start")
         lifecycleTask = Task { [weak self] in
             await self?.runLifecycle()
         }
-        observeRestorationIfNeeded()
-        observeBluetoothStateIfNeeded()
-        observeConnectionEventsIfNeeded()
     }
 
     /// Tear down the connection and stop streaming (provider switched away, or
@@ -332,14 +327,11 @@ final class Libre3DirectManager: ObservableObject {
         setSignalLossState(deadline: nil)
         lifecycleTask?.cancel()
         lifecycleTask = nil
-        restorationTask?.cancel()
-        restorationTask = nil
-        stateTask?.cancel()
-        stateTask = nil
-        connectionEventTask?.cancel()
-        connectionEventTask = nil
+        scannerEventTask?.cancel()
+        scannerEventTask = nil
         if let scanner, let session {
-            scanner.disconnect(session)
+            session.handleDisconnect(error: nil)
+            scanner.cancelConnection(session.peripheral)
         }
         session = nil
         decoder = nil
@@ -395,7 +387,7 @@ final class Libre3DirectManager: ObservableObject {
         Libre3DiagnosticsLog.traceReconnect("reload-kick action=force-reconnect")
         // Disconnecting ends `notifications()`, allowing the existing lifecycle
         // loop to reconnect. Coincident kicks may repeat this harmless request.
-        scanner.disconnect(session)
+        scanner.cancelConnection(session.peripheral)
     }
 
     /// Forget the in-memory session state after the stored sensor is cleared.
@@ -438,75 +430,100 @@ final class Libre3DirectManager: ObservableObject {
 
     private func ensureScanner() {
         guard scanner == nil else { return }
-        scanner = SensorScanner(
+        scanner = SensorScannerNG(
             configuration: .background(restorationIdentifier: Self.restoreIdentifier)
         )
     }
 
-    /// Subscribe to CoreBluetooth state restoration once. On a background launch
-    /// triggered by a sensor notification, iOS re-creates our central and hands
-    /// back the restored peripheral; we just (re)start the lifecycle, which will
-    /// retrieve and resume that peripheral by its saved identifier.
-    private func observeRestorationIfNeeded() {
-        guard restorationTask == nil, let scanner else { return }
-        restorationTask = Task { [weak self] in
-            for await event in scanner.restorationEvents() {
+    /// Own the one long-lived NG event subscription. Besides replacing the old
+    /// state/restoration/connection-event streams, this must explicitly forward
+    /// disconnects into `SensorSession`: NG deliberately leaves session ownership
+    /// and invalidation to its client.
+    private func observeScannerEventsIfNeeded() {
+        guard scannerEventTask == nil, let scanner else { return }
+        let events = scanner.events()
+        scannerEventTask = Task { [weak self] in
+            for await event in events {
                 guard let self else { return }
-                Logger.libre3.info("Libre3 BLE state restoration: \(event.peripherals.count, privacy: .public) peripheral(s)")
-                if self.isActiveProvider, Libre3StateStore.isPaired {
-                    self.start()
-                }
+                self.handleScannerEvent(event)
+                if Task.isCancelled { break }
             }
         }
     }
 
-    /// Observe Bluetooth power transitions. This is essential for reconnect:
-    /// when the user turns Bluetooth OFF, iOS transitions the central to
-    /// `poweredOff` but does NOT deliver a peripheral disconnect, so the
-    /// `notifications()` stream never finishes and `consumeNotifications` would
-    /// hang forever — streaming silently dies with no recovery. So we tear the
-    /// stuck session down on power-loss and restart it when power returns.
-    private func observeBluetoothStateIfNeeded() {
-        guard stateTask == nil, let scanner else { return }
-        stateTask = Task { [weak self] in
-            for await state in scanner.stateEvents() {
-                guard let self else { return }
-                if state == .poweredOn {
-                    if self.isActiveProvider, Libre3StateStore.isPaired, self.lifecycleTask == nil {
-                        Logger.libre3.info("Libre3 BLE: Bluetooth powered on — reconnecting")
-                        self.start()
-                    }
-                } else if self.lifecycleTask != nil {
+    private func handleScannerEvent(_ event: SensorScannerNG.Event) {
+        switch event {
+        case .stateChanged(let state):
+            Libre3DiagnosticsLog.traceReconnect("cb-state value=\(state.rawValue)")
+            switch state {
+            case .poweredOn:
+                if isActiveProvider, Libre3StateStore.isPaired, lifecycleTask == nil {
+                    Logger.libre3.info("Libre3 BLE: Bluetooth powered on — reconnecting")
+                    start()
+                }
+            case .poweredOff, .unauthorized, .unsupported, .resetting:
+                if lifecycleTask != nil {
                     Logger.libre3.info("Libre3 BLE: Bluetooth unavailable (\(String(describing: state), privacy: .public)) — tearing down session")
-                    self.teardownForReconnect()
+                    teardownForReconnect()
                 }
+            case .unknown:
+                // Every new central starts unknown and settles through a later
+                // callback. Cancelling here would kill its fresh lifecycle.
+                break
+            @unknown default:
+                break
+            }
+
+        case .didDiscover:
+            // A short-lived discovery waiter consumes the matching event. Avoid
+            // filling the bounded reconnect trace with unrelated advertisements.
+            break
+
+        case .didConnect(let peripheral):
+            Libre3DiagnosticsLog.traceReconnect("cb-did-connect")
+            Logger.libre3.info("Libre3 BLE didConnect: \(peripheral.identifier.uuidString, privacy: .private(mask: .hash))")
+
+        case .didFailToConnect(let peripheral, let error):
+            let errorName = error.map { Self.compactErrorName(for: $0) } ?? "nil"
+            Libre3DiagnosticsLog.traceReconnect("cb-connect-failed error=\(errorName)")
+            Logger.libre3.info("Libre3 BLE didFailToConnect: \(peripheral.identifier.uuidString, privacy: .private(mask: .hash)) error=\(errorName, privacy: .public)")
+
+        case .didDisconnect(let peripheral, let error):
+            let errorName = error.map { Self.compactErrorName(for: $0) } ?? "nil"
+            Libre3DiagnosticsLog.traceReconnect("cb-did-disconnect error=\(errorName)")
+            if session?.peripheral.identifier == peripheral.identifier {
+                session?.handleDisconnect(error: error)
+            }
+
+        case .connectionEvent(let connectionEvent, let peripheral):
+            Libre3DiagnosticsLog.traceReconnect("cb-connection-event value=\(connectionEvent.rawValue)")
+            guard connectionEvent == .peerConnected else { return }
+            if let savedPeripheralID,
+               peripheral.identifier == savedPeripheralID,
+               isActiveProvider,
+               Libre3StateStore.isPaired,
+               lifecycleTask == nil {
+                Logger.libre3.info("Libre3 BLE: peripheral connection event — reconnecting")
+                start()
+            }
+
+        case .willRestoreState(let restoration):
+            Libre3DiagnosticsLog.traceReconnect("state-restoration peripherals=\(restoration.peripherals.count)")
+            Logger.libre3.info("Libre3 BLE state restoration: \(restoration.peripherals.count, privacy: .public) peripheral(s)")
+            if isActiveProvider, Libre3StateStore.isPaired {
+                start()
             }
         }
     }
 
-    /// Observe CoreBluetooth connection events (registered per-peripheral in
-    /// `connectAuthorizeAndStream`). When the app is suspended the backoff
-    /// reconnect loop can't run, so a background range-loss recovery relies on
-    /// iOS waking us with a `.peerConnected` event for the known peripheral —
-    /// at which point we (re)start the lifecycle if it isn't already running.
-    private func observeConnectionEventsIfNeeded() {
-        guard connectionEventTask == nil, let scanner else { return }
-        connectionEventTask = Task { [weak self] in
-            for await event in scanner.connectionEvents() {
-                guard let self else { return }
-                guard event.event == .peerConnected else { continue }
-                if self.isActiveProvider, Libre3StateStore.isPaired, self.lifecycleTask == nil {
-                    Logger.libre3.info("Libre3 BLE: peripheral connection event — reconnecting")
-                    self.start()
-                }
-            }
-        }
+    private var savedPeripheralID: UUID? {
+        UUID(uuidString: SharedData.libre3PeripheralUUID)
     }
 
     /// Cancel the in-flight session (otherwise stuck in `consumeNotifications`,
     /// since a Bluetooth power-off yields no disconnect) and drop session state,
     /// leaving the manager ready to reconnect on the next power-on. Unlike
-    /// `stop()` it keeps the restoration/state observers alive so we can come
+    /// `stop()` it keeps the unified scanner event observer alive so we can come
     /// back automatically.
     private func teardownForReconnect() {
         // Deliberately do NOT cancel signal loss here. Bluetooth-off means hypo
@@ -515,12 +532,16 @@ final class Libre3DirectManager: ObservableObject {
         lifecycleTask?.cancel()
         lifecycleTask = nil
         finishConnectedAttempt(traceStreamEnd: lastAttemptStage == "streaming")
-        // Don't call `scanner.disconnect(session)` here: this runs only when
+        // NG clients own session invalidation. Power-off does not reliably emit
+        // didDisconnect, so fail outstanding GATT work explicitly before dropping
+        // the session reference.
+        session?.handleDisconnect(error: nil)
+        // Don't call `scanner.cancelConnection` here: this runs only when
         // Bluetooth has gone UN-available (the state observer's non-poweredOn
         // branch), so the OS has already dropped the link and
         // `cancelPeripheralConnection` on a powered-off central is an API misuse
         // ("can only accept this command while in the powered on state"). Just
-        // drop our references; the next power-on reconnect's `ensureDisconnected`
+        // drop our references; the next power-on reconnect's clean-disconnect step
         // clears any phantom peripheral state.
         session = nil
         decoder = nil
@@ -633,7 +654,7 @@ final class Libre3DirectManager: ObservableObject {
             throw Libre3DirectError.notPaired
         }
 
-        try await scanner.waitUntilReady()
+        try await waitUntilScannerReady(scanner)
 
         connectionState = .scanning
         let peripheral = try await discoverPeripheral(scanner: scanner)
@@ -641,25 +662,22 @@ final class Libre3DirectManager: ObservableObject {
 
         // First-attempt-drop fix (PLAN Phase 5): after a disconnect or state
         // restoration iOS may still report the peripheral `.connected`, so
-        // `scanner.connect` skips `central.connect` and the handshake then runs
+        // an already-connected fast path skips `central.connect` and the handshake runs
         // over a half-dead link — which reliably drops right after
         // StartAuthentication and only succeeds on the retry. Force a clean
         // `.disconnected` state first (a no-op/quick return when already
         // disconnected) so `connect` re-establishes a fresh link every time.
-        await scanner.ensureDisconnected(peripheralID: peripheral.identifier)
+        try await ensureDisconnected(scanner: scanner, peripheral: peripheral)
 
         connectionState = .connecting
-        let session = try await scanner.connect(peripheral)
-        self.session = session
-        attemptReachedDidConnect = true
-        Libre3DiagnosticsLog.traceReconnect("did-connect")
+        let session = try await connectAndBuildSession(scanner: scanner, peripheral: peripheral)
         // Ask iOS to wake us when it next sees this peripheral after a
         // background range loss, so reconnect doesn't rely solely on the
         // backoff loop running (it won't while suspended).
         scanner.registerForConnectionEvents(peripheralIDs: [peripheral.identifier])
 
         // Wrap ONLY the auth handshake burst in a background task — NOT the slow
-        // `scanner.connect` above, which can wait ~30s for the Libre 3's
+        // indefinite NG connection above, which can wait ~30s for the Libre 3's
         // once-per-minute connection window. bluetooth-central keeps the pending
         // connect alive and wakes us on didConnect, so the wait needs no task;
         // holding one across it just trips iOS's 30s "risk of termination"
@@ -862,20 +880,166 @@ final class Libre3DirectManager: ObservableObject {
     /// Find the paired sensor: prefer the saved peripheral identifier (no scan
     /// wait on reconnect); otherwise scan for the first sensor advertising the
     /// Libre service.
-    private func discoverPeripheral(scanner: SensorScanner) async throws -> CBPeripheral {
+    private func discoverPeripheral(scanner: SensorScannerNG) async throws -> CBPeripheral {
         let savedUUID = SharedData.libre3PeripheralUUID
         if !savedUUID.isEmpty, let id = UUID(uuidString: savedUUID) {
-            let known = await scanner.retrievePeripherals(withIdentifiers: [id])
+            let known = scanner.retrievePeripherals(withIdentifiers: [id])
             if let peripheral = known.first {
                 return peripheral
             }
         }
 
-        for await found in scanner.startScan() {
-            scanner.stopScan()
-            return found.peripheral
+        // Subscribe before starting the scan: both operations serialize onto
+        // NG's central queue, so no fast discovery can beat the waiter.
+        let events = scanner.events()
+        scanner.startScan()
+        defer { scanner.stopScan() }
+        for await event in events {
+            try Task.checkCancellation()
+            if case .didDiscover(let found) = event {
+                return found.peripheral
+            }
         }
+        if Task.isCancelled { throw CancellationError() }
         throw Libre3DirectError.sensorNotFound
+    }
+
+    /// Wait for CoreBluetooth to become usable using NG's replayed state event.
+    /// `.unknown` and `.resetting` are transitional; terminal radio/permission
+    /// states throw the same public scanner errors as the old async wrapper.
+    private func waitUntilScannerReady(_ scanner: SensorScannerNG) async throws {
+        func readyResult(for state: CBManagerState) -> Result<Void, Error>? {
+            switch state {
+            case .poweredOn:
+                return .success(())
+            case .poweredOff:
+                return .failure(SensorScannerError.bluetoothPoweredOff)
+            case .unauthorized:
+                return .failure(SensorScannerError.bluetoothUnauthorized)
+            case .unsupported:
+                return .failure(SensorScannerError.bluetoothUnavailable)
+            case .unknown, .resetting:
+                return nil
+            @unknown default:
+                return .failure(SensorScannerError.bluetoothUnavailable)
+            }
+        }
+
+        if let result = readyResult(for: scanner.centralState) {
+            return try result.get()
+        }
+
+        for await event in scanner.events() {
+            try Task.checkCancellation()
+            guard case .stateChanged(let state) = event,
+                  let result = readyResult(for: state) else { continue }
+            return try result.get()
+        }
+        if Task.isCancelled { throw CancellationError() }
+        throw SensorScannerError.bluetoothUnavailable
+    }
+
+    /// Stage-1 compatibility with the old scanner's first-attempt-drop guard.
+    /// Stage 2 will replace this unconditional cleanup with adopt-first handling.
+    private func ensureDisconnected(
+        scanner: SensorScannerNG,
+        peripheral: CBPeripheral
+    ) async throws {
+        guard peripheral.state != .disconnected else { return }
+        Libre3DiagnosticsLog.traceReconnect(
+            "clean-disconnect state=\(peripheral.state.rawValue)"
+        )
+        scanner.cancelConnection(peripheral)
+
+        let deadline = Date().addingTimeInterval(2)
+        while Date() < deadline {
+            try await Task.sleep(nanoseconds: 100_000_000)
+            if peripheral.state == .disconnected { return }
+        }
+        Libre3DiagnosticsLog.traceReconnect(
+            "clean-disconnect-timeout state=\(peripheral.state.rawValue)"
+        )
+    }
+
+    /// Indefinite NG connection followed by a fresh `SensorSession` discovery.
+    /// The CoreBluetooth request has no application timeout, so it remains a
+    /// background wake source until connection or explicit cancellation.
+    private func connectAndBuildSession(
+        scanner: SensorScannerNG,
+        peripheral: CBPeripheral
+    ) async throws -> SensorSession {
+        try await withTaskCancellationHandler {
+            let connected = try await awaitConnectedPeripheral(
+                scanner: scanner,
+                peripheral: peripheral
+            )
+            attemptReachedDidConnect = true
+            Libre3DiagnosticsLog.traceReconnect("did-connect")
+
+            let newSession = SensorSession(
+                peripheral: connected,
+                queue: scanner.centralQueue
+            )
+            // Publish before discovery: the long-lived NG event owner must be
+            // able to fail discovery/notify continuations if the link drops.
+            session = newSession
+            try await newSession.discoverAndSubscribe()
+            return newSession
+        } onCancel: {
+            // Power-loss teardown intentionally avoids issuing CoreBluetooth
+            // commands while the central is unavailable. Ordinary stop/cancel
+            // still tears down an indefinite pending request immediately.
+            if scanner.centralState == .poweredOn {
+                scanner.cancelConnection(peripheral)
+            }
+        }
+    }
+
+    private func awaitConnectedPeripheral(
+        scanner: SensorScannerNG,
+        peripheral: CBPeripheral
+    ) async throws -> CBPeripheral {
+        if peripheral.state == .connected {
+            return peripheral
+        }
+
+        // Register the waiter before requestConnect. NG serializes both onto its
+        // central queue, preventing an immediate didConnect from being missed.
+        let events = scanner.events()
+        Libre3DiagnosticsLog.traceReconnect(
+            "connect-intent-armed state=\(peripheral.state.rawValue)"
+        )
+        scanner.requestConnect(peripheral)
+
+        for await event in events {
+            try Task.checkCancellation()
+            switch event {
+            case .didConnect(let connected)
+                where connected.identifier == peripheral.identifier:
+                return connected
+            case .didFailToConnect(let failed, let error)
+                where failed.identifier == peripheral.identifier:
+                throw SensorScannerError.connectionFailed(
+                    error?.localizedDescription ?? "unknown"
+                )
+            case .didDisconnect(let disconnected, let error)
+                where disconnected.identifier == peripheral.identifier:
+                throw SensorScannerError.connectionFailed(
+                    error?.localizedDescription ?? "disconnected"
+                )
+            case .stateChanged(.poweredOff):
+                throw SensorScannerError.bluetoothPoweredOff
+            case .stateChanged(.unauthorized):
+                throw SensorScannerError.bluetoothUnauthorized
+            case .stateChanged(.unsupported):
+                throw SensorScannerError.bluetoothUnavailable
+            default:
+                continue
+            }
+        }
+
+        if Task.isCancelled { throw CancellationError() }
+        throw SensorScannerError.connectionFailed("event stream ended")
     }
 
     /// Authorize the freshly-connected session. Prefers the fast cached/direct
