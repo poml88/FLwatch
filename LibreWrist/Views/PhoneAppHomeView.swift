@@ -451,6 +451,10 @@ struct PhoneAppHomeView: View {
             if !diagnostics.isEmpty {
                 messageBodyString += "\(diagnostics)\n"
             }
+            let reconnectTrace = Libre3DiagnosticsLog.reconnectTraceEmailBlock()
+            if !reconnectTrace.isEmpty {
+                messageBodyString += "\(reconnectTrace)\n"
+            }
         }
         
         // Build the URL components safely

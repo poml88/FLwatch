@@ -56,6 +56,10 @@ struct MailView: UIViewControllerRepresentable {
             if !diagnostics.isEmpty {
                 messageBodyString += "\(diagnostics)\n"
             }
+            let reconnectTrace = Libre3DiagnosticsLog.reconnectTraceEmailBlock()
+            if !reconnectTrace.isEmpty {
+                messageBodyString += "\(reconnectTrace)\n"
+            }
         }
 
         let vc = MFMailComposeViewController()

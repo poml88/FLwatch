@@ -136,6 +136,7 @@ enum DefaultsKey: String {
     case libre3EngineStatusMessage = "libre3EngineStatusMessageKey"
     case libre3SensorNeedsReplacement = "libre3SensorNeedsReplacementKey"
     case libre3DiagnosticEvents = "libre3DiagnosticEventsKey"
+    case libre3ReconnectTrace = "libre3ReconnectTraceKey"
     case libre3LastRecordedSignalLossDeliveryDate = "libre3LastRecordedSignalLossDeliveryDateKey"
 }
 
@@ -718,6 +719,11 @@ enum SharedData {
     static var libre3DiagnosticEvents: [String] {
         get { store.getStringArray(.libre3DiagnosticEvents) }
         set { store.setStringArray(newValue, forKey: .libre3DiagnosticEvents) }
+    }
+
+    static var libre3ReconnectTrace: [String] {
+        get { store.getStringArray(.libre3ReconnectTrace) }
+        set { store.setStringArray(newValue, forKey: .libre3ReconnectTrace) }
     }
 
     static var libre3LastRecordedSignalLossDeliveryDate: Date? {
