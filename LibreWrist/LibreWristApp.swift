@@ -135,21 +135,18 @@ final class BGAppRefreshScheduler {
     private func handleAppRefresh(task: BGAppRefreshTask) {
         Logger.bgTaskScheduler.info("Handling BG refresh task")
         
-        if UserDefaults.group.username == "librewidget@cmdline.net" {
-            
-            let executionTimestampsKey = "bgAppRefreshExecutionTimestamps"
-            let now = Date()
-            let cutoffDate = now.addingTimeInterval(-12 * 60 * 60)
-            var executionTimestamps = (UserDefaults.group.array(forKey: executionTimestampsKey) as? [TimeInterval] ?? [])
-                .map(Date.init(timeIntervalSince1970:))
-            
-            executionTimestamps.append(now)
-            executionTimestamps = executionTimestamps.filter { $0 >= cutoffDate }
-            UserDefaults.group.set(executionTimestamps.map(\.timeIntervalSince1970), forKey: executionTimestampsKey)
-            
-            let executionsInLastTwoHours = executionTimestamps.count
-            Logger.bgTaskScheduler.info("BG refresh executions in last 12 hours: \(executionsInLastTwoHours, privacy: .public)")
-        }
+        let executionTimestampsKey = "bgAppRefreshExecutionTimestamps"
+        let now = Date()
+        let cutoffDate = now.addingTimeInterval(-12 * 60 * 60)
+        var executionTimestamps = (UserDefaults.group.array(forKey: executionTimestampsKey) as? [TimeInterval] ?? [])
+            .map(Date.init(timeIntervalSince1970:))
+
+        executionTimestamps.append(now)
+        executionTimestamps = executionTimestamps.filter { $0 >= cutoffDate }
+        UserDefaults.group.set(executionTimestamps.map(\.timeIntervalSince1970), forKey: executionTimestampsKey)
+
+        let executionsInLast12Hours = executionTimestamps.count
+        Logger.bgTaskScheduler.info("BG refresh executions in last 12 hours: \(executionsInLast12Hours, privacy: .public)")
         scheduleNextRefresh()
 
         let refreshTask = Task {
