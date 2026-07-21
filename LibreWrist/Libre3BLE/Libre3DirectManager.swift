@@ -177,6 +177,12 @@ final class Libre3DirectManager: ObservableObject {
     private var consecutiveReconnectFailures = 0
     private var consecutiveCredentialFailures = 0
     private var didNotifyReconnectFailing = false
+    /// Wall-clock time before which another failed connect/auth lifecycle must
+    /// not begin. A deadline survives suspension without extending the intended
+    /// wait when the process resumes.
+    private var reconnectBackoffDeadline: Date?
+    /// Single cancellable wake-up for `reconnectBackoffDeadline`.
+    private var backoffRearmTask: Task<Void, Never>?
     /// The next attempt must bypass the retrieved-peripheral fast path after a
     /// repeated connected-without-glucose livelock.
     private var forceFreshDiscoveryNextAttempt = false
@@ -228,6 +234,13 @@ final class Libre3DirectManager: ObservableObject {
     private static let terminalCredentialFailureAfter = 12
     private static let freshDiscoveryNoStreamCycles = 3
     private static let maxBackfillFailuresPerSession = 3
+    /// First two failures retry immediately, then reconnect attempts back off
+    /// exponentially from 5 seconds to a five-minute cap.
+    private static func reconnectBackoff(failures: Int) -> TimeInterval {
+        guard failures >= 3 else { return 0 }
+        let exponent = min(failures - 3, 6)
+        return min(300, 5 * pow(2.0, Double(exponent)))
+    }
     private static var bestEffortRearmCharacteristics: [CBUUID] {
         [
             LibreSensorGATT.Char.eventLog,
@@ -379,6 +392,7 @@ final class Libre3DirectManager: ObservableObject {
     /// Ordinary reload kicks call `start()` and cannot clear the terminal gate.
     func retryConnection() {
         guard isActiveProvider, Libre3StateStore.isPaired else { return }
+        clearReconnectBackoff()
         connectionRequiresUserAction = false
         consecutiveReconnectFailures = 0
         consecutiveCredentialFailures = 0
@@ -395,6 +409,7 @@ final class Libre3DirectManager: ObservableObject {
         // can synchronously enqueue a disconnect callback, and that callback must
         // not resurrect a provider the user just left.
         shouldMaintainConnection = false
+        clearReconnectBackoff()
         waitingForDisconnectBeforeRearm = false
         setSignalLossState(deadline: nil)
         lifecycleAttemptID = nil
@@ -650,6 +665,7 @@ final class Libre3DirectManager: ObservableObject {
         // Deliberately do NOT cancel signal loss here. Bluetooth-off means hypo
         // protection is genuinely offline, so the OS-scheduled alert must remain
         // armed while this process may be suspended.
+        clearReconnectBackoff()
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
@@ -684,9 +700,9 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     /// Start one connect → authorize → stream attempt. Recovery is driven by
-    /// completion and CoreBluetooth callbacks, not a retry loop: whenever no
-    /// attempt is running, either an indefinite connect or a disconnect cleanup
-    /// request is owned by CoreBluetooth before this process may suspend.
+    /// completion and CoreBluetooth callbacks, with a bounded timer only after a
+    /// completed failure. Otherwise an indefinite connect or disconnect cleanup
+    /// request remains owned by CoreBluetooth before this process may suspend.
     private func ensureLifecycleAttempt(reason: String) {
         guard shouldMaintainConnection,
               isActiveProvider,
@@ -695,6 +711,33 @@ final class Libre3DirectManager: ObservableObject {
               !waitingForDisconnectBeforeRearm,
               let scanner,
               scanner.centralState == .poweredOn else { return }
+
+        if let deadline = reconnectBackoffDeadline {
+            let remaining = deadline.timeIntervalSinceNow
+            if remaining > 0 {
+                guard backoffRearmTask == nil else { return }
+                let waitSeconds = Int(remaining.rounded(.up))
+                Libre3DiagnosticsLog.traceReconnect(
+                    "reconnect-backoff wait=\(waitSeconds)s reason=\(reason)"
+                )
+                let nanoseconds = UInt64(remaining * 1_000_000_000)
+                backoffRearmTask = Task { [weak self] in
+                    do {
+                        try await Task.sleep(nanoseconds: nanoseconds)
+                    } catch {
+                        return
+                    }
+                    guard let self, !Task.isCancelled else { return }
+                    self.backoffRearmTask = nil
+                    self.ensureLifecycleAttempt(reason: "backoff-elapsed")
+                }
+                return
+            }
+
+            // Another lifecycle trigger may observe an elapsed wall-clock
+            // deadline before the sleeping task is scheduled again after resume.
+            clearReconnectBackoff()
+        }
 
         let attemptID = UUID()
         lifecycleAttemptID = attemptID
@@ -780,13 +823,38 @@ final class Libre3DirectManager: ObservableObject {
             }
         }
 
+        // A genuinely out-of-range request remains pending inside
+        // `awaitConnectedPeripheral` and never reaches this completion path. If
+        // CoreBluetooth does report a failed connection, pace that completed
+        // failure too so marginal links cannot spin before `didConnect`.
+        if shouldMaintainConnection, !sessionProducedGlucose {
+            armReconnectBackoff(
+                Self.reconnectBackoff(failures: consecutiveReconnectFailures)
+            )
+        } else {
+            clearReconnectBackoff()
+        }
+
         prepareForNextAttempt()
+    }
+
+    private func armReconnectBackoff(_ delay: TimeInterval) {
+        clearReconnectBackoff()
+        guard delay > 0 else { return }
+        reconnectBackoffDeadline = Date().addingTimeInterval(delay)
+    }
+
+    private func clearReconnectBackoff() {
+        reconnectBackoffDeadline = nil
+        backoffRearmTask?.cancel()
+        backoffRearmTask = nil
     }
 
     /// Tear down a failed authorized/connected session. If CoreBluetooth still
     /// owns a live or pending link, its cancellation is the standing operation
-    /// and `didDisconnect` performs the re-arm. If already disconnected, issue
-    /// the next indefinite connect before returning.
+    /// and `didDisconnect` performs the re-arm. If already disconnected, route
+    /// through the lifecycle gate, which either starts the next indefinite
+    /// connect or schedules the bounded backoff wake-up.
     private func prepareForNextAttempt() {
         bestEffortRearmPassID = nil
         bestEffortRearmTask?.cancel()
@@ -1558,6 +1626,7 @@ final class Libre3DirectManager: ObservableObject {
 
         if !sessionProducedGlucose {
             sessionProducedGlucose = true
+            clearReconnectBackoff()
             if let rearmCompletedAt {
                 Libre3DiagnosticsLog.traceReconnect(
                     "first-glucose delay=\(Self.reconnectDelay(from: rearmCompletedAt, to: Date()))"
