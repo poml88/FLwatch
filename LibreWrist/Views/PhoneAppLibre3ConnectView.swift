@@ -14,7 +14,7 @@ import SwiftUI
 struct PhoneAppLibre3ConnectView: View {
     @StateObject private var coordinator = Libre3PairingCoordinator()
     @ObservedObject private var directManager = Libre3DirectManager.shared
-    @State private var selectedMode: Libre3Mode = .takeover
+    @State private var selectedMode: Libre3Mode = .parallelJoin
     @State private var showFreshActivationConfirm = false
 
     /// LibreView patient UUID whose FNV-32a hash is the receiver ID. Persisted
@@ -61,12 +61,12 @@ struct PhoneAppLibre3ConnectView: View {
             isPresented: $showFreshActivationConfirm,
             titleVisibility: .visible
         ) {
-            Button("Activate (starts 14-day clock)", role: .destructive) {
+            Button("Activate (starts wear period)", role: .destructive) {
                 startScan(mode: .activateFresh)
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This starts the sensor's 14-day wear clock and can't be undone. Most users should activate the sensor in the FreeStyle Libre 3 app instead, then take it over here.")
+            Text("This starts the sensor’s wear period—14 days for Libre 3 or 15 days for Libre 3 Plus—and can’t be undone. Most users should activate the sensor in the FreeStyle Libre 3 app instead, then pair it here using Parallel mode.")
         }
     }
 
@@ -77,7 +77,7 @@ struct PhoneAppLibre3ConnectView: View {
         
         Section {
             
-            Text("Support for Libre 3 BLE is still in early testing.\nTo pair an already-activated sensor you need your LibreView Account ID. The section below helps you retrieve it.\nThere are three pairing modes. I recommend Parallel mode, so you can use both apps (Libre 3 and FLwatch) — just not at the same time. Only one may run at a time; the other must be force-closed, otherwise the two apps steal the sensor connection from each other.\nAfter you switch apps, it takes 2–3 minutes for the other one to regain control.\n\nNote: while the Libre 3 app is closed, it gives no alarms. FLwatch provides a low-glucose alarm, but it is still being tested.")
+            Text("Parallel mode is recommended. It keeps the sensor’s existing Libre 3 credentials valid, allowing you to switch between FLwatch and the FreeStyle Libre 3 app without scanning the sensor again.\n\nOnly one app should access the sensor at a time. While using FLwatch, force-close the Libre 3 app and turn off Bluetooth access for it in iOS Settings. Otherwise, it may take the sensor connection from FLwatch. Switching apps can take 2–3 minutes.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -140,8 +140,8 @@ struct PhoneAppLibre3ConnectView: View {
 
         Section {
             Picker("Pairing mode", selection: $selectedMode) {
-                Text("Take over").tag(Libre3Mode.takeover)
                 Text("Parallel").tag(Libre3Mode.parallelJoin)
+                Text("Take over").tag(Libre3Mode.takeover)
                 Text("Fresh").tag(Libre3Mode.activateFresh)
             }
             .pickerStyle(.segmented)
@@ -152,17 +152,9 @@ struct PhoneAppLibre3ConnectView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if selectedMode.isExperimental {
-                Label(
-                    "Experimental. Whether the Libre app keeps working depends on your sensor's firmware. Opens a second, independent session.",
-                    systemImage: "flask"
-                )
-                .font(.footnote)
-                .foregroundStyle(.orange)
-            }
             if selectedMode.startsIrreversibleWearClock {
                 Label(
-                    "Irreversible: starts the sensor's 14-day wear clock.",
+                    "Irreversible: starts the sensor’s wear period.",
                     systemImage: "exclamationmark.triangle"
                 )
                 .font(.footnote)
@@ -408,11 +400,11 @@ struct PhoneAppLibre3ConnectView: View {
     private func modeDescription(_ mode: Libre3Mode) -> LocalizedStringKey {
         switch mode {
         case .takeover:
-            return "Take over a sensor you already started in the Libre 3 app. FLwatch becomes the sensor's receiver; the Libre app and LibreView sharing stop."
+            return "Make FLwatch the sensor’s receiver. This invalidates the Libre 3 app’s current connection credentials. While using FLwatch, force-close the Libre 3 app and turn off Bluetooth access for it in iOS Settings.\n\nTo return to Libre 3, force-close FLwatch, re-enable Bluetooth access for Libre 3, and select “Start New Sensor.” The app may warn that this will end your current sensor. Scan the same sensor you are already wearing—the sensor will not be stopped. Libre 3 should recognize it as your current sensor and reconnect. You may also need to sign in to LibreView again before uploads resume."
         case .parallelJoin:
-            return "Join a sensor you already started in the Libre 3 app without taking it over, so the Libre app and LibreView keep working alongside FLwatch. Recommended."
+            return "Connect FLwatch without replacing the sensor’s existing Libre 3 credentials. To return to the Libre 3 app, force-close FLwatch, enable Bluetooth access for Libre 3 in iOS Settings, and open the Libre 3 app. It will reconnect without another NFC scan and resume uploading data to LibreView."
         case .activateFresh:
-            return "Activate a brand-new, unused sensor with FLwatch. With a LibreView Patient ID above, the sensor stays tied to that account (LibreView keeps working); without one it's activated with a random receiver — FLwatch-only, no LibreView."
+            return "Activate a brand-new, unused sensor directly with FLwatch. This immediately starts the sensor’s wear period and cannot be undone. The LibreView Account ID is optional. If you provide the same Account ID used by the Libre 3 app, Libre 3 should be able to take over the sensor later after an NFC scan, but this has not yet been fully tested. If you leave it empty, FLwatch uses its own receiver ID and transferring the sensor to Libre 3 later may not be possible."
         }
     }
 

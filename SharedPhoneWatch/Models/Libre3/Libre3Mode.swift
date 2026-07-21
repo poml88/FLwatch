@@ -17,17 +17,17 @@ import Foundation
 enum Libre3Mode: String, Codable, CaseIterable, Identifiable {
     /// Take over an already-active sensor (NFC `0xA8`, `switchReceiver`).
     /// Rotates the BLE PIN → FLwatch becomes the sole receiver; the vendor app
-    /// loses the sensor and its LibreView upload stops. Fully grounded — the
-    /// recommended primary flow (and the one implemented first, M1).
+    /// loses the sensor and its LibreView upload stops.
     case takeover
 
     /// Non-destructive parallel join of an already-active sensor (NFC `0xA0`,
     /// reads the *existing* PIN without rotating it), so the vendor app keeps
-    /// working. Experimental and firmware-dependent — see PLAN §11.
+    /// its credentials and can reconnect when FLwatch releases the sensor.
+    /// This is the recommended pairing mode.
     case parallelJoin
 
     /// Activate a brand-new sensor (NFC `0xA0` on state `0x01`). **Irreversible**
-    /// — starts the 14-day wear clock. Advanced; recommend vendor-app activation
+    /// — starts the sensor's wear period. Advanced; recommend vendor-app activation
     /// instead (PLAN §5).
     case activateFresh
 
@@ -36,10 +36,6 @@ enum Libre3Mode: String, Codable, CaseIterable, Identifiable {
     /// Fresh activation is irreversible (starts the wear clock) → demands a hard
     /// confirmation before firing the command.
     var startsIrreversibleWearClock: Bool { self == .activateFresh }
-
-    /// Parallel join rests on unvalidated firmware behaviour (PLAN §11) → gate
-    /// behind a firmware check + an explicit "experimental" affordance.
-    var isExperimental: Bool { self == .parallelJoin }
 
     /// True for modes that act on a sensor the vendor app already activated
     /// (takeover / parallel join), as opposed to activating a fresh one.

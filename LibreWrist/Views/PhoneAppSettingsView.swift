@@ -277,7 +277,7 @@ struct PhoneAppSettingsView: View {
                 ) {
                     Text("FreeStyle Libre (LibreLinkUp)").tag(CGMProviderKind.libreLinkUp)
                     Text("Dexcom (Share)").tag(CGMProviderKind.dexcomShare)
-                    Text("FreeStyle Libre 3 (Bluetooth) EXPERIMENTAL").tag(CGMProviderKind.libre3BLE)
+                    Text("FreeStyle Libre 3 (Bluetooth)").tag(CGMProviderKind.libre3BLE)
                 } label: {
                     Text("CGM provider")
                 }
@@ -631,19 +631,19 @@ struct PhoneAppSettingsView: View {
                         }
                     }
 
-                    Toggle("Critical alerts", isOn: $lowGlucoseCriticalAlertsEnabled)
+                    Toggle("Use critical alerts", isOn: $lowGlucoseCriticalAlertsEnabled)
                         .onChange(of: lowGlucoseCriticalAlertsEnabled) { _, isEnabled in
                             handleCriticalAlertsChanged(isEnabled)
                         }
-
-                    Text("Critical alerts play a sound and appear even when your phone is in silent mode, a Focus, or Do Not Disturb. You'll be asked for permission the first time you turn this on.")
-                        .font(.subheadline)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .foregroundStyle(.secondary)
                 } else {
                     LabeledContent("Alert me below", value: lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold))
                         .foregroundStyle(.secondary)
                 }
+
+                Text("Notifies you when a new sensor reading is below \(lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold)). Alerts may repeat every 5 minutes while glucose remains low and require a stable Bluetooth connection. Alerts can be snoozed for 15 minutes.")
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundStyle(.secondary)
 
                 Divider()
 
@@ -652,31 +652,27 @@ struct PhoneAppSettingsView: View {
                         handleSignalLossAlertChanged(isEnabled)
                     }
 
-                Toggle("Critical alert", isOn: $libre3SignalLossCritical)
-                    .padding(.leading, 20)
+                Toggle("Use critical alerts", isOn: $libre3SignalLossCritical)
                     .disabled(!libre3SignalLossAlertEnabled)
                     .onChange(of: libre3SignalLossCritical) { _, isEnabled in
                         handleSignalLossCriticalChanged(isEnabled)
                     }
 
+                Text("Notifies you when no sensor readings have arrived for 20 minutes. Keep your iPhone near the sensor to maintain the Bluetooth connection.")
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundStyle(.secondary)
+
                 if notificationAuthorizationDenied {
-                    Text("Notifications are off — glucose alerts can't be delivered")
+                    Text("Notifications are off — alerts can't be delivered")
                         .font(.subheadline)
                         .foregroundStyle(.red)
                     Link("Open app settings", destination: URL(string: UIApplication.openSettingsURLString)!)
                 }
-
-                Text("You’ll get a notification when a new reading is below \(lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold)). Alerts repeat at most every 5 minutes while glucose stays low. Alerts depend on a stable Bluetooth connection to your sensor. Always rely on the manufacturer's alerts first.")
-                    .font(.subheadline)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .foregroundStyle(.secondary)
             } header: {
                 Text("Notifications")
             } footer: {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("FLwatch alerts you when a new sensor reading is below your alert level. The alert is delivered as your sensor pushes readings over Bluetooth.")
-                    Text("Notifies you when no readings have arrived for 20 minutes. Requires your phone to be near the sensor.")
-                }
+                Text("Critical alerts can play a sound even when your iPhone is muted or a Focus is active. iOS will ask for permission the first time you enable one.\nFLwatch alerts are delivered on a best-effort basis and may be delayed or missed. Always confirm your glucose reading before taking action.")
             }
             } // end `if cgmProviderKind == .libre3BLE` — BLE notifications section
 
