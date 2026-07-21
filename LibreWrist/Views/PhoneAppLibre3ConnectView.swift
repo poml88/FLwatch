@@ -10,12 +10,20 @@
 
 #if os(iOS)
 import SwiftUI
+import UIKit
 
 struct PhoneAppLibre3ConnectView: View {
     @StateObject private var coordinator = Libre3PairingCoordinator()
     @ObservedObject private var directManager = Libre3DirectManager.shared
     @State private var selectedMode: Libre3Mode = .parallelJoin
     @State private var showFreshActivationConfirm = false
+    @AppStorage("developerModeEnabled") private var developerModeEnabled = false
+    @State private var logEntries: [String] = []
+    @State private var notableEntries: [String] = []
+    @State private var fullHandshakeRecoveryCount = 0
+    @State private var fullHandshakeRecoveryLastSeen: Date?
+    @State private var glucoseOnlyDeathCount = 0
+    @State private var glucoseOnlyDeathLastSeen: Date?
 
     /// LibreView patient UUID whose FNV-32a hash is the receiver ID. Persisted
     /// to the app group; read by `Libre3StateStore.receiverID()`.
@@ -47,6 +55,10 @@ struct PhoneAppLibre3ConnectView: View {
             default:
                 setupSections
             }
+            if developerModeEnabled {
+                developerNotableEventsSection
+                developerLogSection
+            }
         }
         .navigationTitle("Libre 3 (Bluetooth)")
         .onAppear {
@@ -55,6 +67,10 @@ struct PhoneAppLibre3ConnectView: View {
             if libreViewPassword.isEmpty, let stored = try? LibreViewPasswordKeychain.read() {
                 libreViewPassword = stored ?? ""
             }
+            reloadDiagnosticsLog()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .libre3DiagnosticsDidChange)) { _ in
+            reloadDiagnosticsLog()
         }
         .confirmationDialog(
             "Activate a new sensor?",
@@ -350,6 +366,97 @@ struct PhoneAppLibre3ConnectView: View {
     private var liveTint: Color {
         if directManager.isInErrorState { return .orange }
         return directManager.connectionState == .streaming ? .green : .secondary
+    }
+
+    // MARK: - Developer diagnostics
+
+    private var developerNotableEventsSection: some View {
+        Section {
+            LabeledContent("Full-handshake recoveries") {
+                Text(lifetimeEventSummary(
+                    count: fullHandshakeRecoveryCount,
+                    lastSeen: fullHandshakeRecoveryLastSeen
+                ))
+                .multilineTextAlignment(.trailing)
+            }
+
+            LabeledContent("Glucose-only deaths") {
+                Text(lifetimeEventSummary(
+                    count: glucoseOnlyDeathCount,
+                    lastSeen: glucoseOnlyDeathLastSeen
+                ))
+                .multilineTextAlignment(.trailing)
+            }
+
+            Button("Reset lifetime stats", role: .destructive) {
+                Libre3DiagnosticsLog.resetLifetimeEventStats()
+                reloadDiagnosticsLog()
+            }
+            .buttonStyle(.borderless)
+
+            ScrollView(.vertical) {
+                Text(
+                    notableEntries.isEmpty
+                        ? "No notable events recorded."
+                        : notableEntries.joined(separator: "\n")
+                )
+                .font(.system(.caption, design: .monospaced))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
+            }
+            .frame(height: 180)
+        } header: {
+            Text("Notable events")
+        } footer: {
+            Text("Clear removes retained log lines but leaves the lifetime statistics above. Reset lifetime stats clears only those counts and dates.")
+        }
+    }
+
+    private var developerLogSection: some View {
+        Section {
+            HStack {
+                Button("Clear", role: .destructive) {
+                    Libre3DiagnosticsLog.clearAllLogs()
+                    reloadDiagnosticsLog()
+                }
+                .buttonStyle(.borderless)
+
+                Spacer()
+
+                Button("Copy all") {
+                    UIPasteboard.general.string = Libre3DiagnosticsLog.fullExportText()
+                }
+                .buttonStyle(.borderless)
+            }
+
+            ScrollView(.vertical) {
+                Text(
+                    logEntries.isEmpty
+                        ? "No diagnostics recorded."
+                        : logEntries.joined(separator: "\n")
+                )
+                .font(.system(.caption, design: .monospaced))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
+            }
+            .frame(height: 300)
+        } header: {
+            Text("Developer log")
+        }
+    }
+
+    private func lifetimeEventSummary(count: Int, lastSeen: Date?) -> String {
+        guard let lastSeen else { return "\(count) · never" }
+        return "\(count) · last \(lastSeen.formatted(date: .abbreviated, time: .shortened))"
+    }
+
+    private func reloadDiagnosticsLog() {
+        logEntries = Libre3DiagnosticsLog.mergedEntries()
+        notableEntries = Libre3DiagnosticsLog.notableEntries()
+        fullHandshakeRecoveryCount = SharedData.libre3FullHandshakeRecoveryCount
+        fullHandshakeRecoveryLastSeen = SharedData.libre3FullHandshakeRecoveryLastSeen
+        glucoseOnlyDeathCount = SharedData.libre3GlucoseOnlyDeathCount
+        glucoseOnlyDeathLastSeen = SharedData.libre3GlucoseOnlyDeathLastSeen
     }
 
     // MARK: - Actions

@@ -34,6 +34,10 @@ extension Notification.Name {
     /// shared provider — compiled into the watch + widget targets, which don't
     /// link the BLE engine — never names the phone-only manager type.
     static let libre3DirectReloadRequested = Notification.Name("Libre3DirectReloadRequested")
+
+    /// Posted after either retained Libre 3 diagnostics ring changes so an open
+    /// developer-log view can refresh without polling.
+    static let libre3DiagnosticsDidChange = Notification.Name("Libre3DiagnosticsDidChange")
 }
 
 enum LibreWristUpdateNotifier {

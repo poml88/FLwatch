@@ -145,6 +145,11 @@ final class Libre3DirectManager: ObservableObject {
     private var lastPatchStatusAt: Date?
     /// In-session status-channel silence watchdog; lifetime matches the session.
     private var silenceWatchdogTask: Task<Void, Never>?
+    /// Diagnostic-only patch-status quiet episode. Direct-read responses keep
+    /// the link observable but do not count as spontaneous-notify recovery.
+    private var patchStatusQuietEpisodeStartedAt: Date?
+    private var didTracePatchStatusQuietEscalation = false
+    private var patchStatusReadResponsePending = false
     /// Latest advancing life count that moved the signal-loss deadline.
     private var lastArmedLifeCount: UInt16?
     /// Manager-side mirror of the executor's desired deadline. Settings changes
@@ -199,6 +204,8 @@ final class Libre3DirectManager: ObservableObject {
     private var attemptReachedDidConnect = false
     private var attemptEndRecorded = false
     private var sessionProducedGlucose = false
+    private var sessionAuthorizedViaFullHandshake = false
+    private var didRecordGlucoseOnlyDeath = false
     private var rearmCompletedAt: Date?
     private var didTraceFirstPacket = false
     /// Nonessential CCCDs still awaiting a successful arm. Their initial serial
@@ -235,6 +242,7 @@ final class Libre3DirectManager: ObservableObject {
     /// Six minutes allows roughly two missed reload opportunities beyond the
     /// normal three-minute stale-reading window before escalating to reconnect.
     private static let recoveryStaleThreshold: TimeInterval = 6 * 60
+    private static let glucoseOnlyDeathRecentChannelThreshold: TimeInterval = 90
     private static let signalLossThreshold: TimeInterval = 20 * 60
     private static let reconnectEscalateUserAfter = 6
     private static let terminalCredentialFailureAfter = 12
@@ -491,6 +499,17 @@ final class Libre3DirectManager: ObservableObject {
         let glucoseQuiet = now.timeIntervalSince(lastGlucoseAt)
         let anyChannelQuiet = now.timeIntervalSince(lastAnyChannelAt)
         guard glucoseQuiet >= Self.recoveryStaleThreshold else { return }
+        if anyChannelQuiet < Self.glucoseOnlyDeathRecentChannelThreshold,
+           !didRecordGlucoseOnlyDeath {
+            didRecordGlucoseOnlyDeath = true
+            let eventDate = Date()
+            SharedData.libre3GlucoseOnlyDeathCount += 1
+            SharedData.libre3GlucoseOnlyDeathLastSeen = eventDate
+            Libre3DiagnosticsLog.recordNotable(
+                "EVENT glucose-only death glucoseQuiet=\(Int(glucoseQuiet))s anyChannelQuiet=\(Int(anyChannelQuiet))s",
+                at: eventDate
+            )
+        }
         // `.notice` has better retention odds than `.info` in the unified-log
         // store and collected archives; it is still not a delivery guarantee.
         Logger.libre3.notice("Libre3 BLE: glucose quiet \(Int(glucoseQuiet), privacy: .public)s, any-channel quiet \(Int(anyChannelQuiet), privacy: .public)s — forcing reconnect")
@@ -826,7 +845,7 @@ final class Libre3DirectManager: ObservableObject {
             connectionState = .failed(String(localized: "Sensor authorization keeps failing. Retry the connection, or re-pair the sensor in the Connect tab."))
             if !didNotifyReconnectFailing {
                 didNotifyReconnectFailing = true
-                Libre3DiagnosticsLog.record(
+                Libre3DiagnosticsLog.recordNotable(
                     "credential-terminal failures=\(consecutiveCredentialFailures) stage=\(endedStage) lastError=\(errorName)"
                 )
                 Task { await SensorAlertNotificationManager.shared.postReconnectFailing() }
@@ -911,6 +930,8 @@ final class Libre3DirectManager: ObservableObject {
         attemptReachedDidConnect = false
         attemptEndRecorded = false
         sessionProducedGlucose = false
+        sessionAuthorizedViaFullHandshake = false
+        didRecordGlucoseOnlyDeath = false
         attemptAdoptedConnectedPeripheral = false
         rearmCompletedAt = nil
         didTraceFirstPacket = false
@@ -1097,17 +1118,31 @@ final class Libre3DirectManager: ObservableObject {
     private func startSilenceWatchdog(session: SensorSession) {
         silenceWatchdogTask?.cancel()
         lastPatchStatusAt = Date()
+        patchStatusQuietEpisodeStartedAt = nil
+        didTracePatchStatusQuietEscalation = false
+        patchStatusReadResponsePending = false
         silenceWatchdogTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 20_000_000_000)
                 guard let self, !Task.isCancelled, self.session === session else { return }
-                let psQuiet = Date().timeIntervalSince(self.lastPatchStatusAt ?? .distantPast)
+                let now = Date()
+                let lastPatchStatusAt = self.lastPatchStatusAt ?? .distantPast
+                let psQuiet = now.timeIntervalSince(lastPatchStatusAt)
                 guard psQuiet >= 60 else { continue }
+                if self.patchStatusQuietEpisodeStartedAt == nil {
+                    self.patchStatusQuietEpisodeStartedAt = lastPatchStatusAt
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "patchstatus-quiet-start quiet=\(Int(psQuiet))s"
+                    )
+                }
                 if psQuiet >= 150 {
                     // Notify channel proven un-armed/stuck: one targeted off→on.
-                    Libre3DiagnosticsLog.traceReconnect(
-                        "patchstatus-quiet-rearm quiet=\(Int(psQuiet))s"
-                    )
+                    if !self.didTracePatchStatusQuietEscalation {
+                        self.didTracePatchStatusQuietEscalation = true
+                        Libre3DiagnosticsLog.traceReconnect(
+                            "patchstatus-quiet-rearm quiet=\(Int(psQuiet))s"
+                        )
+                    }
                     try? await session.refreshDataPlaneNotifications(
                         characteristics: [LibreSensorGATT.Char.patchStatus],
                         forceReArm: [LibreSensorGATT.Char.patchStatus]
@@ -1116,12 +1151,12 @@ final class Libre3DirectManager: ObservableObject {
                 }
                 // Vendor-parity direct read: no CCCD churn; result returns via
                 // notifications() and is handled like any patchStatus frame.
-                Libre3DiagnosticsLog.traceReconnect(
-                    "patchstatus-read quiet=\(Int(psQuiet))s"
-                )
+                Logger.libre3.info("Libre3 BLE patchstatus-read quiet=\(Int(psQuiet), privacy: .public)s")
+                self.patchStatusReadResponsePending = true
                 do {
                     _ = try await session.readPatchStatus()
                 } catch {
+                    self.patchStatusReadResponsePending = false
                     Logger.libre3.info("Libre3 BLE readPatchStatus failed: \(String(describing: error), privacy: .public)")
                 }
                 guard self.session === session else { return }
@@ -1463,6 +1498,7 @@ final class Libre3DirectManager: ObservableObject {
                 let material = try await runCachedReconnect(
                     session: session, blePIN: sensorState.blePIN, reconnectKey: reconnectKey
                 )
+                sessionAuthorizedViaFullHandshake = false
                 Logger.libre3.info("Libre3 BLE cached reconnect succeeded")
                 return material
             } catch is CancellationError {
@@ -1486,6 +1522,8 @@ final class Libre3DirectManager: ObservableObject {
                 throw error
             }
         }
+        sessionAuthorizedViaFullHandshake = skipCachedReconnectOnce
+            && Libre3StateStore.loadReconnectKey() != nil
         skipCachedReconnectOnce = false
         let result = try await runHandshake(session: session, blePIN: sensorState.blePIN)
         // Persist this full pair's established Phase-5 raw key for the cached
@@ -1617,6 +1655,17 @@ final class Libre3DirectManager: ObservableObject {
             guard let assembled = assembler.feed(fragment: event.fragment, channel: channel) else {
                 continue   // waiting for the glucose suffix fragment
             }
+            if channel == .patchStatus {
+                if patchStatusReadResponsePending {
+                    patchStatusReadResponsePending = false
+                } else if let quietStartedAt = patchStatusQuietEpisodeStartedAt {
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "patchstatus-quiet-recovered duration=\(Self.reconnectDelay(from: quietStartedAt, to: event.receivedAt))"
+                    )
+                    patchStatusQuietEpisodeStartedAt = nil
+                    didTracePatchStatusQuietEscalation = false
+                }
+            }
             handle(assembled: assembled, channel: channel)
         }
     }
@@ -1692,6 +1741,15 @@ final class Libre3DirectManager: ObservableObject {
 
         if !sessionProducedGlucose {
             sessionProducedGlucose = true
+            if sessionAuthorizedViaFullHandshake {
+                let eventDate = Date()
+                SharedData.libre3FullHandshakeRecoveryCount += 1
+                SharedData.libre3FullHandshakeRecoveryLastSeen = eventDate
+                Libre3DiagnosticsLog.recordNotable(
+                    "EVENT full-handshake reconnect streamed gen=\(SharedData.libre3Generation)",
+                    at: eventDate
+                )
+            }
             clearReconnectBackoff()
             if let rearmCompletedAt {
                 Libre3DiagnosticsLog.traceReconnect(
@@ -1984,7 +2042,7 @@ final class Libre3DirectManager: ObservableObject {
             if let delivered = deliveredNotifications.first(where: {
                 $0.request.identifier == SensorAlertNotificationManager.signalLossIdentifier
             }), SharedData.libre3LastRecordedSignalLossDeliveryDate != delivered.date {
-                Libre3DiagnosticsLog.record("signal-loss-delivered")
+                Libre3DiagnosticsLog.recordNotable("signal-loss-delivered", at: delivered.date)
                 SharedData.libre3LastRecordedSignalLossDeliveryDate = delivered.date
             }
             // Mirror only: adopting an existing request must not reschedule it.
@@ -2168,7 +2226,7 @@ final class Libre3DirectManager: ObservableObject {
             consecutiveNoStreamCycles += 1
             if consecutiveNoStreamCycles == Self.freshDiscoveryNoStreamCycles {
                 forceFreshDiscoveryNextAttempt = true
-                Libre3DiagnosticsLog.record(
+                Libre3DiagnosticsLog.recordNotable(
                     "no-stream-livelock cycles=\(Self.freshDiscoveryNoStreamCycles) action=fresh-discovery"
                 )
             }

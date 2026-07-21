@@ -138,6 +138,11 @@ enum DefaultsKey: String {
     case libre3ConnectionRequiresUserAction = "libre3ConnectionRequiresUserActionKey"
     case libre3DiagnosticEvents = "libre3DiagnosticEventsKey"
     case libre3ReconnectTrace = "libre3ReconnectTraceKey"
+    case libre3NotableEvents = "libre3NotableEventsKey"
+    case libre3FullHandshakeRecoveryCount = "libre3FullHandshakeRecoveryCountKey"
+    case libre3FullHandshakeRecoveryLastSeen = "libre3FullHandshakeRecoveryLastSeenKey"
+    case libre3GlucoseOnlyDeathCount = "libre3GlucoseOnlyDeathCountKey"
+    case libre3GlucoseOnlyDeathLastSeen = "libre3GlucoseOnlyDeathLastSeenKey"
     case libre3LastRecordedSignalLossDeliveryDate = "libre3LastRecordedSignalLossDeliveryDateKey"
 }
 
@@ -732,6 +737,47 @@ enum SharedData {
     static var libre3ReconnectTrace: [String] {
         get { store.getStringArray(.libre3ReconnectTrace) }
         set { store.setStringArray(newValue, forKey: .libre3ReconnectTrace) }
+    }
+
+    static var libre3NotableEvents: [String] {
+        get { store.getStringArray(.libre3NotableEvents) }
+        set { store.setStringArray(newValue, forKey: .libre3NotableEvents) }
+    }
+
+    static var libre3FullHandshakeRecoveryCount: Int {
+        get { store.getInt(.libre3FullHandshakeRecoveryCount) }
+        set { store.setInt(newValue, forKey: .libre3FullHandshakeRecoveryCount) }
+    }
+
+    static var libre3FullHandshakeRecoveryLastSeen: Date? {
+        get {
+            guard store.object(forKey: DefaultsKey.libre3FullHandshakeRecoveryLastSeen.rawValue) != nil else {
+                return nil
+            }
+            return store.getDate(.libre3FullHandshakeRecoveryLastSeen)
+        }
+        set {
+            if let newValue { store.setDate(newValue, forKey: .libre3FullHandshakeRecoveryLastSeen) }
+            else { store.removeObject(forKey: DefaultsKey.libre3FullHandshakeRecoveryLastSeen.rawValue) }
+        }
+    }
+
+    static var libre3GlucoseOnlyDeathCount: Int {
+        get { store.getInt(.libre3GlucoseOnlyDeathCount) }
+        set { store.setInt(newValue, forKey: .libre3GlucoseOnlyDeathCount) }
+    }
+
+    static var libre3GlucoseOnlyDeathLastSeen: Date? {
+        get {
+            guard store.object(forKey: DefaultsKey.libre3GlucoseOnlyDeathLastSeen.rawValue) != nil else {
+                return nil
+            }
+            return store.getDate(.libre3GlucoseOnlyDeathLastSeen)
+        }
+        set {
+            if let newValue { store.setDate(newValue, forKey: .libre3GlucoseOnlyDeathLastSeen) }
+            else { store.removeObject(forKey: DefaultsKey.libre3GlucoseOnlyDeathLastSeen.rawValue) }
+        }
     }
 
     static var libre3LastRecordedSignalLossDeliveryDate: Date? {

@@ -2,11 +2,11 @@
 //  Libre3DiagnosticsLog.swift
 //  FLwatch
 //
-//  Both the rare-event ring and the reconnect trace contain no glucose values,
-//  sensor identifiers, credentials, or BLE payloads — durations, event names,
-//  and error codes only. The trace is a separate, bounded per-attempt timeline;
-//  it must never be written into the rare-event ring. This is the same content
-//  policy as `Libre3DirectManager.supportSafeDescription(for:)`.
+//  The rare-event ring, notable-event ring, and reconnect trace contain no
+//  glucose values, sensor identifiers, credentials, or BLE payloads — durations,
+//  event names, and error codes only. The trace is a separate, bounded
+//  per-attempt timeline; it must never be written into either event ring. This is
+//  the same content policy as `Libre3DirectManager.supportSafeDescription(for:)`.
 //
 
 #if os(iOS)
@@ -20,10 +20,11 @@ enum Libre3DiagnosticsLog {
     private static let reconnectTraceStorageEntryLimit = 40
     private static let reconnectTraceSupportEntryLimit = 12
     private static let reconnectTraceSupportCharacterLimit = 1_200
+    private static let notableEventStorageEntryLimit = 50
 
     private static let timestampFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         return formatter
     }()
@@ -31,13 +32,24 @@ enum Libre3DiagnosticsLog {
     /// Records rare events only. Do not add per-reading events, lifecycle
     /// backoff retries, or ESA/data-quality episodes here.
     static func record(_ event: String) {
-        let timestamp = timestampFormatter.string(from: Date())
-        var entries = SharedData.libre3DiagnosticEvents
-        entries.append("\(timestamp) \(event)")
-        if entries.count > storageEntryLimit {
-            entries.removeFirst(entries.count - storageEntryLimit)
-        }
-        SharedData.libre3DiagnosticEvents = entries
+        let entry = timestamped(event, at: Date())
+        SharedData.libre3DiagnosticEvents = appending(
+            entry, to: SharedData.libre3DiagnosticEvents, limit: storageEntryLimit
+        )
+        NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)
+    }
+
+    /// Records a genuinely important line in both the general rare-event ring
+    /// and the longer-lived notable-event ring using one identical timestamp.
+    static func recordNotable(_ event: String, at date: Date = Date()) {
+        let entry = timestamped(event, at: date)
+        SharedData.libre3DiagnosticEvents = appending(
+            entry, to: SharedData.libre3DiagnosticEvents, limit: storageEntryLimit
+        )
+        SharedData.libre3NotableEvents = appending(
+            entry, to: SharedData.libre3NotableEvents, limit: notableEventStorageEntryLimit
+        )
+        NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)
     }
 
     static func recentEntries(limit: Int) -> [String] {
@@ -48,13 +60,51 @@ enum Libre3DiagnosticsLog {
     /// Records the compact connect/reconnect timeline separately from the
     /// rare-event ring. Callers must follow the same support-safe content policy.
     static func traceReconnect(_ line: String) {
-        let timestamp = timestampFormatter.string(from: Date())
-        var entries = SharedData.libre3ReconnectTrace
-        entries.append("\(timestamp) \(line)")
-        if entries.count > reconnectTraceStorageEntryLimit {
-            entries.removeFirst(entries.count - reconnectTraceStorageEntryLimit)
-        }
-        SharedData.libre3ReconnectTrace = entries
+        let entry = timestamped(line, at: Date())
+        SharedData.libre3ReconnectTrace = appending(
+            entry, to: SharedData.libre3ReconnectTrace, limit: reconnectTraceStorageEntryLimit
+        )
+        NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)
+    }
+
+    static func notableEntries() -> [String] {
+        Array(SharedData.libre3NotableEvents.reversed())
+    }
+
+    /// All retained rare events and reconnect-trace lines, newest first.
+    /// Both rings remain separate on the write side.
+    static func mergedEntries() -> [String] {
+        (SharedData.libre3DiagnosticEvents + SharedData.libre3ReconnectTrace)
+            .sorted(by: >)
+    }
+
+    /// Clipboard export of lifetime stats plus every entry still retained by the
+    /// three bounded rings. Unlike email, this applies no additional caps.
+    static func fullExportText() -> String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
+            as? String ?? "unknown"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")
+            as? String ?? "unknown"
+        let header = "FLwatch \(version) (\(build)) — Libre 3 diagnostics exported \(timestampFormatter.string(from: Date()))"
+        let fullHandshakeLastSeen = SharedData.libre3FullHandshakeRecoveryLastSeen
+            .map { timestampFormatter.string(from: $0) } ?? "never"
+        let glucoseOnlyLastSeen = SharedData.libre3GlucoseOnlyDeathLastSeen
+            .map { timestampFormatter.string(from: $0) } ?? "never"
+        let notable = notableEntries()
+        let merged = mergedEntries()
+        return ([
+            header,
+            "",
+            "Lifetime stats:",
+            "Full-handshake recoveries: \(SharedData.libre3FullHandshakeRecoveryCount) · last \(fullHandshakeLastSeen)",
+            "Glucose-only deaths: \(SharedData.libre3GlucoseOnlyDeathCount) · last \(glucoseOnlyLastSeen)",
+            "",
+            "Notable events:",
+        ]
+            + (notable.isEmpty ? ["None"] : notable)
+            + ["", "Merged retained log:"]
+            + (merged.isEmpty ? ["None"] : merged))
+            .joined(separator: "\n")
     }
 
     /// Owns support-mail formatting. Both the count and character caps matter:
@@ -96,10 +146,45 @@ enum Libre3DiagnosticsLog {
 
     static func clear() {
         SharedData.libre3DiagnosticEvents = []
+        NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)
     }
 
     static func clearReconnectTrace() {
         SharedData.libre3ReconnectTrace = []
+        NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)
+    }
+
+    static func clearNotableEvents() {
+        SharedData.libre3NotableEvents = []
+        NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)
+    }
+
+    static func clearAllLogs() {
+        SharedData.libre3DiagnosticEvents = []
+        SharedData.libre3ReconnectTrace = []
+        SharedData.libre3NotableEvents = []
+        NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)
+    }
+
+    static func resetLifetimeEventStats() {
+        SharedData.libre3FullHandshakeRecoveryCount = 0
+        SharedData.libre3FullHandshakeRecoveryLastSeen = nil
+        SharedData.libre3GlucoseOnlyDeathCount = 0
+        SharedData.libre3GlucoseOnlyDeathLastSeen = nil
+        NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)
+    }
+
+    private static func timestamped(_ event: String, at date: Date) -> String {
+        "\(timestampFormatter.string(from: date)) \(event)"
+    }
+
+    private static func appending(_ entry: String, to existing: [String], limit: Int) -> [String] {
+        var entries = existing
+        entries.append(entry)
+        if entries.count > limit {
+            entries.removeFirst(entries.count - limit)
+        }
+        return entries
     }
 }
 #endif
