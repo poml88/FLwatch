@@ -139,6 +139,12 @@ final class Libre3DirectManager: ObservableObject {
     /// threshold, more than rarely. Both stale together = the link died = B2 +
     /// the signal-loss alert are the complete answer.
     private var lastAnyChannelAt: Date?
+    /// Receipt time of the latest patchStatus fragment (notify or read-fallback).
+    /// Separate from lastGlucoseAt/lastAnyChannelAt so the status watchdog can
+    /// never bump the glucose-liveness clocks that gate reconnect/signal-loss.
+    private var lastPatchStatusAt: Date?
+    /// In-session status-channel silence watchdog; lifetime matches the session.
+    private var silenceWatchdogTask: Task<Void, Never>?
     /// Latest advancing life count that moved the signal-loss deadline.
     private var lastArmedLifeCount: UInt16?
     /// Manager-side mirror of the executor's desired deadline. Settings changes
@@ -418,6 +424,8 @@ final class Libre3DirectManager: ObservableObject {
         bestEffortRearmPassID = nil
         bestEffortRearmTask?.cancel()
         bestEffortRearmTask = nil
+        silenceWatchdogTask?.cancel()
+        silenceWatchdogTask = nil
         failedBestEffortRearmCharacteristics.removeAll()
         let peripheralToCancel = session?.peripheral
             ?? lifecyclePeripheral
@@ -672,6 +680,8 @@ final class Libre3DirectManager: ObservableObject {
         bestEffortRearmPassID = nil
         bestEffortRearmTask?.cancel()
         bestEffortRearmTask = nil
+        silenceWatchdogTask?.cancel()
+        silenceWatchdogTask = nil
         failedBestEffortRearmCharacteristics.removeAll()
         waitingForDisconnectBeforeRearm = false
         finishConnectedAttempt(traceStreamEnd: lastAttemptStage == "streaming")
@@ -859,6 +869,8 @@ final class Libre3DirectManager: ObservableObject {
         bestEffortRearmPassID = nil
         bestEffortRearmTask?.cancel()
         bestEffortRearmTask = nil
+        silenceWatchdogTask?.cancel()
+        silenceWatchdogTask = nil
         failedBestEffortRearmCharacteristics.removeAll()
 
         let peripheral = session?.peripheral ?? lifecyclePeripheral
@@ -906,6 +918,8 @@ final class Libre3DirectManager: ObservableObject {
         bestEffortRearmPassID = nil
         bestEffortRearmTask?.cancel()
         bestEffortRearmTask = nil
+        silenceWatchdogTask?.cancel()
+        silenceWatchdogTask = nil
         Libre3DiagnosticsLog.traceReconnect("connect-start")
 
         guard let scanner else { throw Libre3DirectError.notStarted }
@@ -1025,6 +1039,7 @@ final class Libre3DirectManager: ObservableObject {
         connectionState = .streaming
         Libre3DiagnosticsLog.traceReconnect("stream-start")
         startBestEffortRearmPass(session: session, isRetry: false)
+        startSilenceWatchdog(session: session)
         // Give a newly authorized stream a full recovery window; subsequent
         // liveness advances come only from actual glucose-channel fragments.
         let streamingStartedAt = Date()
@@ -1077,6 +1092,42 @@ final class Libre3DirectManager: ObservableObject {
 
     private func retryBestEffortRearmsIfNeeded(session: SensorSession) {
         startBestEffortRearmPass(session: session, isRetry: true)
+    }
+
+    private func startSilenceWatchdog(session: SensorSession) {
+        silenceWatchdogTask?.cancel()
+        lastPatchStatusAt = Date()
+        silenceWatchdogTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 20_000_000_000)
+                guard let self, !Task.isCancelled, self.session === session else { return }
+                let psQuiet = Date().timeIntervalSince(self.lastPatchStatusAt ?? .distantPast)
+                guard psQuiet >= 60 else { continue }
+                if psQuiet >= 150 {
+                    // Notify channel proven un-armed/stuck: one targeted off→on.
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "patchstatus-quiet-rearm quiet=\(Int(psQuiet))s"
+                    )
+                    try? await session.refreshDataPlaneNotifications(
+                        characteristics: [LibreSensorGATT.Char.patchStatus],
+                        forceReArm: [LibreSensorGATT.Char.patchStatus]
+                    )
+                    guard self.session === session else { return }
+                }
+                // Vendor-parity direct read: no CCCD churn; result returns via
+                // notifications() and is handled like any patchStatus frame.
+                Libre3DiagnosticsLog.traceReconnect(
+                    "patchstatus-read quiet=\(Int(psQuiet))s"
+                )
+                do {
+                    _ = try await session.readPatchStatus()
+                } catch {
+                    Logger.libre3.info("Libre3 BLE readPatchStatus failed: \(String(describing: error), privacy: .public)")
+                }
+                guard self.session === session else { return }
+                self.lastPatchStatusAt = Date()
+            }
+        }
     }
 
     /// Nonessential CCCDs are armed serially beside the already-live essential
@@ -1240,6 +1291,18 @@ final class Libre3DirectManager: ObservableObject {
             let known = scanner.retrievePeripherals(withIdentifiers: [id])
             if let peripheral = known.first {
                 return peripheral
+            }
+        }
+
+        // iOS may evict the cached identifier after a long suspension while still
+        // holding the peripheral connected on the Libre 3 service. This is a
+        // different source than retrievePeripherals and recovers the held link
+        // without a scan. Match the saved id strictly — never adopt a stray.
+        if !forceFreshDiscoveryNextAttempt, let id = savedID {
+            if let connected = scanner.retrieveConnectedPeripherals()
+                .first(where: { $0.identifier == id }) {
+                Libre3DiagnosticsLog.traceReconnect("reconnect-recovered-connected")
+                return connected
             }
         }
 
@@ -1538,6 +1601,9 @@ final class Libre3DirectManager: ObservableObject {
             // malformed frames still prove that the glucose channel is alive.
             if channel == .glucoseData {
                 lastGlucoseAt = event.receivedAt
+            }
+            if channel == .patchStatus {
+                lastPatchStatusAt = event.receivedAt
             }
             // Diagnostic: surface the rarer channels (history/clinical/event/
             // factory) so we can confirm a backfill burst actually arrives,
