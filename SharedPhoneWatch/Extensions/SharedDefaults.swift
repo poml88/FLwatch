@@ -122,6 +122,7 @@ enum DefaultsKey: String {
     case libre3SensorStartDate = "libre3SensorStartDateKey"
     case libre3LastLifeCount = "libre3LastLifeCountKey"
     case libre3LastGlucoseMgDL = "libre3LastGlucoseMgDLKey"
+    case libre3LastGlucoseAt = "libre3LastGlucoseAtKey"
     // Sensor lifecycle + model, parsed from the NFC patch info at pair time and
     // reused on reconnect (no NFC re-scan) to drive warmup/expiry quality gating
     // and SensorType stamping.
@@ -670,6 +671,19 @@ enum SharedData {
     static var libre3LastGlucoseMgDL: Int {
         get { store.getInt(.libre3LastGlucoseMgDL) }
         set { store.setInt(newValue, forKey: .libre3LastGlucoseMgDL) }
+    }
+
+    static var libre3LastGlucoseAt: Date? {
+        get {
+            guard store.object(forKey: DefaultsKey.libre3LastGlucoseAt.rawValue) != nil else {
+                return nil
+            }
+            return store.getDate(.libre3LastGlucoseAt)
+        }
+        set {
+            if let newValue { store.setDate(newValue, forKey: .libre3LastGlucoseAt) }
+            else { store.removeObject(forKey: DefaultsKey.libre3LastGlucoseAt.rawValue) }
+        }
     }
 
     /// Warm-up duration in minutes (Libre 3 = 60), parsed from the NFC patch

@@ -244,6 +244,7 @@ final class Libre3DirectManager: ObservableObject {
     private static let recoveryStaleThreshold: TimeInterval = 6 * 60
     private static let glucoseOnlyDeathRecentChannelThreshold: TimeInterval = 90
     private static let signalLossThreshold: TimeInterval = 20 * 60
+    private static let glucoseGapNotableThreshold: TimeInterval = 10 * 60
     private static let reconnectEscalateUserAfter = 6
     private static let terminalCredentialFailureAfter = 12
     private static let freshDiscoveryNoStreamCycles = 3
@@ -544,6 +545,7 @@ final class Libre3DirectManager: ObservableObject {
         // sensor's entire wear.
         SharedData.libre3LastLifeCount = 0
         SharedData.libre3LastGlucoseMgDL = 0
+        SharedData.libre3LastGlucoseAt = nil
         lastArmedLifeCount = nil
         // Forgetting follows the re-pair advice, so retract that banner. Also
         // clear expiry reminders so the prior sensor cannot alert after unpairing.
@@ -744,6 +746,9 @@ final class Libre3DirectManager: ObservableObject {
         if let deadline = reconnectBackoffDeadline {
             let remaining = deadline.timeIntervalSinceNow
             if remaining > 0 {
+                // Keep the CoreBluetooth wake source armed before consulting the
+                // task guard: every mid-backoff callback must restore the intent.
+                armStandingConnectIntent()
                 guard backoffRearmTask == nil else { return }
                 let waitSeconds = Int(remaining.rounded(.up))
                 Libre3DiagnosticsLog.traceReconnect(
@@ -766,6 +771,22 @@ final class Libre3DirectManager: ObservableObject {
             // Another lifecycle trigger may observe an elapsed wall-clock
             // deadline before the sleeping task is scheduled again after resume.
             clearReconnectBackoff()
+        }
+
+        if forceFreshDiscoveryNextAttempt,
+           let savedPeripheralID,
+           let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first,
+           peripheral.state == .connected || peripheral.state == .connecting {
+            waitingForDisconnectBeforeRearm = true
+            Libre3DiagnosticsLog.traceReconnect(
+                "fresh-discovery-disconnect state=\(peripheral.state.rawValue)"
+            )
+            scanner.cancelConnection(peripheral)
+            if peripheral.state == .disconnected {
+                waitingForDisconnectBeforeRearm = false
+                ensureLifecycleAttempt(reason: "fresh-discovery-already-disconnected")
+            }
+            return
         }
 
         let attemptID = UUID()
@@ -871,6 +892,26 @@ final class Libre3DirectManager: ObservableObject {
         clearReconnectBackoff()
         guard delay > 0 else { return }
         reconnectBackoffDeadline = Date().addingTimeInterval(delay)
+    }
+
+    /// Keep an indefinite CoreBluetooth connect request standing for the saved
+    /// peripheral while the app-level backoff is suspended. CoreBluetooth owns
+    /// the wake source; the state guards are required because reconnecting an
+    /// already connected/connecting peripheral can re-fire `didConnect` rapidly.
+    private func armStandingConnectIntent() {
+        guard shouldMaintainConnection,
+              isActiveProvider,
+              Libre3StateStore.isPaired,
+              let scanner,
+              scanner.centralState == .poweredOn,
+              let savedPeripheralID,
+              let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first,
+              peripheral.state != .connected,
+              peripheral.state != .connecting else { return }
+        Libre3DiagnosticsLog.traceReconnect(
+            "standing-connect-armed state=\(peripheral.state.rawValue)"
+        )
+        scanner.requestConnect(peripheral)
     }
 
     private func clearReconnectBackoff() {
@@ -1738,22 +1779,33 @@ final class Libre3DirectManager: ObservableObject {
             sensorStartDate: anchor,
             settings: settings
         ) else { return }
+        let acceptedAt = Date()
 
         if !sessionProducedGlucose {
             sessionProducedGlucose = true
+            // Recovery is the one-shot point where a persisted receipt time can
+            // expose a gap that suspension may have erased from the trace ring.
+            if let lastGlucoseAt = SharedData.libre3LastGlucoseAt {
+                let gap = acceptedAt.timeIntervalSince(lastGlucoseAt)
+                if gap > Self.glucoseGapNotableThreshold {
+                    Libre3DiagnosticsLog.recordNotable(
+                        "EVENT glucose-gap seconds=\(Int(gap.rounded())) minutes=\(Int((gap / 60).rounded())) recovered",
+                        at: acceptedAt
+                    )
+                }
+            }
             if sessionAuthorizedViaFullHandshake {
-                let eventDate = Date()
                 SharedData.libre3FullHandshakeRecoveryCount += 1
-                SharedData.libre3FullHandshakeRecoveryLastSeen = eventDate
+                SharedData.libre3FullHandshakeRecoveryLastSeen = acceptedAt
                 Libre3DiagnosticsLog.recordNotable(
                     "EVENT full-handshake reconnect streamed gen=\(SharedData.libre3Generation)",
-                    at: eventDate
+                    at: acceptedAt
                 )
             }
             clearReconnectBackoff()
             if let rearmCompletedAt {
                 Libre3DiagnosticsLog.traceReconnect(
-                    "first-glucose delay=\(Self.reconnectDelay(from: rearmCompletedAt, to: Date()))"
+                    "first-glucose delay=\(Self.reconnectDelay(from: rearmCompletedAt, to: acceptedAt))"
                 )
             }
             consecutiveReconnectFailures = 0
@@ -1771,7 +1823,7 @@ final class Libre3DirectManager: ObservableObject {
         minuteByLifeCount[mapped.glucose.id] = mapped
         currentGlucoseMgDL = mapped.glucose.value
         clearReadingStatus()
-        persistLastAccepted(reading)
+        persistLastAccepted(reading, at: acceptedAt)
         pushHistory()
         refreshLiveActivityForNewReading()
         evaluateLowGlucoseForNewReading()
@@ -2125,9 +2177,10 @@ final class Libre3DirectManager: ObservableObject {
         _ = SensorSettingsStore.shared.updateSensorSettings(updated)
     }
 
-    private func persistLastAccepted(_ reading: RealtimeGlucoseReading) {
+    private func persistLastAccepted(_ reading: RealtimeGlucoseReading, at acceptedAt: Date) {
         SharedData.libre3LastLifeCount = Int(reading.lifeCount)
         SharedData.libre3LastGlucoseMgDL = reading.currentGlucoseMgDL.map(Int.init) ?? 0
+        SharedData.libre3LastGlucoseAt = acceptedAt
     }
 
     /// Build the two display series and write them into the universal sink,
