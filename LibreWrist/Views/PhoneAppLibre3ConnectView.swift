@@ -20,8 +20,6 @@ struct PhoneAppLibre3ConnectView: View {
     @AppStorage("developerModeEnabled") private var developerModeEnabled = false
     @State private var logEntries: [String] = []
     @State private var notableEntries: [String] = []
-    @State private var fullHandshakeRecoveryCount = 0
-    @State private var fullHandshakeRecoveryLastSeen: Date?
     @State private var glucoseOnlyDeathCount = 0
     @State private var glucoseOnlyDeathLastSeen: Date?
 
@@ -313,18 +311,14 @@ struct PhoneAppLibre3ConnectView: View {
                 }
             }
 
-            if directManager.connectionRequiresUserAction {
+            if directManager.reScanSuggested {
                 Label(
-                    "Repeated sensor authorization failures need your attention.",
-                    systemImage: "key.fill"
+                    "Reconnect is continuing automatically. If it keeps failing, disconnect below and re-pair the sensor.",
+                    systemImage: "exclamationmark.triangle.fill"
                 )
                 .font(.subheadline)
                 .foregroundStyle(.orange)
                 .fixedSize(horizontal: false, vertical: true)
-
-                Button("Retry connection") {
-                    directManager.retryConnection()
-                }
             }
 
             // Terminal replacement state wins over expiry/warm-up/soft attention
@@ -372,14 +366,6 @@ struct PhoneAppLibre3ConnectView: View {
 
     private var developerNotableEventsSection: some View {
         Section {
-            LabeledContent("Full-handshake recoveries") {
-                Text(lifetimeEventSummary(
-                    count: fullHandshakeRecoveryCount,
-                    lastSeen: fullHandshakeRecoveryLastSeen
-                ))
-                .multilineTextAlignment(.trailing)
-            }
-
             LabeledContent("Glucose-only deaths") {
                 Text(lifetimeEventSummary(
                     count: glucoseOnlyDeathCount,
@@ -453,8 +439,6 @@ struct PhoneAppLibre3ConnectView: View {
     private func reloadDiagnosticsLog() {
         logEntries = Libre3DiagnosticsLog.mergedEntries()
         notableEntries = Libre3DiagnosticsLog.notableEntries()
-        fullHandshakeRecoveryCount = SharedData.libre3FullHandshakeRecoveryCount
-        fullHandshakeRecoveryLastSeen = SharedData.libre3FullHandshakeRecoveryLastSeen
         glucoseOnlyDeathCount = SharedData.libre3GlucoseOnlyDeathCount
         glucoseOnlyDeathLastSeen = SharedData.libre3GlucoseOnlyDeathLastSeen
     }

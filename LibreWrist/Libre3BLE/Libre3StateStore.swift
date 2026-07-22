@@ -114,20 +114,19 @@ enum Libre3StateStore {
 
     static var isPaired: Bool { SharedData.libre3SensorIsPaired }
 
-    // MARK: - Cached-reconnect key (Phase-6 kEnc)
+    // MARK: - Cached-reconnect key (Phase-5 raw key)
 
-    /// Persist the 16-byte kEnc captured from a successful **full** first-pair
-    /// Phase 6, to be reused as the cached/direct reconnect Phase-5 key
-    /// (`runCachedReconnectHandshake`, PLAN Phase 5). Anchored to the last full
-    /// handshake — the value the sensor (re)authorized us with — not refreshed
-    /// from cached-reconnect Phase 6 responses, matching Juggluco's
-    /// export-once-at-pair model.
-    static func saveReconnectKey(_ kEnc: Data) {
-        try? Libre3PINStore.saveReconnectKey(kEnc)
+    /// Persist the 16-byte Phase-5 raw key established by a successful full
+    /// handshake. `runCachedReconnectHandshake` reuses this authorization key
+    /// on every later connection; cached reconnects do not replace it with their
+    /// fresh Phase-6 data-plane keys.
+    static func saveReconnectKey(_ rawKey: Data) {
+        try? Libre3PINStore.saveReconnectKey(rawKey)
     }
 
     /// The persisted cached-reconnect key, or `nil` if a full handshake hasn't
-    /// run since pairing (so the reconnect path must fall back to full auth).
+    /// completed since pairing or the app predates this stored material. Only
+    /// this no-key establishment path runs full authorization.
     static func loadReconnectKey() -> Data? {
         (try? Libre3PINStore.readReconnectKey()) ?? nil
     }

@@ -109,11 +109,11 @@ final class Libre3DirectManager: ObservableObject {
     @Published private(set) var sensorAttention: Libre3SensorAttention = .none
     /// Persistent terminal attention state for phone UI relaunch seeding.
     @Published private(set) var sensorNeedsReplacement = false
-    /// Repeated credential-shaped failures deliberately stop the otherwise
-    /// relentless reconnect owner until the user retries, re-pairs, or toggles
-    /// the provider. Transport failures never enter this state.
-    @Published private(set) var connectionRequiresUserAction = false {
-        didSet { SharedData.libre3ConnectionRequiresUserAction = connectionRequiresUserAction }
+    /// Persistent, non-blocking hint that repeated reconnect failures make an
+    /// NFC re-scan/re-pair worth considering. The reconnect owner keeps running;
+    /// the first usable realtime glucose clears this state again.
+    @Published private(set) var reScanSuggested = false {
+        didSet { SharedData.libre3ConnectionRequiresUserAction = reScanSuggested }
     }
 
     // MARK: - Engine
@@ -171,10 +171,6 @@ final class Libre3DirectManager: ObservableObject {
     /// Peripheral currently being adopted, connected, or streamed. Unlike
     /// `session`, this is available while an indefinite connect is still pending.
     private var lifecyclePeripheral: CBPeripheral?
-    /// True only when this attempt adopted a peripheral CoreBluetooth already
-    /// reported as connected. A transport failure on that potentially phantom
-    /// link earns one cached-handshake retry after a real reconnect.
-    private var attemptAdoptedConnectedPeripheral = false
     /// A failed connected setup is cancelled before another attempt. During that
     /// interval the cancellation itself is the standing CoreBluetooth operation;
     /// `didDisconnect` clears this gate and immediately rearms connection intent.
@@ -186,8 +182,6 @@ final class Libre3DirectManager: ObservableObject {
     /// A failure streak spans attempts and is reset only by the first usable
     /// realtime glucose, never by authorization or entering `.streaming`.
     private var consecutiveReconnectFailures = 0
-    private var consecutiveCredentialFailures = 0
-    private var didNotifyReconnectFailing = false
     /// Wall-clock time before which another failed connect/auth lifecycle must
     /// not begin. A deadline survives suspension without extending the intended
     /// wait when the process resumes.
@@ -204,7 +198,6 @@ final class Libre3DirectManager: ObservableObject {
     private var attemptReachedDidConnect = false
     private var attemptEndRecorded = false
     private var sessionProducedGlucose = false
-    private var sessionAuthorizedViaFullHandshake = false
     private var didRecordGlucoseOnlyDeath = false
     private var rearmCompletedAt: Date?
     private var didTraceFirstPacket = false
@@ -246,7 +239,6 @@ final class Libre3DirectManager: ObservableObject {
     private static let signalLossThreshold: TimeInterval = 20 * 60
     private static let glucoseGapNotableThreshold: TimeInterval = 10 * 60
     private static let reconnectEscalateUserAfter = 6
-    private static let terminalCredentialFailureAfter = 12
     private static let freshDiscoveryNoStreamCycles = 3
     private static let maxBackfillFailuresPerSession = 3
     /// First two failures retry immediately, then reconnect attempts back off
@@ -281,11 +273,6 @@ final class Libre3DirectManager: ObservableObject {
     /// both response-channel CCCDs are ready. Failed requests are bounded below.
     private var didRequestBackfill = false
     private var backfillFailuresThisSession = 0
-
-    /// Set when a cached/direct reconnect is rejected (the sensor drops the
-    /// link), so the NEXT connect attempt skips the cached path and runs a full
-    /// handshake on its fresh connection. Reset whenever a full handshake runs.
-    private var skipCachedReconnectOnce = false
 
     /// The newest historical (5-min) lifeCount we already held when this
     /// connection started — i.e. the persisted-store seed, captured BEFORE the
@@ -326,10 +313,7 @@ final class Libre3DirectManager: ObservableObject {
         }
         sensorStartDate = SharedData.libre3SensorStartDate
         sensorNeedsReplacement = SharedData.libre3SensorNeedsReplacement
-        connectionRequiresUserAction = SharedData.libre3ConnectionRequiresUserAction
-        if connectionRequiresUserAction {
-            connectionState = .failed(String(localized: "Sensor authorization keeps failing. Retry the connection, or re-pair the sensor in the Connect tab."))
-        }
+        reScanSuggested = SharedData.libre3ConnectionRequiresUserAction
         publishStatusToAppGroup()
     }
 
@@ -350,7 +334,7 @@ final class Libre3DirectManager: ObservableObject {
             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
             start()
         } else if shouldMaintainConnection ||
-                    connectionRequiresUserAction ||
+                    reScanSuggested ||
                     lifecycleTask != nil ||
                     scannerEventTask != nil ||
                     session != nil ||
@@ -380,7 +364,6 @@ final class Libre3DirectManager: ObservableObject {
             connectionState = .idle
             return
         }
-        guard !connectionRequiresUserAction else { return }
         shouldMaintainConnection = true
         // Recover before any lifecycle-driven grace arm. This runs only when the
         // paired direct-BLE provider starts, so a cloud-provider relaunch cannot
@@ -401,20 +384,6 @@ final class Libre3DirectManager: ObservableObject {
         // lived owner must always be that first subscriber.
         observeScannerEventsIfNeeded()
         ensureLifecycleAttempt(reason: "start")
-    }
-
-    /// Explicitly leave the terminal credential state and start a fresh streak.
-    /// Ordinary reload kicks call `start()` and cannot clear the terminal gate.
-    func retryConnection() {
-        guard isActiveProvider, Libre3StateStore.isPaired else { return }
-        clearReconnectBackoff()
-        connectionRequiresUserAction = false
-        consecutiveReconnectFailures = 0
-        consecutiveCredentialFailures = 0
-        didNotifyReconnectFailing = false
-        forceFreshDiscoveryNextAttempt = true
-        SensorAlertNotificationManager.shared.retractReconnectFailing()
-        start()
     }
 
     /// Tear down the connection and stop streaming (provider switched away, or
@@ -456,13 +425,11 @@ final class Libre3DirectManager: ObservableObject {
         assembler.reset()
         clearReadingStatus()
         consecutiveReconnectFailures = 0
-        consecutiveCredentialFailures = 0
-        didNotifyReconnectFailing = false
         forceFreshDiscoveryNextAttempt = false
-        connectionRequiresUserAction = false
+        reScanSuggested = false
         SensorAlertNotificationManager.shared.retractReconnectFailing()
         // A stop means the direct sensor is no longer active here, so remove any
-        // standing terminal sensor alert that would now be stale.
+        // standing sensor alert that would now be stale.
         Task { await SensorAlertNotificationManager.shared.retract() }
         connectionState = .idle
     }
@@ -539,10 +506,9 @@ final class Libre3DirectManager: ObservableObject {
         sensorAttention = .none
         lastSensorAttention = .none
         lastScheduledExpiryAnchor = nil
-        // A replacement sensor starts near lifeCount zero. Clear both the
-        // persisted data-plane seed and the advancing-lifeCount arm seed, or the
-        // old sensor's ~20,000-minute value would suppress arming for the new
-        // sensor's entire wear.
+        // A replacement sensor starts near lifeCount zero. Clear the old sensor's
+        // data-plane seeds or its ~20,000-minute count would suppress arming; its
+        // receipt timestamp must not turn the interval between sensors into a gap.
         SharedData.libre3LastLifeCount = 0
         SharedData.libre3LastGlucoseMgDL = 0
         SharedData.libre3LastGlucoseAt = nil
@@ -773,6 +739,10 @@ final class Libre3DirectManager: ObservableObject {
             clearReconnectBackoff()
         }
 
+        // A standing backoff intent may already have connected the sensor. Drop
+        // that link before forced discovery so the scan cannot wait behind a
+        // connected peripheral that may no longer advertise; its callback
+        // re-enters here.
         if forceFreshDiscoveryNextAttempt,
            let savedPeripheralID,
            let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first,
@@ -832,11 +802,6 @@ final class Libre3DirectManager: ObservableObject {
 
         if !sessionProducedGlucose {
             consecutiveReconnectFailures += 1
-            if failureClass == "credential" {
-                consecutiveCredentialFailures += 1
-            } else {
-                consecutiveCredentialFailures = 0
-            }
         }
         if let error {
             connectionState = .failed(Self.friendlyMessage(for: error))
@@ -851,23 +816,14 @@ final class Libre3DirectManager: ObservableObject {
                 "Libre3 BLE: notification stream ended"
         }
 
-        // Keep transport/other escalation diagnostic-only. The signal-loss
-        // dead-man already tells the user that glucose is unavailable; only a
-        // credential streak may post re-pair guidance or stop reconnecting.
         if consecutiveReconnectFailures == Self.reconnectEscalateUserAfter {
             Libre3DiagnosticsLog.record(
                 "reconnect-escalation failures=\(consecutiveReconnectFailures) stage=\(endedStage) class=\(failureClass) lastError=\(errorName)"
             )
-        }
-
-        if consecutiveCredentialFailures >= Self.terminalCredentialFailureAfter {
-            shouldMaintainConnection = false
-            connectionRequiresUserAction = true
-            connectionState = .failed(String(localized: "Sensor authorization keeps failing. Retry the connection, or re-pair the sensor in the Connect tab."))
-            if !didNotifyReconnectFailing {
-                didNotifyReconnectFailing = true
+            if !reScanSuggested {
+                reScanSuggested = true
                 Libre3DiagnosticsLog.recordNotable(
-                    "credential-terminal failures=\(consecutiveCredentialFailures) stage=\(endedStage) lastError=\(errorName)"
+                    "reconnect-rescan-suggested failures=\(consecutiveReconnectFailures) stage=\(endedStage) class=\(failureClass) lastError=\(errorName)"
                 )
                 Task { await SensorAlertNotificationManager.shared.postReconnectFailing() }
             }
@@ -895,9 +851,10 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     /// Keep an indefinite CoreBluetooth connect request standing for the saved
-    /// peripheral while the app-level backoff is suspended. CoreBluetooth owns
-    /// the wake source; the state guards are required because reconnecting an
-    /// already connected/connecting peripheral can re-fire `didConnect` rapidly.
+    /// peripheral while backoff is active and the app may be suspended.
+    /// CoreBluetooth owns the wake source; the state guards are required because
+    /// reconnecting an already connected/connecting peripheral can re-fire
+    /// `didConnect` rapidly.
     private func armStandingConnectIntent() {
         guard shouldMaintainConnection,
               isActiveProvider,
@@ -971,9 +928,7 @@ final class Libre3DirectManager: ObservableObject {
         attemptReachedDidConnect = false
         attemptEndRecorded = false
         sessionProducedGlucose = false
-        sessionAuthorizedViaFullHandshake = false
         didRecordGlucoseOnlyDeath = false
-        attemptAdoptedConnectedPeripheral = false
         rearmCompletedAt = nil
         didTraceFirstPacket = false
         failedBestEffortRearmCharacteristics.removeAll()
@@ -994,7 +949,6 @@ final class Libre3DirectManager: ObservableObject {
         connectionState = .scanning
         let peripheral = try await discoverPeripheral(scanner: scanner)
         lifecyclePeripheral = peripheral
-        attemptAdoptedConnectedPeripheral = peripheral.state == .connected
         SharedData.libre3PeripheralUUID = peripheral.identifier.uuidString
 
         connectionState = .connecting
@@ -1523,49 +1477,28 @@ final class Libre3DirectManager: ObservableObject {
         throw SensorScannerError.connectionFailed("event stream ended")
     }
 
-    /// Authorize the freshly-connected session. Prefers the fast cached/direct
-    /// reconnect (PLAN Phase 5) when we hold a reconnect key from a prior full
-    /// pair. A transport failure on an adopted/restored connection retries the
-    /// short cached path once after a real reconnect; other cached failures fall
-    /// back to the full command-gated first-pair handshake on the next fresh
-    /// connection. Returns the Phase-6 session material the decoder needs.
-    ///
-    /// Deliberate divergence from LibreLoop `50ea2de`: it removed this fallback,
-    /// but FLwatch's Phase-5 validation log captured the full-handshake fallback
-    /// succeeding on active sensor hardware, so that recovery path stays intact.
+    /// Authorize a connected sensor. A saved Phase-5 raw key always selects
+    /// LibreCRKit's short cached/direct reconnect (PLAN Phase 5). Failure is
+    /// propagated so the lifecycle owner backs off and retries the same cached
+    /// path on a fresh connection. The full command-gated handshake is reserved
+    /// for the no-key establishment path after NFC pairing or legacy migration.
+    /// Returns the Phase-6 session material the decoder needs.
     private func authorize(session: SensorSession, sensorState: Libre3SensorState) async throws -> Phase6SessionMaterial {
-        if !skipCachedReconnectOnce, let reconnectKey = Libre3StateStore.loadReconnectKey() {
+        if let reconnectKey = Libre3StateStore.loadReconnectKey() {
             do {
                 let material = try await runCachedReconnect(
                     session: session, blePIN: sensorState.blePIN, reconnectKey: reconnectKey
                 )
-                sessionAuthorizedViaFullHandshake = false
                 Logger.libre3.info("Libre3 BLE cached reconnect succeeded")
                 return material
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
-                // A restored `.connected` peripheral can be a half-dead link.
-                // If that adopted link fails for transport reasons, preserve the
-                // cached key and try the short handshake once more after cleanup
-                // produces a real didConnect. Any failure on that fresh attempt,
-                // or an explicitly credential-shaped failure now, selects the
-                // hardware-validated full-handshake fallback next time.
-                let retryCachedFresh = attemptAdoptedConnectedPeripheral
-                    && Self.failureClass(for: error) == "transport"
-                skipCachedReconnectOnce = !retryCachedFresh
-                let nextPathToken = retryCachedFresh ? "cached" : "full"
-                let nextPath = retryCachedFresh ? "cached handshake" : "full handshake"
-                Libre3DiagnosticsLog.traceReconnect(
-                    "cached-reconnect-failed adopted=\(attemptAdoptedConnectedPeripheral) next=\(nextPathToken)"
-                )
-                Logger.libre3.info("Libre3 BLE cached reconnect failed (\(String(describing: error), privacy: .public)) — reconnecting fresh for \(nextPath, privacy: .public)")
+                Libre3DiagnosticsLog.traceReconnect("cached-reconnect-failed")
+                Logger.libre3.info("Libre3 BLE cached reconnect failed (\(String(describing: error), privacy: .public)) — retrying cached on the next connection")
                 throw error
             }
         }
-        sessionAuthorizedViaFullHandshake = skipCachedReconnectOnce
-            && Libre3StateStore.loadReconnectKey() != nil
-        skipCachedReconnectOnce = false
         let result = try await runHandshake(session: session, blePIN: sensorState.blePIN)
         // Persist this full pair's established Phase-5 raw key for the cached
         // reconnect fast path. This is the key the sensor accepts on the
@@ -1579,13 +1512,9 @@ final class Libre3DirectManager: ObservableObject {
 
     /// Cached/direct reconnect: `0x11 StartAuthorization` → R1/nonce notify →
     /// Phase 5 → Phase 6, skipping the certificate + ephemeral exchange (PLAN
-    /// Phase 5; LibreCRKit `runCachedReconnectHandshake`). The persisted
-    /// Phase-6 kEnc is fed straight in as the Phase-5 raw key — matching
-    /// LibreCRKit's `runTakeoverHandshake` default (`{ $0.kEnc }`) and
-    /// Juggluco's reuse of its exported authorization material. We don't hold an
-    /// Android-style 149-byte kAuth blob (a first-pair never produces one), so
-    /// kEnc is the only cached key available — and the right one. Throws on
-    /// sensor rejection so `authorize` can fall back to the full handshake.
+    /// Phase 5; LibreCRKit `runCachedReconnectHandshake`). The persisted Phase-5
+    /// raw key is reused for every reconnect. Throws on sensor rejection so the
+    /// lifecycle owner can back off and retry cached on a fresh connection.
     private func runCachedReconnect(session: SensorSession, blePIN: Data, reconnectKey: Data) async throws -> Phase6SessionMaterial {
         let transport = SensorSessionTransport(session: session)
         let flow = PairingFlow(
@@ -1794,14 +1723,6 @@ final class Libre3DirectManager: ObservableObject {
                     )
                 }
             }
-            if sessionAuthorizedViaFullHandshake {
-                SharedData.libre3FullHandshakeRecoveryCount += 1
-                SharedData.libre3FullHandshakeRecoveryLastSeen = acceptedAt
-                Libre3DiagnosticsLog.recordNotable(
-                    "EVENT full-handshake reconnect streamed gen=\(SharedData.libre3Generation)",
-                    at: acceptedAt
-                )
-            }
             clearReconnectBackoff()
             if let rearmCompletedAt {
                 Libre3DiagnosticsLog.traceReconnect(
@@ -1809,11 +1730,10 @@ final class Libre3DirectManager: ObservableObject {
                 )
             }
             consecutiveReconnectFailures = 0
-            consecutiveCredentialFailures = 0
             forceFreshDiscoveryNextAttempt = false
             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
+            reScanSuggested = false
             SensorAlertNotificationManager.shared.retractReconnectFailing()
-            didNotifyReconnectFailing = false
         }
         requestBackfillWhenReady()
         // Only an accepted usable realtime reading proves the connection is

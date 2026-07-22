@@ -7062,61 +7062,61 @@
     "FLwatch" : {
 
     },
-    "FLwatch can't reconnect to your sensor. If the sensor was replaced or re-scanned with another app, re-pair it in the Connect tab." : {
+    "FLwatch is still trying to reconnect. If readings don't resume, re-pair the sensor in the Connect tab." : {
 
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "FLwatch kann die Verbindung zu deinem Sensor nicht wiederherstellen. Wenn der Sensor ersetzt oder mit einer anderen App erneut gescannt wurde, kopple ihn im Tab „Verbinden“ erneut."
+            "value" : "FLwatch versucht weiterhin, die Verbindung wiederherzustellen. Wenn keine Messwerte mehr eingehen, kopple den Sensor im Tab „Verbinden“ erneut."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "FLwatch no puede volver a conectarse al sensor. Si el sensor se ha sustituido o se ha vuelto a escanear con otra app, enlázalo de nuevo en la pestaña Conectar."
+            "value" : "FLwatch sigue intentando volver a conectarse. Si no se reanudan las lecturas, vuelve a enlazar el sensor en la pestaña Conectar."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "FLwatch ne parvient pas à se reconnecter à votre capteur. Si le capteur a été remplacé ou analysé à nouveau avec une autre app, associez-le de nouveau dans l’onglet Connexion."
+            "value" : "FLwatch continue d’essayer de se reconnecter. Si les mesures ne reprennent pas, associez de nouveau le capteur dans l’onglet Connexion."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "FLwatch non riesce a riconnettersi al sensore. Se il sensore è stato sostituito o scansionato di nuovo con un’altra app, abbinalo nuovamente nel pannello Connetti."
+            "value" : "FLwatch sta ancora tentando di riconnettersi. Se le letture non riprendono, abbina nuovamente il sensore nel pannello Connetti."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "FLwatchはセンサーに再接続できません。センサーを交換したか別のアプリで再スキャンした場合は、「接続」タブで再度ペアリングしてください。"
+            "value" : "FLwatchは再接続を試みています。測定値が再開しない場合は、「接続」タブでセンサーを再度ペアリングしてください。"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "FLwatch kan niet opnieuw verbinding maken met je sensor. Als de sensor is vervangen of opnieuw is gescand met een andere app, koppel je hem opnieuw in het tabblad Verbinden."
+            "value" : "FLwatch blijft proberen opnieuw verbinding te maken. Als de metingen niet worden hervat, koppel je de sensor opnieuw in het tabblad Verbinden."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "FLwatch nie może ponownie połączyć się z sensorem. Jeśli sensor został wymieniony lub ponownie zeskanowany w innej aplikacji, sparuj go ponownie na karcie Połącz."
+            "value" : "FLwatch nadal próbuje ponownie się połączyć. Jeśli odczyty nie zostaną wznowione, sparuj sensor ponownie na karcie Połącz."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "FLwatch не удаётся повторно подключиться к датчику. Если датчик был заменён или повторно отсканирован другим приложением, снова выполните сопряжение на вкладке «Подключение»."
+            "value" : "FLwatch продолжает попытки повторного подключения. Если показания не возобновятся, снова выполните сопряжение датчика на вкладке «Подключение»."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "FLwatch无法重新连接传感器。如果传感器已更换或被其他App重新扫描，请在“连接”标签页中重新配对。"
+            "value" : "FLwatch仍在尝试重新连接。如果读数没有恢复，请在“连接”标签页中重新配对传感器。"
           }
         }
       }
@@ -7485,9 +7485,6 @@
           }
         }
       }
-    },
-    "Full-handshake recoveries" : {
-
     },
     "g" : {
 
@@ -14496,61 +14493,61 @@
         }
       }
     },
-    "Repeated sensor authorization failures need your attention." : {
+    "Reconnect is continuing automatically. If it keeps failing, disconnect below and re-pair the sensor." : {
 
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wiederholte Fehler bei der Sensorautorisierung erfordern deine Aufmerksamkeit."
+            "value" : "Die Wiederverbindung wird automatisch fortgesetzt. Wenn sie weiterhin fehlschlägt, trenne den Sensor unten und kopple ihn erneut."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Los fallos repetidos de autorización del sensor requieren tu atención."
+            "value" : "La reconexión continúa automáticamente. Si sigue fallando, desconecta el sensor abajo y vuelve a enlazarlo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les échecs répétés d’autorisation du capteur nécessitent votre attention."
+            "value" : "La reconnexion se poursuit automatiquement. Si elle échoue toujours, déconnectez le capteur ci-dessous et associez-le de nouveau."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "I ripetuti errori di autorizzazione del sensore richiedono la tua attenzione."
+            "value" : "La riconnessione continua automaticamente. Se continua a non riuscire, disconnetti il sensore qui sotto e abbinalo di nuovo."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "センサー認証が繰り返し失敗しています。確認が必要です。"
+            "value" : "再接続は自動的に継続されます。失敗が続く場合は、下でセンサーを切断して再度ペアリングしてください。"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Herhaalde autorisatiefouten van de sensor vragen je aandacht."
+            "value" : "Opnieuw verbinding maken gaat automatisch door. Als dit blijft mislukken, ontkoppel je de sensor hieronder en koppel je hem opnieuw."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Powtarzające się błędy autoryzacji sensora wymagają Twojej uwagi."
+            "value" : "Ponowne łączenie jest automatycznie kontynuowane. Jeśli nadal się nie udaje, odłącz sensor poniżej i sparuj go ponownie."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Повторяющиеся сбои авторизации датчика требуют вашего внимания."
+            "value" : "Попытки повторного подключения продолжаются автоматически. Если сбой сохраняется, отключите датчик ниже и снова выполните сопряжение."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "传感器授权反复失败，需要您处理。"
+            "value" : "系统正在自动继续重新连接。如果仍然失败，请在下方断开传感器并重新配对。"
           }
         }
       }
@@ -14964,66 +14961,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "最终碳水化合物"
-          }
-        }
-      }
-    },
-    "Retry connection" : {
-      "comment" : "A button that retries connecting to a sensor.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbindung erneut versuchen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reintentar conexión"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Réessayer la connexion"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Riprova connessione"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "接続を再試行"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbinding opnieuw proberen"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ponów próbę połączenia"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Повторить подключение"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重试连接"
           }
         }
       }
@@ -15747,121 +15684,61 @@
         }
       }
     },
-    "Sensor authorization keeps failing. Retry the connection, or re-pair the sensor in the Connect tab." : {
-      "comment" : "User-facing message when the sensor is not paired.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Sensorautorisierung schlägt wiederholt fehl. Versuche erneut, die Verbindung herzustellen, oder kopple den Sensor im Tab „Verbinden“ neu."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La autorización del sensor sigue fallando. Reintenta la conexión o vuelve a enlazar el sensor en la pestaña Conectar."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L’autorisation du capteur échoue à répétition. Réessayez la connexion ou réassociez le capteur dans l’onglet Connexion."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L’autorizzazione del sensore continua a non riuscire. Riprova la connessione oppure riabbina il sensore nel pannello Connetti."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "センサー認証が繰り返し失敗しています。接続を再試行するか、「接続」タブでセンサーを再度ペアリングしてください。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De sensorautorisatie blijft mislukken. Probeer de verbinding opnieuw of koppel de sensor opnieuw in het tabblad Verbinden."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Autoryzacja sensora wciąż kończy się niepowodzeniem. Ponów próbę połączenia lub sparuj sensor ponownie na karcie Połącz."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Авторизация датчика постоянно завершается сбоем. Повторите подключение или заново выполните сопряжение датчика на вкладке «Подключение»."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "传感器授权持续失败。请重试连接，或在“连接”标签页中重新配对传感器。"
-          }
-        }
-      }
-    },
-    "Sensor connection failing" : {
+    "Re-scan sensor" : {
 
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sensorverbindung schlägt fehl"
+            "value" : "Sensor erneut scannen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fallo de conexión del sensor"
+            "value" : "Volver a escanear el sensor"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Échec de la connexion au capteur"
+            "value" : "Scanner à nouveau le capteur"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connessione del sensore non riuscita"
+            "value" : "Scansiona di nuovo il sensore"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "センサー接続エラー"
+            "value" : "センサーを再スキャン"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sensorverbinding mislukt"
+            "value" : "Sensor opnieuw scannen"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Błąd połączenia z sensorem"
+            "value" : "Zeskanuj sensor ponownie"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сбой подключения датчика"
+            "value" : "Повторно отсканируйте датчик"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "传感器连接失败"
+            "value" : "重新扫描传感器"
           }
         }
       }

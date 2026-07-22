@@ -46,8 +46,8 @@ final class SensorAlertNotificationManager {
 
     func postReconnectFailing() async {
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Sensor connection failing")
-        content.body = String(localized: "FLwatch can't reconnect to your sensor. If the sensor was replaced or re-scanned with another app, re-pair it in the Connect tab.")
+        content.title = String(localized: "Re-scan sensor")
+        content.body = String(localized: "FLwatch is still trying to reconnect. If readings don't resume, re-pair the sensor in the Connect tab.")
         content.interruptionLevel = .timeSensitive
         content.sound = .default
 

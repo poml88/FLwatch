@@ -86,8 +86,6 @@ enum Libre3DiagnosticsLog {
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")
             as? String ?? "unknown"
         let header = "FLwatch \(version) (\(build)) — Libre 3 diagnostics exported \(timestampFormatter.string(from: Date()))"
-        let fullHandshakeLastSeen = SharedData.libre3FullHandshakeRecoveryLastSeen
-            .map { timestampFormatter.string(from: $0) } ?? "never"
         let glucoseOnlyLastSeen = SharedData.libre3GlucoseOnlyDeathLastSeen
             .map { timestampFormatter.string(from: $0) } ?? "never"
         let notable = notableEntries()
@@ -96,7 +94,6 @@ enum Libre3DiagnosticsLog {
             header,
             "",
             "Lifetime stats:",
-            "Full-handshake recoveries: \(SharedData.libre3FullHandshakeRecoveryCount) · last \(fullHandshakeLastSeen)",
             "Glucose-only deaths: \(SharedData.libre3GlucoseOnlyDeathCount) · last \(glucoseOnlyLastSeen)",
             "",
             "Notable events:",
@@ -167,8 +164,6 @@ enum Libre3DiagnosticsLog {
     }
 
     static func resetLifetimeEventStats() {
-        SharedData.libre3FullHandshakeRecoveryCount = 0
-        SharedData.libre3FullHandshakeRecoveryLastSeen = nil
         SharedData.libre3GlucoseOnlyDeathCount = 0
         SharedData.libre3GlucoseOnlyDeathLastSeen = nil
         NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)

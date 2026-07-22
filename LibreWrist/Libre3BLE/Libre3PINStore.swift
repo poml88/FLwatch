@@ -12,14 +12,10 @@
 //  binary, not a UTF-8 string). Keychain survival across reinstall is NOT
 //  required (PLAN §9: re-pair via NFC after reinstall) — this is for secrecy.
 //
-//  It also holds the Phase-5 **reconnect key** (the 16-byte kEnc captured from
-//  the first-pair Phase 6). On reconnect the cached/direct handshake
-//  (`runCachedReconnectHandshake`, PLAN Phase 5) feeds this kEnc straight into
-//  the Phase-5 block encryptor as `phase5RawKey` — matching LibreCRKit's
-//  `runTakeoverHandshake` default (`{ $0.kEnc }`) and Juggluco's model of
-//  exporting the authorization material once at first-pair and reusing it on
-//  every reconnect. It's session-secret material, so it lives beside the PIN in
-//  the keychain rather than the app group.
+//  It also holds the 16-byte Phase-5 raw key established by the full handshake.
+//  The cached/direct handshake (`runCachedReconnectHandshake`, PLAN Phase 5)
+//  reuses that authorization material on every reconnect. It's secret material,
+//  so it lives beside the PIN in the keychain rather than the app group.
 //
 
 #if os(iOS)
@@ -39,6 +35,7 @@ enum Libre3PINStoreError: Error, LocalizedError {
 enum Libre3PINStore {
 
     private static let pinAccount = "libre3.ble.pin"
+    // Keep the legacy account name so existing paired sensors retain their key.
     private static let reconnectKeyAccount = "libre3.ble.kenc"
 
     private static var service: String {
@@ -55,7 +52,7 @@ enum Libre3PINStore {
     static func save(_ pin: Data) throws { try save(pin, account: pinAccount) }
     static func delete() throws { try delete(account: pinAccount) }
 
-    // MARK: - Reconnect key (Phase-6 kEnc reused as the cached-reconnect Phase-5 key)
+    // MARK: - Reconnect key (Phase-5 raw key)
 
     static func readReconnectKey() throws -> Data? { try read(account: reconnectKeyAccount) }
     static func saveReconnectKey(_ key: Data) throws { try save(key, account: reconnectKeyAccount) }
