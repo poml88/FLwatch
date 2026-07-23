@@ -2405,10 +2405,9 @@ final class Libre3DirectManager: ObservableObject {
     /// the moment a fresh *usable* minute reading has been written into the
     /// shared `LibreLinkUpHistory` store by `pushHistory()`.
     ///
-    /// `LowGlucoseNotificationManager` is provider-agnostic — it reads the shared
-    /// history + `activeProvider.staleReadingAfter` (3 min for `.libre3BLE`) and
-    /// self-gates on the enabled flag and its own 5-minute repeat throttle — so
-    /// it needs no Libre-3-specific knowledge. Only called on a usable reading
+    /// `LowGlucoseNotificationManager` reads the shared history +
+    /// `activeProvider.staleReadingAfter` (3 min for `.libre3BLE`) and self-gates
+    /// each enabled tier with its own 5-minute repeat throttle. Only called on a usable reading
     /// (not warm-up/garbage, not per backfill page), mirroring
     /// `refreshLiveActivityForNewReading`.
     private func evaluateLowGlucoseForNewReading() {

@@ -28,6 +28,9 @@ struct PhoneAppSettingsView: View {
     @AppStorage(DefaultsKey.lowGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationsEnabled: Bool = false
     @AppStorage(DefaultsKey.lowGlucoseCriticalAlertsEnabled.rawValue, store: UserDefaults.group) private var lowGlucoseCriticalAlertsEnabled: Bool = false
     @AppStorage(DefaultsKey.lowGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationThreshold: Int = 70
+    @AppStorage(DefaultsKey.criticalLowGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var criticalLowGlucoseNotificationsEnabled: Bool = false
+    @AppStorage(DefaultsKey.criticalLowGlucoseCriticalAlertsEnabled.rawValue, store: UserDefaults.group) private var criticalLowGlucoseCriticalAlertsEnabled: Bool = false
+    @AppStorage(DefaultsKey.criticalLowGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var criticalLowGlucoseNotificationThreshold: Int = 55
     @AppStorage(DefaultsKey.libre3SignalLossAlertEnabled.rawValue, store: UserDefaults.group) private var libre3SignalLossAlertEnabled: Bool = true
     @AppStorage(DefaultsKey.libre3SignalLossCritical.rawValue, store: UserDefaults.group) private var libre3SignalLossCritical: Bool = false
     @AppStorage("developerModeEnabled") private var developerModeEnabled: Bool = false
@@ -56,6 +59,10 @@ struct PhoneAppSettingsView: View {
     private var watchConnector = WatchConnectivityManager.shared
     let updateFrequencyOptions: [Int] = [1, 5, 10, 15, 20]
     let lowGlucoseThresholdOptions: [Int] = Array(stride(from: 60, through: 200, by: 5))
+    private var criticalLowGlucoseThresholdOptions: [Int] {
+        let maximumThreshold = max(50, min(80, lowGlucoseNotificationThreshold - 5))
+        return Array(stride(from: 50, through: maximumThreshold, by: 5))
+    }
     // Stored in mg/dL; displayed in the selected unit. Ranges kept disjoint so
     // targetLow stays below targetHigh and never trips SensorSettings normalization.
     let targetLowOptions: [Int] = Array(stride(from: 50, through: 120, by: 5))
@@ -110,19 +117,24 @@ struct PhoneAppSettingsView: View {
         }
     }
 
-    private func handleLowGlucoseAlertsChanged(_ isEnabled: Bool) {
+    private func handleGlucoseAlertsChanged(_ tier: GlucoseAlertTier, isEnabled: Bool) {
         Task {
             if isEnabled {
                 let granted = await LowGlucoseNotificationManager.shared.requestAuthorizationIfNeeded()
                 if granted {
-                    await LowGlucoseNotificationManager.shared.enableNotifications()
+                    await LowGlucoseNotificationManager.shared.enableNotifications(for: tier)
                 } else {
                     await MainActor.run {
-                        lowGlucoseNotificationsEnabled = false
+                        switch tier {
+                        case .low:
+                            lowGlucoseNotificationsEnabled = false
+                        case .criticalLow:
+                            criticalLowGlucoseNotificationsEnabled = false
+                        }
                     }
                 }
             } else {
-                await LowGlucoseNotificationManager.shared.disableNotifications()
+                await LowGlucoseNotificationManager.shared.disableNotifications(for: tier)
             }
         }
     }
@@ -131,20 +143,64 @@ struct PhoneAppSettingsView: View {
     /// the standard grant; if the user declines the system prompt, revert the
     /// toggle so it reflects reality. Re-evaluates so a currently-low reading is
     /// re-delivered at the new level.
-    private func handleCriticalAlertsChanged(_ isEnabled: Bool) {
+    private func handleCriticalAlertsChanged(for tier: GlucoseAlertTier, isEnabled: Bool) {
         Task {
             if isEnabled {
                 let granted = await LowGlucoseNotificationManager.shared.requestCriticalAuthorizationIfNeeded()
                 if !granted {
-                    await MainActor.run { lowGlucoseCriticalAlertsEnabled = false }
+                    await MainActor.run {
+                        switch tier {
+                        case .low:
+                            lowGlucoseCriticalAlertsEnabled = false
+                        case .criticalLow:
+                            criticalLowGlucoseCriticalAlertsEnabled = false
+                        }
+                    }
                 }
             }
             // Mirror the (possibly reverted) preference to the watch so its
             // backup low-glucose alert matches the phone's level, then
             // re-evaluate so a current low is re-delivered at the new level.
             watchConnector.sendSettingsSnapshotToWatch()
-            await LowGlucoseNotificationManager.shared.enableNotifications()
+            await LowGlucoseNotificationManager.shared.rearmNotifications(for: [tier])
         }
+    }
+
+    private func handleLowGlucoseThresholdChanged(persistSensorSettings: Bool) {
+        if persistSensorSettings {
+            persistManualSensorSettings()
+        }
+
+        let clampedCriticalThreshold = max(
+            50,
+            min(
+                criticalLowGlucoseNotificationThreshold,
+                min(80, lowGlucoseNotificationThreshold - 5)
+            )
+        )
+        let didClampCriticalThreshold = clampedCriticalThreshold != criticalLowGlucoseNotificationThreshold
+        if didClampCriticalThreshold {
+            criticalLowGlucoseNotificationThreshold = clampedCriticalThreshold
+        }
+
+        Task {
+            let tiers: Set<GlucoseAlertTier> = didClampCriticalThreshold
+                ? [.low, .criticalLow]
+                : [.low]
+            await LowGlucoseNotificationManager.shared.rearmNotifications(for: tiers)
+        }
+    }
+
+    private var criticalLowGlucoseThresholdBinding: Binding<Int> {
+        Binding(
+            get: { criticalLowGlucoseNotificationThreshold },
+            set: { newValue in
+                criticalLowGlucoseNotificationThreshold = newValue
+                Task {
+                    await LowGlucoseNotificationManager.shared.rearmNotifications(for: [.criticalLow])
+                }
+            }
+        )
     }
 
     private func handleSignalLossAlertChanged(_ isEnabled: Bool) {
@@ -469,7 +525,7 @@ struct PhoneAppSettingsView: View {
                             bluetoothHeartbeatManager.setEnabled($0)
                             guard !$0, lowGlucoseNotificationsEnabled else { return }
                             lowGlucoseNotificationsEnabled = false
-                            handleLowGlucoseAlertsChanged(false)
+                        handleGlucoseAlertsChanged(.low, isEnabled: false)
                         }
                     )
                 )
@@ -558,7 +614,7 @@ struct PhoneAppSettingsView: View {
                         if cgmProviderKind == .dexcomShare {
                             persistManualSensorSettings()
                         }
-                        handleLowGlucoseAlertsChanged(isEnabled)
+                        handleGlucoseAlertsChanged(.low, isEnabled: isEnabled)
                     }
                     .disabled(!bluetoothHeartbeatManager.isEnabled)
 
@@ -570,12 +626,9 @@ struct PhoneAppSettingsView: View {
                         }
                     }
                     .onChange(of: lowGlucoseNotificationThreshold) { _, _ in
-                        if cgmProviderKind == .dexcomShare {
-                            persistManualSensorSettings()
-                        }
-                        Task {
-                            await LowGlucoseNotificationManager.shared.enableNotifications()
-                        }
+                        handleLowGlucoseThresholdChanged(
+                            persistSensorSettings: cgmProviderKind == .dexcomShare
+                        )
                     }
                 } else {
                     LabeledContent("Alert me below", value: lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold))
@@ -613,7 +666,7 @@ struct PhoneAppSettingsView: View {
                         // Re-wire the graph's red low-alarm line: it tracks the
                         // threshold while alerts are on, hidden otherwise.
                         persistManualSensorSettings()
-                        handleLowGlucoseAlertsChanged(isEnabled)
+                        handleGlucoseAlertsChanged(.low, isEnabled: isEnabled)
                     }
 
                 if lowGlucoseNotificationsEnabled {
@@ -624,16 +677,12 @@ struct PhoneAppSettingsView: View {
                         }
                     }
                     .onChange(of: lowGlucoseNotificationThreshold) { _, _ in
-                        // Move the red low-alarm line to the new threshold.
-                        persistManualSensorSettings()
-                        Task {
-                            await LowGlucoseNotificationManager.shared.enableNotifications()
-                        }
+                        handleLowGlucoseThresholdChanged(persistSensorSettings: true)
                     }
 
                     Toggle("Use critical alerts", isOn: $lowGlucoseCriticalAlertsEnabled)
                         .onChange(of: lowGlucoseCriticalAlertsEnabled) { _, isEnabled in
-                            handleCriticalAlertsChanged(isEnabled)
+                            handleCriticalAlertsChanged(for: .low, isEnabled: isEnabled)
                         }
                 } else {
                     LabeledContent("Alert me below", value: lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold))
@@ -641,6 +690,38 @@ struct PhoneAppSettingsView: View {
                 }
 
                 Text("Notifies you when a new sensor reading is below \(lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold)). Alerts may repeat every 5 minutes while glucose remains low and require a stable Bluetooth connection. Alerts can be snoozed for 15 minutes.")
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+
+                Toggle("Critically low glucose alerts", isOn: $criticalLowGlucoseNotificationsEnabled)
+                    .onChange(of: criticalLowGlucoseNotificationsEnabled) { _, isEnabled in
+                        handleGlucoseAlertsChanged(.criticalLow, isEnabled: isEnabled)
+                    }
+
+                if criticalLowGlucoseNotificationsEnabled {
+                    Picker("Alert me below", selection: criticalLowGlucoseThresholdBinding) {
+                        ForEach(criticalLowGlucoseThresholdOptions, id: \.self) { threshold in
+                            Text(lowGlucoseThresholdText(for: threshold))
+                                .tag(threshold)
+                        }
+                    }
+
+                    Toggle("Use critical alerts", isOn: $criticalLowGlucoseCriticalAlertsEnabled)
+                        .onChange(of: criticalLowGlucoseCriticalAlertsEnabled) { _, isEnabled in
+                            handleCriticalAlertsChanged(for: .criticalLow, isEnabled: isEnabled)
+                        }
+                } else {
+                    LabeledContent(
+                        "Alert me below",
+                        value: lowGlucoseThresholdText(for: criticalLowGlucoseNotificationThreshold)
+                    )
+                    .foregroundStyle(.secondary)
+                }
+
+                Text("Notifies you when a new sensor reading is critically low, below \(lowGlucoseThresholdText(for: criticalLowGlucoseNotificationThreshold)). This alert takes precedence over the low glucose alert. Alerts may repeat every 5 minutes and share the 15-minute snooze.")
                     .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.secondary)
@@ -893,6 +974,9 @@ struct PhoneAppSettingsView: View {
         // Mirror the change to the watch so its stale window and cadence
         // follow without waiting for the next settings sync.
         watchConnector.sendSettingsSnapshotToWatch()
+        Task {
+            await LowGlucoseNotificationManager.shared.providerDidChange()
+        }
     }
 
     private func refreshAppleHealthStatus() {

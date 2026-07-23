@@ -24,6 +24,11 @@ enum SharedDefaults {
     /// static var requireStore: UserDefaults { guard let id = appGroupID, let ud = ... else { fatalError("APP_GROUP_ID not configured") } }
 }
 
+enum GlucoseAlertTier: String, Codable, CaseIterable, Sendable {
+    case low
+    case criticalLow
+}
+
 // MARK: - All keys in one place
 enum DefaultsKey: String {
     // SharedData keys
@@ -51,6 +56,11 @@ enum DefaultsKey: String {
     case lowGlucoseNotificationLastSentDate = "lowGlucoseNotificationLastSentDateKey"
     case lowGlucoseNotificationPendingRepeat = "lowGlucoseNotificationPendingRepeatKey"
     case lowGlucoseNotificationSnoozeUntilDate = "lowGlucoseNotificationSnoozeUntilDateKey"
+    case criticalLowGlucoseNotificationsEnabled = "criticalLowGlucoseNotificationsEnabledKey"
+    case criticalLowGlucoseCriticalAlertsEnabled = "criticalLowGlucoseCriticalAlertsEnabledKey"
+    case criticalLowGlucoseNotificationThreshold = "criticalLowGlucoseNotificationThresholdKey"
+    case criticalLowGlucoseNotificationLastSentDate = "criticalLowGlucoseNotificationLastSentDateKey"
+    case criticalLowGlucoseNotificationPendingRepeat = "criticalLowGlucoseNotificationPendingRepeatKey"
     case libre3SignalLossAlertEnabled = "libre3SignalLossAlertEnabledKey"
     case libre3SignalLossCritical = "libre3SignalLossCriticalKey"
     case icrGramsPerUnit = "icrGramsPerUnitKey"
@@ -400,6 +410,31 @@ enum SharedData {
     static var lowGlucoseNotificationSnoozeUntilDate: Date {
         get { store.getDate(.lowGlucoseNotificationSnoozeUntilDate, defaultValue: .distantPast) }
         set { store.setDate(newValue, forKey: .lowGlucoseNotificationSnoozeUntilDate) }
+    }
+
+    static var criticalLowGlucoseNotificationsEnabled: Bool {
+        get { store.getBool(.criticalLowGlucoseNotificationsEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .criticalLowGlucoseNotificationsEnabled) }
+    }
+
+    static var criticalLowGlucoseCriticalAlertsEnabled: Bool {
+        get { store.getBool(.criticalLowGlucoseCriticalAlertsEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .criticalLowGlucoseCriticalAlertsEnabled) }
+    }
+
+    static var criticalLowGlucoseNotificationThreshold: Int {
+        get { store.getInt(.criticalLowGlucoseNotificationThreshold, defaultValue: 55) }
+        set { store.setInt(newValue, forKey: .criticalLowGlucoseNotificationThreshold) }
+    }
+
+    static var criticalLowGlucoseNotificationLastSentDate: Date {
+        get { store.getDate(.criticalLowGlucoseNotificationLastSentDate, defaultValue: .distantPast) }
+        set { store.setDate(newValue, forKey: .criticalLowGlucoseNotificationLastSentDate) }
+    }
+
+    static var criticalLowGlucoseNotificationPendingRepeat: Bool {
+        get { store.getBool(.criticalLowGlucoseNotificationPendingRepeat, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .criticalLowGlucoseNotificationPendingRepeat) }
     }
 
     /// Enables the Libre 3 direct-BLE signal-loss dead-man notification. This is

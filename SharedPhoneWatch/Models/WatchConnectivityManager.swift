@@ -32,7 +32,6 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     private static let dexcomShareSessionContent = "dexcomShareSession"
     private static let dexcomShareSessionIdKey = "dexcomShareSessionId"
 #if os(watchOS)
-    private static let watchLowGlucoseNotificationIdentifierPrefix = "watch-low-glucose-alert"
     private static let watchLowGlucoseAlertFreshness: TimeInterval = 3 * 60
     private static let watchLowGlucoseAlertTriggerDelay: TimeInterval = 1
     private static let watchLowGlucoseAlertCooldown: TimeInterval = 45
@@ -92,6 +91,9 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         // phone's level and pre-request critical-alert authorization. Optional
         // for older builds that didn't send it (treated as false).
         let lowGlucoseCriticalAlertsEnabled: Bool?
+        // Same delivery preference for the Libre 3-only critically-low tier.
+        // Optional so watches can still decode snapshots from older phones.
+        let criticalLowGlucoseCriticalAlertsEnabled: Bool?
         let updatedAt: Date
     }
 
@@ -100,6 +102,8 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         let subtitle: String
         let body: String
         let sentAt: Date
+        // Missing payloads came from older phones and are ordinary low alerts.
+        let tier: GlucoseAlertTier?
     }
 
 #if os(watchOS)
@@ -189,8 +193,8 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
 #if os(watchOS)
     private let watchNotificationCenter = UNUserNotificationCenter.current()
     private var watchAppVisibilityState: WatchAppVisibilityState = .background
-    private var lastWatchLowGlucoseAlertAt: Date = .distantPast
-    private var lastScheduledWatchLowGlucoseSentAt: TimeInterval = 0
+    private var lastWatchGlucoseAlertAt: [GlucoseAlertTier: Date] = [:]
+    private var lastScheduledWatchGlucoseSentAt: [GlucoseAlertTier: TimeInterval] = [:]
 #endif
     
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: (any Error)?) {
@@ -566,6 +570,9 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             sensorTypeRawValue: providerKind == .dexcomShare ? SensorSettingsStore.shared.sensorType.rawValue : nil,
             libre3Serial: providerKind == .libre3BLE && SharedData.libre3SensorIsPaired ? SharedData.libre3Serial : nil,
             lowGlucoseCriticalAlertsEnabled: SharedData.lowGlucoseCriticalAlertsEnabled,
+            criticalLowGlucoseCriticalAlertsEnabled: providerKind == .libre3BLE
+                ? SharedData.criticalLowGlucoseCriticalAlertsEnabled
+                : false,
             updatedAt: Date()
         )
 
@@ -710,13 +717,17 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         // notification matches the phone's level. When it flips on, (re)request
         // authorization including `.criticalAlert` now, so the grant is in place
         // before the next alert rather than prompting mid-low.
-        let wantsCritical = snapshot.lowGlucoseCriticalAlertsEnabled ?? false
+        let wantsLowCritical = snapshot.lowGlucoseCriticalAlertsEnabled ?? false
+        let wantsCriticalLowCritical = snapshot.criticalLowGlucoseCriticalAlertsEnabled ?? false
 #if os(watchOS)
-        let criticalWasEnabled = SharedData.lowGlucoseCriticalAlertsEnabled
+        let lowCriticalWasEnabled = SharedData.lowGlucoseCriticalAlertsEnabled
+        let criticalLowCriticalWasEnabled = SharedData.criticalLowGlucoseCriticalAlertsEnabled
 #endif
-        SharedData.lowGlucoseCriticalAlertsEnabled = wantsCritical
+        SharedData.lowGlucoseCriticalAlertsEnabled = wantsLowCritical
+        SharedData.criticalLowGlucoseCriticalAlertsEnabled = wantsCriticalLowCritical
 #if os(watchOS)
-        if wantsCritical && !criticalWasEnabled {
+        if (wantsLowCritical && !lowCriticalWasEnabled) ||
+            (wantsCriticalLowCritical && !criticalLowCriticalWasEnabled) {
             requestWatchLowGlucoseNotificationAuthorization()
         }
 #endif
@@ -921,12 +932,19 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     // `sentAt` staleness guard drops any replay older than its window. If a
     // future change needs alerts to fire exactly once, switch them to
     // transferUserInfo (FIFO, delivered once) or clear this key after consume.
-    func sendLowGlucoseAlertToWatch(title: String, subtitle: String, body: String, sentAt: Date) {
+    func sendLowGlucoseAlertToWatch(
+        title: String,
+        subtitle: String,
+        body: String,
+        sentAt: Date,
+        tier: GlucoseAlertTier
+    ) {
         let payload = LowGlucoseAlertPayload(
             title: title,
             subtitle: subtitle,
             body: body,
-            sentAt: sentAt
+            sentAt: sentAt,
+            tier: tier
         )
 
         do {
@@ -968,6 +986,24 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         }
     }
 
+    private func watchNotificationIdentifierPrefix(for tier: GlucoseAlertTier) -> String {
+        switch tier {
+        case .low:
+            "watch-low-glucose-alert"
+        case .criticalLow:
+            "watch-critical-low-glucose-alert"
+        }
+    }
+
+    private func criticalDeliveryEnabled(for tier: GlucoseAlertTier) -> Bool {
+        switch tier {
+        case .low:
+            SharedData.lowGlucoseCriticalAlertsEnabled
+        case .criticalLow:
+            SharedData.criticalLowGlucoseCriticalAlertsEnabled
+        }
+    }
+
     private func requestWatchNotificationAuthorizationIfNeeded() async -> Bool {
         let settings = await watchNotificationCenter.notificationSettings()
         guard settings.authorizationStatus != .denied else {
@@ -979,7 +1015,8 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         // base alert grant exists, so iOS prompts for the incremental
         // critical-alert permission. Skip the request only when already
         // authorized AND the critical grant is satisfied (or not wanted).
-        let wantsCritical = SharedData.lowGlucoseCriticalAlertsEnabled
+        let wantsCritical = SharedData.lowGlucoseCriticalAlertsEnabled ||
+            SharedData.criticalLowGlucoseCriticalAlertsEnabled
         let criticalSatisfied = !wantsCritical || settings.criticalAlertSetting == .enabled
         if [.authorized, .provisional].contains(settings.authorizationStatus), criticalSatisfied {
             return true
@@ -999,8 +1036,9 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     }
 
     private func scheduleWatchLowGlucoseNotificationIfNeeded(for payload: LowGlucoseAlertPayload) async {
+        let tier = payload.tier ?? .low
         Logger.connectivity.info(
-            "Watch low glucose fallback received: state=\(String(describing: self.watchAppVisibilityState), privacy: .public), sentAt=\(payload.sentAt.formatted(date: .omitted, time: .standard), privacy: .public)"
+            "Watch \(tier.rawValue, privacy: .public) glucose fallback received: state=\(String(describing: self.watchAppVisibilityState), privacy: .public), sentAt=\(payload.sentAt.formatted(date: .omitted, time: .standard), privacy: .public)"
         )
         guard watchAppVisibilityState.isFrontmost else {
             Logger.connectivity.info("Skipping watch low glucose fallback: app not frontmost")
@@ -1016,12 +1054,13 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         }
 
         let sentAtInterval = payload.sentAt.timeIntervalSince1970
-        guard sentAtInterval > lastScheduledWatchLowGlucoseSentAt else {
+        guard sentAtInterval > lastScheduledWatchGlucoseSentAt[tier, default: 0] else {
             Logger.connectivity.info("Skipping watch low glucose fallback: already scheduled this alert")
             return
         }
 
-        guard now.timeIntervalSince(lastWatchLowGlucoseAlertAt) >= Self.watchLowGlucoseAlertCooldown else {
+        let lastAlertAt = lastWatchGlucoseAlertAt[tier] ?? .distantPast
+        guard now.timeIntervalSince(lastAlertAt) >= Self.watchLowGlucoseAlertCooldown else {
             Logger.connectivity.info("Skipping watch low glucose fallback: cooldown active")
             return
         }
@@ -1047,7 +1086,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         // Not Disturb, plays a sound even when muted) when the user opted in AND
         // the watch granted the critical-alert permission; otherwise the default
         // time-sensitive level.
-        let useCritical = SharedData.lowGlucoseCriticalAlertsEnabled && settings.criticalAlertSetting == .enabled
+        let useCritical = criticalDeliveryEnabled(for: tier) && settings.criticalAlertSetting == .enabled
         if useCritical {
             content.sound = .defaultCritical
             content.interruptionLevel = .critical
@@ -1059,11 +1098,17 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         }
         content.relevanceScore = 1
 
-        let requestIdentifier = "\(Self.watchLowGlucoseNotificationIdentifierPrefix)-\(Int(now.timeIntervalSince1970))"
+        let identifierPrefix = watchNotificationIdentifierPrefix(for: tier)
+        let requestIdentifier = "\(identifierPrefix)-\(Int(now.timeIntervalSince1970))"
         let pendingRequests = await watchNotificationCenter.pendingNotificationRequests()
+        let prefixesToRemove = tier == .criticalLow
+            ? [identifierPrefix, watchNotificationIdentifierPrefix(for: .low)]
+            : [identifierPrefix]
         let matchingPendingIdentifiers = pendingRequests
             .map(\.identifier)
-            .filter { $0.hasPrefix(Self.watchLowGlucoseNotificationIdentifierPrefix) }
+            .filter { identifier in
+                prefixesToRemove.contains { prefix in identifier.hasPrefix(prefix) }
+            }
         if !matchingPendingIdentifiers.isEmpty {
             watchNotificationCenter.removePendingNotificationRequests(withIdentifiers: matchingPendingIdentifiers)
         }
@@ -1076,8 +1121,8 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
 
         do {
             try await watchNotificationCenter.add(request)
-            lastWatchLowGlucoseAlertAt = now
-            lastScheduledWatchLowGlucoseSentAt = sentAtInterval
+            lastWatchGlucoseAlertAt[tier] = now
+            lastScheduledWatchGlucoseSentAt[tier] = sentAtInterval
             Logger.connectivity.info("Scheduled watch low glucose fallback notification with identifier \(requestIdentifier, privacy: .public)")
         } catch {
             Logger.connectivity.error("Failed to schedule watch low glucose fallback notification: \(error.localizedDescription)")
@@ -1089,7 +1134,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        guard notification.request.identifier.hasPrefix(Self.watchLowGlucoseNotificationIdentifierPrefix) else {
+        let identifier = notification.request.identifier
+        let isWatchGlucoseAlert = GlucoseAlertTier.allCases.contains {
+            identifier.hasPrefix(watchNotificationIdentifierPrefix(for: $0))
+        }
+        guard isWatchGlucoseAlert else {
             completionHandler([])
             return
         }

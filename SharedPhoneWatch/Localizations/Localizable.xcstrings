@@ -4903,6 +4903,64 @@
         }
       }
     },
+    "Critically low glucose alerts" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnungen bei kritisch niedrigem Glukosewert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertas de glucosa críticamente baja"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertes de glycémie très basse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisi di glucosio criticamente basso"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重度の低グルコースアラート"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waarschuwingen voor kritiek lage glucose"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerty krytycznie niskiego poziomu glukozy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оповещения о критически низком уровне глюкозы"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "葡萄糖严重偏低提醒"
+          }
+        }
+      }
+    },
     "Current glucose & IOB" : {
       "localizations" : {
         "de" : {
@@ -7913,6 +7971,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "CarPlay 中的葡萄糖图表"
+          }
+        }
+      }
+    },
+    "Glucose is critically low" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glukose ist kritisch niedrig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La glucosa está críticamente baja"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le glucose est très bas"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il glucosio è criticamente basso"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "グルコースが非常に低いです"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucose is kritiek laag"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poziom glukozy jest krytycznie niski"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Критически низкий уровень глюкозы"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "葡萄糖严重偏低"
           }
         }
       }
@@ -11897,6 +12013,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当新的传感器读数低于%@时通知您。只要葡萄糖值持续偏低，警报可能每5分钟重复一次，并且需要稳定的蓝牙连接。警报可以暂停15分钟。"
+          }
+        }
+      }
+    },
+    "Notifies you when a new sensor reading is critically low, below %@. This alert takes precedence over the low glucose alert. Alerts may repeat every 5 minutes and share the 15-minute snooze." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benachrichtigt dich, wenn ein neuer Sensormesswert kritisch niedrig ist und unter %@ liegt. Dieser Hinweis hat Vorrang vor der Niedrigglukosewarnung. Hinweise können alle 5 Minuten wiederholt werden und verwenden dieselbe 15-minütige Stummschaltung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Te avisa cuando una nueva lectura del sensor indica un nivel de glucosa críticamente bajo, inferior a %@. Esta alerta tiene prioridad sobre la alerta de glucosa baja. Las alertas pueden repetirse cada 5 minutos y comparten la función de posponer durante 15 minutos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous avertit lorsqu’une nouvelle mesure du capteur indique une glycémie très basse, inférieure à %@. Cette alerte est prioritaire sur l’alerte de glycémie basse. Les alertes peuvent se répéter toutes les 5 minutes et partagent la même suspension de 15 minutes."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ti avvisa quando una nuova lettura del sensore indica un livello di glucosio criticamente basso, inferiore a %@. Questo avviso ha la precedenza sull’avviso di glucosio basso. Gli avvisi possono ripetersi ogni 5 minuti e condividono lo stesso posticipo di 15 minuti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいセンサー測定値が%@を下回り、非常に低い場合に通知します。この通知は低グルコース通知より優先されます。通知は5分ごとに繰り返されることがあり、15分間のスヌーズは両方の通知に適用されます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldt het wanneer een nieuwe sensormeting kritiek laag is, onder %@. Deze waarschuwing heeft voorrang op de waarschuwing voor lage glucose. Waarschuwingen kunnen elke 5 minuten worden herhaald en delen dezelfde sluimertijd van 15 minuten."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Powiadamia, gdy nowy odczyt sensora wskazuje krytycznie niski poziom glukozy, poniżej %@. Ten alert ma pierwszeństwo przed alertem niskiego poziomu glukozy. Alerty mogą być powtarzane co 5 minut i korzystają z tego samego 15-minutowego wyciszenia."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомляет, когда новое показание датчика указывает на критически низкий уровень глюкозы — ниже %@. Это оповещение имеет приоритет перед оповещением о низком уровне глюкозы. Оповещения могут повторяться каждые 5 минут и используют общий 15-минутный период отсрочки."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当新的传感器读数严重偏低（低于%@）时通知您。此提醒优先于低血糖提醒。提醒可能每5分钟重复一次，并共享同一个15分钟暂停时段。"
           }
         }
       }
