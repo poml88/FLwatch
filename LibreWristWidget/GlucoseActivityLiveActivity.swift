@@ -280,7 +280,7 @@ private struct MediumSupplementalActivityView: View {
                 
                 Spacer()
                 
-                if isUpdateUI {
+                if isUpdateUI, SharedData.cgmProviderKind != .libre3BLE {
                     HStack(spacing: 6) {
                         Text("Update")
                             .font(.caption)

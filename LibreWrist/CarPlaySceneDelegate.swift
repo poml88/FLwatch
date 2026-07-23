@@ -236,6 +236,10 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     }
 
     private func shouldShowManualRefreshAction(now: Date = Date()) -> Bool {
+        guard SharedData.cgmProviderKind != .libre3BLE else {
+            return false
+        }
+
         guard SharedData.bluetoothHeartbeatEnabled else {
             return true
         }
