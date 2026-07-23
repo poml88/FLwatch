@@ -17,6 +17,12 @@ import LibreCRKit
 
 enum Libre3GlucoseMapper {
 
+    /// Realtime frames normally represent the sensor's current value, so their
+    /// BLE receipt time is the most accurate available wall-clock timestamp.
+    /// Retain the lifetime-derived timestamp when the two disagree materially,
+    /// which defensively preserves an unexpectedly old realtime value.
+    private static let realtimeReceiptTolerance: TimeInterval = 3 * 60
+
     // MARK: - Trend arrow
     //
     // LibreCRKit's `Libre3Trend` has the five Libre levels (plus an
@@ -59,18 +65,22 @@ enum Libre3GlucoseMapper {
     //
     // `id` is the sensor `lifeCount` (minutes since activation) — monotonic and
     // stable across reconnects, so it keys cleanly into LibreLinkUpHistory's
-    // id-based de-duplication. `date` is anchored to the sensor-start wall clock
-    // (`sensorStartDate + lifeCount·60s`) so timestamps stay consistent across
-    // reconnects (PLAN §8).
+    // id-based de-duplication. A normal realtime value uses its BLE receipt time;
+    // if that differs from `sensorStartDate + lifeCount·60s` by more than three
+    // minutes, retain the lifetime-derived timestamp as a defensive fallback.
 
     static func makeGlucose(
         from reading: RealtimeGlucoseReading,
         sensorStartDate: Date,
+        receivedAt: Date,
         settings: SensorSettings
     ) -> LibreLinkUpGlucose? {
         guard let mgDL = reading.currentGlucoseMgDL else { return nil }
         let value = Int(mgDL)
-        let date = sensorStartDate.addingTimeInterval(Double(reading.lifeCount) * 60)
+        let lifetimeDerivedDate = sensorStartDate.addingTimeInterval(Double(reading.lifeCount) * 60)
+        let date = abs(receivedAt.timeIntervalSince(lifetimeDerivedDate)) <= Self.realtimeReceiptTolerance
+            ? receivedAt
+            : lifetimeDerivedDate
         let arrow = trendArrow(from: reading.trendKind)
         let rate = Double(reading.rateOfChangeMgDLPerMinute ?? 0)
         let glucose = Glucose(

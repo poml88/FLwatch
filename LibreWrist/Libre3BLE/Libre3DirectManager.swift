@@ -71,6 +71,324 @@ struct Libre3ReadingStatus: Equatable {
     var symbol: String { "exclamationmark.triangle.fill" }
 }
 
+/// Frozen-value run tracker — diagnostic only. Nothing here suppresses a reading
+/// or raises a warning; it exists to prove or disprove the pattern in field logs
+/// before any behaviour is built on it.
+///
+/// A sensor that holds one value reports the repeats with no error flag, so the
+/// only evidence is an identical value surviving *advancing* minutes. Both the
+/// packed word and the uncapped mg/dL must match: the display value alone can
+/// repeat legitimately (it is capped at 39/501), and the word alone carries
+/// status bits that could coincide with a changed reading.
+///
+/// Only otherwise-usable readings participate. A DQ error, blocking sensor
+/// condition, warm-up, or expiry ends the run because those faults are already
+/// visible through the normal quality path. `.notActionable` remains eligible:
+/// LibreCRKit treats it as advisory, so it does not make the reading unusable.
+///
+/// A value type so the run rules — which are easy to get subtly wrong — are
+/// unit-testable without a live BLE session.
+struct Libre3StuckGlucoseTracker {
+    /// Advancing repeats required before an episode is reported. Four means the
+    /// value survived five consecutive minutes unchanged.
+    static let episodeThreshold = 4
+
+    enum EndReason: String, Equatable {
+        case valueChanged
+        case lifeCountGap
+        case lifeCountBackwards
+        case unusableReading
+    }
+
+    enum Outcome: Equatable {
+        /// The same minute resent. It repeats the value by definition, so it
+        /// neither advances nor breaks the run.
+        case sameMinuteResend
+        /// First frame, a skipped minute, a backwards frame, or a changed value.
+        case reset
+        /// Repeated across the adjacent minute, still below the threshold.
+        case advanced(run: Int)
+        /// Threshold reached. Returned once per episode, not on every frame.
+        case episodeDetected(run: Int)
+        /// A previously reported episode ended. `run + 1` is the number of
+        /// consecutive one-minute readings observed with the identical value.
+        case episodeEnded(run: Int, reason: EndReason)
+    }
+
+    private(set) var run = 0
+    private var lastWord: UInt16?
+    private var lastUncappedMgDL: UInt16?
+    private var lastLifeCount: UInt16?
+    private var didReportEpisode = false
+
+    mutating func reset() {
+        self = Libre3StuckGlucoseTracker()
+    }
+
+    mutating func advance(
+        lifeCount: UInt16,
+        word: UInt16,
+        uncappedMgDL: UInt16,
+        isUsable: Bool = true
+    ) -> Outcome {
+        // Unusable values are not forwarded and cannot establish a clean-looking
+        // frozen run. They break any prior run; the next usable frame re-seeds.
+        guard isUsable else {
+            let endedRun = didReportEpisode ? run : nil
+            reset()
+            return endedRun.map {
+                .episodeEnded(run: $0, reason: .unusableReading)
+            } ?? .reset
+        }
+
+        let previousLifeCount = lastLifeCount
+        let previousWord = lastWord
+        let previousUncappedMgDL = lastUncappedMgDL
+
+        // First frame after a reset only seeds the comparison state.
+        guard let previousLifeCount else {
+            lastLifeCount = lifeCount
+            lastWord = word
+            lastUncappedMgDL = uncappedMgDL
+            return .reset
+        }
+        // A same-minute resend is ignored completely. In particular, it must not
+        // replace the baseline used to compare the next advancing minute.
+        guard lifeCount != previousLifeCount else { return .sameMinuteResend }
+        lastLifeCount = lifeCount
+        lastWord = word
+        lastUncappedMgDL = uncappedMgDL
+        // Only an exact +1 step counts, so a reconnect that skips minutes cannot
+        // manufacture an episode out of two unrelated frames.
+        guard lifeCount == previousLifeCount &+ 1,
+              word == previousWord,
+              uncappedMgDL == previousUncappedMgDL else {
+            let endedRun = didReportEpisode ? run : nil
+            let endReason: EndReason
+            if lifeCount < previousLifeCount {
+                endReason = .lifeCountBackwards
+            } else if lifeCount != previousLifeCount &+ 1 {
+                endReason = .lifeCountGap
+            } else {
+                endReason = .valueChanged
+            }
+            run = 0
+            didReportEpisode = false
+            return endedRun.map {
+                .episodeEnded(run: $0, reason: endReason)
+            } ?? .reset
+        }
+        run += 1
+        guard run >= Self.episodeThreshold, !didReportEpisode else {
+            return .advanced(run: run)
+        }
+        didReportEpisode = true
+        return .episodeDetected(run: run)
+    }
+}
+
+/// One successfully decrypted data-plane packet retained by the opt-in developer
+/// capture. The LibreCRKit packet already contains both its decrypted plaintext
+/// and decoded payload, so capture itself performs no extra formatting work.
+struct Libre3LivePacketRecord: Identifiable, Equatable {
+    let id: Int
+    let receivedAt: Date
+    let packet: DataPlaneDecodedPacket
+}
+
+/// Formatting is deliberately separate from capture. These helpers run only
+/// while the developer view renders a record or when Copy capture is requested.
+enum Libre3LivePacketFormatter {
+    static func summary(for record: Libre3LivePacketRecord) -> String {
+        switch record.packet.payload {
+        case .realtimeGlucose(let reading):
+            let glucose = reading.currentGlucoseMgDL.map(String.init) ?? "nil"
+            return "\(glucose) mg/dL · LC \(reading.lifeCount)"
+        case .patchStatus(let status):
+            return "LC \(status.currentLifeCount) · \(status.patchStateKind)"
+        case .historicalReadingPage(let page):
+            return "\(page.startLifeCount)–\(page.endLifeCount) · \(page.samples.count) samples"
+        case .clinicalReadingRecord(let clinical):
+            let glucose = clinical.currentGlucoseMgDL.map(String.init) ?? "nil"
+            return "\(glucose) mg/dL · LC \(clinical.lifeCount)"
+        case .raw(let plaintext):
+            return "\(plaintext.count) decoded bytes"
+        }
+    }
+
+    static func properties(for record: Libre3LivePacketRecord) -> [(String, String)] {
+        let packet = record.packet
+        var result: [(String, String)] = [
+            ("channel", packet.channel.rawValue),
+            ("kind", String(describing: packet.kind)),
+            ("preferredKind", packet.preferredKind.map { String(describing: $0) } ?? "none"),
+            ("usedPreferredKind", "\(packet.usedPreferredKind)"),
+            ("frameSequence", "\(packet.frame.sequenceNumber)"),
+            ("frameSeq", hexByte(packet.frame.seq)),
+            ("frameType", hexByte(packet.frame.type)),
+        ]
+
+        switch packet.payload {
+        case .realtimeGlucose(let reading):
+            result.append(contentsOf: [
+                ("lifeCount", "\(reading.lifeCount)"),
+                ("currentWord", hexWord(reading.currentWord)),
+                ("readingMgDL", "\(reading.readingMgDL)"),
+                ("dqError", "\(reading.dqError) (raw \(hexWord(reading.dqErrorRaw)))"),
+                (
+                    "sensorCondition",
+                    "\(reading.sensorCondition) (raw \(reading.sensorConditionRaw))"
+                ),
+                ("currentGlucose", reading.currentGlucoseMgDL.map { "\($0) mg/dL" } ?? "nil"),
+                ("currentValid", "\(reading.isCurrentGlucoseValid)"),
+                ("currentGlucoseStatus", "\(reading.currentGlucoseStatus)"),
+                ("rateOfChangeRaw", "\(reading.rateOfChangeRaw)"),
+                (
+                    "rateOfChange",
+                    reading.rateOfChangeMgDLPerMinute
+                        .map { String(format: "%+.2f mg/dL/min", $0) } ?? "nil"
+                ),
+                ("trend", "\(reading.trendKind) (raw \(reading.trendRaw))"),
+                ("esaDuration", "\(reading.esaDuration)"),
+                ("projectedGlucose", "\(reading.projectedGlucose)"),
+                ("temperatureStatus", "\(reading.temperatureStatus)"),
+            ])
+            result.append(contentsOf: [
+                ("historicalLifeCount", "\(reading.historicalLifeCount)"),
+                ("historicalWord", hexWord(reading.historicalWord)),
+                ("historicalReading", "\(reading.historicalReading)"),
+                (
+                    "historicalDQError",
+                    "\(reading.historicalReadingDQError) " +
+                        "(raw \(hexWord(reading.historicalReadingDQErrorRaw)))"
+                ),
+                (
+                    "historicRangeStatus",
+                    "\(reading.historicResultRangeStatus) " +
+                        "(raw \(reading.historicResultRangeStatusRaw))"
+                ),
+                (
+                    "historicalGlucose",
+                    reading.historicalGlucoseMgDL.map { "\($0) mg/dL" } ?? "nil"
+                ),
+                ("historicalValid", "\(reading.isHistoricalGlucoseValid)"),
+                ("historicalGlucoseStatus", "\(reading.historicalGlucoseStatus)"),
+            ])
+            result.append(contentsOf: [
+                (
+                    "trendAndStatusByte",
+                    hexByte(reading.trendAndStatusByte)
+                ),
+                ("trendBits", "\(reading.trend)"),
+                ("statusBits", "\(reading.statusBits)"),
+                ("actionability", "\(reading.actionability) (raw \(reading.actionableStatus))"),
+                ("uncappedCurrent", "\(reading.uncappedCurrentMgDL)"),
+                ("uncappedHistoric", "\(reading.uncappedHistoricMgDL)"),
+                ("temperature", "\(reading.temperature)"),
+                ("fastData", hexBytes(reading.fastData)),
+                (
+                    "fastDataWordsLE",
+                    reading.fastDataWordsLE
+                        .map { String(format: "%04x", Int($0)) }
+                        .joined(separator: " ")
+                ),
+                ("wordsLE", reading.wordsLE.map { String(format: "%04x", Int($0)) }.joined(separator: " ")),
+                ("trailingByte", hexByte(reading.trailingByte)),
+            ])
+
+        case .patchStatus(let status):
+            result.append(contentsOf: [
+                ("lifeCount", "\(status.lifeCount)"),
+                ("errorData", "\(status.errorData)"),
+                ("eventDataRaw", "\(status.eventDataRaw)"),
+                ("eventData", "\(status.eventData)"),
+                ("index/total", "\(status.index)/\(status.totalEvents)"),
+                ("patchState", "\(status.patchStateKind) (raw \(status.patchState))"),
+                ("currentLifeCount", "\(status.currentLifeCount)"),
+                ("stackDisconnectReason", "\(status.stackDisconnectReason)"),
+                ("appDisconnectReason", "\(status.appDisconnectReason)"),
+                ("sensorError", "\(status.sensorError)"),
+                ("sensorAttention", "\(status.sensorAttention)"),
+            ])
+
+        case .historicalReadingPage(let page):
+            result.append(contentsOf: [
+                ("startLifeCount", "\(page.startLifeCount)"),
+                ("endLifeCount", "\(page.endLifeCount)"),
+                ("sampleCount", "\(page.samples.count)"),
+            ])
+            for sample in page.samples {
+                result.append(
+                    (
+                        "LC \(sample.lifeCount)",
+                        "raw \(sample.rawValue) · " +
+                            (sample.glucoseMgDL.map { "\($0) mg/dL" } ?? "not displayable")
+                    )
+                )
+            }
+
+        case .clinicalReadingRecord(let clinical):
+            result.append(contentsOf: [
+                ("lifeCount", "\(clinical.lifeCount)"),
+                (
+                    "currentGlucose",
+                    clinical.currentGlucoseMgDL.map { "\($0) mg/dL" } ?? "nil"
+                ),
+                ("currentGlucoseRaw", "\(clinical.currentGlucoseRaw)"),
+                (
+                    "historicGlucose",
+                    clinical.historicGlucoseMgDL.map { "\($0) mg/dL" } ?? "nil"
+                ),
+                ("historicGlucoseRaw", "\(clinical.historicGlucoseRaw)"),
+                (
+                    "historicLifeCountEstimate",
+                    clinical.historicLifeCountEstimate.map(String.init) ?? "nil"
+                ),
+                ("rawSensorWord1", "\(clinical.rawSensorWord1)"),
+                ("rawSensorWord2", "\(clinical.rawSensorWord2)"),
+                ("rawSensorWord3", "\(clinical.rawSensorWord3)"),
+                ("reservedWord", "\(clinical.reservedWord)"),
+            ])
+
+        case .raw(let plaintext):
+            result.append(("decodedBytes", "\(plaintext.count)"))
+        }
+
+        result.append(("plaintext", hexBytes(packet.plaintext)))
+        return result
+    }
+
+    static func export(_ records: [Libre3LivePacketRecord]) -> String {
+        guard !records.isEmpty else { return "" }
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
+            as? String ?? "unknown"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")
+            as? String ?? "unknown"
+        let header = "FLwatch \(version) (\(build)) — Libre 3 live packet capture exported \(formatter.string(from: Date()))"
+        let blocks = records.map { record -> String in
+            let head = "\(formatter.string(from: record.receivedAt)) [\(record.packet.channel.rawValue)] \(summary(for: record))"
+            return ([head] + properties(for: record).map { "    \($0.0): \($0.1)" })
+                .joined(separator: "\n")
+        }
+        return ([header, ""] + blocks).joined(separator: "\n")
+    }
+
+    private static func hexWord(_ value: UInt16) -> String {
+        String(format: "0x%04x", Int(value))
+    }
+
+    private static func hexByte(_ value: UInt8) -> String {
+        String(format: "0x%02x", Int(value))
+    }
+
+    private static func hexBytes(_ data: Data) -> String {
+        data.map { String(format: "%02x", Int($0)) }.joined()
+    }
+}
+
 @MainActor
 final class Libre3DirectManager: ObservableObject {
 
@@ -103,6 +421,9 @@ final class Libre3DirectManager: ObservableObject {
     /// Transient Libre 3 realtime status for decoded frames that are temporarily
     /// unusable for sensor data-quality reasons.
     @Published private(set) var currentReadingStatus: Libre3ReadingStatus?
+    /// Session-only developer capture. Off after every process launch and never
+    /// persisted; packet arrivals do not publish UI changes.
+    @Published private(set) var livePacketCaptureEnabled = false
     /// Layer A: sensor-reported attention from patch status. Kept separate from
     /// Layer B reading-quality episodes; views merge them only for display.
     /// Soft states only hint; terminal states mirror into `sensorNeedsReplacement`.
@@ -210,6 +531,21 @@ final class Libre3DirectManager: ObservableObject {
     /// Setup success is not proof of health: only usable realtime glucose resets
     /// this counter, matching the connect-without-stream livelock lesson.
     private var consecutiveNoStreamCycles = 0
+
+    /// Frozen-value detection — diagnostic only. Nothing is suppressed, no banner
+    /// is raised, and the reading still flows through `ingest` unchanged; this
+    /// exists purely to prove or disprove the pattern in field logs first.
+    private var stuckGlucoseTracker = Libre3StuckGlucoseTracker()
+    /// Cheap in-memory flight recorder. It is never persisted during normal
+    /// streaming; one compact copy is saved only when the tracker reports an
+    /// anomaly.
+    private var recentStuckEvidenceFrames: [Libre3StuckEvidenceSnapshot.Frame] = []
+    private static let stuckEvidenceFrameLimit = 8
+    /// Opt-in, memory-only decrypted/decoded packet ring. Stored oldest first for
+    /// cheap append/trim; developer snapshots expose it newest first.
+    private var livePacketRecords: [Libre3LivePacketRecord] = []
+    private var livePacketSequence = 0
+    private static let livePacketRecordLimit = 300
 
     /// Two parallel series mirroring the LibreLinkUp model (see `LibreLinkUp.swift`):
     ///
@@ -383,6 +719,7 @@ final class Libre3DirectManager: ObservableObject {
         // NG buffers restoration only until its first subscriber, so the long-
         // lived owner must always be that first subscriber.
         observeScannerEventsIfNeeded()
+        recoverCompletedDisconnectHandoff(reason: "start")
         ensureLifecycleAttempt(reason: "start")
     }
 
@@ -505,6 +842,11 @@ final class Libre3DirectManager: ObservableObject {
         sensorNeedsReplacement = false
         sensorAttention = .none
         lastSensorAttention = .none
+        // A replacement sensor restarts near lifeCount 0, so the outgoing sensor's
+        // comparison state must not carry over (a reconnect deliberately keeps it —
+        // see `updateStuckGlucoseEvidence`; a new sensor is a different question).
+        stuckGlucoseTracker.reset()
+        recentStuckEvidenceFrames.removeAll()
         lastScheduledExpiryAnchor = nil
         // A replacement sensor starts near lifeCount zero. Clear the old sensor's
         // data-plane seeds or its ~20,000-minute count would suppress arming; its
@@ -583,9 +925,7 @@ final class Libre3DirectManager: ObservableObject {
             Libre3DiagnosticsLog.traceReconnect("cb-did-connect")
             Logger.libre3.info("Libre3 BLE didConnect: \(peripheral.identifier.uuidString, privacy: .private(mask: .hash))")
             if isSavedPeripheral(peripheral), lifecycleTask == nil {
-                waitingForDisconnectBeforeRearm = false
-                lifecyclePeripheral = peripheral
-                ensureLifecycleAttempt(reason: "did-connect")
+                adoptConnectedPeripheral(peripheral, reason: "did-connect")
             }
 
         case .didFailToConnect(let peripheral, let error):
@@ -616,9 +956,7 @@ final class Libre3DirectManager: ObservableObject {
             switch connectionEvent {
             case .peerConnected:
                 Logger.libre3.info("Libre3 BLE: peripheral connected event — adopting")
-                waitingForDisconnectBeforeRearm = false
-                lifecyclePeripheral = peripheral
-                ensureLifecycleAttempt(reason: "peer-connected")
+                adoptConnectedPeripheral(peripheral, reason: "peer-connected")
             case .peerDisconnected:
                 waitingForDisconnectBeforeRearm = false
                 ensureLifecycleAttempt(reason: "peer-disconnected")
@@ -635,6 +973,20 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
+    private func adoptConnectedPeripheral(_ peripheral: CBPeripheral, reason: String) {
+        waitingForDisconnectBeforeRearm = false
+        lifecyclePeripheral = peripheral
+        if reconnectBackoffDeadline != nil {
+            // A connected peripheral is no longer a pending-connect wake source;
+            // adopt it now instead of depending on a suspended backoff task.
+            Libre3DiagnosticsLog.traceReconnect(
+                "reconnect-backoff-bypassed reason=\(reason)"
+            )
+            clearReconnectBackoff()
+        }
+        ensureLifecycleAttempt(reason: reason)
+    }
+
     private var savedPeripheralID: UUID? {
         UUID(uuidString: SharedData.libre3PeripheralUUID)
     }
@@ -649,6 +1001,19 @@ final class Libre3DirectManager: ObservableObject {
               isActiveProvider,
               Libre3StateStore.isPaired else { return false }
         return matchesSavedPeripheral(peripheral)
+    }
+
+    private func recoverCompletedDisconnectHandoff(reason: String) {
+        guard waitingForDisconnectBeforeRearm,
+              let scanner,
+              scanner.centralState == .poweredOn,
+              let savedPeripheralID,
+              let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first,
+              peripheral.state == .disconnected else { return }
+        waitingForDisconnectBeforeRearm = false
+        Libre3DiagnosticsLog.traceReconnect(
+            "disconnect-handoff-recovered reason=\(reason)"
+        )
     }
 
     /// Cancel the in-flight session (otherwise stuck in `consumeNotifications`,
@@ -739,24 +1104,36 @@ final class Libre3DirectManager: ObservableObject {
             clearReconnectBackoff()
         }
 
-        // A standing backoff intent may already have connected the sensor. Drop
-        // that link before forced discovery so the scan cannot wait behind a
-        // connected peripheral that may no longer advertise; its callback
-        // re-enters here.
+        // A standing backoff intent can block the advertisement that forced
+        // discovery needs. Established links wait for didDisconnect; pending
+        // connects are cancelled before the scan without entering that gate.
         if forceFreshDiscoveryNextAttempt,
            let savedPeripheralID,
-           let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first,
-           peripheral.state == .connected || peripheral.state == .connecting {
-            waitingForDisconnectBeforeRearm = true
-            Libre3DiagnosticsLog.traceReconnect(
-                "fresh-discovery-disconnect state=\(peripheral.state.rawValue)"
-            )
-            scanner.cancelConnection(peripheral)
-            if peripheral.state == .disconnected {
-                waitingForDisconnectBeforeRearm = false
-                ensureLifecycleAttempt(reason: "fresh-discovery-already-disconnected")
+           let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first {
+            switch peripheral.state {
+            case .connected:
+                lifecyclePeripheral = peripheral
+                waitingForDisconnectBeforeRearm = true
+                Libre3DiagnosticsLog.traceReconnect(
+                    "fresh-discovery-disconnect state=\(peripheral.state.rawValue)"
+                )
+                scanner.cancelConnection(peripheral)
+                return
+            case .connecting:
+                // A pending connect has no established link whose teardown must
+                // gate discovery. Queue its cancellation before starting the scan.
+                Libre3DiagnosticsLog.traceReconnect(
+                    "fresh-discovery-cancel-pending state=\(peripheral.state.rawValue)"
+                )
+                scanner.cancelConnection(peripheral)
+                if lifecyclePeripheral?.identifier == peripheral.identifier {
+                    lifecyclePeripheral = nil
+                }
+            case .disconnected, .disconnecting:
+                break
+            @unknown default:
+                break
             }
-            return
         }
 
         let attemptID = UUID()
@@ -852,9 +1229,8 @@ final class Libre3DirectManager: ObservableObject {
 
     /// Keep an indefinite CoreBluetooth connect request standing for the saved
     /// peripheral while backoff is active and the app may be suspended.
-    /// CoreBluetooth owns the wake source; the state guards are required because
-    /// reconnecting an already connected/connecting peripheral can re-fire
-    /// `didConnect` rapidly.
+    /// The manager retains the peripheral because releasing its handle implicitly
+    /// cancels the request; the state guards prevent rapid `didConnect` re-fires.
     private func armStandingConnectIntent() {
         guard shouldMaintainConnection,
               isActiveProvider,
@@ -865,6 +1241,11 @@ final class Libre3DirectManager: ObservableObject {
               let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first,
               peripheral.state != .connected,
               peripheral.state != .connecting else { return }
+        // TODO: Remove the client-side retention assignments once LibreCRKit's
+        // SensorScannerNG owns pending connects and cancellation handoffs through
+        // their terminal callbacks. Keep the connected-wake backoff bypass above;
+        // it fixes the separate suspended-timer hazard.
+        lifecyclePeripheral = peripheral
         Libre3DiagnosticsLog.traceReconnect(
             "standing-connect-armed state=\(peripheral.state.rawValue)"
         )
@@ -877,11 +1258,10 @@ final class Libre3DirectManager: ObservableObject {
         backoffRearmTask = nil
     }
 
-    /// Tear down a failed authorized/connected session. If CoreBluetooth still
-    /// owns a live or pending link, its cancellation is the standing operation
-    /// and `didDisconnect` performs the re-arm. If already disconnected, route
-    /// through the lifecycle gate, which either starts the next indefinite
-    /// connect or schedules the bounded backoff wake-up.
+    /// Tear down a failed authorized/connected session. Established links wait
+    /// for `didDisconnect`; an already-pending connect remains the background
+    /// wake source. A detached peripheral routes directly through the lifecycle
+    /// gate for its next connection or bounded backoff.
     private func prepareForNextAttempt() {
         bestEffortRearmPassID = nil
         bestEffortRearmTask?.cancel()
@@ -902,18 +1282,35 @@ final class Libre3DirectManager: ObservableObject {
 
         if let scanner,
            scanner.centralState == .poweredOn,
-           let peripheral,
-           peripheral.state != .disconnected {
-            waitingForDisconnectBeforeRearm = true
-            Libre3DiagnosticsLog.traceReconnect(
-                "disconnect-before-rearm state=\(peripheral.state.rawValue)"
-            )
-            scanner.cancelConnection(peripheral)
-            if peripheral.state == .disconnected {
-                waitingForDisconnectBeforeRearm = false
-                ensureLifecycleAttempt(reason: "cleanup-already-disconnected")
+           let peripheral {
+            switch peripheral.state {
+            case .connected:
+                lifecyclePeripheral = peripheral
+                waitingForDisconnectBeforeRearm = true
+                Libre3DiagnosticsLog.traceReconnect(
+                    "disconnect-before-rearm state=\(peripheral.state.rawValue)"
+                )
+                scanner.cancelConnection(peripheral)
+                return
+            case .disconnecting:
+                lifecyclePeripheral = peripheral
+                waitingForDisconnectBeforeRearm = true
+                Libre3DiagnosticsLog.traceReconnect(
+                    "disconnect-before-rearm state=\(peripheral.state.rawValue)"
+                )
+                return
+            case .connecting:
+                // This pending request is already the background wake source the
+                // next attempt needs; cancelling it would create a callback gap.
+                lifecyclePeripheral = peripheral
+                Libre3DiagnosticsLog.traceReconnect(
+                    "pending-connect-preserved state=\(peripheral.state.rawValue)"
+                )
+            case .disconnected:
+                break
+            @unknown default:
+                break
             }
-            return
         }
 
         waitingForDisconnectBeforeRearm = false
@@ -1636,15 +2033,65 @@ final class Libre3DirectManager: ObservableObject {
                     didTracePatchStatusQuietEscalation = false
                 }
             }
-            handle(assembled: assembled, channel: channel)
+            handle(assembled: assembled, channel: channel, receivedAt: event.receivedAt)
         }
     }
 
-    private func handle(assembled: Data, channel: DataPlaneChannel) {
+    // MARK: - Opt-in live packet capture
+
+    /// Starts or stops the session-only developer capture. Starting a new capture
+    /// deliberately clears the previous one; stopping retains its records for
+    /// inspection and copying.
+    func setLivePacketCaptureEnabled(_ enabled: Bool) {
+        guard livePacketCaptureEnabled != enabled else { return }
+        if enabled {
+            livePacketRecords.removeAll(keepingCapacity: true)
+            livePacketSequence = 0
+        }
+        livePacketCaptureEnabled = enabled
+    }
+
+    func clearLivePacketCapture() {
+        livePacketRecords.removeAll(keepingCapacity: true)
+        livePacketSequence = 0
+    }
+
+    /// Newest first. Called by the developer view on its five-second refresh,
+    /// never from the per-packet path.
+    func livePacketRecordsSnapshot() -> [Libre3LivePacketRecord] {
+        Array(livePacketRecords.reversed())
+    }
+
+    func livePacketCaptureExportText() -> String {
+        Libre3LivePacketFormatter.export(livePacketRecordsSnapshot())
+    }
+
+    private func captureLivePacketIfEnabled(
+        _ packet: DataPlaneDecodedPacket,
+        receivedAt: Date
+    ) {
+        guard livePacketCaptureEnabled else { return }
+        livePacketSequence += 1
+        livePacketRecords.append(
+            Libre3LivePacketRecord(
+                id: livePacketSequence,
+                receivedAt: receivedAt,
+                packet: packet
+            )
+        )
+        if livePacketRecords.count > Self.livePacketRecordLimit {
+            livePacketRecords.removeFirst(
+                livePacketRecords.count - Self.livePacketRecordLimit
+            )
+        }
+    }
+
+    private func handle(assembled: Data, channel: DataPlaneChannel, receivedAt: Date) {
         guard let decoder, var state = dataPlaneState else { return }
         do {
             let frame = try DataFrame.parse(assembled)
             let packet = try decoder.decrypt(frame: frame, channel: channel)
+            captureLivePacketIfEnabled(packet, receivedAt: receivedAt)
             let update = state.record(packet)
             dataPlaneState = state
             // Patch status carries the authoritative lifecycle; until the first
@@ -1660,7 +2107,12 @@ final class Libre3DirectManager: ObservableObject {
                 let assessment = state.latestLifecycle != nil
                     ? recordedAssessment
                     : reading.currentGlucoseQualityAssessment(lifecycle: lifecycle)
-                ingest(reading, assessment: assessment)
+                updateStuckGlucoseEvidence(
+                    for: reading,
+                    assessment: assessment,
+                    receivedAt: receivedAt
+                )
+                ingest(reading, assessment: assessment, receivedAt: receivedAt)
             case .historicalReadingPage(let page):
                 ingestHistorical(page)
             case .patchStatus, .clinicalReadingRecord, .raw:
@@ -1671,13 +2123,86 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
+    // MARK: - Frozen-value detection (diagnostic only)
+
+    /// Retain one compact realtime fingerprint in memory, then feed usable
+    /// readings to the run tracker. Records one notable event and one compact
+    /// evidence snapshot per episode; nothing else changes.
+    ///
+    /// Deliberately does NOT reset across BLE sessions: if a value is genuinely
+    /// held, a reconnect landing on the very next minute is still evidence. Only
+    /// a sensor change resets it (`forgetSensor`).
+    private func updateStuckGlucoseEvidence(
+        for reading: RealtimeGlucoseReading,
+        assessment: Libre3GlucoseQualityAssessment,
+        receivedAt: Date
+    ) {
+        recentStuckEvidenceFrames.append(
+            Libre3StuckEvidenceSnapshot.Frame(
+                receivedAt: receivedAt,
+                lifeCount: reading.lifeCount,
+                currentWord: reading.currentWord,
+                uncappedCurrentMgDL: reading.uncappedCurrentMgDL,
+                currentGlucoseMgDL: reading.currentGlucoseMgDL,
+                dqErrorRaw: reading.dqErrorRaw,
+                sensorConditionRaw: reading.sensorConditionRaw,
+                actionableStatus: reading.actionableStatus,
+                rateOfChangeRaw: reading.rateOfChangeRaw,
+                trendAndStatusByte: reading.trendAndStatusByte,
+                isUsable: assessment.isUsable
+            )
+        )
+        if recentStuckEvidenceFrames.count > Self.stuckEvidenceFrameLimit {
+            recentStuckEvidenceFrames.removeFirst(
+                recentStuckEvidenceFrames.count - Self.stuckEvidenceFrameLimit
+            )
+        }
+
+        let outcome = stuckGlucoseTracker.advance(
+            lifeCount: reading.lifeCount,
+            word: reading.currentWord,
+            uncappedMgDL: reading.uncappedCurrentMgDL,
+            isUsable: assessment.isUsable
+        )
+        switch outcome {
+        case .episodeDetected(let run):
+            // Notable events reach the support email, so this line stays inside the
+            // support-safe policy: counts, sensor age, and an error code — no
+            // glucose value or raw word.
+            // The values themselves are in the compact local evidence snapshot,
+            // which never leaves the device except by an explicit copy.
+            Libre3DiagnosticsLog.recordNotable(
+                "EVENT suspected-stuck-glucose-detected observedSpanMinutes=\(run) identicalReadings=\(run + 1) detectedLifeCount=\(reading.lifeCount) dq=\(reading.dqError)",
+                at: receivedAt
+            )
+            Libre3DiagnosticsLog.recordStuckSnapshot(
+                run: run,
+                frames: recentStuckEvidenceFrames,
+                at: receivedAt
+            )
+
+        case .episodeEnded(let run, let reason):
+            Libre3DiagnosticsLog.recordNotable(
+                "EVENT suspected-stuck-glucose-ended observedSpanMinutes=\(run) identicalReadings=\(run + 1) reason=\(reason.rawValue)",
+                at: receivedAt
+            )
+
+        case .sameMinuteResend, .reset, .advanced:
+            break
+        }
+    }
+
     // MARK: - Reading → history
 
     /// Quality-gated realtime ingest. Readings the library flags as not usable
-    /// (warm-up, sensor error, out of range, not actionable) update the lifecycle
-    /// UI but are NOT surfaced — that's the "suppress garbage during warm-up"
-    /// rule (PLAN Phase 4).
-    private func ingest(_ reading: RealtimeGlucoseReading, assessment: Libre3GlucoseQualityAssessment) {
+    /// (warm-up, sensor error, out of range) update the lifecycle UI but are NOT
+    /// surfaced — that's the "suppress garbage during warm-up" rule (PLAN Phase
+    /// 4). Advisory issues such as `.notActionable` remain displayable.
+    private func ingest(
+        _ reading: RealtimeGlucoseReading,
+        assessment: Libre3GlucoseQualityAssessment,
+        receivedAt: Date
+    ) {
         seedAnchorIfNeeded(lifeCount: Int(reading.lifeCount))
         guard let anchor = sensorStartDate else { return }
         let settings = SensorSettingsStore.shared.sensorSettings
@@ -1706,9 +2231,16 @@ final class Libre3DirectManager: ObservableObject {
         guard let mapped = Libre3GlucoseMapper.makeGlucose(
             from: reading,
             sensorStartDate: anchor,
+            receivedAt: receivedAt,
             settings: settings
         ) else { return }
-        let acceptedAt = Date()
+        let acceptedAt = receivedAt
+        if mapped.glucose.date != receivedAt {
+            let difference = Int(abs(receivedAt.timeIntervalSince(mapped.glucose.date)).rounded())
+            Logger.libre3.info(
+                "Libre3 BLE realtime timestamp differs from receipt by \(difference, privacy: .public)s; using lifetime-derived timestamp (lifeCount=\(reading.lifeCount, privacy: .public))."
+            )
+        }
 
         if !sessionProducedGlucose {
             sessionProducedGlucose = true
@@ -2197,11 +2729,13 @@ final class Libre3DirectManager: ObservableObject {
 
         if !sessionProducedGlucose {
             consecutiveNoStreamCycles += 1
-            if consecutiveNoStreamCycles == Self.freshDiscoveryNoStreamCycles {
+            if consecutiveNoStreamCycles >= Self.freshDiscoveryNoStreamCycles {
                 forceFreshDiscoveryNextAttempt = true
-                Libre3DiagnosticsLog.recordNotable(
-                    "no-stream-livelock cycles=\(Self.freshDiscoveryNoStreamCycles) action=fresh-discovery"
-                )
+                if consecutiveNoStreamCycles == Self.freshDiscoveryNoStreamCycles {
+                    Libre3DiagnosticsLog.recordNotable(
+                        "no-stream-livelock cycles=\(Self.freshDiscoveryNoStreamCycles) action=fresh-discovery"
+                    )
+                }
             }
         }
 

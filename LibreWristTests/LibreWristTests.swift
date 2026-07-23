@@ -67,6 +67,171 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(Int(parsedDate.timeIntervalSince1970), 1_774_209_943)
     }
 
+    // MARK: - Libre 3 frozen-value run tracking
+
+    /// Feed a frame and return the outcome, defaulting the raw fields so a test
+    /// only states what it is actually varying.
+    private func advance(
+        _ tracker: inout Libre3StuckGlucoseTracker,
+        lifeCount: UInt16,
+        word: UInt16 = 0x0100,
+        uncappedMgDL: UInt16 = 120
+    ) -> Libre3StuckGlucoseTracker.Outcome {
+        tracker.advance(lifeCount: lifeCount, word: word, uncappedMgDL: uncappedMgDL)
+    }
+
+    private func detectedStuckTracker() -> Libre3StuckGlucoseTracker {
+        var tracker = Libre3StuckGlucoseTracker()
+        for lifeCount in UInt16(100)...UInt16(104) {
+            _ = advance(&tracker, lifeCount: lifeCount)
+        }
+        return tracker
+    }
+
+    func testStuckTrackerReportsEpisodeAfterFourAdvancingRepeats() throws {
+        var tracker = Libre3StuckGlucoseTracker()
+        XCTAssertEqual(advance(&tracker, lifeCount: 100), .reset)          // seeds
+        XCTAssertEqual(advance(&tracker, lifeCount: 101), .advanced(run: 1))
+        XCTAssertEqual(advance(&tracker, lifeCount: 102), .advanced(run: 2))
+        XCTAssertEqual(advance(&tracker, lifeCount: 103), .advanced(run: 3))
+        XCTAssertEqual(advance(&tracker, lifeCount: 104), .episodeDetected(run: 4))
+        // Once per episode, not once per frame.
+        XCTAssertEqual(advance(&tracker, lifeCount: 105), .advanced(run: 5))
+    }
+
+    func testStuckTrackerIgnoresSameMinuteResends() throws {
+        var tracker = Libre3StuckGlucoseTracker()
+        _ = advance(&tracker, lifeCount: 100)
+        XCTAssertEqual(
+            advance(&tracker, lifeCount: 100, word: 0x0200, uncappedMgDL: 140),
+            .sameMinuteResend
+        )
+        XCTAssertEqual(tracker.run, 0, "a resend must not inflate the run")
+        // The differing resend must not replace the original minute's baseline.
+        XCTAssertEqual(advance(&tracker, lifeCount: 101), .advanced(run: 1))
+    }
+
+    func testStuckTrackerRejectsUnusableFrames() throws {
+        var tracker = Libre3StuckGlucoseTracker()
+        _ = advance(&tracker, lifeCount: 100)
+        _ = advance(&tracker, lifeCount: 101)
+        XCTAssertEqual(tracker.run, 1)
+
+        XCTAssertEqual(
+            tracker.advance(
+                lifeCount: 102,
+                word: 0x0100,
+                uncappedMgDL: 120,
+                isUsable: false
+            ),
+            .reset
+        )
+        XCTAssertEqual(tracker.run, 0)
+        // The first clean frame after the blocked value only re-seeds.
+        XCTAssertEqual(advance(&tracker, lifeCount: 103), .reset)
+    }
+
+    func testStuckTrackerResetsOnGapBackwardsAndChangedValue() throws {
+        // A skipped minute breaks the run even though the value is unchanged.
+        var gap = Libre3StuckGlucoseTracker()
+        _ = advance(&gap, lifeCount: 100)
+        _ = advance(&gap, lifeCount: 101)
+        XCTAssertEqual(advance(&gap, lifeCount: 103), .reset)
+        XCTAssertEqual(gap.run, 0)
+
+        // A backwards frame does too.
+        var backwards = Libre3StuckGlucoseTracker()
+        _ = advance(&backwards, lifeCount: 100)
+        _ = advance(&backwards, lifeCount: 101)
+        XCTAssertEqual(advance(&backwards, lifeCount: 100), .reset)
+
+        // So does a changed value on an otherwise adjacent minute.
+        var changed = Libre3StuckGlucoseTracker()
+        _ = advance(&changed, lifeCount: 100)
+        _ = advance(&changed, lifeCount: 101)
+        XCTAssertEqual(advance(&changed, lifeCount: 102, word: 0x0200), .reset)
+    }
+
+    /// The display value is capped at 39/501, so two different raw words can map
+    /// to the same mg/dL. Both fields must match for the run to advance.
+    func testStuckTrackerRequiresBothWordAndUncappedToMatch() throws {
+        var wordOnly = Libre3StuckGlucoseTracker()
+        _ = advance(&wordOnly, lifeCount: 100, word: 0x0100, uncappedMgDL: 501)
+        XCTAssertEqual(
+            advance(&wordOnly, lifeCount: 101, word: 0x0100, uncappedMgDL: 520),
+            .reset
+        )
+
+        var uncappedOnly = Libre3StuckGlucoseTracker()
+        _ = advance(&uncappedOnly, lifeCount: 100, word: 0x0100, uncappedMgDL: 120)
+        XCTAssertEqual(
+            advance(&uncappedOnly, lifeCount: 101, word: 0x0180, uncappedMgDL: 120),
+            .reset
+        )
+    }
+
+    /// A recovered value must re-arm the episode report, otherwise a sensor that
+    /// freezes twice only ever produces one notable event.
+    func testStuckTrackerReportsASecondEpisodeAfterRecovery() throws {
+        var tracker = Libre3StuckGlucoseTracker()
+        for lifeCount in UInt16(100)...UInt16(104) {
+            _ = advance(&tracker, lifeCount: lifeCount)
+        }
+        XCTAssertEqual(tracker.run, 4)
+
+        // Value changes: the completed episode is reported and its latch clears.
+        XCTAssertEqual(
+            advance(&tracker, lifeCount: 105, word: 0x0200),
+            .episodeEnded(run: 4, reason: .valueChanged)
+        )
+
+        for lifeCount in UInt16(106)...UInt16(108) {
+            _ = advance(&tracker, lifeCount: lifeCount, word: 0x0200)
+        }
+        XCTAssertEqual(
+            advance(&tracker, lifeCount: 109, word: 0x0200),
+            .episodeDetected(run: 4)
+        )
+    }
+
+    func testStuckTrackerReportsUncertainEpisodeEndReasons() throws {
+        var gap = detectedStuckTracker()
+        XCTAssertEqual(
+            advance(&gap, lifeCount: 106),
+            .episodeEnded(run: 4, reason: .lifeCountGap)
+        )
+
+        var backwards = detectedStuckTracker()
+        XCTAssertEqual(
+            advance(&backwards, lifeCount: 103),
+            .episodeEnded(run: 4, reason: .lifeCountBackwards)
+        )
+
+        var unusable = detectedStuckTracker()
+        XCTAssertEqual(
+            unusable.advance(
+                lifeCount: 105,
+                word: 0x0100,
+                uncappedMgDL: 120,
+                isUsable: false
+            ),
+            .episodeEnded(run: 4, reason: .unusableReading)
+        )
+    }
+
+    func testStuckTrackerResetClearsRunAndSeed() throws {
+        var tracker = Libre3StuckGlucoseTracker()
+        _ = advance(&tracker, lifeCount: 100)
+        _ = advance(&tracker, lifeCount: 101)
+        XCTAssertEqual(tracker.run, 1)
+
+        tracker.reset()
+        XCTAssertEqual(tracker.run, 0)
+        // Post-reset the next frame only re-seeds, so an adjacent minute carrying
+        // the old value cannot resume the previous run.
+        XCTAssertEqual(advance(&tracker, lifeCount: 102), .reset)
+    }
+
     func testLibreLinkUpFallsBackToOffsetTimestamp() throws {
         let parsedDate = try XCTUnwrap(
             LibreLinkUp.parseMeasurementDate(

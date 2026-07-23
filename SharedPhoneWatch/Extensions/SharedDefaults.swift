@@ -140,6 +140,11 @@ enum DefaultsKey: String {
     case libre3DiagnosticEvents = "libre3DiagnosticEventsKey"
     case libre3ReconnectTrace = "libre3ReconnectTraceKey"
     case libre3NotableEvents = "libre3NotableEventsKey"
+    /// Compact stuck-glucose evidence snapshots. Read/written only by the
+    /// phone-only `Libre3DiagnosticsLog`, which owns the record type — hence a
+    /// key here but no `SharedData` accessor. Reuses the former stream-ring key
+    /// so the diagnostics layer can discard that obsolete high-volume payload.
+    case libre3StuckSnapshots = "libre3StreamRecordsKey"
     case libre3GlucoseOnlyDeathCount = "libre3GlucoseOnlyDeathCountKey"
     case libre3GlucoseOnlyDeathLastSeen = "libre3GlucoseOnlyDeathLastSeenKey"
     case libre3LastRecordedSignalLossDeliveryDate = "libre3LastRecordedSignalLossDeliveryDateKey"
@@ -839,7 +844,6 @@ enum SharedData {
 
     // Add other static properties as needed — or prefer using @AppStorage directly (below).
 }
-
 
 /*
 // SwiftUI view using @AppStorage directly with the app-group store:

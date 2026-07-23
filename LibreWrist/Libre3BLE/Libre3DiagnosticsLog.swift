@@ -2,25 +2,59 @@
 //  Libre3DiagnosticsLog.swift
 //  FLwatch
 //
-//  The rare-event ring, notable-event ring, and reconnect trace contain no
-//  glucose values, sensor identifiers, credentials, or BLE payloads — durations,
-//  event names, and error codes only. The trace is a separate, bounded
-//  per-attempt timeline; it must never be written into either event ring. This is
-//  the same content policy as `Libre3DirectManager.supportSafeDescription(for:)`.
+//  Content policy, in two tiers:
+//
+//  * Support-safe rings — the rare-event ring, notable-event ring, and reconnect
+//    trace contain no glucose values, sensor identifiers, credentials, or BLE
+//    payloads — durations, event names, and error codes only. The trace is a
+//    separate, bounded per-attempt timeline; it must never be written into either
+//    event ring. This is the same content policy as
+//    `Libre3DirectManager.supportSafeDescription(for:)`. These three are what the
+//    support-email blocks draw from.
+//  * Local stuck-glucose evidence — a maximum of ten anomaly snapshots. Each
+//    contains only eight compact decoded realtime fingerprints; no decrypted
+//    plaintext, credentials, or sensor identifiers. It is written only when the
+//    stuck detector fires, exported only by an explicit developer clipboard
+//    action, and never folded into a support email.
 //
 
 #if os(iOS)
 import Foundation
+
+/// Compact evidence retained only when the diagnostic stuck detector fires.
+/// Frames are kept as raw scalar fields so formatting work happens only when the
+/// developer opens or exports the evidence.
+struct Libre3StuckEvidenceSnapshot: Codable, Identifiable, Equatable {
+    struct Frame: Codable, Equatable {
+        let receivedAt: Date
+        let lifeCount: UInt16
+        let currentWord: UInt16
+        let uncappedCurrentMgDL: UInt16
+        let currentGlucoseMgDL: UInt16?
+        let dqErrorRaw: UInt16
+        let sensorConditionRaw: UInt8
+        let actionableStatus: UInt8
+        let rateOfChangeRaw: Int16
+        let trendAndStatusByte: UInt8
+        let isUsable: Bool
+    }
+
+    let id: UUID
+    let detectedAt: Date
+    let run: Int
+    let frames: [Frame]
+}
 
 @MainActor
 enum Libre3DiagnosticsLog {
     private static let storageEntryLimit = 100
     private static let supportEntryLimit = 20
     private static let supportCharacterLimit = 1_500
-    private static let reconnectTraceStorageEntryLimit = 40
+    private static let reconnectTraceStorageEntryLimit = 120
     private static let reconnectTraceSupportEntryLimit = 12
     private static let reconnectTraceSupportCharacterLimit = 1_200
     private static let notableEventStorageEntryLimit = 50
+    private static let stuckSnapshotStorageLimit = 10
 
     private static let timestampFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -71,6 +105,74 @@ enum Libre3DiagnosticsLog {
         Array(SharedData.libre3NotableEvents.reversed())
     }
 
+    // MARK: - Stuck-glucose evidence (local developer diagnostics)
+
+    /// Decode the compact snapshot ring. The raw key previously held the removed
+    /// high-volume stream format; if that obsolete payload is encountered, clear
+    /// it once instead of retaining or repeatedly trying to decode it.
+    private static func storedStuckSnapshots() -> [Libre3StuckEvidenceSnapshot] {
+        if let snapshots = SharedData.store.getArray(
+            [Libre3StuckEvidenceSnapshot].self,
+            forKey: .libre3StuckSnapshots
+        ) {
+            return snapshots
+        }
+        if SharedData.store.object(forKey: DefaultsKey.libre3StuckSnapshots.rawValue) != nil {
+            SharedData.store.removeObject(forKey: DefaultsKey.libre3StuckSnapshots.rawValue)
+        }
+        return []
+    }
+
+    /// Retained anomaly snapshots, newest first.
+    static func stuckSnapshots() -> [Libre3StuckEvidenceSnapshot] {
+        storedStuckSnapshots().reversed()
+    }
+
+    /// One persistence write per detected anomaly — never per packet.
+    static func recordStuckSnapshot(
+        run: Int,
+        frames: [Libre3StuckEvidenceSnapshot.Frame],
+        at detectedAt: Date = Date()
+    ) {
+        var snapshots = storedStuckSnapshots()
+        snapshots.append(
+            Libre3StuckEvidenceSnapshot(
+                id: UUID(),
+                detectedAt: detectedAt,
+                run: run,
+                frames: frames
+            )
+        )
+        if snapshots.count > stuckSnapshotStorageLimit {
+            snapshots.removeFirst(snapshots.count - stuckSnapshotStorageLimit)
+        }
+        SharedData.store.setArray(snapshots, forKey: .libre3StuckSnapshots)
+        NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)
+    }
+
+    static func stuckEvidenceExportText() -> String {
+        let snapshots = stuckSnapshots()
+        guard !snapshots.isEmpty else { return "" }
+        let header = "\(appBuildDescription) — Libre 3 stuck-glucose evidence exported \(timestampFormatter.string(from: Date()))"
+        let blocks = snapshots.map { snapshot -> String in
+            let head = "\(timestampFormatter.string(from: snapshot.detectedAt)) run=\(snapshot.run)"
+            let frames = snapshot.frames.map { frame in
+                let glucose = frame.currentGlucoseMgDL.map(String.init) ?? "nil"
+                let word = String(format: "0x%04x", Int(frame.currentWord))
+                let dq = String(format: "0x%04x", Int(frame.dqErrorRaw))
+                let trendStatus = String(format: "0x%02x", Int(frame.trendAndStatusByte))
+                return "    \(timestampFormatter.string(from: frame.receivedAt)) lc=\(frame.lifeCount) glucose=\(glucose) uncapped=\(frame.uncappedCurrentMgDL) word=\(word) dq=\(dq) condition=\(frame.sensorConditionRaw) actionable=\(frame.actionableStatus) rocRaw=\(frame.rateOfChangeRaw) trendStatus=\(trendStatus) usable=\(frame.isUsable)"
+            }
+            return ([head] + frames).joined(separator: "\n")
+        }
+        return ([header, ""] + blocks).joined(separator: "\n")
+    }
+
+    static func clearStuckSnapshots() {
+        SharedData.store.removeObject(forKey: DefaultsKey.libre3StuckSnapshots.rawValue)
+        NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)
+    }
+
     /// All retained rare events and reconnect-trace lines, newest first.
     /// Both rings remain separate on the write side.
     static func mergedEntries() -> [String] {
@@ -81,11 +183,7 @@ enum Libre3DiagnosticsLog {
     /// Clipboard export of lifetime stats plus every entry still retained by the
     /// three bounded rings. Unlike email, this applies no additional caps.
     static func fullExportText() -> String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
-            as? String ?? "unknown"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")
-            as? String ?? "unknown"
-        let header = "FLwatch \(version) (\(build)) — Libre 3 diagnostics exported \(timestampFormatter.string(from: Date()))"
+        let header = "\(appBuildDescription) — Libre 3 diagnostics exported \(timestampFormatter.string(from: Date()))"
         let glucoseOnlyLastSeen = SharedData.libre3GlucoseOnlyDeathLastSeen
             .map { timestampFormatter.string(from: $0) } ?? "never"
         let notable = notableEntries()
@@ -160,6 +258,7 @@ enum Libre3DiagnosticsLog {
         SharedData.libre3DiagnosticEvents = []
         SharedData.libre3ReconnectTrace = []
         SharedData.libre3NotableEvents = []
+        SharedData.store.removeObject(forKey: DefaultsKey.libre3StuckSnapshots.rawValue)
         NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)
     }
 
@@ -167,6 +266,16 @@ enum Libre3DiagnosticsLog {
         SharedData.libre3GlucoseOnlyDeathCount = 0
         SharedData.libre3GlucoseOnlyDeathLastSeen = nil
         NotificationCenter.default.post(name: .libre3DiagnosticsDidChange, object: nil)
+    }
+
+    /// Shared export header prefix, so the two clipboard exports always name the
+    /// same build.
+    private static var appBuildDescription: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
+            as? String ?? "unknown"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")
+            as? String ?? "unknown"
+        return "FLwatch \(version) (\(build))"
     }
 
     private static func timestamped(_ event: String, at date: Date) -> String {

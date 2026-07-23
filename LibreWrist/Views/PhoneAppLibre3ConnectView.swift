@@ -22,6 +22,10 @@ struct PhoneAppLibre3ConnectView: View {
     @State private var notableEntries: [String] = []
     @State private var glucoseOnlyDeathCount = 0
     @State private var glucoseOnlyDeathLastSeen: Date?
+    @State private var stuckSnapshots: [Libre3StuckEvidenceSnapshot] = []
+    @State private var expandedStuckSnapshotIDs: Set<UUID> = []
+    @State private var livePacketRecords: [Libre3LivePacketRecord] = []
+    @State private var expandedLivePacketRecordIDs: Set<Int> = []
 
     /// LibreView patient UUID whose FNV-32a hash is the receiver ID. Persisted
     /// to the app group; read by `Libre3StateStore.receiverID()`.
@@ -56,6 +60,8 @@ struct PhoneAppLibre3ConnectView: View {
             if developerModeEnabled {
                 developerNotableEventsSection
                 developerLogSection
+                developerStuckEvidenceSection
+                developerLivePacketSection
             }
         }
         .navigationTitle("Libre 3 (Bluetooth)")
@@ -69,6 +75,19 @@ struct PhoneAppLibre3ConnectView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .libre3DiagnosticsDidChange)) { _ in
             reloadDiagnosticsLog()
+        }
+        .task(id: "\(developerModeEnabled):\(directManager.livePacketCaptureEnabled)") {
+            guard developerModeEnabled else { return }
+            reloadLivePacketCapture()
+            guard directManager.livePacketCaptureEnabled else { return }
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(for: .seconds(5))
+                } catch {
+                    return
+                }
+                reloadLivePacketCapture()
+            }
         }
         .confirmationDialog(
             "Activate a new sensor?",
@@ -403,6 +422,7 @@ struct PhoneAppLibre3ConnectView: View {
             HStack {
                 Button("Clear", role: .destructive) {
                     Libre3DiagnosticsLog.clearAllLogs()
+                    expandedStuckSnapshotIDs.removeAll()
                     reloadDiagnosticsLog()
                 }
                 .buttonStyle(.borderless)
@@ -431,6 +451,195 @@ struct PhoneAppLibre3ConnectView: View {
         }
     }
 
+    /// Compact flight-recorder snapshots written only when the diagnostic stuck
+    /// detector fires. They contain decoded scalar evidence, never plaintext.
+    private var developerStuckEvidenceSection: some View {
+        Section {
+            HStack {
+                Button("Clear", role: .destructive) {
+                    Libre3DiagnosticsLog.clearStuckSnapshots()
+                    expandedStuckSnapshotIDs.removeAll()
+                    reloadDiagnosticsLog()
+                }
+                .buttonStyle(.borderless)
+                .disabled(stuckSnapshots.isEmpty)
+
+                Spacer()
+
+                Button("Copy evidence") {
+                    UIPasteboard.general.string = Libre3DiagnosticsLog.stuckEvidenceExportText()
+                }
+                .buttonStyle(.borderless)
+                .disabled(stuckSnapshots.isEmpty)
+            }
+
+            if stuckSnapshots.isEmpty {
+                Text("No suspected stuck-glucose episodes recorded.")
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            } else {
+                ScrollView(.vertical) {
+                    LazyVStack(alignment: .leading, spacing: 6) {
+                        ForEach(stuckSnapshots) { snapshot in
+                            stuckSnapshotRow(snapshot)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(height: 320)
+            }
+        } header: {
+            Text("Stuck glucose evidence")
+        } footer: {
+            Text("Up to 10 suspected episodes, newest first. Each stores only eight compact realtime fingerprints—never decrypted payloads—and is never added to a support email.")
+        }
+    }
+
+    private func stuckSnapshotRow(_ snapshot: Libre3StuckEvidenceSnapshot) -> some View {
+        DisclosureGroup(
+            isExpanded: Binding(
+                get: { expandedStuckSnapshotIDs.contains(snapshot.id) },
+                set: { isExpanded in
+                    if isExpanded {
+                        expandedStuckSnapshotIDs.insert(snapshot.id)
+                    } else {
+                        expandedStuckSnapshotIDs.remove(snapshot.id)
+                    }
+                }
+            )
+        ) {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(Array(snapshot.frames.enumerated()), id: \.offset) { _, frame in
+                    let glucose = frame.currentGlucoseMgDL.map(String.init) ?? "nil"
+                    let word = String(format: "0x%04x", Int(frame.currentWord))
+                    let dq = String(format: "0x%04x", Int(frame.dqErrorRaw))
+                    let trendStatus = String(
+                        format: "0x%02x",
+                        Int(frame.trendAndStatusByte)
+                    )
+                    let time = frame.receivedAt.formatted(date: .omitted, time: .standard)
+                    Text(
+                        "\(time) · LC \(frame.lifeCount) · glucose \(glucose) · " +
+                        "uncapped \(frame.uncappedCurrentMgDL) · word \(word) · dq \(dq) · " +
+                        "cond \(frame.sensorConditionRaw) · act \(frame.actionableStatus) · " +
+                        "roc \(frame.rateOfChangeRaw) · trend/status \(trendStatus) · " +
+                        "usable \(frame.isUsable ? "yes" : "no")"
+                    )
+                }
+            }
+            .font(.system(.caption2, design: .monospaced))
+            .textSelection(.enabled)
+        } label: {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(verbatim: "Suspected stuck glucose · run \(snapshot.run)")
+                Text(snapshot.detectedAt.formatted(date: .abbreviated, time: .standard))
+                    .foregroundStyle(.secondary)
+            }
+            .font(.system(.caption, design: .monospaced))
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// Opt-in, session-only flight recorder. The BLE path stores the existing
+    /// decoded packet value; formatting happens only for visible rows or export.
+    private var developerLivePacketSection: some View {
+        Section {
+            Toggle(
+                "Capture live packets",
+                isOn: Binding(
+                    get: { directManager.livePacketCaptureEnabled },
+                    set: { enabled in
+                        directManager.setLivePacketCaptureEnabled(enabled)
+                        expandedLivePacketRecordIDs.removeAll()
+                        reloadLivePacketCapture()
+                    }
+                )
+            )
+
+            LabeledContent("Captured packets") {
+                Text(verbatim: "\(livePacketRecords.count) / 300")
+                    .monospacedDigit()
+            }
+
+            HStack {
+                Button("Clear", role: .destructive) {
+                    directManager.clearLivePacketCapture()
+                    expandedLivePacketRecordIDs.removeAll()
+                    reloadLivePacketCapture()
+                }
+                .buttonStyle(.borderless)
+                .disabled(livePacketRecords.isEmpty)
+
+                Spacer()
+
+                Button("Copy capture") {
+                    UIPasteboard.general.string =
+                        directManager.livePacketCaptureExportText()
+                }
+                .buttonStyle(.borderless)
+                .disabled(livePacketRecords.isEmpty)
+            }
+
+            if livePacketRecords.isEmpty {
+                Text("No packets captured.")
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            } else {
+                ScrollView(.vertical) {
+                    LazyVStack(alignment: .leading, spacing: 6) {
+                        ForEach(livePacketRecords) { record in
+                            livePacketRecordRow(record)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(height: 320)
+            }
+        } header: {
+            Text("Live packet capture")
+        } footer: {
+            Text("Session-only and memory-only. Off after every app launch. Captures up to 300 decrypted and decoded packets from channels FLwatch already uses; nothing is persisted or added to a support email.")
+        }
+    }
+
+    private func livePacketRecordRow(_ record: Libre3LivePacketRecord) -> some View {
+        DisclosureGroup(
+            isExpanded: Binding(
+                get: { expandedLivePacketRecordIDs.contains(record.id) },
+                set: { isExpanded in
+                    if isExpanded {
+                        expandedLivePacketRecordIDs.insert(record.id)
+                    } else {
+                        expandedLivePacketRecordIDs.remove(record.id)
+                    }
+                }
+            )
+        ) {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(
+                    Array(Libre3LivePacketFormatter.properties(for: record).enumerated()),
+                    id: \.offset
+                ) { _, property in
+                    Text(verbatim: "\(property.0): \(property.1)")
+                }
+            }
+            .font(.system(.caption2, design: .monospaced))
+            .textSelection(.enabled)
+        } label: {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(
+                    verbatim:
+                        "\(record.packet.channel.rawValue) · " +
+                        Libre3LivePacketFormatter.summary(for: record)
+                )
+                Text(record.receivedAt.formatted(date: .abbreviated, time: .standard))
+                    .foregroundStyle(.secondary)
+            }
+            .font(.system(.caption, design: .monospaced))
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
     private func lifetimeEventSummary(count: Int, lastSeen: Date?) -> String {
         guard let lastSeen else { return "\(count) · never" }
         return "\(count) · last \(lastSeen.formatted(date: .abbreviated, time: .shortened))"
@@ -439,8 +648,17 @@ struct PhoneAppLibre3ConnectView: View {
     private func reloadDiagnosticsLog() {
         logEntries = Libre3DiagnosticsLog.mergedEntries()
         notableEntries = Libre3DiagnosticsLog.notableEntries()
+        stuckSnapshots = Libre3DiagnosticsLog.stuckSnapshots()
         glucoseOnlyDeathCount = SharedData.libre3GlucoseOnlyDeathCount
         glucoseOnlyDeathLastSeen = SharedData.libre3GlucoseOnlyDeathLastSeen
+    }
+
+    private func reloadLivePacketCapture() {
+        let snapshot = directManager.livePacketRecordsSnapshot()
+        let didChange = snapshot.count != livePacketRecords.count
+            || snapshot.first?.id != livePacketRecords.first?.id
+        guard didChange else { return }
+        livePacketRecords = snapshot
     }
 
     // MARK: - Actions
