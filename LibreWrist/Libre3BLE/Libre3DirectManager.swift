@@ -922,7 +922,9 @@ final class Libre3DirectManager: ObservableObject {
             break
 
         case .didConnect(let peripheral):
-            Libre3DiagnosticsLog.traceReconnect("cb-did-connect")
+            Libre3DiagnosticsLog.traceReconnect(
+                "cb-did-connect peripheral=\(peripheral.identifier.uuidString)"
+            )
             Logger.libre3.info("Libre3 BLE didConnect: \(peripheral.identifier.uuidString, privacy: .private(mask: .hash))")
             if isSavedPeripheral(peripheral), lifecycleTask == nil {
                 adoptConnectedPeripheral(peripheral, reason: "did-connect")
@@ -930,7 +932,9 @@ final class Libre3DirectManager: ObservableObject {
 
         case .didFailToConnect(let peripheral, let error):
             let errorName = error.map { Self.compactErrorName(for: $0) } ?? "nil"
-            Libre3DiagnosticsLog.traceReconnect("cb-connect-failed error=\(errorName)")
+            Libre3DiagnosticsLog.traceReconnect(
+                "cb-connect-failed peripheral=\(peripheral.identifier.uuidString) \(Self.coreBluetoothErrorDescription(error))"
+            )
             Logger.libre3.info("Libre3 BLE didFailToConnect: \(peripheral.identifier.uuidString, privacy: .private(mask: .hash)) error=\(errorName, privacy: .public)")
             if isSavedPeripheral(peripheral), lifecycleTask == nil {
                 waitingForDisconnectBeforeRearm = false
@@ -938,8 +942,9 @@ final class Libre3DirectManager: ObservableObject {
             }
 
         case .didDisconnect(let peripheral, let error):
-            let errorName = error.map { Self.compactErrorName(for: $0) } ?? "nil"
-            Libre3DiagnosticsLog.traceReconnect("cb-did-disconnect error=\(errorName)")
+            Libre3DiagnosticsLog.traceReconnect(
+                "cb-did-disconnect peripheral=\(peripheral.identifier.uuidString) \(Self.coreBluetoothErrorDescription(error))"
+            )
             if session?.peripheral.identifier == peripheral.identifier {
                 session?.handleDisconnect(error: error)
             }
@@ -951,7 +956,9 @@ final class Libre3DirectManager: ObservableObject {
             }
 
         case .connectionEvent(let connectionEvent, let peripheral):
-            Libre3DiagnosticsLog.traceReconnect("cb-connection-event value=\(connectionEvent.rawValue)")
+            Libre3DiagnosticsLog.traceReconnect(
+                "cb-connection-event peripheral=\(peripheral.identifier.uuidString) value=\(connectionEvent.rawValue)"
+            )
             guard isSavedPeripheral(peripheral), lifecycleTask == nil else { return }
             switch connectionEvent {
             case .peerConnected:
@@ -1806,7 +1813,6 @@ final class Libre3DirectManager: ObservableObject {
                 peripheral: peripheral
             )
             attemptReachedDidConnect = true
-            Libre3DiagnosticsLog.traceReconnect("did-connect")
 
             let newSession = SensorSession(
                 peripheral: connected,
@@ -2787,6 +2793,12 @@ final class Libre3DirectManager: ObservableObject {
             .split(separator: ".")
             .last
             .map(String.init) ?? String(supportSafeName)
+    }
+
+    private static func coreBluetoothErrorDescription(_ error: Error?) -> String {
+        guard let error else { return "error=nil" }
+        let nsError = error as NSError
+        return "localized=\"\(error.localizedDescription)\" domain=\(nsError.domain) code=\(nsError.code) hex=0x\(String(nsError.code, radix: 16))"
     }
 
     private static func randomBytes(_ count: Int) throws -> Data {
