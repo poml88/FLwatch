@@ -2405,7 +2405,7 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
-    /// Drive the low-glucose alert from the push model's data tick. In BLE mode
+    /// Drive glucose alerts from the push model's data tick. In BLE mode
     /// there's no heartbeat coordinator to call `evaluateCurrentReading` (the
     /// cloud path's trigger — `BluetoothHeartbeatManager`), so we fire it here
     /// the moment a fresh *usable* minute reading has been written into the

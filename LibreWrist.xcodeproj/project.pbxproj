@@ -648,6 +648,7 @@
 				7BD574E12FBDF89400BE7E7D /* HeartbeatConnectionProfile.swift */,
 				7BF0A0112FA4000200C0D001 /* CarPlaySceneDelegate.swift */,
 				7BF92A5C2FF6D8D900F7A6B1 /* LowGlucoseNotificationManager.swift */,
+				7B8802FA300505310065D90B /* SensorAlertNotificationManager.swift */,
 				7BA0AE2C2C582F63004226FE /* LibreWristApp.swift */,
 				7BC51FC02C7D3DEF009542D2 /* Views */,
 				7BC51F622C7C9D51009542D2 /* LibreWrist.entitlements */,
@@ -655,7 +656,6 @@
 				7BA0AE302C582F64004226FE /* Assets.xcassets */,
 				7BA0AE322C582F64004226FE /* Preview Content */,
 				7BD2C65B2DC3BE6D0079EE4A /* InfoPlist.strings */,
-				7B8802FA300505310065D90B /* SensorAlertNotificationManager.swift */,
 			);
 			path = LibreWrist;
 			sourceTree = "<group>";

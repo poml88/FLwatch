@@ -113,6 +113,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     private func makeRootTemplate() -> CPTemplate {
         let snapshot = makeSnapshot()
         let shouldShowSnoozeAction = LowGlucoseNotificationManager.shared.shouldShowSnoozeAction()
+        let shouldShowHighSnoozeAction = LowGlucoseNotificationManager.shared.shouldShowHighGlucoseSnoozeAction()
         let shouldShowManualRefreshAction = shouldShowManualRefreshAction()
 
         let glucoseItem = CPListItem(
@@ -153,6 +154,18 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             }
         }
 
+        let snoozeHighAlertItem = CPListItem(
+            text: String(localized: "Snooze high alert for 15 min"),
+            detailText: String(localized: "Pause high glucose alerts temporarily.")
+        )
+        snoozeHighAlertItem.handler = { [weak self] _, completion in
+            Task { @MainActor [weak self] in
+                await LowGlucoseNotificationManager.shared.snoozeHighGlucoseAlerts()
+                self?.updateCarPlayUI()
+                completion()
+            }
+        }
+
         let graphInfoItem = CPListItem(
             text: String(localized: "Glucose Graphs in CarPlay"),
             detailText: String(localized: "Use the widget or Live Activity.")
@@ -169,6 +182,9 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         var actionItems: [CPListItem] = []
         if shouldShowSnoozeAction {
             actionItems.append(snoozeAlertItem)
+        }
+        if shouldShowHighSnoozeAction {
+            actionItems.append(snoozeHighAlertItem)
         }
         if shouldShowManualRefreshAction {
             actionItems.append(refreshItem)

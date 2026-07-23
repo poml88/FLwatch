@@ -27,6 +27,7 @@ private extension GlucoseAlertTier {
         switch self {
         case .low: "low-glucose-alert"
         case .criticalLow: "critical-low-glucose-alert"
+        case .high: "high-glucose-alert"
         }
     }
 
@@ -34,6 +35,7 @@ private extension GlucoseAlertTier {
         switch self {
         case .low: "LOW_GLUCOSE_ALERT"
         case .criticalLow: "CRITICAL_LOW_GLUCOSE_ALERT"
+        case .high: "HIGH_GLUCOSE_ALERT"
         }
     }
 
@@ -41,6 +43,7 @@ private extension GlucoseAlertTier {
         switch self {
         case .low: String(localized: "Glucose is low")
         case .criticalLow: String(localized: "Glucose is critically low")
+        case .high: String(localized: "Glucose is high")
         }
     }
 
@@ -48,6 +51,7 @@ private extension GlucoseAlertTier {
         switch self {
         case .low: "Low glucose"
         case .criticalLow: "Critically low glucose"
+        case .high: "High glucose"
         }
     }
 }
@@ -57,6 +61,7 @@ final class LowGlucoseNotificationManager: NSObject {
     static let shared = LowGlucoseNotificationManager()
     private let notificationCenter = UNUserNotificationCenter.current()
     private var tiersKnownClearInNotificationCenter: Set<GlucoseAlertTier> = []
+    private var tiersBeingScheduled: Set<GlucoseAlertTier> = []
 
     private override init() {
         super.init()
@@ -131,7 +136,8 @@ final class LowGlucoseNotificationManager: NSObject {
         await clearNotifications(for: ineffectiveTiers, resetCooldown: true)
 
         guard !effectiveTiers.isEmpty else {
-            clearSnoozeIfNeeded()
+            clearLowSnoozeIfNeeded()
+            clearHighSnoozeIfNeeded()
             return
         }
 
@@ -155,30 +161,44 @@ final class LowGlucoseNotificationManager: NSObject {
             return
         }
 
-        let tiersBelowThreshold = effectiveTiers.filter {
-            history.currentGlucose < threshold(for: $0)
+        let triggeredTiers = effectiveTiers.filter {
+            isTriggered($0, glucose: history.currentGlucose)
         }
-        let recoveredTiers = Set(effectiveTiers.filter { !tiersBelowThreshold.contains($0) })
+        let recoveredTiers = Set(effectiveTiers.filter { !triggeredTiers.contains($0) })
         await clearNotifications(for: recoveredTiers, resetCooldown: true)
+        if !triggeredTiers.contains(.low) && !triggeredTiers.contains(.criticalLow) {
+            clearLowSnoozeIfNeeded()
+        }
+        if !triggeredTiers.contains(.high) {
+            clearHighSnoozeIfNeeded()
+        }
 
-        guard !tiersBelowThreshold.isEmpty else {
-            clearSnoozeIfNeeded()
+        guard !triggeredTiers.isEmpty else {
             return
         }
 
-        let winningTier: GlucoseAlertTier = tiersBelowThreshold.contains(.criticalLow) ? .criticalLow : .low
-        let suppressedTiers = Set(tiersBelowThreshold.filter { $0 != winningTier })
+        var winningTiers: [GlucoseAlertTier] = []
+        if triggeredTiers.contains(.criticalLow) {
+            winningTiers.append(.criticalLow)
+        } else if triggeredTiers.contains(.low) {
+            winningTiers.append(.low)
+        }
+        if triggeredTiers.contains(.high) {
+            winningTiers.append(.high)
+        }
+
+        let suppressedTiers = Set(triggeredTiers.filter { !winningTiers.contains($0) })
         await clearNotifications(for: suppressedTiers, resetCooldown: false)
 
-        let snoozeUntil = SharedData.lowGlucoseNotificationSnoozeUntilDate
-        guard now >= snoozeUntil else {
-            Logger.connectivity.info("\(winningTier.logLabel, privacy: .public) notification skipped: snoozed until \(snoozeUntil.formatted(), privacy: .public)")
-            return
+        let dueTiers = winningTiers.filter { tier in
+            let snoozeUntil = snoozeUntilDate(for: tier)
+            guard now >= snoozeUntil else {
+                Logger.connectivity.info("\(tier.logLabel, privacy: .public) notification skipped: snoozed until \(snoozeUntil.formatted(), privacy: .public)")
+                return false
+            }
+            return pendingRepeat(for: tier) || notificationIsDue(for: tier, now: now)
         }
-
-        guard pendingRepeat(for: winningTier) || notificationIsDue(for: winningTier, now: now) else {
-            return
-        }
+        guard !dueTiers.isEmpty else { return }
 
         let settings = await notificationCenter.notificationSettings()
         guard [.authorized, .provisional, .ephemeral].contains(settings.authorizationStatus) else {
@@ -189,14 +209,39 @@ final class LowGlucoseNotificationManager: NSObject {
             return
         }
 
-        let winningThreshold = threshold(for: winningTier)
+        // Another evaluation may have completed while notification settings were
+        // being fetched. Re-check the persisted gate before scheduling.
+        for tier in dueTiers where
+            pendingRepeat(for: tier) || notificationIsDue(for: tier, now: now) {
+            await scheduleNotification(
+                for: tier,
+                history: history,
+                settings: settings,
+                now: now
+            )
+        }
+    }
+
+    private func scheduleNotification(
+        for tier: GlucoseAlertTier,
+        history: LibreLinkUpHistory,
+        settings: UNNotificationSettings,
+        now: Date
+    ) async {
+        // `add` suspends, so keep a per-tier in-flight guard as well as the
+        // persisted due check above. A concurrent evaluation can still schedule
+        // a different tier independently.
+        guard tiersBeingScheduled.insert(tier).inserted else { return }
+        defer { tiersBeingScheduled.remove(tier) }
+
+        let alertThreshold = threshold(for: tier)
         let glucoseUnit = GlucoseUnit(uom: SensorSettingsStore.shared.sensorSettings.uom)
         let compactCurrentValue = formattedGlucoseNumber(history.currentGlucose, glucoseUnit: glucoseUnit)
-        let thresholdValue = formattedGlucoseValue(winningThreshold, glucoseUnit: glucoseUnit)
+        let thresholdValue = formattedGlucoseValue(alertThreshold, glucoseUnit: glucoseUnit)
         let trendArrow = history.currentTrendArrow == "---" ? "-" : history.currentTrendArrow
         let compactTrendSummary = "\(compactCurrentValue) \(trendArrow)"
 
-        let notificationTitle = winningTier.notificationTitle
+        let notificationTitle = tier.notificationTitle
         let content = UNMutableNotificationContent()
         content.title = "\(notificationTitle) 📱"
         content.subtitle = compactTrendSummary
@@ -206,7 +251,7 @@ final class LowGlucoseNotificationManager: NSObject {
         // otherwise fall back to the default time-sensitive level. A critical
         // alert plays its sound even when the ringer is muted, so it ignores the
         // system sound setting.
-        let useCritical = criticalDeliveryEnabled(for: winningTier) && settings.criticalAlertSetting == .enabled
+        let useCritical = criticalDeliveryEnabled(for: tier) && settings.criticalAlertSetting == .enabled
         if useCritical {
             content.sound = .defaultCritical
             content.interruptionLevel = .critical
@@ -214,14 +259,14 @@ final class LowGlucoseNotificationManager: NSObject {
             if settings.soundSetting == .enabled {
                 content.sound = .default
             } else {
-                Logger.connectivity.info("\(winningTier.logLabel, privacy: .public) notification scheduled without sound because sounds are disabled in system settings")
+                Logger.connectivity.info("\(tier.logLabel, privacy: .public) notification scheduled without sound because sounds are disabled in system settings")
             }
             content.interruptionLevel = .timeSensitive
         }
         content.relevanceScore = 1
-        content.categoryIdentifier = winningTier.categoryIdentifier
+        content.categoryIdentifier = tier.categoryIdentifier
 
-        let requestIdentifier = "\(winningTier.notificationIdentifierPrefix)-\(Int(now.timeIntervalSince1970))"
+        let requestIdentifier = "\(tier.notificationIdentifierPrefix)-\(Int(now.timeIntervalSince1970))"
         let request = UNNotificationRequest(
             identifier: requestIdentifier,
             content: content,
@@ -230,19 +275,19 @@ final class LowGlucoseNotificationManager: NSObject {
 
         do {
             try await notificationCenter.add(request)
-            tiersKnownClearInNotificationCenter.remove(winningTier)
-            setLastSentDate(now, for: winningTier)
-            setPendingRepeat(false, for: winningTier)
-            clearSnoozeIfNeeded()
+            tiersKnownClearInNotificationCenter.remove(tier)
+            setLastSentDate(now, for: tier)
+            setPendingRepeat(false, for: tier)
+            clearSnoozeIfNeeded(for: tier)
             WatchConnectivityManager.shared.sendLowGlucoseAlertToWatch(
                 title: "\(notificationTitle) ⌚",
                 subtitle: content.subtitle,
                 body: content.body,
                 sentAt: now,
-                tier: winningTier
+                tier: tier
             )
         } catch {
-            Logger.connectivity.error("\(winningTier.logLabel, privacy: .public) notification scheduling failed: \(error.localizedDescription, privacy: .public)")
+            Logger.connectivity.error("\(tier.logLabel, privacy: .public) notification scheduling failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -266,7 +311,8 @@ final class LowGlucoseNotificationManager: NSObject {
             await clearNotifications(for: [.criticalLow], resetCooldown: true, forceCleanup: true)
         }
         if !GlucoseAlertTier.allCases.contains(where: isEffectivelyEnabled) {
-            clearSnoozeIfNeeded()
+            clearLowSnoozeIfNeeded()
+            clearHighSnoozeIfNeeded()
         }
     }
 
@@ -275,7 +321,7 @@ final class LowGlucoseNotificationManager: NSObject {
     }
 
     func shouldShowSnoozeAction(now: Date = Date()) -> Bool {
-        let effectiveTiers = GlucoseAlertTier.allCases.filter(isEffectivelyEnabled)
+        let effectiveTiers: [GlucoseAlertTier] = [.low, .criticalLow].filter(isEffectivelyEnabled)
         guard !effectiveTiers.isEmpty else {
             return false
         }
@@ -287,15 +333,38 @@ final class LowGlucoseNotificationManager: NSObject {
             return false
         }
 
-        return effectiveTiers.contains { history.currentGlucose < threshold(for: $0) } &&
+        return effectiveTiers.contains { isTriggered($0, glucose: history.currentGlucose) } &&
             !isLowGlucoseAlertSnoozed(now: now)
     }
 
+    func shouldShowHighGlucoseSnoozeAction(now: Date = Date()) -> Bool {
+        guard isEffectivelyEnabled(.high) else { return false }
+
+        let history = LibreLinkUpHistory.shared
+        guard history.currentGlucose > 0,
+              history.lastReadingDate > .distantPast,
+              now.timeIntervalSince(history.lastReadingDate) <= LibreLinkUpService.shared.activeProvider.staleReadingAfter else {
+            return false
+        }
+
+        return isTriggered(.high, glucose: history.currentGlucose) &&
+            now >= SharedData.highGlucoseNotificationSnoozeUntilDate
+    }
+
     func snoozeLowGlucoseAlerts(now: Date = Date()) async {
-        await removePendingAndDeliveredNotifications(for: Set(GlucoseAlertTier.allCases))
+        let lowTiers: Set<GlucoseAlertTier> = [.low, .criticalLow]
+        await removePendingAndDeliveredNotifications(for: lowTiers)
         SharedData.lowGlucoseNotificationSnoozeUntilDate = now.addingTimeInterval(LowGlucoseNotificationConfig.snoozeInterval)
-        for tier in GlucoseAlertTier.allCases where isEffectivelyEnabled(tier) {
+        for tier in lowTiers where isEffectivelyEnabled(tier) {
             setPendingRepeat(true, for: tier)
+        }
+    }
+
+    func snoozeHighGlucoseAlerts(now: Date = Date()) async {
+        await removePendingAndDeliveredNotifications(for: [.high])
+        SharedData.highGlucoseNotificationSnoozeUntilDate = now.addingTimeInterval(LowGlucoseNotificationConfig.snoozeInterval)
+        if isEffectivelyEnabled(.high) {
+            setPendingRepeat(true, for: .high)
         }
     }
 
@@ -303,7 +372,8 @@ final class LowGlucoseNotificationManager: NSObject {
         (SharedData.lowGlucoseNotificationsEnabled && SharedData.lowGlucoseCriticalAlertsEnabled) ||
             (SharedData.cgmProviderKind == .libre3BLE &&
              SharedData.criticalLowGlucoseNotificationsEnabled &&
-             SharedData.criticalLowGlucoseCriticalAlertsEnabled)
+             SharedData.criticalLowGlucoseCriticalAlertsEnabled) ||
+            (SharedData.highGlucoseNotificationsEnabled && SharedData.highGlucoseCriticalAlertsEnabled)
     }
 
     private func isEffectivelyEnabled(_ tier: GlucoseAlertTier) -> Bool {
@@ -313,6 +383,8 @@ final class LowGlucoseNotificationManager: NSObject {
         case .criticalLow:
             SharedData.cgmProviderKind == .libre3BLE &&
                 SharedData.criticalLowGlucoseNotificationsEnabled
+        case .high:
+            SharedData.highGlucoseNotificationsEnabled
         }
     }
 
@@ -322,6 +394,17 @@ final class LowGlucoseNotificationManager: NSObject {
             SharedData.lowGlucoseNotificationThreshold
         case .criticalLow:
             SharedData.criticalLowGlucoseNotificationThreshold
+        case .high:
+            SharedData.highGlucoseNotificationThreshold
+        }
+    }
+
+    private func isTriggered(_ tier: GlucoseAlertTier, glucose: Int) -> Bool {
+        switch tier {
+        case .low, .criticalLow:
+            glucose < threshold(for: tier)
+        case .high:
+            glucose > threshold(for: tier)
         }
     }
 
@@ -331,6 +414,8 @@ final class LowGlucoseNotificationManager: NSObject {
             SharedData.lowGlucoseCriticalAlertsEnabled
         case .criticalLow:
             SharedData.criticalLowGlucoseCriticalAlertsEnabled
+        case .high:
+            SharedData.highGlucoseCriticalAlertsEnabled
         }
     }
 
@@ -340,6 +425,8 @@ final class LowGlucoseNotificationManager: NSObject {
             SharedData.lowGlucoseNotificationLastSentDate
         case .criticalLow:
             SharedData.criticalLowGlucoseNotificationLastSentDate
+        case .high:
+            SharedData.highGlucoseNotificationLastSentDate
         }
     }
 
@@ -349,6 +436,8 @@ final class LowGlucoseNotificationManager: NSObject {
             SharedData.lowGlucoseNotificationLastSentDate = date
         case .criticalLow:
             SharedData.criticalLowGlucoseNotificationLastSentDate = date
+        case .high:
+            SharedData.highGlucoseNotificationLastSentDate = date
         }
     }
 
@@ -358,6 +447,8 @@ final class LowGlucoseNotificationManager: NSObject {
             SharedData.lowGlucoseNotificationPendingRepeat
         case .criticalLow:
             SharedData.criticalLowGlucoseNotificationPendingRepeat
+        case .high:
+            SharedData.highGlucoseNotificationPendingRepeat
         }
     }
 
@@ -367,6 +458,8 @@ final class LowGlucoseNotificationManager: NSObject {
             SharedData.lowGlucoseNotificationPendingRepeat = isPending
         case .criticalLow:
             SharedData.criticalLowGlucoseNotificationPendingRepeat = isPending
+        case .high:
+            SharedData.highGlucoseNotificationPendingRepeat = isPending
         }
     }
 
@@ -437,9 +530,32 @@ final class LowGlucoseNotificationManager: NSObject {
         setPendingRepeat(true, for: tier)
     }
 
-    private func clearSnoozeIfNeeded() {
+    private func snoozeUntilDate(for tier: GlucoseAlertTier) -> Date {
+        switch tier {
+        case .low, .criticalLow:
+            SharedData.lowGlucoseNotificationSnoozeUntilDate
+        case .high:
+            SharedData.highGlucoseNotificationSnoozeUntilDate
+        }
+    }
+
+    private func clearSnoozeIfNeeded(for tier: GlucoseAlertTier) {
+        switch tier {
+        case .low, .criticalLow:
+            clearLowSnoozeIfNeeded()
+        case .high:
+            clearHighSnoozeIfNeeded()
+        }
+    }
+
+    private func clearLowSnoozeIfNeeded() {
         guard SharedData.lowGlucoseNotificationSnoozeUntilDate > .distantPast else { return }
         SharedData.lowGlucoseNotificationSnoozeUntilDate = .distantPast
+    }
+
+    private func clearHighSnoozeIfNeeded() {
+        guard SharedData.highGlucoseNotificationSnoozeUntilDate > .distantPast else { return }
+        SharedData.highGlucoseNotificationSnoozeUntilDate = .distantPast
     }
 
     private func formattedGlucoseValue(_ valueInMgDl: Int, glucoseUnit: GlucoseUnit) -> String {
@@ -490,7 +606,9 @@ extension LowGlucoseNotificationManager: UNUserNotificationCenterDelegate {
         defer { completionHandler() }
 
         let identifier = response.notification.request.identifier
-        guard GlucoseAlertTier.allCases.contains(where: { identifier.hasPrefix($0.notificationIdentifierPrefix) }) else {
+        guard let tier = GlucoseAlertTier.allCases.first(where: {
+            identifier.hasPrefix($0.notificationIdentifierPrefix)
+        }) else {
             return
         }
 
@@ -499,7 +617,12 @@ extension LowGlucoseNotificationManager: UNUserNotificationCenterDelegate {
         }
 
         Task { @MainActor in
-            await LowGlucoseNotificationManager.shared.snoozeLowGlucoseAlerts()
+            switch tier {
+            case .low, .criticalLow:
+                await LowGlucoseNotificationManager.shared.snoozeLowGlucoseAlerts()
+            case .high:
+                await LowGlucoseNotificationManager.shared.snoozeHighGlucoseAlerts()
+            }
         }
     }
 }

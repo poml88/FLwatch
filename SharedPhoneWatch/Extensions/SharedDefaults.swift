@@ -27,6 +27,7 @@ enum SharedDefaults {
 enum GlucoseAlertTier: String, Codable, CaseIterable, Sendable {
     case low
     case criticalLow
+    case high
 }
 
 // MARK: - All keys in one place
@@ -61,6 +62,12 @@ enum DefaultsKey: String {
     case criticalLowGlucoseNotificationThreshold = "criticalLowGlucoseNotificationThresholdKey"
     case criticalLowGlucoseNotificationLastSentDate = "criticalLowGlucoseNotificationLastSentDateKey"
     case criticalLowGlucoseNotificationPendingRepeat = "criticalLowGlucoseNotificationPendingRepeatKey"
+    case highGlucoseNotificationsEnabled = "highGlucoseNotificationsEnabledKey"
+    case highGlucoseCriticalAlertsEnabled = "highGlucoseCriticalAlertsEnabledKey"
+    case highGlucoseNotificationThreshold = "highGlucoseNotificationThresholdKey"
+    case highGlucoseNotificationLastSentDate = "highGlucoseNotificationLastSentDateKey"
+    case highGlucoseNotificationPendingRepeat = "highGlucoseNotificationPendingRepeatKey"
+    case highGlucoseNotificationSnoozeUntilDate = "highGlucoseNotificationSnoozeUntilDateKey"
     case libre3SignalLossAlertEnabled = "libre3SignalLossAlertEnabledKey"
     case libre3SignalLossCritical = "libre3SignalLossCriticalKey"
     case icrGramsPerUnit = "icrGramsPerUnitKey"
@@ -435,6 +442,36 @@ enum SharedData {
     static var criticalLowGlucoseNotificationPendingRepeat: Bool {
         get { store.getBool(.criticalLowGlucoseNotificationPendingRepeat, defaultValue: false) }
         set { store.setBool(newValue, forKey: .criticalLowGlucoseNotificationPendingRepeat) }
+    }
+
+    static var highGlucoseNotificationsEnabled: Bool {
+        get { store.getBool(.highGlucoseNotificationsEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .highGlucoseNotificationsEnabled) }
+    }
+
+    static var highGlucoseCriticalAlertsEnabled: Bool {
+        get { store.getBool(.highGlucoseCriticalAlertsEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .highGlucoseCriticalAlertsEnabled) }
+    }
+
+    static var highGlucoseNotificationThreshold: Int {
+        get { store.getInt(.highGlucoseNotificationThreshold, defaultValue: 250) }
+        set { store.setInt(newValue, forKey: .highGlucoseNotificationThreshold) }
+    }
+
+    static var highGlucoseNotificationLastSentDate: Date {
+        get { store.getDate(.highGlucoseNotificationLastSentDate, defaultValue: .distantPast) }
+        set { store.setDate(newValue, forKey: .highGlucoseNotificationLastSentDate) }
+    }
+
+    static var highGlucoseNotificationPendingRepeat: Bool {
+        get { store.getBool(.highGlucoseNotificationPendingRepeat, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .highGlucoseNotificationPendingRepeat) }
+    }
+
+    static var highGlucoseNotificationSnoozeUntilDate: Date {
+        get { store.getDate(.highGlucoseNotificationSnoozeUntilDate, defaultValue: .distantPast) }
+        set { store.setDate(newValue, forKey: .highGlucoseNotificationSnoozeUntilDate) }
     }
 
     /// Enables the Libre 3 direct-BLE signal-loss dead-man notification. This is

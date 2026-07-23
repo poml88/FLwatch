@@ -47,9 +47,10 @@ struct LibreWristApp: App {
         appRefreshScheduler.scheduleNextRefresh()
         scheduleAppleHealthCatchUpExport()
         let lowGlucoseAlertsEnabled = SharedData.lowGlucoseNotificationsEnabled
+        let highGlucoseAlertsEnabled = SharedData.highGlucoseNotificationsEnabled
         let criticalLowGlucoseAlertsEnabled = SharedData.cgmProviderKind == .libre3BLE &&
             SharedData.criticalLowGlucoseNotificationsEnabled
-        if lowGlucoseAlertsEnabled || criticalLowGlucoseAlertsEnabled {
+        if lowGlucoseAlertsEnabled || criticalLowGlucoseAlertsEnabled || highGlucoseAlertsEnabled {
             Task {
                 let granted = await LowGlucoseNotificationManager.shared.requestAuthorizationIfNeeded()
                 if !granted {
@@ -58,6 +59,9 @@ struct LibreWristApp: App {
                     }
                     if criticalLowGlucoseAlertsEnabled {
                         SharedData.criticalLowGlucoseNotificationsEnabled = false
+                    }
+                    if highGlucoseAlertsEnabled {
+                        SharedData.highGlucoseNotificationsEnabled = false
                     }
                 }
             }

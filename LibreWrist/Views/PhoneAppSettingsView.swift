@@ -31,6 +31,9 @@ struct PhoneAppSettingsView: View {
     @AppStorage(DefaultsKey.criticalLowGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var criticalLowGlucoseNotificationsEnabled: Bool = false
     @AppStorage(DefaultsKey.criticalLowGlucoseCriticalAlertsEnabled.rawValue, store: UserDefaults.group) private var criticalLowGlucoseCriticalAlertsEnabled: Bool = false
     @AppStorage(DefaultsKey.criticalLowGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var criticalLowGlucoseNotificationThreshold: Int = 55
+    @AppStorage(DefaultsKey.highGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var highGlucoseNotificationsEnabled: Bool = false
+    @AppStorage(DefaultsKey.highGlucoseCriticalAlertsEnabled.rawValue, store: UserDefaults.group) private var highGlucoseCriticalAlertsEnabled: Bool = false
+    @AppStorage(DefaultsKey.highGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var highGlucoseNotificationThreshold: Int = 250
     @AppStorage(DefaultsKey.libre3SignalLossAlertEnabled.rawValue, store: UserDefaults.group) private var libre3SignalLossAlertEnabled: Bool = true
     @AppStorage(DefaultsKey.libre3SignalLossCritical.rawValue, store: UserDefaults.group) private var libre3SignalLossCritical: Bool = false
     @AppStorage("developerModeEnabled") private var developerModeEnabled: Bool = false
@@ -58,7 +61,8 @@ struct PhoneAppSettingsView: View {
     @StateObject private var bluetoothHeartbeatManager = BluetoothHeartbeatManager.shared
     private var watchConnector = WatchConnectivityManager.shared
     let updateFrequencyOptions: [Int] = [1, 5, 10, 15, 20]
-    let lowGlucoseThresholdOptions: [Int] = Array(stride(from: 60, through: 200, by: 5))
+    let lowGlucoseThresholdOptions: [Int] = Array(stride(from: 60, through: 120, by: 5))
+    let highGlucoseThresholdOptions: [Int] = Array(stride(from: 120, through: 400, by: 10))
     private var criticalLowGlucoseThresholdOptions: [Int] {
         let maximumThreshold = max(50, min(80, lowGlucoseNotificationThreshold - 5))
         return Array(stride(from: 50, through: maximumThreshold, by: 5))
@@ -130,6 +134,8 @@ struct PhoneAppSettingsView: View {
                             lowGlucoseNotificationsEnabled = false
                         case .criticalLow:
                             criticalLowGlucoseNotificationsEnabled = false
+                        case .high:
+                            highGlucoseNotificationsEnabled = false
                         }
                     }
                 }
@@ -141,8 +147,8 @@ struct PhoneAppSettingsView: View {
 
     /// Enabling critical delivery needs the critical-alert permission on top of
     /// the standard grant; if the user declines the system prompt, revert the
-    /// toggle so it reflects reality. Re-evaluates so a currently-low reading is
-    /// re-delivered at the new level.
+    /// toggle so it reflects reality. Re-evaluates so a currently-triggered
+    /// reading is re-delivered at the new level.
     private func handleCriticalAlertsChanged(for tier: GlucoseAlertTier, isEnabled: Bool) {
         Task {
             if isEnabled {
@@ -154,13 +160,15 @@ struct PhoneAppSettingsView: View {
                             lowGlucoseCriticalAlertsEnabled = false
                         case .criticalLow:
                             criticalLowGlucoseCriticalAlertsEnabled = false
+                        case .high:
+                            highGlucoseCriticalAlertsEnabled = false
                         }
                     }
                 }
             }
             // Mirror the (possibly reverted) preference to the watch so its
-            // backup low-glucose alert matches the phone's level, then
-            // re-evaluate so a current low is re-delivered at the new level.
+            // backup glucose alert matches the phone's level, then re-evaluate
+            // so a currently-triggered reading is re-delivered at the new level.
             watchConnector.sendSettingsSnapshotToWatch()
             await LowGlucoseNotificationManager.shared.rearmNotifications(for: [tier])
         }
@@ -198,6 +206,18 @@ struct PhoneAppSettingsView: View {
                 criticalLowGlucoseNotificationThreshold = newValue
                 Task {
                     await LowGlucoseNotificationManager.shared.rearmNotifications(for: [.criticalLow])
+                }
+            }
+        )
+    }
+
+    private var highGlucoseThresholdBinding: Binding<Int> {
+        Binding(
+            get: { highGlucoseNotificationThreshold },
+            set: { newValue in
+                highGlucoseNotificationThreshold = newValue
+                Task {
+                    await LowGlucoseNotificationManager.shared.rearmNotifications(for: [.high])
                 }
             }
         )
@@ -503,8 +523,8 @@ struct PhoneAppSettingsView: View {
                 Text("Permission is requested only when you turn this on. FLwatch exports insulin injections and glucose values, and tags samples with HealthKit sync identifiers to avoid duplicates.")
             }
 
-            // The Bluetooth heartbeat — and the low-glucose alert that rides on
-            // it — applies only to the cloud providers: there FLwatch relies on
+            // The Bluetooth heartbeat — and the glucose alerts that ride on it
+            // — applies only to the cloud providers: there FLwatch relies on
             // the vendor app for primary alarms, and the heartbeat merely
             // schedules cloud polls. In direct-BLE mode there's no vendor app to
             // alarm and nothing to poll, so the whole section is hidden. BLE
@@ -523,9 +543,15 @@ struct PhoneAppSettingsView: View {
                         get: { bluetoothHeartbeatManager.isEnabled },
                         set: {
                             bluetoothHeartbeatManager.setEnabled($0)
-                            guard !$0, lowGlucoseNotificationsEnabled else { return }
-                            lowGlucoseNotificationsEnabled = false
-                        handleGlucoseAlertsChanged(.low, isEnabled: false)
+                            guard !$0 else { return }
+                            if lowGlucoseNotificationsEnabled {
+                                lowGlucoseNotificationsEnabled = false
+                                handleGlucoseAlertsChanged(.low, isEnabled: false)
+                            }
+                            if highGlucoseNotificationsEnabled {
+                                highGlucoseNotificationsEnabled = false
+                                handleGlucoseAlertsChanged(.high, isEnabled: false)
+                            }
                         }
                     )
                 )
@@ -646,6 +672,40 @@ struct PhoneAppSettingsView: View {
                     .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.secondary)
+
+                Divider()
+
+                Toggle("High glucose alerts", isOn: $highGlucoseNotificationsEnabled)
+                    .onChange(of: highGlucoseNotificationsEnabled) { _, isEnabled in
+                        guard bluetoothHeartbeatManager.isEnabled || !isEnabled else {
+                            highGlucoseNotificationsEnabled = false
+                            return
+                        }
+                        handleGlucoseAlertsChanged(.high, isEnabled: isEnabled)
+                    }
+                    .disabled(!bluetoothHeartbeatManager.isEnabled)
+
+                if highGlucoseNotificationsEnabled {
+                    Picker("Alert me above", selection: highGlucoseThresholdBinding) {
+                        ForEach(highGlucoseThresholdOptions, id: \.self) { threshold in
+                            Text(lowGlucoseThresholdText(for: threshold))
+                                .tag(threshold)
+                        }
+                    }
+
+                    Toggle("Use critical alerts", isOn: $highGlucoseCriticalAlertsEnabled)
+                        .onChange(of: highGlucoseCriticalAlertsEnabled) { _, isEnabled in
+                            handleCriticalAlertsChanged(for: .high, isEnabled: isEnabled)
+                        }
+                } else {
+                    LabeledContent("Alert me above", value: lowGlucoseThresholdText(for: highGlucoseNotificationThreshold))
+                        .foregroundStyle(.secondary)
+                }
+
+                Text("You’ll get a notification when a new reading is above \(lowGlucoseThresholdText(for: highGlucoseNotificationThreshold)). Alerts repeat at most every 5 minutes while glucose stays high. Alerts depend on a stable Bluetooth connection to your sensor and an internet connection. Always rely on the manufacturer's alerts first.")
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundStyle(.secondary)
             } header: {
                 Text("Bluetooth Heartbeat and Notifications")
             } footer: {
@@ -655,7 +715,7 @@ struct PhoneAppSettingsView: View {
 
             // Direct-BLE has no vendor app to poll and no heartbeat to ride on:
             // the sensor pushes readings and `Libre3DirectManager` drives the
-            // low-glucose alert from that push tick. So BLE gets its own, simpler
+            // glucose alerts from that push tick. So BLE gets its own, simpler
             // Notifications section — no heartbeat toggle to gate on, otherwise
             // identical to the cloud one and backed by the same provider-agnostic
             // `LowGlucoseNotificationManager`.
@@ -722,6 +782,38 @@ struct PhoneAppSettingsView: View {
                 }
 
                 Text("Notifies you when a new sensor reading is critically low, below \(lowGlucoseThresholdText(for: criticalLowGlucoseNotificationThreshold)). This alert takes precedence over the low glucose alert. Alerts may repeat every 5 minutes and share the 15-minute snooze.")
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+
+                Toggle("High glucose alerts", isOn: $highGlucoseNotificationsEnabled)
+                    .onChange(of: highGlucoseNotificationsEnabled) { _, isEnabled in
+                        handleGlucoseAlertsChanged(.high, isEnabled: isEnabled)
+                    }
+
+                if highGlucoseNotificationsEnabled {
+                    Picker("Alert me above", selection: highGlucoseThresholdBinding) {
+                        ForEach(highGlucoseThresholdOptions, id: \.self) { threshold in
+                            Text(lowGlucoseThresholdText(for: threshold))
+                                .tag(threshold)
+                        }
+                    }
+
+                    Toggle("Use critical alerts", isOn: $highGlucoseCriticalAlertsEnabled)
+                        .onChange(of: highGlucoseCriticalAlertsEnabled) { _, isEnabled in
+                            handleCriticalAlertsChanged(for: .high, isEnabled: isEnabled)
+                        }
+                } else {
+                    LabeledContent(
+                        "Alert me above",
+                        value: lowGlucoseThresholdText(for: highGlucoseNotificationThreshold)
+                    )
+                    .foregroundStyle(.secondary)
+                }
+
+                Text("Notifies you when a new sensor reading is above \(lowGlucoseThresholdText(for: highGlucoseNotificationThreshold)). Alerts may repeat every 5 minutes while glucose remains high and require a stable Bluetooth connection. Alerts can be snoozed for 15 minutes.")
                     .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.secondary)

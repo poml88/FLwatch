@@ -1582,6 +1582,64 @@
         }
       }
     },
+    "Alert me above" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benachrichtige mich über"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avisarme por encima de"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "M’alerter au-dessus de"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisami sopra"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次を上回ったら通知"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waarschuw mij boven"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Powiadom mnie powyżej"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оповещать меня выше"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高于此值时提醒我"
+          }
+        }
+      }
+    },
     "Alert me below" : {
       "localizations" : {
         "de" : {
@@ -8033,6 +8091,64 @@
         }
       }
     },
+    "Glucose is high" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glukose ist hoch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La glucosa está alta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le glucose est élevé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il glucosio è alto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "グルコースが高いです"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucose is hoog"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poziom glukozy jest wysoki"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Высокий уровень глюкозы"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "葡萄糖偏高"
+          }
+        }
+      }
+    },
     "Glucose is low" : {
       "localizations" : {
         "de" : {
@@ -10502,6 +10618,64 @@
         }
       }
     },
+    "High glucose alerts" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnungen bei hohem Glukosewert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertas de glucosa alta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertes de glycémie élevée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisi di glucosio alto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高グルコースアラート"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waarschuwingen voor hoge glucose"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerty wysokiego poziomu glukozy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оповещения о высоком уровне глюкозы"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高血糖提醒"
+          }
+        }
+      }
+    },
     "Low glucose alerts" : {
       "localizations" : {
         "de" : {
@@ -11959,6 +12133,64 @@
         }
       }
     },
+    "Notifies you when a new sensor reading is above %@. Alerts may repeat every 5 minutes while glucose remains high and require a stable Bluetooth connection. Alerts can be snoozed for 15 minutes." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benachrichtigt dich, wenn ein neuer Sensormesswert über %@ liegt. Hinweise können alle 5 Minuten wiederholt werden, solange der Glukosewert hoch bleibt, und erfordern eine stabile Bluetooth-Verbindung. Hinweise können für 15 Minuten stummgeschaltet werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Te avisa cuando una nueva lectura del sensor está por encima de %@. Las alertas pueden repetirse cada 5 minutos mientras la glucosa siga alta y requieren una conexión Bluetooth estable. Las alertas se pueden posponer durante 15 minutos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous avertit lorsqu’une nouvelle mesure du capteur est supérieure à %@. Les alertes peuvent se répéter toutes les 5 minutes tant que la glycémie reste élevée et nécessitent une connexion Bluetooth stable. Elles peuvent être suspendues pendant 15 minutes."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ti avvisa quando una nuova lettura del sensore è superiore a %@. Gli avvisi possono ripetersi ogni 5 minuti finché il glucosio resta alto e richiedono una connessione Bluetooth stabile. Gli avvisi possono essere posticipati di 15 minuti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいセンサー測定値が%@を上回ると通知します。グルコース値が高い間は5分ごとに通知が繰り返されることがあり、安定したBluetooth接続が必要です。通知は15分間スヌーズできます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldt het wanneer een nieuwe sensormeting hoger is dan %@. Waarschuwingen kunnen elke 5 minuten worden herhaald zolang de glucose hoog blijft en vereisen een stabiele Bluetooth-verbinding. Je kunt waarschuwingen 15 minuten sluimeren."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Powiadamia, gdy nowy odczyt sensora jest wyższy niż %@. Alerty mogą być powtarzane co 5 minut, dopóki poziom glukozy pozostaje wysoki, i wymagają stabilnego połączenia Bluetooth. Alerty można wyciszyć na 15 minut."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомляет, когда новое показание датчика выше %@. Пока уровень глюкозы остаётся высоким, предупреждения могут повторяться каждые 5 минут; для этого требуется стабильное Bluetooth-соединение. Предупреждения можно отложить на 15 минут."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当新的传感器读数高于%@时通知您。只要葡萄糖值持续偏高，警报可能每5分钟重复一次，并且需要稳定的蓝牙连接。警报可以暂停15分钟。"
+          }
+        }
+      }
+    },
     "Notifies you when a new sensor reading is below %@. Alerts may repeat every 5 minutes while glucose remains low and require a stable Bluetooth connection. Alerts can be snoozed for 15 minutes." : {
       "localizations" : {
         "de" : {
@@ -12877,6 +13109,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "暂停心跳检查"
+          }
+        }
+      }
+    },
+    "Pause high glucose alerts temporarily." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnungen bei hohem Glukosewert vorübergehend pausieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar temporalmente las alertas de glucosa alta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspendre temporairement les alertes d’hyperglycémie."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sospendi temporaneamente gli avvisi di glucosio alto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高グルコース警告を一時的に停止します。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pauzeer waarschuwingen voor hoge glucose tijdelijk."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tymczasowo wstrzymaj alerty wysokiego poziomu glukozy."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Временно приостановить предупреждения о высоком уровне глюкозы."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂时暂停高血糖警报。"
           }
         }
       }
@@ -17144,6 +17434,64 @@
         }
       }
     },
+    "Snooze high alert for 15 min" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoch-Alarm für 15 Min. schlummern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posponer alerta de glucosa alta durante 15 min"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reporter l'alerte de glucose élevé pendant 15 min"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posticipa l'avviso di glucosio alto per 15 min"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高グルコースアラートを15分スヌーズ"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoge-glucosewaarschuwing 15 min sluimeren"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odłóż alert wysokiego poziomu glukozy na 15 min"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отложить предупреждение о высоком уровне глюкозы на 15 мин"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将高葡萄糖提醒延后15分钟"
+          }
+        }
+      }
+    },
     "Snooze low alert for 15 min" : {
       "localizations" : {
         "de" : {
@@ -21343,6 +21691,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "您稍后可以在“设置”中更改此项。"
+          }
+        }
+      }
+    },
+    "You’ll get a notification when a new reading is above %@. Alerts repeat at most every 5 minutes while glucose stays high. Alerts depend on a stable Bluetooth connection to your sensor and an internet connection. Always rely on the manufacturer's alerts first." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sie erhalten eine Mitteilung, wenn ein neuer Messwert über %@ liegt. Solange der Glukosewert hoch bleibt, werden Warnungen höchstens alle 5 Minuten wiederholt. Die Warnungen hängen von einer stabilen Bluetooth-Verbindung zu Ihrem Sensor und einer Internetverbindung ab. Verlassen Sie sich immer zuerst auf die Warnungen des Herstellers."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recibirá una notificación cuando una nueva lectura esté por encima de %@. Las alertas se repiten como máximo cada 5 minutos mientras la glucosa siga alta. Las alertas dependen de una conexión Bluetooth estable con su sensor y de una conexión a internet. Confíe siempre primero en las alertas del fabricante."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous recevrez une notification lorsqu’une nouvelle mesure sera supérieure à %@. Les alertes se répètent au maximum toutes les 5 minutes tant que la glycémie reste élevée. Les alertes dépendent d’une connexion Bluetooth stable à votre capteur et d’une connexion Internet. Fiez-vous toujours d’abord aux alertes du fabricant."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riceverai una notifica quando una nuova lettura sarà superiore a %@. Gli avvisi si ripetono al massimo ogni 5 minuti finché il glucosio resta alto. Gli avvisi dipendono da una connessione Bluetooth stabile al sensore e da una connessione Internet. Affidati sempre prima di tutto agli avvisi del produttore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しい測定値が %@ を上回ると通知が届きます。グルコース値が高いままの間、アラートは最大で 5 分ごとに繰り返されます。アラートは、センサーとの安定した Bluetooth 接続とインターネット接続に依存します。常にまずメーカーのアラートを優先してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je krijgt een melding wanneer een nieuwe meting boven %@ ligt. Waarschuwingen worden hoogstens elke 5 minuten herhaald zolang de glucose hoog blijft. Waarschuwingen zijn afhankelijk van een stabiele Bluetooth-verbinding met je sensor en een internetverbinding. Vertrouw altijd eerst op de waarschuwingen van de fabrikant."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otrzymasz powiadomienie, gdy nowy odczyt wzrośnie powyżej %@. Alerty powtarzają się najwyżej co 5 minut, dopóki poziom glukozy pozostaje wysoki. Alerty zależą od stabilnego połączenia Bluetooth z sensorem oraz połączenia z internetem. Zawsze w pierwszej kolejności polegaj na alertach producenta."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы получите уведомление, когда новое значение окажется выше %@. Оповещения повторяются не чаще чем каждые 5 минут, пока уровень глюкозы остается высоким. Оповещения зависят от стабильного Bluetooth-соединения с сенсором и подключения к интернету. Всегда в первую очередь полагайтесь на оповещения производителя."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当新的读数高于 %@ 时，您会收到通知。只要血糖持续偏高，提醒最多每 5 分钟重复一次。提醒依赖于与传感器的稳定蓝牙连接以及互联网连接。请始终优先依赖制造商提供的提醒。"
           }
         }
       }

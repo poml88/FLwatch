@@ -23,6 +23,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     private static let settingsSnapshotDataKey = "settingsSnapshotData"
     private static let requestSettingsSnapshotContent = "requestSettingsSnapshot"
     private static let lowGlucoseAlertContent = "lowGlucoseAlert"
+    private static let highGlucoseAlertContent = "highGlucoseAlert"
     private static let lowGlucoseAlertDataKey = "lowGlucoseAlertData"
     /// Phone → watch nudge: a fresh Dexcom Share sessionId after the phone
     /// re-authenticated. The watch persists it so its own next reload skips
@@ -94,6 +95,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         // Same delivery preference for the Libre 3-only critically-low tier.
         // Optional so watches can still decode snapshots from older phones.
         let criticalLowGlucoseCriticalAlertsEnabled: Bool?
+        let highGlucoseCriticalAlertsEnabled: Bool?
         let updatedAt: Date
     }
 
@@ -413,9 +415,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         }
 #endif
 
-        if message["content"] as? String == Self.lowGlucoseAlertContent {
+        let glucoseAlertContent = message["content"] as? String
+        if glucoseAlertContent == Self.lowGlucoseAlertContent ||
+            glucoseAlertContent == Self.highGlucoseAlertContent {
             guard let alertData = message[Self.lowGlucoseAlertDataKey] as? Data else {
-                Logger.connectivity.error("Missing low glucose alert data in message")
+                Logger.connectivity.error("Missing glucose alert data in message")
                 return
             }
 
@@ -427,7 +431,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
                 }
 #endif
             } catch {
-                Logger.connectivity.error("Failed to decode low glucose alert payload: \(error.localizedDescription)")
+                Logger.connectivity.error("Failed to decode glucose alert payload: \(error.localizedDescription)")
             }
         }
 
@@ -573,6 +577,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             criticalLowGlucoseCriticalAlertsEnabled: providerKind == .libre3BLE
                 ? SharedData.criticalLowGlucoseCriticalAlertsEnabled
                 : false,
+            highGlucoseCriticalAlertsEnabled: SharedData.highGlucoseCriticalAlertsEnabled,
             updatedAt: Date()
         )
 
@@ -719,15 +724,19 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         // before the next alert rather than prompting mid-low.
         let wantsLowCritical = snapshot.lowGlucoseCriticalAlertsEnabled ?? false
         let wantsCriticalLowCritical = snapshot.criticalLowGlucoseCriticalAlertsEnabled ?? false
+        let wantsHighCritical = snapshot.highGlucoseCriticalAlertsEnabled ?? false
 #if os(watchOS)
         let lowCriticalWasEnabled = SharedData.lowGlucoseCriticalAlertsEnabled
         let criticalLowCriticalWasEnabled = SharedData.criticalLowGlucoseCriticalAlertsEnabled
+        let highCriticalWasEnabled = SharedData.highGlucoseCriticalAlertsEnabled
 #endif
         SharedData.lowGlucoseCriticalAlertsEnabled = wantsLowCritical
         SharedData.criticalLowGlucoseCriticalAlertsEnabled = wantsCriticalLowCritical
+        SharedData.highGlucoseCriticalAlertsEnabled = wantsHighCritical
 #if os(watchOS)
         if (wantsLowCritical && !lowCriticalWasEnabled) ||
-            (wantsCriticalLowCritical && !criticalLowCriticalWasEnabled) {
+            (wantsCriticalLowCritical && !criticalLowCriticalWasEnabled) ||
+            (wantsHighCritical && !highCriticalWasEnabled) {
             requestWatchLowGlucoseNotificationAuthorization()
         }
 #endif
@@ -920,11 +929,12 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     }
 
 #if os(iOS)
-    // NOTE: sent with `useApplicationContext: true`, so it's merged into the WC
-    // application context under the "lowGlucoseAlert" key (a sibling of the
-    // "libreLinkUpSnapshot" key, not nested inside it). Application context is
-    // latest-state storage, not a queue: the value lingers until a newer alert
-    // overwrites it, and the system *replays the whole context* to the watch on
+    // NOTE: sent with `useApplicationContext: true`, so low-family and high
+    // alerts use separate sibling keys in the WC application context. This lets
+    // intentionally overlapping thresholds deliver both families without one
+    // overwriting the other. Application context is latest-state storage, not a
+    // queue: each value lingers until a newer alert in that family overwrites it,
+    // and the system *replays the whole context* to the watch on
     // every session activation / reachability change (see deliverApplicationCtx
     // → received). So the watch will see this same alert re-delivered repeatedly
     // — alongside the snapshot — especially under Xcode where each relaunch
@@ -949,14 +959,17 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
 
         do {
             let alertData = try JSONEncoder().encode(payload)
+            let content = tier == .high
+                ? Self.highGlucoseAlertContent
+                : Self.lowGlucoseAlertContent
             let messageToWatch: [String: Any] = [
-                "content": Self.lowGlucoseAlertContent,
+                "content": content,
                 Self.lowGlucoseAlertDataKey: alertData,
                 "useApplicationContext": true
             ]
             sendMessageToPairedDevice(messageToWatch)
         } catch {
-            Logger.connectivity.error("Failed to encode low glucose alert payload: \(error.localizedDescription)")
+            Logger.connectivity.error("Failed to encode glucose alert payload: \(error.localizedDescription)")
         }
     }
 #endif
@@ -992,6 +1005,8 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             "watch-low-glucose-alert"
         case .criticalLow:
             "watch-critical-low-glucose-alert"
+        case .high:
+            "watch-high-glucose-alert"
         }
     }
 
@@ -1001,6 +1016,8 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             SharedData.lowGlucoseCriticalAlertsEnabled
         case .criticalLow:
             SharedData.criticalLowGlucoseCriticalAlertsEnabled
+        case .high:
+            SharedData.highGlucoseCriticalAlertsEnabled
         }
     }
 
@@ -1016,7 +1033,8 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         // critical-alert permission. Skip the request only when already
         // authorized AND the critical grant is satisfied (or not wanted).
         let wantsCritical = SharedData.lowGlucoseCriticalAlertsEnabled ||
-            SharedData.criticalLowGlucoseCriticalAlertsEnabled
+            SharedData.criticalLowGlucoseCriticalAlertsEnabled ||
+            SharedData.highGlucoseCriticalAlertsEnabled
         let criticalSatisfied = !wantsCritical || settings.criticalAlertSetting == .enabled
         if [.authorized, .provisional].contains(settings.authorizationStatus), criticalSatisfied {
             return true
