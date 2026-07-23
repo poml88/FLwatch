@@ -46,6 +46,7 @@ EXPORT_METHOD = ENV.fetch("FASTLANE_EXPORT_METHOD", "app-store")
 WHATS_NEW_FILE = File.expand_path("whats_new/en-GB.txt", __dir__)
 WHAT_TO_TEST_FILE = File.expand_path("what_to_test/en-GB.txt", __dir__)
 METADATA_PATH = File.expand_path("metadata", __dir__)
+APP_DESCRIPTION_METADATA_PATH = File.expand_path("app_descriptions", __dir__)
 
 def ensure_full_xcode_selected!
   developer_dir = Actions.sh("xcode-select -p", log: false).strip
@@ -172,6 +173,37 @@ def prepare_release_notes!
   end
 end
 
+def validate_app_descriptions!
+  missing_locales = []
+  empty_locales = []
+
+  SUPPORTED_RELEASE_LOCALES.each do |locale|
+    description_path = File.join(APP_DESCRIPTION_METADATA_PATH, locale, "description.txt")
+
+    if !File.exist?(description_path)
+      missing_locales << locale
+    elsif File.read(description_path).strip.empty?
+      empty_locales << locale
+    end
+  end
+
+  unexpected_locales = if Dir.exist?(APP_DESCRIPTION_METADATA_PATH)
+                         Dir.children(APP_DESCRIPTION_METADATA_PATH).select do |entry|
+                           File.directory?(File.join(APP_DESCRIPTION_METADATA_PATH, entry)) &&
+                             !SUPPORTED_RELEASE_LOCALES.include?(entry)
+                         end
+                       else
+                         []
+                       end
+
+  errors = []
+  errors << "Missing description.txt for: #{missing_locales.join(', ')}" unless missing_locales.empty?
+  errors << "Empty description.txt for: #{empty_locales.join(', ')}" unless empty_locales.empty?
+  errors << "Unexpected locale directories: #{unexpected_locales.sort.join(', ')}" unless unexpected_locales.empty?
+
+  UI.user_error!(errors.join("\n")) unless errors.empty?
+end
+
 def external_groups
   groups = ENV.fetch("TESTFLIGHT_EXTERNAL_GROUPS", "External")
               .split(",")
@@ -236,6 +268,38 @@ platform :ios do
           groups: external_groups,
           notify_external_testers: true,
           skip_waiting_for_build_processing: false
+        )
+      end
+    end
+  end
+
+  desc "Upload localized app descriptions to the existing editable App Store version"
+  lane :upload_descriptions do
+    validate_app_descriptions!
+
+    with_deliver_api_key_json do |api_key_json_path|
+      # Authorize the direct Connect API lookup used to require an existing editable version.
+      app_store_connect_api_key_if_configured
+
+      app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+      app_version = editable_app_store_version_string(
+        app_identifier: app_identifier,
+        platform: "ios"
+      )
+
+      UI.message("Uploading localized descriptions to App Store version #{app_version}")
+
+      with_cleared_auth_env do
+        upload_to_app_store(
+          api_key_path: api_key_json_path,
+          app_version: app_version,
+          metadata_path: APP_DESCRIPTION_METADATA_PATH,
+          skip_binary_upload: true,
+          skip_screenshots: true,
+          skip_app_version_update: true,
+          force: true,
+          run_precheck_before_submit: false,
+          submit_for_review: false
         )
       end
     end
