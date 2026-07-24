@@ -212,6 +212,17 @@ final class SensorSettingsStore {
 
     @discardableResult
     func refreshFromPersistence(force: Bool = false) -> Bool {
+        // Routine refreshes can skip the JSON decode when the file mtime is unchanged.
+        let preflightModificationDate: Date? = force
+            ? nil
+            : FileStoreIO.modificationDate(at: storeURL, fileManager: fileManager)
+        if !force,
+           let preflightModificationDate,
+           let lastKnownModificationDate,
+           preflightModificationDate == lastKnownModificationDate {
+            return false
+        }
+
         let snapshot: Snapshot
         do {
             guard let loadedSnapshot = try FileStoreIO.readSnapshot(
@@ -228,7 +239,10 @@ final class SensorSettingsStore {
             return false
         }
 
-        let diskModificationDate = FileStoreIO.modificationDate(at: storeURL, fileManager: fileManager)
+        // Forced refreshes keep the original read-then-stat ordering.
+        let diskModificationDate = force
+            ? FileStoreIO.modificationDate(at: storeURL, fileManager: fileManager)
+            : preflightModificationDate
         if !force {
             let isNewerByUpdatedAt = snapshot.updatedAt > updatedAt
             let isNewerByModificationDate: Bool = {
