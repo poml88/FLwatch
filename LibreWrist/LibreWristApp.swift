@@ -104,7 +104,9 @@ struct LibreWristApp: App {
 
     private func scheduleAppleHealthCatchUpExport() {
         Task {
-            await AppleHealthExportManager.shared.exportInsulinCatchUpIfNeeded()
+            // HealthKit reads may fail while locked, so reconcile both data
+            // types when the app becomes active again.
+            await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
         }
     }
 }

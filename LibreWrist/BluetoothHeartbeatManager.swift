@@ -60,7 +60,10 @@ final class PhoneHeartbeatRefreshCoordinator {
             let forceReload = !bypassPropagationDelay
             await LibreLinkUpService.shared.requestReloadIfNeeded(force: forceReload)
             await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
-            await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
+            // Persisting a newer history already triggers glucose export; the
+            // foreground/BG catch-up paths retry anything missed while locked.
+            // Commented out the following export trigger.
+//            await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
             await LiveActivityManager.shared.refreshFromCurrentHistory(
                 useLiveActivities: SharedData.useLiveActivities,
                 reloadFailed: LibreLinkUpService.shared.didLastReloadFail,
