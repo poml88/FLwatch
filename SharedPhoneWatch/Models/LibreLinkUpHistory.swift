@@ -186,9 +186,17 @@ final class LibreLinkUpHistoryStore {
         let normalizedLatest = latestLibreLinkUpGlucose
             ?? libreLinkUpGlucose.first
             ?? libreLinkUpMinuteGlucose.first
-        let previousLatestDate = self.latestLibreLinkUpGlucose?.glucose.date ?? .distantPast
-        let shouldExportGlucose = (normalizedLatest?.glucose.date ?? .distantPast) > previousLatestDate
         let normalizedFullGraphHistory = fullLibreLinkUpGlucose ?? libreLinkUpGlucose
+        // Health export omits the newest live point, so only changes to the
+        // remaining historical series should trigger a reconciliation.
+        let previousExportIdentifiers = self.fullLibreLinkUpGlucose
+            .dropFirst()
+            .map { AppleHealthExportManager.glucoseSyncIdentifier(for: $0) }
+        let nextExportIdentifiers = normalizedFullGraphHistory
+            .dropFirst()
+            .map { AppleHealthExportManager.glucoseSyncIdentifier(for: $0) }
+        let shouldExportGlucose = !nextExportIdentifiers.isEmpty
+            && nextExportIdentifiers != previousExportIdentifiers
         let nextSnapshot = Snapshot(
             fullLibreLinkUpGlucose: normalizedFullGraphHistory,
             libreLinkUpGlucose: libreLinkUpGlucose,
