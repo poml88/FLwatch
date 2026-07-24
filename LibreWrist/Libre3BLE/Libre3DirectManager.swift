@@ -1119,7 +1119,6 @@ final class Libre3DirectManager: ObservableObject {
            let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first {
             switch peripheral.state {
             case .connected:
-                lifecyclePeripheral = peripheral
                 waitingForDisconnectBeforeRearm = true
                 Libre3DiagnosticsLog.traceReconnect(
                     "fresh-discovery-disconnect state=\(peripheral.state.rawValue)"
@@ -1236,8 +1235,8 @@ final class Libre3DirectManager: ObservableObject {
 
     /// Keep an indefinite CoreBluetooth connect request standing for the saved
     /// peripheral while backoff is active and the app may be suspended.
-    /// The manager retains the peripheral because releasing its handle implicitly
-    /// cancels the request; the state guards prevent rapid `didConnect` re-fires.
+    /// SensorScannerNG owns the peripheral through the connect intent; the state
+    /// guards prevent rapid `didConnect` re-fires.
     private func armStandingConnectIntent() {
         guard shouldMaintainConnection,
               isActiveProvider,
@@ -1248,11 +1247,6 @@ final class Libre3DirectManager: ObservableObject {
               let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first,
               peripheral.state != .connected,
               peripheral.state != .connecting else { return }
-        // TODO: Remove the client-side retention assignments once LibreCRKit's
-        // SensorScannerNG owns pending connects and cancellation handoffs through
-        // their terminal callbacks. Keep the connected-wake backoff bypass above;
-        // it fixes the separate suspended-timer hazard.
-        lifecyclePeripheral = peripheral
         Libre3DiagnosticsLog.traceReconnect(
             "standing-connect-armed state=\(peripheral.state.rawValue)"
         )
@@ -1292,7 +1286,6 @@ final class Libre3DirectManager: ObservableObject {
            let peripheral {
             switch peripheral.state {
             case .connected:
-                lifecyclePeripheral = peripheral
                 waitingForDisconnectBeforeRearm = true
                 Libre3DiagnosticsLog.traceReconnect(
                     "disconnect-before-rearm state=\(peripheral.state.rawValue)"
@@ -1300,7 +1293,6 @@ final class Libre3DirectManager: ObservableObject {
                 scanner.cancelConnection(peripheral)
                 return
             case .disconnecting:
-                lifecyclePeripheral = peripheral
                 waitingForDisconnectBeforeRearm = true
                 Libre3DiagnosticsLog.traceReconnect(
                     "disconnect-before-rearm state=\(peripheral.state.rawValue)"
@@ -1309,7 +1301,6 @@ final class Libre3DirectManager: ObservableObject {
             case .connecting:
                 // This pending request is already the background wake source the
                 // next attempt needs; cancelling it would create a callback gap.
-                lifecyclePeripheral = peripheral
                 Libre3DiagnosticsLog.traceReconnect(
                     "pending-connect-preserved state=\(peripheral.state.rawValue)"
                 )
