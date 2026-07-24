@@ -158,9 +158,11 @@ final class LiveActivityManager {
                 showInsulinDeliveryMarks: showInsulinDeliveryMarks
             )
 
+#if DEBUG
             if let payloadSize = Self.encodedSize(of: state) {
                 Logger.liveActivity.debug("Live Activity state payload size: \(payloadSize, privacy: .public) bytes")
             }
+#endif
 
             return state
         }
@@ -221,6 +223,7 @@ final class LiveActivityManager {
         }
     }
 
+#if DEBUG
     private static func encodedSize(of state: FLWatchAttributes.ContentState) -> Int? {
         do {
             let stateData = try JSONEncoder().encode(state)
@@ -231,6 +234,7 @@ final class LiveActivityManager {
             return nil
         }
     }
+#endif
 }
 private extension Array {
     /// Evenly downsamples to `maxCount` elements (keeping the first and last),
