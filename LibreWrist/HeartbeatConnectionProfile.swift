@@ -16,13 +16,14 @@
 import Foundation
 
 protocol HeartbeatConnectionProfile {
-    /// Libre 3 keeps a *persistent* connection that streams a notification
-    /// every ~1 min, so a connect that doesn't land quickly is a real failure
-    /// worth a timeout + rescan retry. Dexcom G7 instead advertises/connects
-    /// for ~1 s every ~5 min then drops; a standing connect left pending lets
-    /// iOS reconnect (and background-wake us) on its next advertise, with no
-    /// timeout and no rescan. When false, the manager never times the connect
-    /// out or rescans to recover — it just re-arms the pending connect.
+    /// Selects the retry strategy for obtaining heartbeat callbacks.
+    /// Libre 3 uses a successful connect as its tick, so an attempt that does
+    /// not connect quickly is cancelled and discovery restarts. Dexcom G7 uses
+    /// the disconnect callback as its tick; its connect request remains pending
+    /// until the next brief advertising window.
+    ///
+    /// Despite the historical name, this does not mean FLwatch owns Libre's
+    /// authenticated sensor connection; the official Libre app retains that role.
     var usesPersistentConnection: Bool { get }
     /// Treat a successful BLE connect as a tick. True for Libre 3 (it advertises
     /// a fresh value on connect); false for G7 (the connect carries no new
@@ -32,7 +33,7 @@ protocol HeartbeatConnectionProfile {
     /// then drops ~1 s later without ever sending a value, so the disconnect is
     /// the only signal left to keep Share polling alive. (A live G7's data-
     /// bearing notification fires first and debounces the disconnect out.)
-    /// False for Libre, which never drops between readings.
+    /// False for Libre 3 because its heartbeat is recorded on connect, not disconnect.
     var firesHeartbeatOnDisconnect: Bool { get }
     /// Notification silence on a live connection tolerated before the manager
     /// rediscovers services and force-reconnects. Sized to ~one sensor cycle:

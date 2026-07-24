@@ -300,6 +300,11 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
             return
         }
 
+        // Libre 3 heartbeat advertisements do not expose a service UUID, so this scan
+        // must remain broad. The official Libre 3 app owns the authenticated sensor
+        // connection; this path only catches brief ticks and must not retain or steal it.
+        // Battery-oriented filtering or lifecycle changes are deferred until callback
+        // traces confirm they cannot suppress these fragile heartbeat events.
         centralManager.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
         isScanning = true
         status = .scanning
