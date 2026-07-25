@@ -2203,6 +2203,7 @@ final class Libre3DirectManager: ObservableObject {
         seedAnchorIfNeeded(lifeCount: Int(reading.lifeCount))
         guard let anchor = sensorStartDate else { return }
         let settings = SensorSettingsStore.shared.sensorSettings
+        let calibrationOffset = SharedData.effectiveLibre3CalibrationOffsetMgDL
 
         // The embedded 5-minute historical sample (~15–20 min behind now) extends
         // the graph series even when no on-demand backfill arrives. It carries its
@@ -2210,9 +2211,14 @@ final class Libre3DirectManager: ObservableObject {
         if let historical = Libre3GlucoseMapper.makeGlucose(
             fromEmbeddedHistorical: reading,
             sensorStartDate: anchor,
-            settings: settings
+            settings: settings,
+            calibrationOffsetMgDL: calibrationOffset
         ) {
-            historicalByLifeCount[historical.glucose.id] = historical
+            // Calibration is prospective: once an ID is stored, a repeated
+            // embedded/backfill sample must not pick up a later offset.
+            if historicalByLifeCount[historical.glucose.id] == nil {
+                historicalByLifeCount[historical.glucose.id] = historical
+            }
         }
 
         guard assessment.isUsable else {
@@ -2229,7 +2235,8 @@ final class Libre3DirectManager: ObservableObject {
             from: reading,
             sensorStartDate: anchor,
             receivedAt: receivedAt,
-            settings: settings
+            settings: settings,
+            calibrationOffsetMgDL: calibrationOffset
         ) else { return }
         let acceptedAt = receivedAt
         if mapped.glucose.date != receivedAt {
@@ -2269,8 +2276,15 @@ final class Libre3DirectManager: ObservableObject {
         // healthy; authorization/re-arm/streaming transitions never reset this.
         consecutiveNoStreamCycles = 0
 
-        minuteByLifeCount[mapped.glucose.id] = mapped
-        currentGlucoseMgDL = mapped.glucose.value
+        let storedReading: LibreLinkUpGlucose
+        if let existing = minuteByLifeCount[mapped.glucose.id] {
+            // Duplicate packets keep the value first stored for this lifeCount.
+            storedReading = existing
+        } else {
+            minuteByLifeCount[mapped.glucose.id] = mapped
+            storedReading = mapped
+        }
+        currentGlucoseMgDL = storedReading.glucose.value
         clearReadingStatus()
         persistLastAccepted(reading, at: acceptedAt)
         pushHistory()
@@ -2454,9 +2468,15 @@ final class Libre3DirectManager: ObservableObject {
             return
         }
         let settings = SensorSettingsStore.shared.sensorSettings
+        let calibrationOffset = SharedData.effectiveLibre3CalibrationOffsetMgDL
         var added = 0
         for sample in page.samples {
-            if let mapped = Libre3GlucoseMapper.makeGlucose(fromHistorical: sample, sensorStartDate: anchor, settings: settings) {
+            if let mapped = Libre3GlucoseMapper.makeGlucose(
+                fromHistorical: sample,
+                sensorStartDate: anchor,
+                settings: settings,
+                calibrationOffsetMgDL: calibrationOffset
+            ), historicalByLifeCount[mapped.glucose.id] == nil {
                 historicalByLifeCount[mapped.glucose.id] = mapped
                 added += 1
             }

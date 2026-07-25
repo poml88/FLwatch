@@ -240,7 +240,11 @@ final class AppleHealthExportManager {
 
     static func glucoseSyncIdentifier(for reading: LibreLinkUpGlucose) -> String {
         let timestamp = Int(reading.glucose.date.timeIntervalSince1970.rounded())
-        return "librewrist.glucose.\(timestamp).\(reading.glucose.value)"
+        // Identity must not change when a Libre 3 BLE value is locally corrected.
+        // All current providers initialize rawValue as uncorrected mg/dL × 10, so
+        // this remains byte-for-byte compatible with existing uncalibrated IDs.
+        let uncorrectedMgDL = reading.glucose.rawValue / 10
+        return "librewrist.glucose.\(timestamp).\(uncorrectedMgDL)"
     }
 
     static func insulinSyncIdentifier(for delivery: InsulinDelivery) -> String {

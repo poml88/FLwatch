@@ -59,6 +59,7 @@ final class Libre3PairingCoordinator: ObservableObject {
 
     @Published private(set) var state: PairingState
     @Published private(set) var lastScannedInfo: ScannedSensorInfo?
+    @Published private(set) var calibrationResetNotice: String?
 
     /// Held for the lifetime of an in-flight scan so it isn't deallocated while
     /// the NFC session is open.
@@ -150,6 +151,11 @@ final class Libre3PairingCoordinator: ObservableObject {
             )
             Libre3DirectManager.shared.forgetSensor()
             try Libre3StateStore.save(state: sensorState, mode: mode, patchInfo: result.patchInfo)
+            if !SharedData.libre3CalibrationSensorSerial.isEmpty,
+               SharedData.libre3CalibrationSensorSerial != result.patchInfo.serialNumber {
+                SharedData.resetLibre3CalibrationForNewSensor()
+                calibrationResetNotice = String(localized: "The previous sensor's FLwatch calibration and calibration log were cleared. The new sensor will use its factory calibration.")
+            }
             // Stamp the sensor model immediately so Settings/UI reflect it before
             // the first reading (the manager re-stamps on connect too).
             Libre3StateStore.stampSensorType()
@@ -189,6 +195,10 @@ final class Libre3PairingCoordinator: ObservableObject {
         // (the snapshot now carries a nil libre3Serial).
         WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()
         Logger.libre3.info("Disconnected Libre 3 sensor; cleared stored state")
+    }
+
+    func clearCalibrationResetNotice() {
+        calibrationResetNotice = nil
     }
 
     // MARK: - Mode mapping

@@ -101,6 +101,19 @@ struct PhoneAppLibre3ConnectView: View {
         } message: {
             Text("This starts the sensor’s wear period—14 days for Libre 3 or 15 days for Libre 3 Plus—and can’t be undone. Most users should activate the sensor in the FreeStyle Libre 3 app instead, then pair it here using Parallel mode.")
         }
+        .alert(
+            "Calibration reset",
+            isPresented: Binding(
+                get: { coordinator.calibrationResetNotice != nil },
+                set: { if !$0 { coordinator.clearCalibrationResetNotice() } }
+            )
+        ) {
+            Button("OK", role: .cancel) {
+                coordinator.clearCalibrationResetNotice()
+            }
+        } message: {
+            Text(coordinator.calibrationResetNotice ?? "")
+        }
     }
 
     // MARK: - Setup (not yet paired)
@@ -322,11 +335,20 @@ struct PhoneAppLibre3ConnectView: View {
                     .foregroundStyle(liveTint)
                 Text(directManager.statusMessage)
                 Spacer()
-                if let mgdl = directManager.currentGlucoseMgDL,
-                   directManager.warmupRemainingMinutes == nil {
-                    Text("\(mgdl) mg/dL")
-                        .font(.headline)
-                        .monospacedDigit()
+                if directManager.currentGlucoseMgDL != nil,
+                   directManager.warmupRemainingMinutes == nil,
+                   SharedData.libre3LastGlucoseMgDL > 0 {
+                    HStack(spacing: 6) {
+                        Text("\(SharedData.libre3LastGlucoseMgDL) mg/dL")
+                            .font(.headline)
+                            .monospacedDigit()
+
+                        if let receivedAt = SharedData.libre3LastGlucoseAt {
+                            Text(receivedAt.formatted(date: .omitted, time: .shortened))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
             }
 

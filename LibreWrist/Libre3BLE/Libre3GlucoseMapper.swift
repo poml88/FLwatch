@@ -73,18 +73,28 @@ enum Libre3GlucoseMapper {
         from reading: RealtimeGlucoseReading,
         sensorStartDate: Date,
         receivedAt: Date,
-        settings: SensorSettings
+        settings: SensorSettings,
+        calibrationOffsetMgDL: Int = 0
     ) -> LibreLinkUpGlucose? {
         guard let mgDL = reading.currentGlucoseMgDL else { return nil }
-        let value = Int(mgDL)
-        let lifetimeDerivedDate = sensorStartDate.addingTimeInterval(Double(reading.lifeCount) * 60)
+
+        let rawValueMgDL = Int(mgDL)
+        let value = calibratedValue(
+            rawValueMgDL: rawValueMgDL,
+            offsetMgDL: calibrationOffsetMgDL
+        )
+
+        let lifetimeDerivedDate = sensorStartDate.addingTimeInterval(
+            Double(reading.lifeCount) * 60
+        )
         let date = abs(receivedAt.timeIntervalSince(lifetimeDerivedDate)) <= Self.realtimeReceiptTolerance
             ? receivedAt
             : lifetimeDerivedDate
+        
         let arrow = trendArrow(from: reading.trendKind)
         let rate = Double(reading.rateOfChangeMgDLPerMinute ?? 0)
-        let glucose = Glucose(
-            value,
+        var glucose = Glucose(
+            rawValueMgDL,
             temperature: 0,
             trendRate: rate,
             trendArrow: arrow,
@@ -92,6 +102,7 @@ enum Libre3GlucoseMapper {
             date: date,
             source: "Libre3 BLE"
         )
+        glucose.value = value
         return LibreLinkUpGlucose(
             glucose: glucose,
             color: color(forMgDL: value, settings: settings),
@@ -112,13 +123,15 @@ enum Libre3GlucoseMapper {
     static func makeGlucose(
         fromHistorical sample: HistoricalReadingSample,
         sensorStartDate: Date,
-        settings: SensorSettings
+        settings: SensorSettings,
+        calibrationOffsetMgDL: Int = 0
     ) -> LibreLinkUpGlucose? {
         guard let mgDL = sample.glucoseMgDL else { return nil }
-        let value = Int(mgDL)
+        let rawValueMgDL = Int(mgDL)
+        let value = calibratedValue(rawValueMgDL: rawValueMgDL, offsetMgDL: calibrationOffsetMgDL)
         let date = sensorStartDate.addingTimeInterval(Double(sample.lifeCount) * 60)
-        let glucose = Glucose(
-            value,
+        var glucose = Glucose(
+            rawValueMgDL,
             temperature: 0,
             trendRate: 0,
             trendArrow: .notDetermined,
@@ -126,6 +139,7 @@ enum Libre3GlucoseMapper {
             date: date,
             source: "Libre3 BLE"
         )
+        glucose.value = value
         return LibreLinkUpGlucose(
             glucose: glucose,
             color: color(forMgDL: value, settings: settings),
@@ -144,16 +158,18 @@ enum Libre3GlucoseMapper {
     static func makeGlucose(
         fromEmbeddedHistorical reading: RealtimeGlucoseReading,
         sensorStartDate: Date,
-        settings: SensorSettings
+        settings: SensorSettings,
+        calibrationOffsetMgDL: Int = 0
     ) -> LibreLinkUpGlucose? {
         guard reading.isHistoricalGlucoseValid,
               reading.isHistoricalDQGood,
               reading.historicalLifeCount > 0,
               let mgDL = reading.historicalGlucoseMgDL else { return nil }
-        let value = Int(mgDL)
+        let rawValueMgDL = Int(mgDL)
+        let value = calibratedValue(rawValueMgDL: rawValueMgDL, offsetMgDL: calibrationOffsetMgDL)
         let date = sensorStartDate.addingTimeInterval(Double(reading.historicalLifeCount) * 60)
-        let glucose = Glucose(
-            value,
+        var glucose = Glucose(
+            rawValueMgDL,
             temperature: 0,
             trendRate: 0,
             trendArrow: .notDetermined,
@@ -161,11 +177,19 @@ enum Libre3GlucoseMapper {
             date: date,
             source: "Libre3 BLE"
         )
+        glucose.value = value
         return LibreLinkUpGlucose(
             glucose: glucose,
             color: color(forMgDL: value, settings: settings),
             trendArrow: .notDetermined
         )
+    }
+
+    /// Apply a prospective FLwatch-local correction while preserving Glucose's
+    /// immutable `rawValue` as the original sensor-reported value. Recomputing
+    /// color here keeps every downstream surface consistent with the value it sees.
+    private static func calibratedValue(rawValueMgDL: Int, offsetMgDL: Int) -> Int {
+        min(max(rawValueMgDL + offsetMgDL, 39), 501)
     }
 }
 #endif

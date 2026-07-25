@@ -36,6 +36,7 @@ struct PhoneAppSettingsView: View {
     @AppStorage(DefaultsKey.highGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var highGlucoseNotificationThreshold: Int = 250
     @AppStorage(DefaultsKey.libre3SignalLossAlertEnabled.rawValue, store: UserDefaults.group) private var libre3SignalLossAlertEnabled: Bool = true
     @AppStorage(DefaultsKey.libre3SignalLossCritical.rawValue, store: UserDefaults.group) private var libre3SignalLossCritical: Bool = false
+    @AppStorage(DefaultsKey.libre3CalibrationOffsetMgDL.rawValue, store: UserDefaults.group) private var libre3CalibrationOffsetMgDL: Int = 0
     @AppStorage("developerModeEnabled") private var developerModeEnabled: Bool = false
     
     
@@ -43,6 +44,7 @@ struct PhoneAppSettingsView: View {
     @State private var showingMailView = false
     @State private var isShowingSiriSheet = false
     @State private var isShowingDeveloperAlert = false
+    @State private var isShowingCalibrationSheet = false
     @State private var developerAlertRequiresCode = true
     @State private var enteredDeveloperCode = ""
     @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
@@ -454,6 +456,28 @@ struct PhoneAppSettingsView: View {
                     Text("Libre 3 Sensor Settings")
                 } footer: {
                     Text("The direct Bluetooth connection doesn't carry these, so set them here. Values are shown in the selected unit and used for the graph target range and reading colors. The red low-alarm line follows your low-glucose alert level.")
+                }
+            }
+
+            if cgmProviderKind == .libre3BLE {
+                Section {
+                    Button {
+                        isShowingCalibrationSheet = true
+                    } label: {
+                        HStack {
+                            Label("Sensor calibration", systemImage: "plus.forwardslash.minus")
+                            Spacer()
+                            Text(formattedCalibrationOffset)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .sheet(isPresented: $isShowingCalibrationSheet) {
+                        PhoneAppCalibrationView()
+                    }
+                } header: {
+                    Text("Calibration")
+                } footer: {
+                    Text("Libre 3 and Libre 3 Plus sensors are factory calibrated and normally do not require calibration. Any FLwatch correction applies only to newly received readings.")
                 }
             }
 
@@ -1074,6 +1098,13 @@ struct PhoneAppSettingsView: View {
     private func refreshAppleHealthStatus() {
         appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
         appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
+    }
+
+    private var formattedCalibrationOffset: String {
+        let glucoseUnit = GlucoseUnit(uom: manualUom)
+        let magnitude = abs(libre3CalibrationOffsetMgDL).asGlucose(glucoseUnit: glucoseUnit)
+        let sign = libre3CalibrationOffsetMgDL > 0 ? "+" : libre3CalibrationOffsetMgDL < 0 ? "−" : ""
+        return "\(sign)\(magnitude) \(glucoseUnit.description)"
     }
 
     private func refreshNotificationAuthorizationStatus() {

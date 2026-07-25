@@ -45,6 +45,7 @@ struct PhoneAppHomeView: View {
     @AppStorage(DefaultsKey.hasPromptedOnce.rawValue, store: UserDefaults.group) private var hasPromptedOnce = false
     @AppStorage(DefaultsKey.hasAgreedToReview.rawValue, store: UserDefaults.group) private var hasAgreedToReview = false
     @AppStorage(DefaultsKey.useLiveActivities.rawValue, store: UserDefaults.group) private var useLiveActivities = true
+    @AppStorage(DefaultsKey.cgmProviderKind.rawValue, store: UserDefaults.group) private var cgmProviderKindRaw = CGMProviderKind.libreLinkUp.rawValue
     
     
     
@@ -87,6 +88,17 @@ struct PhoneAppHomeView: View {
     // -------------------------------------
     private let startupUpdateNote: StartupUpdateNote? = nil
 
+    /// `value` changes when FLwatch applied a correction; `rawValue` remains the
+    /// sensor-reported mg/dL × 10. Base the indicator on the displayed reading,
+    /// not the current preference, because preference changes are prospective.
+    private var calibratedReadingRawMgDL: Int? {
+        guard CGMProviderKind(rawValue: cgmProviderKindRaw) == .libre3BLE,
+              let latest = libreLinkUpHistory.latestLibreLinkUpGlucose,
+              latest.glucose.source == "Libre3 BLE" else { return nil }
+        let rawMgDL = latest.glucose.rawValue / 10
+        return latest.glucose.value == rawMgDL ? nil : rawMgDL
+    }
+
 //    private let startupUpdateNote: StartupUpdateNote? = StartupUpdateNote(
 //        version: 2,
 //        message: "Test note!"
@@ -105,9 +117,9 @@ struct PhoneAppHomeView: View {
     var body: some View {
         VStack {
             if colorScheme == .dark {
-                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: libreLinkUpHistory.libreLinkUpGlucose[0].color.color, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: homeWarning)
+                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: libreLinkUpHistory.libreLinkUpGlucose[0].color.color, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: homeWarning, calibratedRawMgDL: calibratedReadingRawMgDL)
             } else {
-                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: Color.primary, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: homeWarning)
+                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: Color.primary, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: homeWarning, calibratedRawMgDL: calibratedReadingRawMgDL)
                 .background(Color(libreLinkUpHistory.libreLinkUpGlucose[0].color.color))
 //                .frame(maxWidth: .infinity)
                 .cornerRadius(30)
@@ -550,6 +562,7 @@ struct GlucoseValueView: View {
     @Binding var isShowingInsulinDeliverySheet: Bool
     var currentIOBSingleton: CurrentIOBSingleton
     var warning: HomeSensorWarning?
+    var calibratedRawMgDL: Int?
     @State private var showWarningDetail = false
 
     var body: some View {
@@ -561,7 +574,7 @@ struct GlucoseValueView: View {
                 .minimumScaleFactor(0.1)
                 .padding()
             
-            VStack(spacing: 4) {
+            VStack(spacing: 0) {
                 HStack {
                     Text("\(libreLinkUpHistory.currentTrendArrow)")
                         .font(.system(size: 50, weight: .bold))
@@ -583,6 +596,21 @@ struct GlucoseValueView: View {
 //                            .foregroundStyle(.orange)
 //                    }
                 }
+                if let calibratedRawMgDL {
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus.forwardslash.minus")
+                            .font(.system(size: 32, weight: .semibold))
+
+                        Text("Raw: \(calibratedRawMgDL.units)")
+                            .font(.caption)
+                    }
+                    .foregroundStyle(foregroundStyleColor)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(
+                        "FLwatch calibration applied. Raw sensor value \(calibratedRawMgDL.units)."
+                    )
+                    .padding(.top, -4)
+                }
                 Button {
                     isShowingInsulinDeliverySheet.toggle()
                 } label: {
@@ -599,6 +627,7 @@ struct GlucoseValueView: View {
                     )
                     
                 }
+                .padding(.top, calibratedRawMgDL == nil ? 4 : 10)
                 .sheet(isPresented: $isShowingInsulinDeliverySheet, content: {
                     PhoneAppInsulinDeliveryView()
                 })

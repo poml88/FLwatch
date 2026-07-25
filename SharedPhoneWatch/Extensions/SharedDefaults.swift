@@ -165,6 +165,11 @@ enum DefaultsKey: String {
     case libre3GlucoseOnlyDeathCount = "libre3GlucoseOnlyDeathCountKey"
     case libre3GlucoseOnlyDeathLastSeen = "libre3GlucoseOnlyDeathLastSeenKey"
     case libre3LastRecordedSignalLossDeliveryDate = "libre3LastRecordedSignalLossDeliveryDateKey"
+    // Optional, FLwatch-local correction for newly received Libre 3 BLE values.
+    // The log is intentionally small and is cleared when a different sensor is paired.
+    case libre3CalibrationOffsetMgDL = "libre3CalibrationOffsetMgDLKey"
+    case libre3CalibrationSensorSerial = "libre3CalibrationSensorSerialKey"
+    case libre3CalibrationLog = "libre3CalibrationLogKey"
 }
 
 // MARK: - Convenience typed helpers + Codable helpers
@@ -638,6 +643,38 @@ enum SharedData {
             if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3Serial.rawValue) }
             else { store.setString(newValue, forKey: .libre3Serial) }
         }
+    }
+
+    /// Constant correction applied only as new Libre 3 BLE samples are mapped.
+    /// Zero means that calibration is disabled. Existing history is never rewritten.
+    static var libre3CalibrationOffsetMgDL: Int {
+        get { store.getInt(.libre3CalibrationOffsetMgDL) }
+        set { store.setInt(min(max(newValue, -30), 30), forKey: .libre3CalibrationOffsetMgDL) }
+    }
+
+    /// Serial associated with the current correction and calibration log. Keeping
+    /// this when disconnected lets a user re-pair the same sensor without losing
+    /// the setting, while a genuinely different serial resets it during pairing.
+    static var libre3CalibrationSensorSerial: String {
+        get { store.getString(.libre3CalibrationSensorSerial, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3CalibrationSensorSerial.rawValue) }
+            else { store.setString(newValue, forKey: .libre3CalibrationSensorSerial) }
+        }
+    }
+
+    /// The correction is inert unless it belongs to the currently paired sensor.
+    static var effectiveLibre3CalibrationOffsetMgDL: Int {
+        let serial = libre3Serial
+        guard !serial.isEmpty,
+              serial == libre3CalibrationSensorSerial else { return 0 }
+        return libre3CalibrationOffsetMgDL
+    }
+
+    static func resetLibre3CalibrationForNewSensor() {
+        libre3CalibrationOffsetMgDL = 0
+        libre3CalibrationSensorSerial = ""
+        store.removeObject(forKey: DefaultsKey.libre3CalibrationLog.rawValue)
     }
 
     static var libre3BleAddress: String {
