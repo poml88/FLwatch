@@ -1,2 +1,3 @@
-* completing Dexcom Share support
-* other small bugfixes
+* added support to directly connect to Libre 3 / Libre 3+ via Bluetooth. Please report any trouble.
+* lots of other smaller improvements along with that.
+
