@@ -520,8 +520,12 @@ final class Libre3DirectManager: ObservableObject {
     private var attemptEndRecorded = false
     private var sessionProducedGlucose = false
     private var didRecordGlucoseOnlyDeath = false
+    private var attemptConnectedAt: Date?
+    private var phase6CompletedAt: Date?
+    private var rearmStartedAt: Date?
     private var rearmCompletedAt: Date?
-    private var didTraceFirstPacket = false
+    private var firstAnyPacketAt: Date?
+    private var firstGlucoseFragmentAt: Date?
     /// Nonessential CCCDs still awaiting a successful arm. Their initial serial
     /// pass runs beside the essential stream; failures get one retry after the
     /// first actual data-plane packet proves the authorized link is alive.
@@ -942,8 +946,11 @@ final class Libre3DirectManager: ObservableObject {
             }
 
         case .didDisconnect(let peripheral, let error):
+            let details = matchesSavedPeripheral(peripheral)
+                ? disconnectAttemptDescription(error: error, at: Date())
+                : Self.coreBluetoothErrorDescription(error)
             Libre3DiagnosticsLog.traceReconnect(
-                "cb-did-disconnect peripheral=\(peripheral.identifier.uuidString) \(Self.coreBluetoothErrorDescription(error))"
+                "cb-did-disconnect peripheral=\(peripheral.identifier.uuidString) \(details)"
             )
             if session?.peripheral.identifier == peripheral.identifier {
                 session?.handleDisconnect(error: error)
@@ -956,8 +963,19 @@ final class Libre3DirectManager: ObservableObject {
             }
 
         case .connectionEvent(let connectionEvent, let peripheral):
+            let details: String
+            switch connectionEvent {
+            case .peerDisconnected:
+                details = matchesSavedPeripheral(peripheral)
+                    ? " \(disconnectAttemptDescription(error: nil, at: Date()))"
+                    : ""
+            case .peerConnected:
+                details = ""
+            @unknown default:
+                details = ""
+            }
             Libre3DiagnosticsLog.traceReconnect(
-                "cb-connection-event peripheral=\(peripheral.identifier.uuidString) value=\(connectionEvent.rawValue)"
+                "cb-connection-event peripheral=\(peripheral.identifier.uuidString) value=\(connectionEvent.rawValue)\(details)"
             )
             guard isSavedPeripheral(peripheral), lifecycleTask == nil else { return }
             switch connectionEvent {
@@ -1174,7 +1192,9 @@ final class Libre3DirectManager: ObservableObject {
 
         let endedStage = lastAttemptStage
         let failureClass = error.map { Self.failureClass(for: $0) } ?? "transport"
-        let errorName = error.map { Self.compactErrorName(for: $0) } ?? "notificationStreamEnded"
+        let errorName = error.map {
+            Self.lifecycleErrorDescription(for: $0)
+        } ?? "notificationStreamEnded"
         if let error {
             Libre3DiagnosticsLog.traceReconnect(
                 "setup-failed stage=\(endedStage) class=\(failureClass) error=\(errorName)"
@@ -1324,8 +1344,12 @@ final class Libre3DirectManager: ObservableObject {
         attemptEndRecorded = false
         sessionProducedGlucose = false
         didRecordGlucoseOnlyDeath = false
+        attemptConnectedAt = nil
+        phase6CompletedAt = nil
+        rearmStartedAt = nil
         rearmCompletedAt = nil
-        didTraceFirstPacket = false
+        firstAnyPacketAt = nil
+        firstGlucoseFragmentAt = nil
         failedBestEffortRearmCharacteristics.removeAll()
         bestEffortRearmPassID = nil
         bestEffortRearmTask?.cancel()
@@ -1373,6 +1397,11 @@ final class Libre3DirectManager: ObservableObject {
         lastAttemptStage = "auth"
         connectionState = .authorizing
         let sessionMaterial = try await authorize(session: session, sensorState: sensorState)
+        let completedAt = Date()
+        phase6CompletedAt = completedAt
+        Libre3DiagnosticsLog.traceReconnect(
+            "phase6-complete elapsed=\(Self.elapsedDescription(from: attemptConnectedAt, to: completedAt))"
+        )
         let crypto = try DataPlaneCrypto(sessionMaterial: sessionMaterial)
         self.decoder = DataPlaneDecoder(crypto: crypto)
         assembler.reset()
@@ -1430,7 +1459,6 @@ final class Libre3DirectManager: ObservableObject {
         // get one opportunistic retry after real data proves the stream alive.
         lastAttemptStage = "rearm"
         try await rearmDataPlaneNotifications(session: session)
-        rearmCompletedAt = Date()
 
         // Stamp the sensor model now that we're authorized (mirrors how the
         // Dexcom/LLU providers set the type on connect).
@@ -1492,11 +1520,30 @@ final class Libre3DirectManager: ObservableObject {
             LibreSensorGATT.Char.glucoseData,
             LibreSensorGATT.Char.patchControl,
         ]
-        for characteristic in essential {
-            try await session.refreshDataPlaneNotifications(
-                characteristics: [characteristic],
-                forceReArm: [characteristic]
+        let startedAt = Date()
+        rearmStartedAt = startedAt
+        Libre3DiagnosticsLog.traceReconnect(
+            "post-auth-rearm-start count=\(essential.count)"
+        )
+
+        do {
+            for characteristic in essential {
+                try await session.refreshDataPlaneNotifications(
+                    characteristics: [characteristic],
+                    forceReArm: [characteristic]
+                )
+            }
+            let completedAt = Date()
+            rearmCompletedAt = completedAt
+            Libre3DiagnosticsLog.traceReconnect(
+                "post-auth-rearm-complete count=\(essential.count) elapsed=\(Self.reconnectDelay(from: startedAt, to: completedAt))"
             )
+        } catch {
+            let endedAt = Date()
+            Libre3DiagnosticsLog.traceReconnect(
+                "post-auth-rearm-failed count=\(essential.count) elapsed=\(Self.reconnectDelay(from: startedAt, to: endedAt)) error=\(Self.compactErrorName(for: error))"
+            )
+            throw error
         }
         failedBestEffortRearmCharacteristics = Set(Self.bestEffortRearmCharacteristics)
     }
@@ -1608,7 +1655,7 @@ final class Libre3DirectManager: ObservableObject {
                 "rearm-best-effort-complete pass=\(passName) pending=\(self.failedBestEffortRearmCharacteristics.count)"
             )
             self.requestBackfillWhenReady()
-            if !isRetry, self.didTraceFirstPacket {
+            if !isRetry, self.firstAnyPacketAt != nil {
                 self.startBestEffortRearmPass(session: session, isRetry: true)
             }
         }
@@ -1804,6 +1851,9 @@ final class Libre3DirectManager: ObservableObject {
                 peripheral: peripheral
             )
             attemptReachedDidConnect = true
+            let connectedAt = Date()
+            attemptConnectedAt = connectedAt
+            Libre3DiagnosticsLog.traceReconnect("did-connect")
 
             let newSession = SensorSession(
                 peripheral: connected,
@@ -1991,10 +2041,16 @@ final class Libre3DirectManager: ObservableObject {
             guard let channel = DataPlaneChannel(uuidString: event.characteristic.uuidString) else {
                 continue
             }
-            if !didTraceFirstPacket, let rearmCompletedAt {
-                didTraceFirstPacket = true
+            if firstAnyPacketAt == nil {
+                firstAnyPacketAt = event.receivedAt
+                let rearmWasCompleteAtReceipt = rearmCompletedAt.map {
+                    event.receivedAt >= $0
+                } ?? false
                 Libre3DiagnosticsLog.traceReconnect(
-                    "first-packet delay=\(Self.reconnectDelay(from: rearmCompletedAt, to: event.receivedAt))"
+                    "first-packet channel=\(channel.rawValue) " +
+                        "since-phase6=\(Self.elapsedDescription(from: phase6CompletedAt, to: event.receivedAt)) " +
+                        "since-rearm-start=\(Self.elapsedDescription(from: rearmStartedAt, to: event.receivedAt)) " +
+                        "rearm-complete=\(rearmWasCompleteAtReceipt)"
                 )
                 retryBestEffortRearmsIfNeeded(session: session)
             }
@@ -2003,6 +2059,12 @@ final class Libre3DirectManager: ObservableObject {
             // malformed frames still prove that the glucose channel is alive.
             if channel == .glucoseData {
                 lastGlucoseAt = event.receivedAt
+                if firstGlucoseFragmentAt == nil {
+                    firstGlucoseFragmentAt = event.receivedAt
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "first-glucose-fragment delay=\(Self.elapsedDescription(from: rearmCompletedAt, to: event.receivedAt))"
+                    )
+                }
             }
             if channel == .patchStatus {
                 lastPatchStatusAt = event.receivedAt
@@ -2260,11 +2322,9 @@ final class Libre3DirectManager: ObservableObject {
                 }
             }
             clearReconnectBackoff()
-            if let rearmCompletedAt {
-                Libre3DiagnosticsLog.traceReconnect(
-                    "first-glucose delay=\(Self.reconnectDelay(from: rearmCompletedAt, to: acceptedAt))"
-                )
-            }
+            Libre3DiagnosticsLog.traceReconnect(
+                "first-usable-glucose delay=\(Self.elapsedDescription(from: rearmCompletedAt, to: acceptedAt))"
+            )
             consecutiveReconnectFailures = 0
             forceFreshDiscoveryNextAttempt = false
             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
@@ -2742,6 +2802,7 @@ final class Libre3DirectManager: ObservableObject {
     private func finishConnectedAttempt(traceStreamEnd: Bool) {
         guard attemptReachedDidConnect, !attemptEndRecorded else { return }
         attemptEndRecorded = true
+        let endedAt = Date()
 
         if !sessionProducedGlucose {
             consecutiveNoStreamCycles += 1
@@ -2757,7 +2818,7 @@ final class Libre3DirectManager: ObservableObject {
 
         if traceStreamEnd {
             Libre3DiagnosticsLog.traceReconnect(
-                "stream-ended streamed=\(sessionProducedGlucose) no-stream-cycles=\(consecutiveNoStreamCycles)"
+                "stream-ended stage=\(lastAttemptStage) duration=\(Self.elapsedDescription(from: attemptConnectedAt, to: endedAt)) streamed=\(sessionProducedGlucose) any-packet=\(firstAnyPacketAt != nil) glucose-fragment=\(firstGlucoseFragmentAt != nil) no-stream-cycles=\(consecutiveNoStreamCycles)"
             )
         }
     }
@@ -2766,6 +2827,21 @@ final class Libre3DirectManager: ObservableObject {
 
     private static func reconnectDelay(from start: Date, to end: Date) -> String {
         String(format: "%.1fs", max(0, end.timeIntervalSince(start)))
+    }
+
+    private static func elapsedDescription(from start: Date?, to end: Date) -> String {
+        start.map { reconnectDelay(from: $0, to: end) } ?? "n/a"
+    }
+
+    private func disconnectAttemptDescription(error: Error?, at date: Date) -> String {
+        let stage = lastAttemptStage.isEmpty ? "none" : lastAttemptStage
+        return "stage=\(stage) since-connect=\(Self.elapsedDescription(from: attemptConnectedAt, to: date)) " +
+            "since-phase6=\(Self.elapsedDescription(from: phase6CompletedAt, to: date)) " +
+            "since-rearm=\(Self.elapsedDescription(from: rearmCompletedAt, to: date)) " +
+            "any-packet=\(firstAnyPacketAt != nil) " +
+            "glucose-fragment=\(firstGlucoseFragmentAt != nil) " +
+            "usable-glucose=\(sessionProducedGlucose) " +
+            Self.coreBluetoothErrorDescription(error)
     }
 
     private static func dataPlaneChannelName(for characteristic: CBUUID) -> String {
@@ -2806,8 +2882,16 @@ final class Libre3DirectManager: ObservableObject {
             .map(String.init) ?? String(supportSafeName)
     }
 
+    private static func lifecycleErrorDescription(for error: Error) -> String {
+        if let pairingError = error as? PairingFlowError,
+           case .writeTimeout(let label, let seconds) = pairingError {
+            return "writeTimeout label=\(label) seconds=\(seconds)"
+        }
+        return compactErrorName(for: error)
+    }
+
     private static func coreBluetoothErrorDescription(_ error: Error?) -> String {
-        guard let error else { return "error=nil" }
+        guard let error else { return "error=nil domain=nil code=nil" }
         let nsError = error as NSError
         return "localized=\"\(error.localizedDescription)\" domain=\(nsError.domain) code=\(nsError.code) hex=0x\(String(nsError.code, radix: 16))"
     }
