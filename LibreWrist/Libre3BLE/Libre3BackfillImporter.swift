@@ -10,8 +10,8 @@
 //
 //  This mirrors LibreCRKit's validated harness bootstrap exactly: enable the
 //  `historicData` notify, then write an AES-CCM-wrapped
-//  `historicalBackfillGreaterEqual` command (sequence 0x0001, the
-//  `patchControlWrite` packet kind) to `patchControl`.
+//  `historicalBackfillGreaterEqual` command (a per-session advancing sequence,
+//  using the `patchControlWrite` packet kind) to `patchControl`.
 //
 //  iOS-only: references LibreCRKit + CoreBluetooth, phone-target only.
 //
@@ -63,16 +63,17 @@ enum Libre3BackfillImporter {
     static func requestHistoricalBackfill(
         session: SensorSession,
         crypto: DataPlaneCrypto,
-        fromLifeCount: UInt16
+        fromLifeCount: UInt16,
+        sequence: UInt16
     ) async throws {
         try await session.setNotify(true, for: LibreSensorGATT.Char.historicData, timeout: 8)
         let command = PatchControlCommand.historicalBackfillGreaterEqual(lifeCount: fromLifeCount)
         let frame = try crypto.encrypt(
             plaintext: command.plaintext,
-            sequence: 0x0001,
+            sequence: sequence,
             kind: .patchControlWrite
         )
-        Logger.libre3.info("Libre3 BLE requesting historical backfill from lifeCount=\(fromLifeCount, privacy: .public) (\(command.label, privacy: .public))")
+        Logger.libre3.info("Libre3 BLE requesting historical backfill seq=\(sequence, privacy: .public) from lifeCount=\(fromLifeCount, privacy: .public) (\(command.label, privacy: .public))")
         try await session.writeRaw(frame.raw, to: LibreSensorGATT.Char.patchControl, timeout: 10)
         Logger.libre3.info("Libre3 BLE historical backfill command accepted")
     }

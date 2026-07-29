@@ -441,6 +441,117 @@ final class LibreWristTests: XCTestCase {
         }
     }
 
+    func testPeripheralCandidateIsReturnedOnlyAfterAuthentication() throws {
+        let candidate = UUID()
+        var tracker = Libre3PeripheralBindingTracker()
+
+        tracker.recordCandidate(candidate)
+
+        XCTAssertEqual(tracker.candidateID, candidate)
+        XCTAssertNil(tracker.authenticatedCandidate(UUID()))
+        XCTAssertEqual(tracker.authenticatedCandidate(candidate), candidate)
+        XCTAssertNil(tracker.candidateID)
+    }
+
+    // MARK: - Libre 3 glucose silence recovery
+
+    func testGlucoseSilenceRearmsAfterThreshold() throws {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+
+        XCTAssertTrue(
+            Libre3GlucoseSilenceRecoveryPolicy.shouldRearm(
+                now: now,
+                lastGlucoseAt: now.addingTimeInterval(-151),
+                lastAttemptAt: nil,
+                isWarmingUp: false,
+                isExpired: false,
+                needsReplacement: false
+            )
+        )
+    }
+
+    func testGlucoseSilenceRecoveryWaitsDuringWarmupAndRetryThrottle() throws {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let quietSince = now.addingTimeInterval(-300)
+
+        XCTAssertFalse(
+            Libre3GlucoseSilenceRecoveryPolicy.shouldRearm(
+                now: now,
+                lastGlucoseAt: quietSince,
+                lastAttemptAt: nil,
+                isWarmingUp: true,
+                isExpired: false,
+                needsReplacement: false
+            )
+        )
+        XCTAssertFalse(
+            Libre3GlucoseSilenceRecoveryPolicy.shouldRearm(
+                now: now,
+                lastGlucoseAt: quietSince,
+                lastAttemptAt: now.addingTimeInterval(-149),
+                isWarmingUp: false,
+                isExpired: false,
+                needsReplacement: false
+            )
+        )
+    }
+
+    // MARK: - Libre 3 reconnect escalation
+
+    func testTransportFailuresNeverTriggerCredentialEscalation() throws {
+        var tracker = Libre3ReconnectFailureTracker()
+
+        for _ in 1...10 {
+            XCTAssertFalse(tracker.recordFailure(.transport))
+        }
+
+        XCTAssertEqual(tracker.overallFailures, 10)
+        XCTAssertEqual(tracker.consecutiveCredentialFailures, 0)
+    }
+
+    func testSixCredentialFailuresTriggerEscalation() throws {
+        var tracker = Libre3ReconnectFailureTracker()
+
+        for _ in 1..<Libre3ReconnectFailureTracker.credentialEscalationThreshold {
+            XCTAssertFalse(tracker.recordFailure(.credential))
+        }
+
+        XCTAssertTrue(tracker.recordFailure(.credential))
+    }
+
+    func testTransportFailureInterruptsCredentialFailureRun() throws {
+        var tracker = Libre3ReconnectFailureTracker()
+        _ = tracker.recordFailure(.credential)
+        _ = tracker.recordFailure(.credential)
+
+        _ = tracker.recordFailure(.transport)
+
+        XCTAssertEqual(tracker.consecutiveCredentialFailures, 0)
+    }
+
+    func testAuthorizationSuccessClearsCredentialFailureRun() throws {
+        var tracker = Libre3ReconnectFailureTracker()
+        _ = tracker.recordFailure(.credential)
+
+        tracker.recordAuthorizationSucceeded()
+
+        XCTAssertEqual(tracker.consecutiveCredentialFailures, 0)
+        XCTAssertEqual(tracker.overallFailures, 1)
+    }
+
+    // MARK: - Libre 3 patch-control sequence
+
+    func testPatchControlSequenceAdvancesAndResets() throws {
+        var sequence = Libre3PatchControlSequence()
+
+        XCTAssertEqual(sequence.next(), 1)
+        XCTAssertEqual(sequence.next(), 2)
+
+        sequence.reset()
+
+        XCTAssertEqual(sequence.next(), 1)
+    }
+
     func testLibreLinkUpFallsBackToOffsetTimestamp() throws {
         let parsedDate = try XCTUnwrap(
             LibreLinkUp.parseMeasurementDate(

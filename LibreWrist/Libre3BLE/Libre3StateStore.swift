@@ -54,15 +54,13 @@ enum Libre3StateStore {
         patchInfo: Libre3NFCPatchInfo
     ) throws {
         let serial = state.serialNumber ?? patchInfo.serialNumber
-        let isDifferentSensor = SharedData.libre3Serial != serial
 
         try Libre3PINStore.save(state.blePIN)
         // A fresh NFC pair establishes new authorization material. Force the
         // next BLE connect through the full handshake, not a stale cached path.
         try? Libre3PINStore.deleteReconnectKey()
-        if isDifferentSensor {
-            SharedData.libre3PeripheralUUID = ""
-        }
+        // Every NFC re-pair must rediscover and authenticate the BLE peripheral.
+        SharedData.libre3PeripheralUUID = ""
         SharedData.libre3Serial = serial
         SharedData.libre3BleAddress = state.bleAddress ?? ""
         // Firmware + lifecycle/model fields come straight from LibreCRKit's
@@ -107,6 +105,7 @@ enum Libre3StateStore {
         SharedData.libre3BleAddress = ""
         SharedData.libre3FirmwareVersion = ""
         SharedData.libre3Mode = nil
+        SharedData.libre3PeripheralUUID = ""
         SharedData.libre3WearDurationMinutes = 0
         SharedData.libre3Generation = 0
         SharedData.libre3ProductType = 0
