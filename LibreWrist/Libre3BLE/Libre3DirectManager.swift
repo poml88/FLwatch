@@ -420,6 +420,35 @@ struct Libre3DisconnectHandoffPolicy: Equatable {
     }
 }
 
+/// Exact seven-channel refresh shared by the manager and its unit tests.
+struct Libre3PostAuthRearmPlan: Equatable {
+    static let dataPlaneCharacteristics = LibreSensorGATT.Char.dataPlaneNotifying
+    static let responseCharacteristics = [
+        LibreSensorGATT.Char.historicData,
+        LibreSensorGATT.Char.clinicalData,
+    ]
+
+    static let standard: Libre3PostAuthRearmPlan = {
+        let characteristics = dataPlaneCharacteristics + responseCharacteristics
+        return Libre3PostAuthRearmPlan(
+            characteristics: characteristics,
+            forceReArm: Set(characteristics)
+        )
+    }()
+
+    let characteristics: [CBUUID]
+    let forceReArm: Set<CBUUID>
+}
+
+struct Libre3BackfillReadiness: Equatable {
+    let rearmCompleted: Bool
+    let usableGlucoseReceived: Bool
+
+    var canRequestBackfill: Bool {
+        rearmCompleted && usableGlucoseReceived
+    }
+}
+
 @MainActor
 final class Libre3DirectManager: ObservableObject {
 
@@ -560,12 +589,6 @@ final class Libre3DirectManager: ObservableObject {
     private var rearmCompletedAt: Date?
     private var firstAnyPacketAt: Date?
     private var firstGlucoseFragmentAt: Date?
-    /// Nonessential CCCDs still awaiting a successful arm. Their initial serial
-    /// pass runs beside the essential stream; failures get one retry after the
-    /// first actual data-plane packet proves the authorized link is alive.
-    private var failedBestEffortRearmCharacteristics = Set<CBUUID>()
-    private var bestEffortRearmTask: Task<Void, Never>?
-    private var bestEffortRearmPassID: UUID?
     /// Setup success is not proof of health: only usable realtime glucose resets
     /// this counter, matching the connect-without-stream livelock lesson.
     private var consecutiveNoStreamCycles = 0
@@ -615,21 +638,14 @@ final class Libre3DirectManager: ObservableObject {
     private static let reconnectEscalateUserAfter = 6
     private static let freshDiscoveryNoStreamCycles = 3
     private static let maxBackfillFailuresPerSession = 3
+    /// Streaming waits until every data-plane and backfill response CCCD is ready.
+    private static let postAuthRearmPlan = Libre3PostAuthRearmPlan.standard
     /// First two failures retry immediately, then reconnect attempts back off
     /// exponentially from 5 seconds to a five-minute cap.
     private static func reconnectBackoff(failures: Int) -> TimeInterval {
         guard failures >= 3 else { return 0 }
         let exponent = min(failures - 3, 6)
         return min(300, 5 * pow(2.0, Double(exponent)))
-    }
-    private static var bestEffortRearmCharacteristics: [CBUUID] {
-        [
-            LibreSensorGATT.Char.eventLog,
-            LibreSensorGATT.Char.factoryData,
-            LibreSensorGATT.Char.patchStatus,
-            LibreSensorGATT.Char.historicData,
-            LibreSensorGATT.Char.clinicalData,
-        ]
     }
     /// How long per-minute points are retained (bounds the buffer). The minute
     /// overlay shows points newer than the last historical sample; this only caps
@@ -774,12 +790,8 @@ final class Libre3DirectManager: ObservableObject {
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
-        bestEffortRearmPassID = nil
-        bestEffortRearmTask?.cancel()
-        bestEffortRearmTask = nil
         silenceWatchdogTask?.cancel()
         silenceWatchdogTask = nil
-        failedBestEffortRearmCharacteristics.removeAll()
         let peripheralToCancel = session?.peripheral
             ?? lifecyclePeripheral
             ?? savedPeripheralID.flatMap { scanner?.retrievePeripherals(withIdentifiers: [$0]).first }
@@ -1102,12 +1114,8 @@ final class Libre3DirectManager: ObservableObject {
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
-        bestEffortRearmPassID = nil
-        bestEffortRearmTask?.cancel()
-        bestEffortRearmTask = nil
         silenceWatchdogTask?.cancel()
         silenceWatchdogTask = nil
-        failedBestEffortRearmCharacteristics.removeAll()
         disconnectHandoffPolicy.reset()
         finishConnectedAttempt(traceStreamEnd: lastAttemptStage == "streaming")
         // NG clients own session invalidation. Power-off does not reliably emit
@@ -1332,12 +1340,8 @@ final class Libre3DirectManager: ObservableObject {
     /// wake source. A detached peripheral routes directly through the lifecycle
     /// gate for its next connection or bounded backoff.
     private func prepareForNextAttempt() {
-        bestEffortRearmPassID = nil
-        bestEffortRearmTask?.cancel()
-        bestEffortRearmTask = nil
         silenceWatchdogTask?.cancel()
         silenceWatchdogTask = nil
-        failedBestEffortRearmCharacteristics.removeAll()
 
         let peripheral = session?.peripheral ?? lifecyclePeripheral
         session?.handleDisconnect(error: nil)
@@ -1397,10 +1401,6 @@ final class Libre3DirectManager: ObservableObject {
         rearmCompletedAt = nil
         firstAnyPacketAt = nil
         firstGlucoseFragmentAt = nil
-        failedBestEffortRearmCharacteristics.removeAll()
-        bestEffortRearmPassID = nil
-        bestEffortRearmTask?.cancel()
-        bestEffortRearmTask = nil
         silenceWatchdogTask?.cancel()
         silenceWatchdogTask = nil
         Libre3DiagnosticsLog.traceReconnect("connect-start")
@@ -1424,15 +1424,8 @@ final class Libre3DirectManager: ObservableObject {
         // an indefinite connect intent while its background wake is still live.
         scanner.registerForConnectionEvents(peripheralIDs: [peripheral.identifier])
 
-        // Wrap ONLY the auth handshake burst in a background task — NOT the slow
-        // indefinite NG connection above, which can wait ~30s for the Libre 3's
-        // once-per-minute connection window. bluetooth-central keeps the pending
-        // connect alive and wakes us on didConnect, so the wait needs no task;
-        // holding one across it just trips iOS's 30s "risk of termination"
-        // warning. Auth is a few seconds of paced BLE round-trips plus the
-        // one-time Phase-5 scalar derivation, which must run without suspension.
-        // Ended the moment streaming starts (below); the defer is the safety net
-        // for the early-throw paths.
+        // Protect authorization and the bounded post-auth re-arm, but not the
+        // indefinite connection wait or long-lived notification stream.
         var bgTask = UIApplication.shared.beginBackgroundTask(withName: "Libre3DirectAuth")
         defer {
             if bgTask != .invalid {
@@ -1498,12 +1491,7 @@ final class Libre3DirectManager: ObservableObject {
         // would resume from one of those and fetch only the last page.
         backfillResumeLifeCount = historicalByLifeCount.keys.max().map { UInt16(clamping: $0) }
 
-        // Rearm serially rather than as one concurrent all-or-nothing burst. The
-        // field failures on glucoseData and factoryData both followed successful
-        // authorization on marginal/restored links, so one missing nonessential
-        // CCCD must not discard valid session keys. glucoseData and patchControl
-        // are fatal; the remaining response/status channels are best effort and
-        // get one opportunistic retry after real data proves the stream alive.
+        // All seven CCCDs must be ready before the session is exposed as streaming.
         lastAttemptStage = "rearm"
         try await rearmDataPlaneNotifications(session: session)
 
@@ -1515,16 +1503,13 @@ final class Libre3DirectManager: ObservableObject {
         // thresholds of its own.
         applyManualAlarmWiring()
 
-        // Backfill waits for both a usable realtime glucose (real lifeCount) and
-        // successful historicData/clinicalData arming. This avoids both the old
-        // `from=0` request and a known ATT 0xFD readiness race.
+        // Backfill still waits for a usable realtime lifeCount after re-arm.
         didRequestBackfill = false
         backfillFailuresThisSession = 0
 
         lastAttemptStage = "streaming"
         connectionState = .streaming
         Libre3DiagnosticsLog.traceReconnect("stream-start")
-        startBestEffortRearmPass(session: session, isRetry: false)
         startSilenceWatchdog(session: session)
         // Give a newly authorized stream a full recovery window; subsequent
         // liveness advances come only from actual glucose-channel fragments.
@@ -1547,7 +1532,7 @@ final class Libre3DirectManager: ObservableObject {
         // snapshots we push. Covers pair / reconnect / state restoration.
         WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()
 
-        // End the connect/auth background task BEFORE the long-lived streaming
+        // End the connect/auth/re-arm background task before long-lived streaming
         // loop. Streaming is sustained by the `bluetooth-central` background mode
         // (each glucoseData notification wakes the app), NOT by a UIBackgroundTask
         // — which iOS expires after a few minutes and then flags the app for
@@ -1563,40 +1548,32 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     private func rearmDataPlaneNotifications(session: SensorSession) async throws {
-        let essential = [
-            LibreSensorGATT.Char.glucoseData,
-            LibreSensorGATT.Char.patchControl,
-        ]
+        let plan = Self.postAuthRearmPlan
         let startedAt = Date()
         rearmStartedAt = startedAt
         Libre3DiagnosticsLog.traceReconnect(
-            "post-auth-rearm-start count=\(essential.count)"
+            "post-auth-rearm-start count=\(plan.characteristics.count)"
         )
 
         do {
-            for characteristic in essential {
-                try await session.refreshDataPlaneNotifications(
-                    characteristics: [characteristic],
-                    forceReArm: [characteristic]
-                )
-            }
+            // LibreCRKit coordinates the seven operations and waits for every ACK.
+            try await session.refreshDataPlaneNotifications(
+                characteristics: plan.characteristics,
+                forceReArm: plan.forceReArm
+            )
             let completedAt = Date()
             rearmCompletedAt = completedAt
             Libre3DiagnosticsLog.traceReconnect(
-                "post-auth-rearm-complete count=\(essential.count) elapsed=\(Self.reconnectDelay(from: startedAt, to: completedAt))"
+                "post-auth-rearm-complete count=\(plan.characteristics.count) elapsed=\(Self.reconnectDelay(from: startedAt, to: completedAt))"
             )
         } catch {
             let endedAt = Date()
             Libre3DiagnosticsLog.traceReconnect(
-                "post-auth-rearm-failed count=\(essential.count) elapsed=\(Self.reconnectDelay(from: startedAt, to: endedAt)) error=\(Self.compactErrorName(for: error))"
+                "post-auth-rearm-failed count=\(plan.characteristics.count) elapsed=\(Self.reconnectDelay(from: startedAt, to: endedAt)) error=\(Self.compactErrorName(for: error))"
             )
+            // Propagate failure so this attempt never transitions to streaming.
             throw error
         }
-        failedBestEffortRearmCharacteristics = Set(Self.bestEffortRearmCharacteristics)
-    }
-
-    private func retryBestEffortRearmsIfNeeded(session: SensorSession) {
-        startBestEffortRearmPass(session: session, isRetry: true)
     }
 
     private func startSilenceWatchdog(session: SensorSession) {
@@ -1649,93 +1626,26 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
-    /// Nonessential CCCDs are armed serially beside the already-live essential
-    /// stream. This keeps a run of 8-second best-effort timeouts from consuming
-    /// the whole auth background task or delaying glucose delivery. Failed
-    /// channels remain in the set for one pass after the first real packet.
-    private func startBestEffortRearmPass(session: SensorSession, isRetry: Bool) {
-        guard bestEffortRearmTask == nil,
-              !failedBestEffortRearmCharacteristics.isEmpty,
-              self.session === session else { return }
-
-        let characteristics = failedBestEffortRearmCharacteristics.sorted {
-            $0.uuidString < $1.uuidString
-        }
-        let passID = UUID()
-        let passName = isRetry ? "retry" : "start"
-        bestEffortRearmPassID = passID
-        Libre3DiagnosticsLog.traceReconnect(
-            "rearm-best-effort-\(passName) count=\(characteristics.count)"
-        )
-        bestEffortRearmTask = Task { [weak self] in
-            guard let self else { return }
-            for characteristic in characteristics {
-                guard !Task.isCancelled, self.session === session else { return }
-                let channel = Self.dataPlaneChannelName(for: characteristic)
-                do {
-                    try await session.refreshDataPlaneNotifications(
-                        characteristics: [characteristic],
-                        forceReArm: [characteristic]
-                    )
-                    guard self.session === session else { return }
-                    self.failedBestEffortRearmCharacteristics.remove(characteristic)
-                    if isRetry {
-                        Libre3DiagnosticsLog.traceReconnect(
-                            "rearm-best-effort-recovered channel=\(channel)"
-                        )
-                    }
-                } catch is CancellationError {
-                    return
-                } catch {
-                    let errorName = Self.compactErrorName(for: error)
-                    let failureName = isRetry ? "retry-failed" : "failed"
-                    Libre3DiagnosticsLog.traceReconnect(
-                        "rearm-best-effort-\(failureName) channel=\(channel) error=\(errorName)"
-                    )
-                    Logger.libre3.info("Libre3 BLE best-effort re-arm failed on \(channel, privacy: .public): \(String(describing: error), privacy: .public)")
-                }
-            }
-            guard self.bestEffortRearmPassID == passID else { return }
-            self.bestEffortRearmPassID = nil
-            self.bestEffortRearmTask = nil
-            Libre3DiagnosticsLog.traceReconnect(
-                "rearm-best-effort-complete pass=\(passName) pending=\(self.failedBestEffortRearmCharacteristics.count)"
-            )
-            self.requestBackfillWhenReady()
-            if !isRetry, self.firstAnyPacketAt != nil {
-                self.startBestEffortRearmPass(session: session, isRetry: true)
-            }
-        }
-    }
-
     /// On-demand historical backfill (the `patchControl` write), modelled on
     /// Juggluco's `fillHistory` (`Libre3GattCallback.receivedpatchstatus` →
     /// `Natives.libre3ControlHistory(1, max(lastReceived, 5))`, byte-identical to
     /// our command).
     ///
-    /// The importer's transient plain-enable remains as belt-and-suspenders, but
-    /// the real arming now happens in the one-time post-handshake backfill-ready
-    /// off→on cycle above. Field diagnostics showed that relying on the plain
-    /// enable after reconnect let iOS's cached CCCD state turn it into a no-op,
-    /// causing every `patchControl` write to fail with ATT 0xFD. The earlier
-    /// streaming breakage matches LibreLoop's backed-out per-retry churn; its
-    /// production-validated configuration re-arms this wider set once per
-    /// handshake. Fired after the first usable realtime glucose and response-
-    /// channel readiness, `from = max(5, …)`.
+    /// The seven-channel post-auth refresh makes both response channels ready
+    /// before streaming. The request then waits only for a usable lifeCount.
     private static let onDemandBackfillEnabled = true
 
-    private var backfillResponseChannelsReady: Bool {
-        !failedBestEffortRearmCharacteristics.contains(LibreSensorGATT.Char.historicData)
-            && !failedBestEffortRearmCharacteristics.contains(LibreSensorGATT.Char.clinicalData)
+    private var backfillReadiness: Libre3BackfillReadiness {
+        Libre3BackfillReadiness(
+            rearmCompleted: rearmCompletedAt != nil,
+            usableGlucoseReceived: sessionProducedGlucose
+        )
     }
 
-    /// Backfill needs both a real realtime-glucose anchor and its response CCCDs.
-    /// Either may arrive first; both the ingest path and CCCD-pass completion call
-    /// here, so whichever becomes ready second launches the request immediately.
+    /// Backfill needs both the completed seven-channel re-arm and usable glucose.
     private func requestBackfillWhenReady() {
         let latestRealtime = dataPlaneState?.latestRealtimeGlucose
-        guard sessionProducedGlucose,
-              backfillResponseChannelsReady,
+        guard backfillReadiness.canRequestBackfill,
               let latestRealtime else {
             return
         }
@@ -1749,7 +1659,7 @@ final class Libre3DirectManager: ObservableObject {
         guard Self.onDemandBackfillEnabled else { return }
         guard !didRequestBackfill,
               backfillFailuresThisSession < Self.maxBackfillFailuresPerSession,
-              backfillResponseChannelsReady,
+              backfillReadiness.canRequestBackfill,
               currentLifeCount > 0,
               let capturedSession = session, let crypto = decoder?.crypto else { return }
         didRequestBackfill = true
@@ -2099,7 +2009,6 @@ final class Libre3DirectManager: ObservableObject {
                         "since-rearm-start=\(Self.elapsedDescription(from: rearmStartedAt, to: event.receivedAt)) " +
                         "rearm-complete=\(rearmWasCompleteAtReceipt)"
                 )
-                retryBestEffortRearmsIfNeeded(session: session)
             }
             lastAnyChannelAt = event.receivedAt
             // Stamp every glucose fragment before assembly/decode: warm-up and
@@ -2889,11 +2798,6 @@ final class Libre3DirectManager: ObservableObject {
             "glucose-fragment=\(firstGlucoseFragmentAt != nil) " +
             "usable-glucose=\(sessionProducedGlucose) " +
             Self.coreBluetoothErrorDescription(error)
-    }
-
-    private static func dataPlaneChannelName(for characteristic: CBUUID) -> String {
-        DataPlaneChannel(uuidString: characteristic.uuidString)?.rawValue
-            ?? characteristic.uuidString
     }
 
     /// Recovery disposition is deliberately per case, not per enum type:

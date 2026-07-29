@@ -290,6 +290,67 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(policy.connectedAdoptionDecision, .adopt)
     }
 
+    // MARK: - Libre 3 post-auth re-arm
+
+    func testPostAuthRearmPlanHasSevenUniqueCharacteristics() throws {
+        let plan = Libre3PostAuthRearmPlan.standard
+
+        XCTAssertEqual(plan.characteristics.count, 7)
+        XCTAssertEqual(Set(plan.characteristics).count, 7)
+    }
+
+    func testPostAuthRearmPlanContainsEveryDataPlaneCharacteristic() throws {
+        let plan = Libre3PostAuthRearmPlan.standard
+
+        for characteristic in Libre3PostAuthRearmPlan.dataPlaneCharacteristics {
+            XCTAssertTrue(plan.characteristics.contains(characteristic))
+        }
+    }
+
+    func testPostAuthRearmPlanAddsBothBackfillResponseCharacteristics() throws {
+        let plan = Libre3PostAuthRearmPlan.standard
+
+        for characteristic in Libre3PostAuthRearmPlan.responseCharacteristics {
+            XCTAssertTrue(plan.characteristics.contains(characteristic))
+        }
+    }
+
+    func testPostAuthRearmPlanForcesTheSameSevenCharacteristics() throws {
+        let plan = Libre3PostAuthRearmPlan.standard
+
+        XCTAssertEqual(plan.forceReArm, Set(plan.characteristics))
+    }
+
+    func testBackfillWaitsForRearmAndUsableGlucose() throws {
+        XCTAssertFalse(
+            Libre3BackfillReadiness(
+                rearmCompleted: false,
+                usableGlucoseReceived: false
+            ).canRequestBackfill
+        )
+        XCTAssertFalse(
+            Libre3BackfillReadiness(
+                rearmCompleted: true,
+                usableGlucoseReceived: false
+            ).canRequestBackfill
+        )
+        XCTAssertFalse(
+            Libre3BackfillReadiness(
+                rearmCompleted: false,
+                usableGlucoseReceived: true
+            ).canRequestBackfill
+        )
+    }
+
+    func testBackfillStartsAfterRearmAndUsableGlucose() throws {
+        let readiness = Libre3BackfillReadiness(
+            rearmCompleted: true,
+            usableGlucoseReceived: true
+        )
+
+        XCTAssertTrue(readiness.canRequestBackfill)
+    }
+
     func testLibreLinkUpFallsBackToOffsetTimestamp() throws {
         let parsedDate = try XCTUnwrap(
             LibreLinkUp.parseMeasurementDate(
