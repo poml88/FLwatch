@@ -115,6 +115,13 @@ struct PhoneAppHomeView: View {
     @State private var showReadingWarning = false
     
     var body: some View {
+        lifecycleContent
+            .overlay {
+                statusOverlay
+            }
+    }
+
+    private var homeContent: some View {
         VStack {
             if colorScheme == .dark {
                 GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: libreLinkUpHistory.libreLinkUpGlucose[0].color.color, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: homeWarning, calibratedRawMgDL: calibratedReadingRawMgDL)
@@ -133,20 +140,30 @@ struct PhoneAppHomeView: View {
             }
             
         }
+    }
+
+    private var disclaimerAlertContent: some View {
+        homeContent
         .alert ("Warning", isPresented: $isShowingDisclaimer) {
             Button("Accept", role: .cancel, action: {SharedData.hasSeenDisclaimer = true})
         }
         message: {
             Text("!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.")
         }
-        
+    }
+
+    private var welcomeAlertContent: some View {
+        disclaimerAlertContent
         .alert ("Welcome", isPresented: $isShowingWelcomeMessage) {
             Button("Start", role: .cancel, action: {SharedData.hasSeenWelcomeMessage = true})
         }
         message: {
             Text("Thank you for downloading FLwatch. I hope it will prove useful.\n\nTo get startet, please read the SETUP AND USAGE guide. In case of questions, please contact support. More info on the Settings tab.")
         }
-        
+    }
+
+    private var startupAlertContent: some View {
+        welcomeAlertContent
         .alert ("Update note", isPresented: $isShowingNotification) {
             Button("Understood", role: .cancel) {
                 guard let startupUpdateNote else { return }
@@ -156,14 +173,20 @@ struct PhoneAppHomeView: View {
         message: {
             Text(startupUpdateNote?.message ?? "")
         }
-        
+    }
+
+    private var reloadFailureAlertContent: some View {
+        startupAlertContent
         .alert ("Warning", isPresented: $isShowingReloadFailed) {
             //            Button("Accept", role: .cancel, action: {settings.hasSeenDisclaimer = true})
         }
         message: {
             Text(lluService.libreLinkUpResponse)
         }
-        
+    }
+
+    private var reviewPromptAlertContent: some View {
+        reloadFailureAlertContent
         .alert("Enjoying FLwatch?", isPresented: $showPrompt) {
             Button("Yes, rate now") {
                 requestReview()
@@ -187,7 +210,10 @@ struct PhoneAppHomeView: View {
         } message: {
             Text("Your feedback helps us improve and makes it easier for others with diabetes to discover the app. And it motivates to continue the work. 😊\nWould you like to leave a quick review?")
         }
+    }
 
+    private var feedbackAlertContent: some View {
+        reviewPromptAlertContent
         // The icon follows current sensor state, but this alert is episode-gated
         // so transient Layer B warnings acknowledge only once per episode.
         .alert(homeWarning?.title ?? "", isPresented: $showReadingWarning) {
@@ -197,7 +223,10 @@ struct PhoneAppHomeView: View {
         } message: {
             Text(homeWarning?.message ?? "")
         }
+    }
 
+    private var presentationContent: some View {
+        feedbackAlertContent
         // First-launch CGM picker. Presented only after the welcome/disclaimer/
         // update-note alerts have all been dismissed (see evaluateProviderPicker).
         .fullScreenCover(isPresented: $showsProviderPicker) {
@@ -210,6 +239,10 @@ struct PhoneAppHomeView: View {
             }
             .interactiveDismissDisabled(true)
         }
+    }
+
+    private var observationContent: some View {
+        presentationContent
         // Each startup alert chains to the next via SwiftUI's one-at-a-time
         // presentation; the picker waits until the last one closes.
         .onChange(of: isShowingWelcomeMessage) {
@@ -228,138 +261,132 @@ struct PhoneAppHomeView: View {
             evaluateReadingWarningAlert()
         }
         .onChange(of: libre3.currentReadingStatus) { evaluateReadingWarningAlert() }
+    }
 
-        .onReceive(timer) { time in
-            Logger.viewDebug.debug("Timer") // Timer fires as well when on a different tab, for example settings tab
-            
-
-            
-//                scrollPosition = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date.now
-
-            
-            reloadAndUpdateMinutes(refreshLiveActivity: true, trigger: "timer")
+    private var lifecycleContent: some View {
+        observationContent
+        .onReceive(timer) { _ in
+            handleTimer()
         }
         .onAppear() { // fires when switching the Views, e.g. form settings to home view.
-            print("onAppear")
-//            settings.hasSeenDisclaimer = false
-//            settings.hasSeenWelcomeMessage = false
-            
-            if SharedData.hasSeenWelcomeMessage == false {
-                isShowingWelcomeMessage = true
-            }
-            
-            if SharedData.hasSeenDisclaimer == false {
-                isShowingDisclaimer = true
-            }
-            
-            
-            
-            if let startupUpdateNote,
-               SharedData.hasSeenNotification(version: startupUpdateNote.version) == false {
-                isShowingNotification = true
-            }
-
-            // If no startup alert needs showing, the picker can come up right
-            // away; otherwise the onChange handlers trigger it after the last
-            // alert is dismissed.
-            evaluateProviderPicker()
-            evaluateReadingWarningAlert()
-
-            //MARK: Skip the following on app start
-            if onAppearNotToDoFirstStart == false { // not to do on first start
-                
-                reloadAndUpdateMinutes(trigger: ".onAppear")
-                
-                if shouldShowPrompt {
-                    showPrompt = true
-                }
-            }
-            // -------------------------------------
-            
-            //MARK: Do the following only on app start
-            if onAppearNotToDoFirstStart == true { // to do only on first start
-                
-                calculateUserdefaultsSize()
-                
-                FLwatchShortcuts.updateAppShortcutParameters() // this was in the app init first, but it seems this was too early... So I moved it here.
-
-                LiveActivityManager.shared.startIfAllowed(useLiveActivities: useLiveActivities)
-                onAppearNotToDoFirstStart = false
-            }
-            
-            if !hasPromptedOnce {
-                recordDayOfUse()
-            }
-            // ----------------------------------------
-            
-            //MARK: Do the following .onAppear
-
-            
+            handleAppear()
         }
-        .onChange(of: scenePhase) { oldPhase, newPhase in
-            if newPhase == .active {
-                print("Scene Phase Active")
-
-//                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
-                
-                //MARK: Skip the following on app start
-                if scenePhaseNotToDoFirstStart == false { // not to do on first start
-                    WidgetCenter.shared.reloadAllTimelines()
-                    print("WidgetCenter.shared.reloadAllTimelines()")
-                }
-                
-                //MARK: Do the following only on app start
-                if scenePhaseNotToDoFirstStart == true { scenePhaseNotToDoFirstStart = false } // to do only on first start
-                
-                //MARK: Do the following .onChange(of: scenePhase) == .active
-                reloadAndUpdateMinutes(
-                    refreshLiveActivity: true,
-                    trigger: "scenePhase.active",
-                    liveActivityRestartThreshold: LiveActivityManager.shared.foregroundRestartAgeThreshold
-                )
-                evaluateReadingWarningAlert()
-
-                
-            } else if newPhase == .inactive {
-                print("Scene Phase Inactive")
-            } else if newPhase == .background {
-                print("Scene Phase Background")
-            }
+        .onChange(of: scenePhase) { _, newPhase in
+            handleScenePhaseChange(to: newPhase)
         }
-        .overlay {
-            if lluService.isReloading == true {
-                ZStack {
-                    Color(white: 0, opacity: 0.25)
-                        .cornerRadius(10)
-                    ProgressView().tint(.white)
-                }
-            }
+    }
 
-            let secondsSinceLastReadingOverlay = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate)
-            if secondsSinceLastReadingOverlay >= lluService.activeProvider.staleReadingAfter && lluService.isReloading == false {
-                ZStack {
-                    Color(white: 0, opacity: 0.5)
-                        .cornerRadius(10)
-                    VStack {
-                        Image(systemName: "hourglass.circle")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 100)
-                            .padding()
-
-                        Text("No data received since \(minutesSinceLastReading) min.\n\n\(overlayConnectionMessage)")
-                            .multilineTextAlignment(.center)
-                            .padding()
-                    }
-                    .background()
+    @ViewBuilder
+    private var statusOverlay: some View {
+        if lluService.isReloading == true {
+            ZStack {
+                Color(white: 0, opacity: 0.25)
                     .cornerRadius(10)
-                    .opacity(0.5)
-                    .padding()
-                }
-//                .ignoresSafeArea()
-                .allowsHitTesting(false) // passes taps/clicks through to the bottom layer
-                // in this case the IOB button
+                ProgressView().tint(.white)
             }
+        }
+
+        let secondsSinceLastReadingOverlay = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate)
+        if secondsSinceLastReadingOverlay >= lluService.activeProvider.staleReadingAfter && lluService.isReloading == false {
+            ZStack {
+                Color(white: 0, opacity: 0.5)
+                    .cornerRadius(10)
+                VStack {
+                    Image(systemName: "hourglass.circle")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 100)
+                        .padding()
+
+                    Text("No data received since \(minutesSinceLastReading) min.\n\n\(overlayConnectionMessage)")
+                        .multilineTextAlignment(.center)
+                        .padding()
+                }
+                .background()
+                .cornerRadius(10)
+                .opacity(0.5)
+                .padding()
+            }
+//            .ignoresSafeArea()
+            .allowsHitTesting(false) // passes taps/clicks through to the bottom layer
+            // in this case the IOB button
+        }
+    }
+
+    private func handleTimer() {
+        Logger.viewDebug.debug("Timer") // Timer fires as well when on a different tab, for example settings tab
+        reloadAndUpdateMinutes(refreshLiveActivity: true, trigger: "timer")
+    }
+
+    private func handleAppear() {
+        print("onAppear")
+
+        if SharedData.hasSeenWelcomeMessage == false {
+            isShowingWelcomeMessage = true
+        }
+
+        if SharedData.hasSeenDisclaimer == false {
+            isShowingDisclaimer = true
+        }
+
+        if let startupUpdateNote,
+           SharedData.hasSeenNotification(version: startupUpdateNote.version) == false {
+            isShowingNotification = true
+        }
+
+        // If no startup alert needs showing, the picker can come up right
+        // away; otherwise the onChange handlers trigger it after the last
+        // alert is dismissed.
+        evaluateProviderPicker()
+        evaluateReadingWarningAlert()
+
+        // Skip the following on app start.
+        if onAppearNotToDoFirstStart == false {
+            reloadAndUpdateMinutes(trigger: ".onAppear")
+
+            if shouldShowPrompt {
+                showPrompt = true
+            }
+        }
+
+        // Do the following only on app start.
+        if onAppearNotToDoFirstStart == true {
+            calculateUserdefaultsSize()
+            FLwatchShortcuts.updateAppShortcutParameters()
+            LiveActivityManager.shared.startIfAllowed(useLiveActivities: useLiveActivities)
+            onAppearNotToDoFirstStart = false
+        }
+
+        if !hasPromptedOnce {
+            recordDayOfUse()
+        }
+    }
+
+    private func handleScenePhaseChange(to newPhase: ScenePhase) {
+        if newPhase == .active {
+            print("Scene Phase Active")
+
+            // Skip the following on app start.
+            if scenePhaseNotToDoFirstStart == false {
+                WidgetCenter.shared.reloadAllTimelines()
+                print("WidgetCenter.shared.reloadAllTimelines()")
+            }
+
+            // Do the following only on app start.
+            if scenePhaseNotToDoFirstStart == true {
+                scenePhaseNotToDoFirstStart = false
+            }
+
+            reloadAndUpdateMinutes(
+                refreshLiveActivity: true,
+                trigger: "scenePhase.active",
+                liveActivityRestartThreshold: LiveActivityManager.shared.foregroundRestartAgeThreshold
+            )
+            evaluateReadingWarningAlert()
+        } else if newPhase == .inactive {
+            print("Scene Phase Inactive")
+        } else if newPhase == .background {
+            print("Scene Phase Background")
         }
     }
     

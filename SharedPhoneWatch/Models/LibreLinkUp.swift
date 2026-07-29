@@ -844,7 +844,9 @@ class LibreLinkUp  {
                                         history.append(LibreLinkUpGlucose(glucose: Glucose(measurement.valueInMgPerDl, id: lifeCount, date: date, source: "LibreLinkUp"), color: measurement.measurementColor, trendArrow: measurement.trendArrow))
                                         let measurementString = "\(measurement)"
                                         // TEMP DEBUG: log every single graph measurement
-                                        Logger.libreLinkUp.debug("LibreLinkUp: graph measurement #  [...] log commented out because of size")
+                                        if i == 1 {
+                                            Logger.libreLinkUp.debug("LibreLinkUp: graph measurement # \(i) [...] log commented out because of size")
+                                        }
 //                                        Logger.libreLinkUp.debug("LibreLinkUp: graph measurement # \(i) of \(graphData.count): \(measurementString) (JSON: \(glucoseMeasurement)), lifeCount = \(lifeCount)")
                                     }
                                 }
