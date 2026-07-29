@@ -459,7 +459,7 @@ struct PhoneAppSettingsView: View {
                 }
             }
 
-            if cgmProviderKind == .libre3BLE {
+            if cgmProviderKind == .libre3BLE && developerModeEnabled {
                 Section {
                     Button {
                         isShowingCalibrationSheet = true
