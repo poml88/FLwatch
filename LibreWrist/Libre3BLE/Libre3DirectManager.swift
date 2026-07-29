@@ -524,36 +524,130 @@ enum Libre3ReconnectFailureCategory: String, Equatable {
     case other
 }
 
+enum Libre3AuthorizationPath: Equatable {
+    case cached
+    case full
+}
+
+struct Libre3AuthorizationRecoveryPolicy {
+    /// Try the short path twice, then one full handshake, then three more short attempts.
+    /// This deliberately differs from LibreLoop's cached-only reconnect: full auth
+    /// works on the Libre 3 tested with FLwatch, while Libre 3 Plus may reject it
+    /// and likely informed LibreLoop's policy.
+    static func path(
+        hasReconnectKey: Bool,
+        authenticationFailures: Int
+    ) -> Libre3AuthorizationPath {
+        guard hasReconnectKey else { return .full }
+        return authenticationFailures == 2 ? .full : .cached
+    }
+
+    /// The sensor's stale-key rejection is a disconnect during the pending 0x08 write.
+    static func challengeLoadDoneDisconnectCategory(
+        phase5WriteCompleted: Bool
+    ) -> Libre3ReconnectFailureCategory {
+        phase5WriteCompleted ? .credential : .transport
+    }
+}
+
+enum Libre3AuthorizationError: Error {
+    case disconnectedWhileSendingChallengeLoadDone(elapsedMilliseconds: Int)
+}
+
+/// Records the exact point where the sensor accepted the Phase-5 ATT write.
+/// PairingFlow still owns the handshake; this wrapper only adds failure context.
+final class Libre3Phase5TrackingTransport: CommandPairingTransport, @unchecked Sendable {
+    private let base: SensorSessionTransport
+    private let lock = NSLock()
+    private var phase5WriteCompletedAt: Date?
+
+    init(session: SensorSession) {
+        base = SensorSessionTransport(session: session)
+    }
+
+    func write(_ message: Data, to characteristic: BleCharRef) async throws {
+        try await base.write(message, to: characteristic)
+        if characteristic == .challenge {
+            markPhase5WriteCompleted()
+        }
+    }
+
+    func awaitNotify(on characteristic: BleCharRef, exactly count: Int) async throws -> Data {
+        try await base.awaitNotify(on: characteristic, exactly: count)
+    }
+
+    func writeCommand(_ command: UInt8) async throws {
+        try await base.writeCommand(command)
+    }
+
+    func awaitCommandResponse(timeout: TimeInterval) async throws -> Data {
+        try await base.awaitCommandResponse(timeout: timeout)
+    }
+
+    func classify(_ error: Error) -> Error {
+        guard let sessionError = error as? SensorSessionError,
+              case .disconnected = sessionError else {
+            return error
+        }
+
+        let completedAt = phase5CompletionDate()
+        // After Phase 5, this error type can only come from the pending 0x08 write.
+        // Later notify-stream endings/timeouts keep their original error type.
+        guard Libre3AuthorizationRecoveryPolicy.challengeLoadDoneDisconnectCategory(
+            phase5WriteCompleted: completedAt != nil
+        ) == .credential, let completedAt else {
+            return error
+        }
+
+        let elapsed = max(0, Date().timeIntervalSince(completedAt))
+        return Libre3AuthorizationError.disconnectedWhileSendingChallengeLoadDone(
+            elapsedMilliseconds: Int((elapsed * 1_000).rounded())
+        )
+    }
+
+    private func markPhase5WriteCompleted() {
+        lock.lock()
+        phase5WriteCompletedAt = Date()
+        lock.unlock()
+    }
+
+    private func phase5CompletionDate() -> Date? {
+        lock.lock()
+        defer { lock.unlock() }
+        return phase5WriteCompletedAt
+    }
+}
+
 struct Libre3ReconnectFailureTracker: Equatable {
-    static let credentialEscalationThreshold = 6
+    static let authenticationEscalationThreshold = 6
 
     private(set) var overallFailures = 0
-    private(set) var consecutiveCredentialFailures = 0
+    private(set) var authenticationFailures = 0
 
-    /// Returns true only when credential failures first reach the user-action threshold.
+    /// Returns true only when qualifying auth failures first reach the user-action threshold.
     mutating func recordFailure(_ category: Libre3ReconnectFailureCategory) -> Bool {
         overallFailures += 1
+        let previousAuthenticationFailures = authenticationFailures
         if category == .credential {
-            consecutiveCredentialFailures += 1
-        } else {
-            // Transport failures must never help produce an NFC re-scan warning.
-            consecutiveCredentialFailures = 0
+            authenticationFailures += 1
         }
-        return consecutiveCredentialFailures == Self.credentialEscalationThreshold
+        // Ordinary radio failures neither advance nor reset the auth recovery sequence.
+        return previousAuthenticationFailures < Self.authenticationEscalationThreshold
+            && authenticationFailures >= Self.authenticationEscalationThreshold
     }
 
     mutating func recordAuthorizationSucceeded() {
-        consecutiveCredentialFailures = 0
+        authenticationFailures = 0
     }
 
     mutating func recordUsableGlucose() {
         overallFailures = 0
-        consecutiveCredentialFailures = 0
+        authenticationFailures = 0
     }
 
     mutating func reset() {
         overallFailures = 0
-        consecutiveCredentialFailures = 0
+        authenticationFailures = 0
     }
 }
 
@@ -659,7 +753,7 @@ final class Libre3DirectManager: ObservableObject {
     @Published private(set) var sensorAttention: Libre3SensorAttention = .none
     /// Persistent terminal attention state for phone UI relaunch seeding.
     @Published private(set) var sensorNeedsReplacement = false
-    /// Persistent, non-blocking hint that repeated credential failures make an
+    /// Persistent, non-blocking hint that repeated auth-shaped failures make an
     /// NFC re-scan/re-pair worth considering. Successful authorization clears it.
     @Published private(set) var reScanSuggested = false {
         didSet { SharedData.libre3ConnectionRequiresUserAction = reScanSuggested }
@@ -734,7 +828,7 @@ final class Libre3DirectManager: ObservableObject {
     /// central callback through this one stream, including state restoration.
     private var scannerEventTask: Task<Void, Never>?
 
-    /// Overall failures pace retries; credential failures alone drive NFC advice.
+    /// Overall failures pace retries; qualifying authentication failures drive NFC advice.
     private var reconnectFailureTracker = Libre3ReconnectFailureTracker()
     /// Wall-clock time before which another failed connect/auth lifecycle must
     /// not begin. A deadline survives suspension without extending the intended
@@ -1492,7 +1586,7 @@ final class Libre3DirectManager: ObservableObject {
         }
         finishConnectedAttempt(traceStreamEnd: endedStage == "streaming")
 
-        let shouldEscalateCredentials = !sessionProducedGlucose
+        let shouldEscalateAuthentication = !sessionProducedGlucose
             ? reconnectFailureTracker.recordFailure(failureCategory)
             : false
         if let error {
@@ -1508,15 +1602,15 @@ final class Libre3DirectManager: ObservableObject {
                 "Libre3 BLE: notification stream ended"
         }
 
-        if shouldEscalateCredentials {
-            let credentialFailures = reconnectFailureTracker.consecutiveCredentialFailures
+        if shouldEscalateAuthentication {
+            let authenticationFailures = reconnectFailureTracker.authenticationFailures
             Libre3DiagnosticsLog.record(
-                "reconnect-escalation credentialFailures=\(credentialFailures) stage=\(endedStage) class=\(failureCategory.rawValue) lastError=\(errorName)"
+                "reconnect-escalation authenticationFailures=\(authenticationFailures) stage=\(endedStage) class=\(failureCategory.rawValue) lastError=\(errorName)"
             )
             if !reScanSuggested {
                 reScanSuggested = true
                 Libre3DiagnosticsLog.recordNotable(
-                    "reconnect-rescan-suggested credentialFailures=\(credentialFailures) stage=\(endedStage) class=\(failureCategory.rawValue) lastError=\(errorName)"
+                    "reconnect-rescan-suggested authenticationFailures=\(authenticationFailures) stage=\(endedStage) class=\(failureCategory.rawValue) lastError=\(errorName)"
                 )
                 Task { await SensorAlertNotificationManager.shared.postReconnectFailing() }
             }
@@ -2150,14 +2244,21 @@ final class Libre3DirectManager: ObservableObject {
         throw SensorScannerError.connectionFailed("event stream ended")
     }
 
-    /// Authorize a connected sensor. A saved Phase-5 raw key always selects
-    /// LibreCRKit's short cached/direct reconnect (PLAN Phase 5). Failure is
-    /// propagated so the lifecycle owner backs off and retries the same cached
-    /// path on a fresh connection. The full command-gated handshake is reserved
-    /// for the no-key establishment path after NFC pairing or legacy migration.
+    /// Authorize a connected sensor. With a saved Phase-5 key the recovery order
+    /// is cached, cached, full, cached, cached, cached. The sixth qualifying
+    /// failure raises the re-scan hint while cached retries continue.
     /// Returns the Phase-6 session material the decoder needs.
     private func authorize(session: SensorSession, sensorState: Libre3SensorState) async throws -> Phase6SessionMaterial {
-        if let reconnectKey = Libre3StateStore.loadReconnectKey() {
+        let reconnectKey = Libre3StateStore.loadReconnectKey()
+        let path = Libre3AuthorizationRecoveryPolicy.path(
+            hasReconnectKey: reconnectKey != nil,
+            authenticationFailures: reconnectFailureTracker.authenticationFailures
+        )
+
+        if path == .cached, let reconnectKey {
+            Logger.libre3.info(
+                "Libre3 BLE auth path=cached authenticationFailures=\(self.reconnectFailureTracker.authenticationFailures, privacy: .public)"
+            )
             do {
                 let material = try await runCachedReconnect(
                     session: session, blePIN: sensorState.blePIN, reconnectKey: reconnectKey
@@ -2168,17 +2269,20 @@ final class Libre3DirectManager: ObservableObject {
                 throw CancellationError()
             } catch {
                 Libre3DiagnosticsLog.traceReconnect("cached-reconnect-failed")
-                Logger.libre3.info("Libre3 BLE cached reconnect failed (\(String(describing: error), privacy: .public)) — retrying cached on the next connection")
+                Logger.libre3.info("Libre3 BLE cached reconnect failed (\(String(describing: error), privacy: .public))")
                 throw error
             }
         }
+
+        if reconnectKey != nil {
+            // One full handshake refreshes a cached key that the sensor may reject.
+            Logger.libre3.info(
+                "Libre3 BLE auth path=full-fallback authenticationFailures=\(self.reconnectFailureTracker.authenticationFailures, privacy: .public)"
+            )
+            Libre3DiagnosticsLog.traceReconnect("full-auth-fallback")
+        }
         let result = try await runHandshake(session: session, blePIN: sensorState.blePIN)
-        // Persist this full pair's established Phase-5 raw key for the cached
-        // reconnect fast path. This is the key the sensor accepts on the
-        // cert/ephemeral-less reconnect — NOT the Phase-6 data-plane kEnc, which
-        // hardware rejected (the sensor disconnected). The cached/direct path
-        // skips the ephemeral ECDH precisely because this authorization key is
-        // already established on both sides, so it reuses the same rawKey.
+        // A successful full attempt replaces stale cached authorization material.
         Libre3StateStore.saveReconnectKey(result.phase5Material.rawKey)
         return result.handshake.sessionMaterial
     }
@@ -2186,21 +2290,25 @@ final class Libre3DirectManager: ObservableObject {
     /// Cached/direct reconnect: `0x11 StartAuthorization` → R1/nonce notify →
     /// Phase 5 → Phase 6, skipping the certificate + ephemeral exchange (PLAN
     /// Phase 5; LibreCRKit `runCachedReconnectHandshake`). The persisted Phase-5
-    /// raw key is reused for every reconnect. Throws on sensor rejection so the
-    /// lifecycle owner can back off and retry cached on a fresh connection.
+    /// raw key is reused for reconnects. A disconnect during the pending 0x08
+    /// write is wrapped as stale-key rejection; later radio loss is not.
     private func runCachedReconnect(session: SensorSession, blePIN: Data, reconnectKey: Data) async throws -> Phase6SessionMaterial {
-        let transport = SensorSessionTransport(session: session)
+        let transport = Libre3Phase5TrackingTransport(session: session)
         let flow = PairingFlow(
             transport: transport,
             eventLogger: { message in
                 Logger.libre3.debug("\(message, privacy: .public)")
             }
         )
-        let result = try await flow.runCachedReconnectHandshake(
-            tail4: blePIN,
-            phase5RawKey: reconnectKey
-        )
-        return result.sessionMaterial
+        do {
+            let result = try await flow.runCachedReconnectHandshake(
+                tail4: blePIN,
+                phase5RawKey: reconnectKey
+            )
+            return result.sessionMaterial
+        } catch {
+            throw transport.classify(error)
+        }
     }
 
     /// Phase 1–6 first-pair authorization. All three NFC pairing modes
@@ -2212,7 +2320,7 @@ final class Libre3DirectManager: ObservableObject {
     /// result so the caller can persist `phase5Material.rawKey` — the
     /// established Phase-5 authorization key reused by the cached reconnect.
     private func runHandshake(session: SensorSession, blePIN: Data) async throws -> FirstPairDerivedHandshakeResult {
-        let transport = SensorSessionTransport(session: session)
+        let transport = Libre3Phase5TrackingTransport(session: session)
         // Use LibreCRKit's bundled v1 (`03 03`) app certificate for first-pair.
         // LibreCRKit owns the matching certificate material and auto-selects the
         // index-1 Phase-5 static scalar from the `03 03` prefix.
@@ -2239,14 +2347,18 @@ final class Libre3DirectManager: ObservableObject {
                 Logger.libre3.debug("\(message, privacy: .public)")
             }
         )
-        let result = try await flow.runCommandGatedFirstPairHandshake(
-            blePIN: blePIN,
-            maxEntropyAttempts: 1,
-            entropySource: { count in
-                try Self.fixedEntropy(nativeEphemeral.nullEntropy11A, count: count)
-            }
-        )
-        return result
+        do {
+            let result = try await flow.runCommandGatedFirstPairHandshake(
+                blePIN: blePIN,
+                maxEntropyAttempts: 1,
+                entropySource: { count in
+                    try Self.fixedEntropy(nativeEphemeral.nullEntropy11A, count: count)
+                }
+            )
+            return result
+        } catch {
+            throw transport.classify(error)
+        }
     }
 
     /// Fixed entropy source for the first-pair handshake: returns the exact
@@ -3071,6 +3183,9 @@ final class Libre3DirectManager: ObservableObject {
     /// Recovery disposition is deliberately per case, not per enum type:
     /// `writeTimeout` remains transport even though PairingFlow owns the case.
     private static func failureCategory(for error: Error) -> Libre3ReconnectFailureCategory {
+        if error is Libre3AuthorizationError {
+            return .credential
+        }
         if let pairingError = error as? PairingFlowError {
             switch pairingError {
             case .phase6VerificationFailed,
@@ -3131,6 +3246,12 @@ final class Libre3DirectManager: ObservableObject {
     /// upcoming `Libre3DiagnosticsLog`.
     private static func supportSafeDescription(for error: Error) -> String {
         switch error {
+        case let error as Libre3AuthorizationError:
+            switch error {
+            case .disconnectedWhileSendingChallengeLoadDone(let elapsedMilliseconds):
+                return "disconnectedWhileSendingChallengeLoadDone(elapsedMilliseconds=\(elapsedMilliseconds))"
+            }
+
         case let error as PairingFlowError:
             switch error {
             case .sessionKeyDerivationNotImplemented:

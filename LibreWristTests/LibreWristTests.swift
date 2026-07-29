@@ -547,7 +547,7 @@ final class LibreWristTests: XCTestCase {
 
     // MARK: - Libre 3 reconnect escalation
 
-    func testTransportFailuresNeverTriggerCredentialEscalation() throws {
+    func testTransportFailuresNeverTriggerAuthenticationEscalation() throws {
         var tracker = Libre3ReconnectFailureTracker()
 
         for _ in 1...10 {
@@ -555,37 +555,83 @@ final class LibreWristTests: XCTestCase {
         }
 
         XCTAssertEqual(tracker.overallFailures, 10)
-        XCTAssertEqual(tracker.consecutiveCredentialFailures, 0)
+        XCTAssertEqual(tracker.authenticationFailures, 0)
     }
 
-    func testSixCredentialFailuresTriggerEscalation() throws {
+    func testSixAuthenticationFailuresTriggerEscalation() throws {
         var tracker = Libre3ReconnectFailureTracker()
 
-        for _ in 1..<Libre3ReconnectFailureTracker.credentialEscalationThreshold {
+        for _ in 1..<Libre3ReconnectFailureTracker.authenticationEscalationThreshold {
             XCTAssertFalse(tracker.recordFailure(.credential))
         }
 
         XCTAssertTrue(tracker.recordFailure(.credential))
+        XCTAssertFalse(tracker.recordFailure(.transport))
+        XCTAssertFalse(tracker.recordFailure(.credential))
     }
 
-    func testTransportFailureInterruptsCredentialFailureRun() throws {
+    func testTransportFailureDoesNotConsumeOrResetAuthenticationSequence() throws {
         var tracker = Libre3ReconnectFailureTracker()
         _ = tracker.recordFailure(.credential)
         _ = tracker.recordFailure(.credential)
 
         _ = tracker.recordFailure(.transport)
 
-        XCTAssertEqual(tracker.consecutiveCredentialFailures, 0)
+        XCTAssertEqual(tracker.authenticationFailures, 2)
     }
 
-    func testAuthorizationSuccessClearsCredentialFailureRun() throws {
+    func testAuthorizationSuccessClearsAuthenticationFailureRun() throws {
         var tracker = Libre3ReconnectFailureTracker()
         _ = tracker.recordFailure(.credential)
 
         tracker.recordAuthorizationSucceeded()
 
-        XCTAssertEqual(tracker.consecutiveCredentialFailures, 0)
+        XCTAssertEqual(tracker.authenticationFailures, 0)
         XCTAssertEqual(tracker.overallFailures, 1)
+    }
+
+    func testAuthorizationRecoveryUsesOneFullFallbackOnThirdAttempt() throws {
+        let expected: [Libre3AuthorizationPath] = [
+            .cached, .cached, .full, .cached, .cached, .cached,
+        ]
+
+        let actual = (0..<6).map {
+            Libre3AuthorizationRecoveryPolicy.path(
+                hasReconnectKey: true,
+                authenticationFailures: $0
+            )
+        }
+
+        XCTAssertEqual(actual, expected)
+        XCTAssertEqual(
+            Libre3AuthorizationRecoveryPolicy.path(
+                hasReconnectKey: true,
+                authenticationFailures: 6
+            ),
+            .cached
+        )
+        XCTAssertEqual(
+            Libre3AuthorizationRecoveryPolicy.path(
+                hasReconnectKey: false,
+                authenticationFailures: 2
+            ),
+            .full
+        )
+    }
+
+    func testOnlyChallengeLoadDoneWriteDisconnectIsCredentialShaped() throws {
+        XCTAssertEqual(
+            Libre3AuthorizationRecoveryPolicy.challengeLoadDoneDisconnectCategory(
+                phase5WriteCompleted: false
+            ),
+            .transport
+        )
+        XCTAssertEqual(
+            Libre3AuthorizationRecoveryPolicy.challengeLoadDoneDisconnectCategory(
+                phase5WriteCompleted: true
+            ),
+            .credential
+        )
     }
 
     // MARK: - Libre 3 patch-control sequence
