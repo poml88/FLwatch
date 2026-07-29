@@ -389,6 +389,37 @@ enum Libre3LivePacketFormatter {
     }
 }
 
+enum ConnectedAdoptionDecision: Equatable {
+    case adopt
+    case ignorePendingDisconnect
+}
+
+/// Keeps connected callbacks from reopening a link while its intentional
+/// cancellation is still waiting for CoreBluetooth's disconnect completion.
+struct Libre3DisconnectHandoffPolicy: Equatable {
+    private(set) var isWaitingForDisconnect = false
+
+    var connectedAdoptionDecision: ConnectedAdoptionDecision {
+        isWaitingForDisconnect ? .ignorePendingDisconnect : .adopt
+    }
+
+    mutating func begin() {
+        isWaitingForDisconnect = true
+    }
+
+    mutating func reset() {
+        isWaitingForDisconnect = false
+    }
+
+    @discardableResult
+    mutating func completeDisconnect(matchesTarget: Bool) -> Bool {
+        // Unrelated peripherals must never release this sensor's handoff gate.
+        guard matchesTarget, isWaitingForDisconnect else { return false }
+        isWaitingForDisconnect = false
+        return true
+    }
+}
+
 @MainActor
 final class Libre3DirectManager: ObservableObject {
 
@@ -495,7 +526,10 @@ final class Libre3DirectManager: ObservableObject {
     /// A failed connected setup is cancelled before another attempt. During that
     /// interval the cancellation itself is the standing CoreBluetooth operation;
     /// `didDisconnect` clears this gate and immediately rearms connection intent.
-    private var waitingForDisconnectBeforeRearm = false
+    private var disconnectHandoffPolicy = Libre3DisconnectHandoffPolicy()
+    private var waitingForDisconnectBeforeRearm: Bool {
+        disconnectHandoffPolicy.isWaitingForDisconnect
+    }
     /// Unified CoreBluetooth event consumer. `SensorScannerNG` broadcasts every
     /// central callback through this one stream, including state restoration.
     private var scannerEventTask: Task<Void, Never>?
@@ -735,7 +769,7 @@ final class Libre3DirectManager: ObservableObject {
         // not resurrect a provider the user just left.
         shouldMaintainConnection = false
         clearReconnectBackoff()
-        waitingForDisconnectBeforeRearm = false
+        disconnectHandoffPolicy.reset()
         setSignalLossState(deadline: nil)
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
@@ -941,7 +975,6 @@ final class Libre3DirectManager: ObservableObject {
             )
             Logger.libre3.info("Libre3 BLE didFailToConnect: \(peripheral.identifier.uuidString, privacy: .private(mask: .hash)) error=\(errorName, privacy: .public)")
             if isSavedPeripheral(peripheral), lifecycleTask == nil {
-                waitingForDisconnectBeforeRearm = false
                 ensureLifecycleAttempt(reason: "did-fail-to-connect")
             }
 
@@ -955,9 +988,11 @@ final class Libre3DirectManager: ObservableObject {
             if session?.peripheral.identifier == peripheral.identifier {
                 session?.handleDisconnect(error: error)
             }
-            if matchesSavedPeripheral(peripheral) {
-                waitingForDisconnectBeforeRearm = false
-            }
+            disconnectHandoffPolicy.completeDisconnect(
+                matchesTarget: matchesSavedPeripheral(peripheral)
+            )
+            // Starting remains separately guarded so duplicate callbacks cannot
+            // create two lifecycle tasks after the handoff is released.
             if isSavedPeripheral(peripheral), lifecycleTask == nil {
                 ensureLifecycleAttempt(reason: "did-disconnect")
             }
@@ -977,13 +1012,18 @@ final class Libre3DirectManager: ObservableObject {
             Libre3DiagnosticsLog.traceReconnect(
                 "cb-connection-event peripheral=\(peripheral.identifier.uuidString) value=\(connectionEvent.rawValue)\(details)"
             )
-            guard isSavedPeripheral(peripheral), lifecycleTask == nil else { return }
             switch connectionEvent {
             case .peerConnected:
+                guard isSavedPeripheral(peripheral), lifecycleTask == nil else { return }
                 Logger.libre3.info("Libre3 BLE: peripheral connected event — adopting")
                 adoptConnectedPeripheral(peripheral, reason: "peer-connected")
             case .peerDisconnected:
-                waitingForDisconnectBeforeRearm = false
+                disconnectHandoffPolicy.completeDisconnect(
+                    matchesTarget: matchesSavedPeripheral(peripheral)
+                )
+                // Release the matching handoff before checking whether a new
+                // lifecycle task may start.
+                guard isSavedPeripheral(peripheral), lifecycleTask == nil else { return }
                 ensureLifecycleAttempt(reason: "peer-disconnected")
             @unknown default:
                 break
@@ -999,7 +1039,15 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     private func adoptConnectedPeripheral(_ peripheral: CBPeripheral, reason: String) {
-        waitingForDisconnectBeforeRearm = false
+        // A late connected callback may race the cancellation requested by
+        // prepareForNextAttempt; only the matching disconnect may reopen this gate.
+        guard disconnectHandoffPolicy.connectedAdoptionDecision == .adopt else {
+            Libre3DiagnosticsLog.traceReconnect(
+                "connected-adoption-ignored reason=\(reason) pending=disconnect-handoff"
+            )
+            return
+        }
+
         lifecyclePeripheral = peripheral
         if reconnectBackoffDeadline != nil {
             // A connected peripheral is no longer a pending-connect wake source;
@@ -1029,13 +1077,13 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     private func recoverCompletedDisconnectHandoff(reason: String) {
-        guard waitingForDisconnectBeforeRearm,
+        guard disconnectHandoffPolicy.isWaitingForDisconnect,
               let scanner,
               scanner.centralState == .poweredOn,
               let savedPeripheralID,
               let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first,
               peripheral.state == .disconnected else { return }
-        waitingForDisconnectBeforeRearm = false
+        disconnectHandoffPolicy.completeDisconnect(matchesTarget: true)
         Libre3DiagnosticsLog.traceReconnect(
             "disconnect-handoff-recovered reason=\(reason)"
         )
@@ -1060,7 +1108,7 @@ final class Libre3DirectManager: ObservableObject {
         silenceWatchdogTask?.cancel()
         silenceWatchdogTask = nil
         failedBestEffortRearmCharacteristics.removeAll()
-        waitingForDisconnectBeforeRearm = false
+        disconnectHandoffPolicy.reset()
         finishConnectedAttempt(traceStreamEnd: lastAttemptStage == "streaming")
         // NG clients own session invalidation. Power-off does not reliably emit
         // didDisconnect, so fail outstanding GATT work explicitly before dropping
@@ -1137,7 +1185,7 @@ final class Libre3DirectManager: ObservableObject {
            let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first {
             switch peripheral.state {
             case .connected:
-                waitingForDisconnectBeforeRearm = true
+                disconnectHandoffPolicy.begin()
                 Libre3DiagnosticsLog.traceReconnect(
                     "fresh-discovery-disconnect state=\(peripheral.state.rawValue)"
                 )
@@ -1306,14 +1354,14 @@ final class Libre3DirectManager: ObservableObject {
            let peripheral {
             switch peripheral.state {
             case .connected:
-                waitingForDisconnectBeforeRearm = true
+                disconnectHandoffPolicy.begin()
                 Libre3DiagnosticsLog.traceReconnect(
                     "disconnect-before-rearm state=\(peripheral.state.rawValue)"
                 )
                 scanner.cancelConnection(peripheral)
                 return
             case .disconnecting:
-                waitingForDisconnectBeforeRearm = true
+                disconnectHandoffPolicy.begin()
                 Libre3DiagnosticsLog.traceReconnect(
                     "disconnect-before-rearm state=\(peripheral.state.rawValue)"
                 )
@@ -1331,7 +1379,6 @@ final class Libre3DirectManager: ObservableObject {
             }
         }
 
-        waitingForDisconnectBeforeRearm = false
         guard shouldMaintainConnection,
               isActiveProvider,
               Libre3StateStore.isPaired else { return }

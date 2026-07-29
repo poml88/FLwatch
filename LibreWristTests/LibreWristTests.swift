@@ -232,6 +232,64 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(advance(&tracker, lifeCount: 102), .reset)
     }
 
+    // MARK: - Libre 3 disconnect handoff
+
+    func testDidConnectAdoptsWhenDisconnectHandoffIsInactive() throws {
+        let policy = Libre3DisconnectHandoffPolicy()
+
+        XCTAssertEqual(policy.connectedAdoptionDecision, .adopt)
+    }
+
+    func testPeerConnectedAdoptsWhenDisconnectHandoffIsInactive() throws {
+        let policy = Libre3DisconnectHandoffPolicy()
+
+        XCTAssertEqual(policy.connectedAdoptionDecision, .adopt)
+    }
+
+    func testConnectedCallbacksAreIgnoredDuringDisconnectHandoff() throws {
+        var policy = Libre3DisconnectHandoffPolicy()
+        policy.begin()
+
+        XCTAssertEqual(
+            policy.connectedAdoptionDecision,
+            .ignorePendingDisconnect
+        )
+        // `didConnect` and `.peerConnected` share this same acceptance policy.
+        XCTAssertEqual(
+            policy.connectedAdoptionDecision,
+            .ignorePendingDisconnect
+        )
+    }
+
+    func testIgnoredConnectedCallbackDoesNotClearDisconnectHandoff() throws {
+        var policy = Libre3DisconnectHandoffPolicy()
+        policy.begin()
+
+        _ = policy.connectedAdoptionDecision
+
+        XCTAssertTrue(policy.isWaitingForDisconnect)
+    }
+
+    func testOnlyMatchingDisconnectClearsDisconnectHandoff() throws {
+        var policy = Libre3DisconnectHandoffPolicy()
+        policy.begin()
+
+        XCTAssertFalse(policy.completeDisconnect(matchesTarget: false))
+        XCTAssertTrue(policy.isWaitingForDisconnect)
+        XCTAssertTrue(policy.completeDisconnect(matchesTarget: true))
+        XCTAssertFalse(policy.isWaitingForDisconnect)
+    }
+
+    func testCompletedDisconnectHandoffRearmsOnlyOnce() throws {
+        var policy = Libre3DisconnectHandoffPolicy()
+        policy.begin()
+
+        // Only the first matching completion can re-arm lifecycle work.
+        XCTAssertTrue(policy.completeDisconnect(matchesTarget: true))
+        XCTAssertFalse(policy.completeDisconnect(matchesTarget: true))
+        XCTAssertEqual(policy.connectedAdoptionDecision, .adopt)
+    }
+
     func testLibreLinkUpFallsBackToOffsetTimestamp() throws {
         let parsedDate = try XCTUnwrap(
             LibreLinkUp.parseMeasurementDate(
