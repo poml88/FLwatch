@@ -351,6 +351,96 @@ final class LibreWristTests: XCTestCase {
         XCTAssertTrue(readiness.canRequestBackfill)
     }
 
+    // MARK: - Libre 3 no-stream diagnostics
+
+    func testOneNoStreamAttemptOnlyIncrementsCounter() throws {
+        var tracker = Libre3NoStreamCycleTracker()
+
+        XCTAssertFalse(tracker.finishAttempt(producedUsableGlucose: false))
+        XCTAssertEqual(tracker.cycles, 1)
+    }
+
+    func testThirdNoStreamAttemptProducesWarningOnly() throws {
+        var tracker = Libre3NoStreamCycleTracker()
+
+        XCTAssertFalse(tracker.finishAttempt(producedUsableGlucose: false))
+        XCTAssertFalse(tracker.finishAttempt(producedUsableGlucose: false))
+        XCTAssertTrue(tracker.finishAttempt(producedUsableGlucose: false))
+        XCTAssertEqual(tracker.cycles, 3)
+    }
+
+    func testTenNoStreamAttemptsProduceOnlyOneWarning() throws {
+        var tracker = Libre3NoStreamCycleTracker()
+        var warningCount = 0
+
+        for _ in 1...10 {
+            if tracker.finishAttempt(producedUsableGlucose: false) {
+                warningCount += 1
+            }
+        }
+
+        XCTAssertEqual(tracker.cycles, 10)
+        XCTAssertEqual(warningCount, 1)
+    }
+
+    func testUsableGlucoseResetsNoStreamCounter() throws {
+        var tracker = Libre3NoStreamCycleTracker()
+        _ = tracker.finishAttempt(producedUsableGlucose: false)
+        _ = tracker.finishAttempt(producedUsableGlucose: false)
+
+        tracker.recordUsableGlucose()
+
+        XCTAssertEqual(tracker.cycles, 0)
+    }
+
+    // MARK: - Libre 3 peripheral discovery
+
+    func testKnownPeripheralUsesRetrievedPathAfterManyNoStreamAttempts() throws {
+        var tracker = Libre3NoStreamCycleTracker()
+        for _ in 1...10 {
+            _ = tracker.finishAttempt(producedUsableGlucose: false)
+        }
+        var connectedLookupCount = 0
+
+        let selection = Libre3PeripheralDiscoveryPolicy.select(
+            retrieveSaved: { "saved" },
+            retrieveConnected: {
+                connectedLookupCount += 1
+                return "connected"
+            }
+        )
+
+        guard case .retrieved(let value) = selection else {
+            return XCTFail("Expected the retrieved-peripheral path")
+        }
+        XCTAssertEqual(value, "saved")
+        XCTAssertEqual(connectedLookupCount, 0)
+        XCTAssertEqual(tracker.cycles, 10)
+    }
+
+    func testConnectedPeripheralIsUsedWhenSavedLookupMisses() throws {
+        let selection = Libre3PeripheralDiscoveryPolicy.select(
+            retrieveSaved: { nil as String? },
+            retrieveConnected: { "connected" }
+        )
+
+        guard case .alreadyConnected(let value) = selection else {
+            return XCTFail("Expected the already-connected path")
+        }
+        XCTAssertEqual(value, "connected")
+    }
+
+    func testMissingPeripheralFallsThroughToScan() throws {
+        let selection = Libre3PeripheralDiscoveryPolicy.select(
+            retrieveSaved: { nil as String? },
+            retrieveConnected: { nil as String? }
+        )
+
+        guard case .scan = selection else {
+            return XCTFail("Expected the scan path")
+        }
+    }
+
     func testLibreLinkUpFallsBackToOffsetTimestamp() throws {
         let parsedDate = try XCTUnwrap(
             LibreLinkUp.parseMeasurementDate(

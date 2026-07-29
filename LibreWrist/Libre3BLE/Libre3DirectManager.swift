@@ -449,6 +449,47 @@ struct Libre3BackfillReadiness: Equatable {
     }
 }
 
+struct Libre3NoStreamCycleTracker: Equatable {
+    static let warningCycle = 3
+    private(set) var cycles = 0
+
+    /// Returns true only when the diagnostic warning threshold is first reached.
+    mutating func finishAttempt(producedUsableGlucose: Bool) -> Bool {
+        guard !producedUsableGlucose else {
+            cycles = 0
+            return false
+        }
+        cycles += 1
+        return cycles == Self.warningCycle
+    }
+
+    mutating func recordUsableGlucose() {
+        cycles = 0
+    }
+}
+
+enum Libre3PeripheralDiscoverySelection<Value> {
+    case retrieved(Value)
+    case alreadyConnected(Value)
+    case scan
+}
+
+struct Libre3PeripheralDiscoveryPolicy {
+    /// Keeps the normal lookup order and evaluates later sources only as needed.
+    static func select<Value>(
+        retrieveSaved: () -> Value?,
+        retrieveConnected: () -> Value?
+    ) -> Libre3PeripheralDiscoverySelection<Value> {
+        if let saved = retrieveSaved() {
+            return .retrieved(saved)
+        }
+        if let connected = retrieveConnected() {
+            return .alreadyConnected(connected)
+        }
+        return .scan
+    }
+}
+
 @MainActor
 final class Libre3DirectManager: ObservableObject {
 
@@ -572,9 +613,6 @@ final class Libre3DirectManager: ObservableObject {
     private var reconnectBackoffDeadline: Date?
     /// Single cancellable wake-up for `reconnectBackoffDeadline`.
     private var backoffRearmTask: Task<Void, Never>?
-    /// The next attempt must bypass the retrieved-peripheral fast path after a
-    /// repeated connected-without-glucose livelock.
-    private var forceFreshDiscoveryNextAttempt = false
 
     /// Diagnostic-only attempt state. MainActor serialization makes plain
     /// properties sufficient for the sequential connect lifecycle.
@@ -589,9 +627,8 @@ final class Libre3DirectManager: ObservableObject {
     private var rearmCompletedAt: Date?
     private var firstAnyPacketAt: Date?
     private var firstGlucoseFragmentAt: Date?
-    /// Setup success is not proof of health: only usable realtime glucose resets
-    /// this counter, matching the connect-without-stream livelock lesson.
-    private var consecutiveNoStreamCycles = 0
+    /// Setup success is not proof of health; only usable glucose resets this.
+    private var noStreamCycleTracker = Libre3NoStreamCycleTracker()
 
     /// Frozen-value detection — diagnostic only. Nothing is suppressed, no banner
     /// is raised, and the reading still flows through `ingest` unchanged; this
@@ -636,7 +673,6 @@ final class Libre3DirectManager: ObservableObject {
     private static let signalLossThreshold: TimeInterval = 20 * 60
     private static let glucoseGapNotableThreshold: TimeInterval = 10 * 60
     private static let reconnectEscalateUserAfter = 6
-    private static let freshDiscoveryNoStreamCycles = 3
     private static let maxBackfillFailuresPerSession = 3
     /// Streaming waits until every data-plane and backfill response CCCD is ready.
     private static let postAuthRearmPlan = Libre3PostAuthRearmPlan.standard
@@ -812,7 +848,6 @@ final class Libre3DirectManager: ObservableObject {
         assembler.reset()
         clearReadingStatus()
         consecutiveReconnectFailures = 0
-        forceFreshDiscoveryNextAttempt = false
         reScanSuggested = false
         SensorAlertNotificationManager.shared.retractReconnectFailing()
         // A stop means the direct sensor is no longer active here, so remove any
@@ -1183,37 +1218,6 @@ final class Libre3DirectManager: ObservableObject {
             // Another lifecycle trigger may observe an elapsed wall-clock
             // deadline before the sleeping task is scheduled again after resume.
             clearReconnectBackoff()
-        }
-
-        // A standing backoff intent can block the advertisement that forced
-        // discovery needs. Established links wait for didDisconnect; pending
-        // connects are cancelled before the scan without entering that gate.
-        if forceFreshDiscoveryNextAttempt,
-           let savedPeripheralID,
-           let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first {
-            switch peripheral.state {
-            case .connected:
-                disconnectHandoffPolicy.begin()
-                Libre3DiagnosticsLog.traceReconnect(
-                    "fresh-discovery-disconnect state=\(peripheral.state.rawValue)"
-                )
-                scanner.cancelConnection(peripheral)
-                return
-            case .connecting:
-                // A pending connect has no established link whose teardown must
-                // gate discovery. Queue its cancellation before starting the scan.
-                Libre3DiagnosticsLog.traceReconnect(
-                    "fresh-discovery-cancel-pending state=\(peripheral.state.rawValue)"
-                )
-                scanner.cancelConnection(peripheral)
-                if lifecyclePeripheral?.identifier == peripheral.identifier {
-                    lifecyclePeripheral = nil
-                }
-            case .disconnected, .disconnecting:
-                break
-            @unknown default:
-                break
-            }
         }
 
         let attemptID = UUID()
@@ -1709,38 +1713,36 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
-    /// Find the paired sensor: prefer the saved peripheral identifier (no scan
-    /// wait on reconnect). After repeated connected-without-glucose cycles,
-    /// deliberately bypass that cached path and rediscover the saved peripheral
-    /// through a standing CoreBluetooth scan.
+    /// Find the paired sensor from CoreBluetooth's known state before scanning.
     private func discoverPeripheral(scanner: SensorScannerNG) async throws -> CBPeripheral {
         let savedUUID = SharedData.libre3PeripheralUUID
         let savedID = UUID(uuidString: savedUUID)
-        if !forceFreshDiscoveryNextAttempt, let id = savedID {
-            let known = scanner.retrievePeripherals(withIdentifiers: [id])
-            if let peripheral = known.first {
-                return peripheral
-            }
+
+        let selection: Libre3PeripheralDiscoverySelection<CBPeripheral> =
+            Libre3PeripheralDiscoveryPolicy.select(
+                retrieveSaved: {
+                    guard let id = savedID else { return nil }
+                    return scanner.retrievePeripherals(withIdentifiers: [id]).first
+                },
+                retrieveConnected: {
+                    guard let id = savedID else { return nil }
+                    // Never adopt a different sensor that happens to be connected.
+                    return scanner.retrieveConnectedPeripherals()
+                        .first(where: { $0.identifier == id })
+                }
+            )
+
+        switch selection {
+        case .retrieved(let peripheral):
+            return peripheral
+        case .alreadyConnected(let peripheral):
+            Libre3DiagnosticsLog.traceReconnect("reconnect-recovered-connected")
+            return peripheral
+        case .scan:
+            break
         }
 
-        // iOS may evict the cached identifier after a long suspension while still
-        // holding the peripheral connected on the Libre 3 service. This is a
-        // different source than retrievePeripherals and recovers the held link
-        // without a scan. Match the saved id strictly — never adopt a stray.
-        if !forceFreshDiscoveryNextAttempt, let id = savedID {
-            if let connected = scanner.retrieveConnectedPeripherals()
-                .first(where: { $0.identifier == id }) {
-                Libre3DiagnosticsLog.traceReconnect("reconnect-recovered-connected")
-                return connected
-            }
-        }
-
-        if forceFreshDiscoveryNextAttempt {
-            Libre3DiagnosticsLog.traceReconnect("fresh-discovery-start")
-        }
-
-        // Subscribe before starting the scan: both operations serialize onto
-        // NG's central queue, so no fast discovery can beat the waiter.
+        // Subscribe before starting the scan so discovery cannot beat the waiter.
         let events = scanner.events()
         scanner.startScan()
         defer { scanner.stopScan() }
@@ -1748,8 +1750,6 @@ final class Libre3DirectManager: ObservableObject {
             try Task.checkCancellation()
             if case .didDiscover(let found) = event,
                savedID.map({ found.peripheral.identifier == $0 }) ?? true {
-                forceFreshDiscoveryNextAttempt = false
-                Libre3DiagnosticsLog.traceReconnect("fresh-discovery-found")
                 return found.peripheral
             }
         }
@@ -2282,7 +2282,6 @@ final class Libre3DirectManager: ObservableObject {
                 "first-usable-glucose delay=\(Self.elapsedDescription(from: rearmCompletedAt, to: acceptedAt))"
             )
             consecutiveReconnectFailures = 0
-            forceFreshDiscoveryNextAttempt = false
             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
             reScanSuggested = false
             SensorAlertNotificationManager.shared.retractReconnectFailing()
@@ -2290,7 +2289,7 @@ final class Libre3DirectManager: ObservableObject {
         requestBackfillWhenReady()
         // Only an accepted usable realtime reading proves the connection is
         // healthy; authorization/re-arm/streaming transitions never reset this.
-        consecutiveNoStreamCycles = 0
+        noStreamCycleTracker.recordUsableGlucose()
 
         let storedReading: LibreLinkUpGlucose
         if let existing = minuteByLifeCount[mapped.glucose.id] {
@@ -2760,21 +2759,18 @@ final class Libre3DirectManager: ObservableObject {
         attemptEndRecorded = true
         let endedAt = Date()
 
-        if !sessionProducedGlucose {
-            consecutiveNoStreamCycles += 1
-            if consecutiveNoStreamCycles >= Self.freshDiscoveryNoStreamCycles {
-                forceFreshDiscoveryNextAttempt = true
-                if consecutiveNoStreamCycles == Self.freshDiscoveryNoStreamCycles {
-                    Libre3DiagnosticsLog.recordNotable(
-                        "no-stream-livelock cycles=\(Self.freshDiscoveryNoStreamCycles) action=fresh-discovery"
-                    )
-                }
-            }
+        // The threshold is diagnostic only; reconnect strategy never changes.
+        if noStreamCycleTracker.finishAttempt(
+            producedUsableGlucose: sessionProducedGlucose
+        ) {
+            Libre3DiagnosticsLog.recordNotable(
+                "no-stream-warning cycles=\(noStreamCycleTracker.cycles) action=none"
+            )
         }
 
         if traceStreamEnd {
             Libre3DiagnosticsLog.traceReconnect(
-                "stream-ended stage=\(lastAttemptStage) duration=\(Self.elapsedDescription(from: attemptConnectedAt, to: endedAt)) streamed=\(sessionProducedGlucose) any-packet=\(firstAnyPacketAt != nil) glucose-fragment=\(firstGlucoseFragmentAt != nil) no-stream-cycles=\(consecutiveNoStreamCycles)"
+                "stream-ended stage=\(lastAttemptStage) duration=\(Self.elapsedDescription(from: attemptConnectedAt, to: endedAt)) streamed=\(sessionProducedGlucose) any-packet=\(firstAnyPacketAt != nil) glucose-fragment=\(firstGlucoseFragmentAt != nil) no-stream-cycles=\(noStreamCycleTracker.cycles)"
             )
         }
     }

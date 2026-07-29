@@ -345,7 +345,7 @@ struct PhoneAppLibre3ConnectView: View {
 
                         if let receivedAt = SharedData.libre3LastGlucoseAt {
                             Text(receivedAt.formatted(date: .omitted, time: .shortened))
-                                .font(.caption)
+//                                .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
