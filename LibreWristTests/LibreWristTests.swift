@@ -290,6 +290,55 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(policy.connectedAdoptionDecision, .adopt)
     }
 
+    func testNewDisconnectHandoffInvalidatesEarlierGeneration() throws {
+        var policy = Libre3DisconnectHandoffPolicy()
+        let firstGeneration = policy.begin()
+        let secondGeneration = policy.begin()
+
+        XCTAssertFalse(policy.isCurrent(firstGeneration))
+        XCTAssertTrue(policy.isCurrent(secondGeneration))
+    }
+
+    func testResetInvalidatesDisconnectHandoffGeneration() throws {
+        var policy = Libre3DisconnectHandoffPolicy()
+        let generation = policy.begin()
+
+        policy.reset()
+
+        XCTAssertFalse(policy.isCurrent(generation))
+        XCTAssertFalse(policy.isWaitingForDisconnect)
+        XCTAssertEqual(policy.connectedAdoptionDecision, .adopt)
+    }
+
+    func testDisconnectHandoffRecoveryCompletesForMissingPeripheral() throws {
+        XCTAssertEqual(
+            Libre3DisconnectHandoffRecoveryPolicy.action(for: nil),
+            .completeAndRearm
+        )
+    }
+
+    func testDisconnectHandoffRecoveryCompletesWhenDisconnected() throws {
+        XCTAssertEqual(
+            Libre3DisconnectHandoffRecoveryPolicy.action(for: .disconnected),
+            .completeAndRearm
+        )
+    }
+
+    func testDisconnectHandoffRecoveryRetriesCancellationForActiveStates() throws {
+        XCTAssertEqual(
+            Libre3DisconnectHandoffRecoveryPolicy.action(for: .connecting),
+            .retryCancellation
+        )
+        XCTAssertEqual(
+            Libre3DisconnectHandoffRecoveryPolicy.action(for: .connected),
+            .retryCancellation
+        )
+        XCTAssertEqual(
+            Libre3DisconnectHandoffRecoveryPolicy.action(for: .disconnecting),
+            .retryCancellation
+        )
+    }
+
     // MARK: - Libre 3 post-auth re-arm
 
     func testPostAuthRearmPlanHasSevenUniqueCharacteristics() throws {
