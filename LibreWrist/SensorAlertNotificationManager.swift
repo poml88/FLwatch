@@ -25,6 +25,7 @@ final class SensorAlertNotificationManager {
     private static let requestIdentifier = "libre3-sensor-alert.terminal"
     nonisolated static let signalLossIdentifier = "libre3-sensor-alert.signal-loss"
     private static let reconnectFailingIdentifier = "libre3-sensor-alert.reconnect-failing"
+    private static let warmupCompletionIdentifier = "libre3-sensor-alert.warmup-complete"
     private let notificationCenter = UNUserNotificationCenter.current()
     private var desiredSignalLossDeadline: Date?
     private var signalLossRevision = 0
@@ -165,6 +166,8 @@ final class SensorAlertNotificationManager {
     ) async {
         switch attention {
         case .replaceSensor:
+            // A failed sensor cannot finish warm-up, so remove its pending reminder.
+            cancelWarmupCompletionReminder()
             // Sensor-reported terminal state is authoritative; the scheduled
             // expiry-ended reminder is only a silent-sensor fallback.
             removeEndedExpiryReminder()
@@ -174,6 +177,8 @@ final class SensorAlertNotificationManager {
                 interruptionLevel: interruptionLevel
             )
         case .sensorEnded:
+            // A terminal sensor cannot finish warm-up, so remove its pending reminder.
+            cancelWarmupCompletionReminder()
             // Sensor-reported terminal state is authoritative; the scheduled
             // expiry-ended reminder is only a silent-sensor fallback.
             removeEndedExpiryReminder()
@@ -185,6 +190,54 @@ final class SensorAlertNotificationManager {
         case .checkSensor, .none, .unknown:
             await retract()
         }
+    }
+
+    func scheduleWarmupCompletionReminder(
+        sensorStartDate: Date,
+        warmupDurationMinutes: Int,
+        now: Date = Date()
+    ) async {
+        // The stable sensor anchor keeps reconnects from moving the completion time.
+        let fireAt = sensorStartDate.addingTimeInterval(TimeInterval(warmupDurationMinutes) * 60)
+        cancelWarmupCompletionReminder()
+        guard fireAt > now,
+              SharedData.libre3SensorIsPaired,
+              SharedData.libre3SensorStartDate == sensorStartDate,
+              !SharedData.libre3SensorNeedsReplacement else { return }
+
+        let dateComponents = Calendar.current.dateComponents(
+            [.year, .month, .day, .hour, .minute, .second],
+            from: fireAt
+        )
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "Sensor warm-up complete")
+        content.body = String(localized: "Your sensor is ready. Open FLwatch to check your glucose.")
+        content.interruptionLevel = .active
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: Self.warmupCompletionIdentifier,
+            content: content,
+            trigger: UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+        )
+
+        do {
+            try await notificationCenter.add(request)
+            // The sensor may have been forgotten or failed while Notification Center was adding it.
+            if !SharedData.libre3SensorIsPaired ||
+                SharedData.libre3SensorStartDate != sensorStartDate ||
+                SharedData.libre3SensorNeedsReplacement {
+                cancelWarmupCompletionReminder()
+            }
+        } catch {
+            Logger.connectivity.error("Warm-up completion notification scheduling failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    func cancelWarmupCompletionReminder() {
+        let ids = [Self.warmupCompletionIdentifier]
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
+        notificationCenter.removeDeliveredNotifications(withIdentifiers: ids)
     }
 
     func scheduleExpiryReminders(sensorStartDate: Date, wearDurationMinutes: Int, now: Date = Date()) async {

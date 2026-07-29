@@ -936,6 +936,8 @@ final class Libre3DirectManager: ObservableObject {
     private var backfillResumeLifeCount: UInt16?
     private var readingStatusEpisodeID = 0
     private var lastSensorAttention: Libre3SensorAttention = .none
+    /// Prevents reconnects for the same sensor anchor from replacing the warm-up reminder.
+    private var lastScheduledWarmupAnchor: Date?
     /// Prevents reconnects for the same sensor anchor from repeatedly replacing
     /// the same OS-scheduled expiry reminders.
     private var lastScheduledExpiryAnchor: Date?
@@ -1163,6 +1165,7 @@ final class Libre3DirectManager: ObservableObject {
         // see `updateStuckGlucoseEvidence`; a new sensor is a different question).
         stuckGlucoseTracker.reset()
         recentStuckEvidenceFrames.removeAll()
+        lastScheduledWarmupAnchor = nil
         lastScheduledExpiryAnchor = nil
         // A replacement sensor starts near lifeCount zero. Clear the old sensor's
         // data-plane seeds or its ~20,000-minute count would suppress arming; its
@@ -1171,9 +1174,9 @@ final class Libre3DirectManager: ObservableObject {
         SharedData.libre3LastGlucoseMgDL = 0
         SharedData.libre3LastGlucoseAt = nil
         lastArmedLifeCount = nil
-        // Forgetting follows the re-pair advice, so retract that banner. Also
-        // clear expiry reminders so the prior sensor cannot alert after unpairing.
+        // Forgetting follows the re-pair advice, so clear every reminder owned by the old sensor.
         SensorAlertNotificationManager.shared.retractReconnectFailing()
+        SensorAlertNotificationManager.shared.cancelWarmupCompletionReminder()
         Task { await SensorAlertNotificationManager.shared.cancelExpiryReminders() }
         SharedData.libre3SensorStartDate = nil
         SharedData.libre3SensorNeedsReplacement = false
@@ -2890,6 +2893,7 @@ final class Libre3DirectManager: ObservableObject {
         seedAnchorIfNeeded(lifeCount: lifecycle.currentLifeCountMinutes)
         warmupRemainingMinutes = lifecycle.isWarmingUp ? lifecycle.remainingWarmupMinutes : nil
         sensorIsExpired = lifecycle.isExpired
+        refreshWarmupCompletionReminder()
         reconcileSignalLossArming()
     }
 
@@ -3004,6 +3008,22 @@ final class Libre3DirectManager: ObservableObject {
         lastScheduledExpiryAnchor = anchor
         Task { await SensorAlertNotificationManager.shared.scheduleExpiryReminders(
             sensorStartDate: anchor, wearDurationMinutes: wear) }
+    }
+
+    private func refreshWarmupCompletionReminder() {
+        // Wait for the stable anchor; scheduling from "now + remaining" would drift.
+        guard warmupRemainingMinutes != nil,
+              !sensorNeedsReplacement,
+              let anchor = sensorStartDate else { return }
+        let warmup = SharedData.libre3WarmupMinutes
+        guard warmup > 0, lastScheduledWarmupAnchor != anchor else { return }
+        lastScheduledWarmupAnchor = anchor
+        Task {
+            await SensorAlertNotificationManager.shared.scheduleWarmupCompletionReminder(
+                sensorStartDate: anchor,
+                warmupDurationMinutes: warmup
+            )
+        }
     }
 
     /// Derive the wall-clock sensor-start anchor once (`now − lifeCount·60s`) and

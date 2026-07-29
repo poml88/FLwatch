@@ -278,16 +278,40 @@ struct PhoneAppHomeView: View {
 
     @ViewBuilder
     private var statusOverlay: some View {
-        if lluService.isReloading == true {
+        if SharedData.cgmProviderKind == .libre3BLE,
+           let remaining = libre3.warmupRemainingMinutes,
+           !libre3.sensorNeedsReplacement {
+            // Warm-up is expected silence, so show it instead of a reload or stale-data warning.
+            ZStack {
+                Color(white: 0, opacity: 0.5)
+                    .cornerRadius(10)
+                VStack {
+                    Image(systemName: "hourglass.circle")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 100)
+                        .padding()
+
+                    Text("Sensor warming up")
+                        .font(.headline)
+
+                    Text("About \(remaining) minutes remaining.\n\nFLwatch will notify you when your sensor is ready.")
+                        .multilineTextAlignment(.center)
+                        .padding()
+                }
+                .background()
+                .cornerRadius(10)
+                .opacity(0.5)
+                .padding()
+            }
+            .allowsHitTesting(false) // Keep the IOB button tappable below the overlay.
+        } else if lluService.isReloading == true {
             ZStack {
                 Color(white: 0, opacity: 0.25)
                     .cornerRadius(10)
                 ProgressView().tint(.white)
             }
-        }
-
-        let secondsSinceLastReadingOverlay = Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate)
-        if secondsSinceLastReadingOverlay >= lluService.activeProvider.staleReadingAfter && lluService.isReloading == false {
+        } else if Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) >= lluService.activeProvider.staleReadingAfter {
             ZStack {
                 Color(white: 0, opacity: 0.5)
                     .cornerRadius(10)
