@@ -8,10 +8,22 @@
 import SwiftUI
 import BackgroundTasks
 import OSLog
+import UIKit
 
+@MainActor
+final class FLwatchApplicationDelegate: NSObject, UIApplicationDelegate {
+    func applicationWillTerminate(_ application: UIApplication) {
+        guard SharedData.cgmProviderKind == .libre3BLE,
+              SharedData.libre3SensorIsPaired else { return }
+
+        SensorAlertNotificationManager.shared.postApplicationTerminated()
+    }
+}
 
 @main
 struct LibreWristApp: App {
+    @UIApplicationDelegateAdaptor(FLwatchApplicationDelegate.self) private var appDelegate
+
     private static let appRefreshTaskIdentifier = "de.poeml.philipp.LibreWrist.apprefresh"
     private let appRefreshScheduler = BGAppRefreshScheduler(
         taskIdentifier: appRefreshTaskIdentifier,
@@ -30,6 +42,7 @@ struct LibreWristApp: App {
         LibreLinkUpHistory.shared.refreshFromPersistence(force: true)
         SensorSettingsStore.shared.refreshFromPersistence(force: true)
         LowGlucoseNotificationManager.shared.configureForegroundPresentation()
+        SensorAlertNotificationManager.shared.clearApplicationTerminatedNotification()
         
         WatchConnectivityManager.shared.startSession()
         BluetoothHeartbeatManager.shared.startIfNeeded()

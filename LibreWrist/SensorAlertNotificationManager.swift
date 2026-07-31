@@ -17,6 +17,7 @@ final class SensorAlertNotificationManager {
     /// Fixed IDs keep rescheduling idempotent and share the sensor-alert prefix
     /// so the existing foreground notification router presents these reminders.
     enum ExpiryReminder: String, CaseIterable {
+        case warning3d = "libre3-sensor-alert.expiry-3d"
         case warning24h = "libre3-sensor-alert.expiry-24h"
         case warning2h = "libre3-sensor-alert.expiry-2h"
         case ended = "libre3-sensor-alert.expiry-ended"
@@ -24,6 +25,7 @@ final class SensorAlertNotificationManager {
 
     private static let requestIdentifier = "libre3-sensor-alert.terminal"
     nonisolated static let signalLossIdentifier = "libre3-sensor-alert.signal-loss"
+    private static let applicationTerminatedIdentifier = "libre3-sensor-alert.application-terminated"
     private static let reconnectFailingIdentifier = "libre3-sensor-alert.reconnect-failing"
     private static let warmupCompletionIdentifier = "libre3-sensor-alert.warmup-complete"
     private let notificationCenter = UNUserNotificationCenter.current()
@@ -32,6 +34,36 @@ final class SensorAlertNotificationManager {
     private var signalLossReconciliationTask: Task<Void, Never>?
 
     private init() { }
+
+    /// Best-effort warning submitted from `applicationWillTerminate`. iOS does
+    /// not guarantee that lifecycle callback for a user force-quit, especially
+    /// when the app is already suspended.
+    func postApplicationTerminated() {
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "FLwatch was closed")
+        content.body = String(localized: "Open FLwatch to resume receiving glucose readings and alarms.")
+        content.interruptionLevel = .timeSensitive
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: Self.applicationTerminatedIdentifier,
+            content: content,
+            trigger: nil
+        )
+        notificationCenter.add(request) { error in
+            if let error {
+                Logger.connectivity.error("App-termination notification scheduling failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+    }
+
+    /// Remove a warning left in Notification Center when the user opens FLwatch
+    /// directly instead of tapping the notification.
+    func clearApplicationTerminatedNotification() {
+        let ids = [Self.applicationTerminatedIdentifier]
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
+        notificationCenter.removeDeliveredNotifications(withIdentifiers: ids)
+    }
 
     /// App-wide auth; idempotent, and only prompts while authorization is undetermined.
     func requestAuthorizationIfNeeded() async {
@@ -248,6 +280,17 @@ final class SensorAlertNotificationManager {
         let expiryDateTime = expiresAt.formatted(date: .abbreviated, time: .shortened)
         let expiryTime = expiresAt.formatted(date: .omitted, time: .shortened)
 
+        await schedule(
+            .warning3d,
+            fireAt: expiresAt.addingTimeInterval(-3 * 24 * 60 * 60),
+            now: now,
+            level: .active,
+            title: String(localized: "Sensor ends in 3 days"),
+            body: String.localizedStringWithFormat(
+                String(localized: "Your sensor is scheduled to end on %@."),
+                expiryDateTime
+            )
+        )
         await schedule(
             .warning24h,
             fireAt: expiresAt.addingTimeInterval(-24 * 60 * 60),
