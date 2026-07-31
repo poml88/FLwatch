@@ -72,6 +72,7 @@ struct PhoneAppCalibrationView: View {
     private static let stabilityMinSamples = 7
     private static let stabilityMinEarlySamples = 2
     private static let stabilityEarlySampleAgeSeconds: TimeInterval = 8 * 60
+    private static let stabilityEarlySampleToleranceSeconds: TimeInterval = 15
     private static let stabilityMaxLatestSampleAgeSeconds: TimeInterval = 2 * 60
     private static let stabilityMaxRangeMgDL = 7
     private static let stabilityMaxAbsoluteSlopeMgDLPerMinute = 0.5
@@ -155,11 +156,13 @@ struct PhoneAppCalibrationView: View {
         let stabilitySupportCutoff = now.addingTimeInterval(
             -(Self.stabilityWindowSeconds + Self.stabilityWindowGraceSeconds)
         )
-        let earlySampleCutoff = now.addingTimeInterval(-Self.stabilityEarlySampleAgeSeconds)
+        let earlySampleCutoff = now.addingTimeInterval(
+            -(Self.stabilityEarlySampleAgeSeconds - Self.stabilityEarlySampleToleranceSeconds)
+        )
         let shortSamples = contextSamples.filter { $0.date > stabilityCutoff }
         let shortAnalysisSamples = contextSamples.filter { $0.date > stabilitySupportCutoff }
 
-        guard shortSamples.count >= Self.stabilityMinSamples,
+        guard shortAnalysisSamples.count >= Self.stabilityMinSamples,
               shortAnalysisSamples.filter({ $0.date <= earlySampleCutoff }).count >= Self.stabilityMinEarlySamples,
               let latestSample = shortSamples.last,
               now.timeIntervalSince(latestSample.date) <= Self.stabilityMaxLatestSampleAgeSeconds else {
@@ -260,7 +263,9 @@ struct PhoneAppCalibrationView: View {
         let stabilitySupportCutoff = now.addingTimeInterval(
             -(Self.stabilityWindowSeconds + Self.stabilityWindowGraceSeconds)
         )
-        let earlySampleCutoff = now.addingTimeInterval(-Self.stabilityEarlySampleAgeSeconds)
+        let earlySampleCutoff = now.addingTimeInterval(
+            -(Self.stabilityEarlySampleAgeSeconds - Self.stabilityEarlySampleToleranceSeconds)
+        )
         let shortSamples = contextSamples.filter { $0.date > stabilityCutoff }
         let shortAnalysisSamples = contextSamples.filter { $0.date > stabilitySupportCutoff }
         let earlySampleCount = shortAnalysisSamples.filter { $0.date <= earlySampleCutoff }.count
@@ -284,8 +289,8 @@ struct PhoneAppCalibrationView: View {
         } ?? false
 
         var lines = [
-            "10m samples: \(debugGate(shortSamples.count >= Self.stabilityMinSamples)) \(shortSamples.count) / >=\(Self.stabilityMinSamples)",
-            "8-11m support: \(debugGate(earlySampleCount >= Self.stabilityMinEarlySamples)) \(earlySampleCount) / >=\(Self.stabilityMinEarlySamples)",
+            "Short samples (<=11m): \(debugGate(shortAnalysisSamples.count >= Self.stabilityMinSamples)) \(shortAnalysisSamples.count) / >=\(Self.stabilityMinSamples)",
+            "8-11m support (15s tolerance): \(debugGate(earlySampleCount >= Self.stabilityMinEarlySamples)) \(earlySampleCount) / >=\(Self.stabilityMinEarlySamples)",
             "Newest age: \(debugGate(latestAgePassed)) \(debugMinutes(latestAgeSeconds)) / <=2.0m",
             "Hour samples (<=65m): \(debugGate(contextSamples.count >= Self.recentContextMinSamples)) \(contextSamples.count) / >=\(Self.recentContextMinSamples)",
             "Hour coverage: \(debugGate(contextCoveragePassed)) \(debugMinutes(contextCoverageSeconds)) / >=45.0m",
@@ -301,7 +306,7 @@ struct PhoneAppCalibrationView: View {
                 ? "*"
                 : sample.date > stabilitySupportCutoff ? "+" : " "
             let age = max(0, now.timeIntervalSince(sample.date)) / 60
-            let ageText = age.formatted(.number.precision(.fractionLength(1)))
+            let ageText = age.formatted(.number.precision(.fractionLength(2)))
             let time = sample.date.formatted(date: .omitted, time: .standard)
             return "\(marker) \(ageText)m  \(time)  \(sample.valueMgDL)"
         })
@@ -314,7 +319,7 @@ struct PhoneAppCalibrationView: View {
 
     private func debugMinutes(_ seconds: TimeInterval?) -> String {
         guard let seconds else { return "none" }
-        return (seconds / 60).formatted(.number.precision(.fractionLength(1))) + "m"
+        return (seconds / 60).formatted(.number.precision(.fractionLength(2))) + "m"
     }
 
     private func debugRange(_ range: Double?) -> String {
