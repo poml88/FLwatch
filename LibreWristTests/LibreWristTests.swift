@@ -67,6 +67,51 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(Int(parsedDate.timeIntervalSince1970), 1_774_209_943)
     }
 
+    // MARK: - Libre 3 glucose colors
+
+    func testLibre3GlucoseColorClassificationUsesTargetAndFixedLimits() {
+        let settings = SensorSettings(
+            uom: 1,
+            targetLow: 80,
+            targetHigh: 180,
+            alarmLow: 70,
+            alarmHigh: 250
+        )
+        let cases: [(value: Int, expected: MeasurementColor)] = [
+            (69, .red),
+            (70, .yellow),
+            (79, .yellow),
+            (80, .green),
+            (180, .green),
+            (181, .yellow),
+            (250, .yellow),
+            (251, .orange)
+        ]
+
+        for testCase in cases {
+            XCTAssertEqual(
+                Libre3GlucoseMapper.color(forMgDL: testCase.value, settings: settings),
+                testCase.expected,
+                "Unexpected Libre 3 color for \(testCase.value) mg/dL"
+            )
+        }
+    }
+
+    func testLibre3GlucoseColorClassificationKeepsTargetBoundariesGreen() {
+        let settings = SensorSettings(
+            uom: 1,
+            targetLow: 70,
+            targetHigh: 250,
+            alarmLow: 70,
+            alarmHigh: 250
+        )
+
+        XCTAssertEqual(Libre3GlucoseMapper.color(forMgDL: 69, settings: settings), .red)
+        XCTAssertEqual(Libre3GlucoseMapper.color(forMgDL: 70, settings: settings), .green)
+        XCTAssertEqual(Libre3GlucoseMapper.color(forMgDL: 250, settings: settings), .green)
+        XCTAssertEqual(Libre3GlucoseMapper.color(forMgDL: 251, settings: settings), .orange)
+    }
+
     // MARK: - Libre 3 frozen-value run tracking
 
     /// Feed a frame and return the outcome, defaulting the raw fields so a test

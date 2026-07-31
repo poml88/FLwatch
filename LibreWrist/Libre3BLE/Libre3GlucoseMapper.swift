@@ -47,11 +47,16 @@ enum Libre3GlucoseMapper {
     // MARK: - Color classification
     //
     // Like Dexcom Share (and unlike the LLU cloud path, which gets a server
-    // color), the BLE path has no pre-computed color, so classify against the
-    // user's target range — identical bands to `DexcomShareTrendMapper.color`.
+    // color), the BLE path has no pre-computed color. Fixed clinical warning
+    // limits take precedence over the user's target range.
+
+    private static let criticalLowMgDL = 70
+    private static let veryHighMgDL = 250
 
     static func color(forMgDL value: Int, settings: SensorSettings) -> MeasurementColor {
-        if value < settings.targetLow  { return .red }
+        if value < criticalLowMgDL     { return .red }
+        if value > veryHighMgDL        { return .orange }
+        if value < settings.targetLow  { return .yellow }
         if value > settings.targetHigh { return .yellow }
         return .green
     }
