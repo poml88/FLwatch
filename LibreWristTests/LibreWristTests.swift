@@ -310,6 +310,21 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(policy.connectedAdoptionDecision, .adopt)
     }
 
+    func testConnectIntentIsRequestedOnlyWhenDisconnected() throws {
+        XCTAssertTrue(
+            Libre3ConnectIntentPolicy.shouldRequestConnect(for: .disconnected)
+        )
+        XCTAssertFalse(
+            Libre3ConnectIntentPolicy.shouldRequestConnect(for: .connecting)
+        )
+        XCTAssertFalse(
+            Libre3ConnectIntentPolicy.shouldRequestConnect(for: .connected)
+        )
+        XCTAssertFalse(
+            Libre3ConnectIntentPolicy.shouldRequestConnect(for: .disconnecting)
+        )
+    }
+
     func testDisconnectHandoffRecoveryCompletesForMissingPeripheral() throws {
         XCTAssertEqual(
             Libre3DisconnectHandoffRecoveryPolicy.action(for: nil),

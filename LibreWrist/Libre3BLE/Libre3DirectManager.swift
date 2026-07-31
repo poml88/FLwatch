@@ -435,6 +435,18 @@ enum Libre3DisconnectHandoffRecoveryAction: Equatable {
     case wait
 }
 
+struct Libre3ConnectIntentPolicy {
+    /// A new CoreBluetooth connect intent is safe only after a pending teardown
+    /// has reached its terminal disconnected state. Connecting again while the
+    /// peripheral is still disconnecting can leave it in a phantom `.connecting`
+    /// state with no terminal callback or usable background wake source.
+    static func shouldRequestConnect(
+        for peripheralState: CBPeripheralState
+    ) -> Bool {
+        peripheralState == .disconnected
+    }
+}
+
 struct Libre3DisconnectHandoffRecoveryPolicy {
     static func action(
         for peripheralState: CBPeripheralState?
@@ -1652,8 +1664,9 @@ final class Libre3DirectManager: ObservableObject {
               scanner.centralState == .poweredOn,
               let savedPeripheralID,
               let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first,
-              peripheral.state != .connected,
-              peripheral.state != .connecting else { return }
+              Libre3ConnectIntentPolicy.shouldRequestConnect(
+                  for: peripheral.state
+              ) else { return }
         Libre3DiagnosticsLog.traceReconnect(
             "standing-connect-armed state=\(peripheral.state.rawValue)"
         )
@@ -1896,6 +1909,14 @@ final class Libre3DirectManager: ObservableObject {
                 characteristics: plan.characteristics,
                 forceReArm: plan.forceReArm
             )
+            // The CCCD refresh waits on CoreBluetooth acknowledgements and does
+            // not finish early just because its parent task was cancelled. A
+            // stopped/superseded attempt must not publish re-arm completion or
+            // enter streaming after a newer attempt has taken ownership.
+            try Task.checkCancellation()
+            guard self.session === session else {
+                throw CancellationError()
+            }
             let completedAt = Date()
             rearmCompletedAt = completedAt
             Libre3DiagnosticsLog.traceReconnect(
@@ -2204,31 +2225,47 @@ final class Libre3DirectManager: ObservableObject {
         scanner: SensorScannerNG,
         peripheral: CBPeripheral
     ) async throws -> CBPeripheral {
-        if peripheral.state == .connected {
-            return peripheral
+        // Queue the subscriber first, then use retrievePeripherals as a central-
+        // queue barrier before inspecting state. If an existing `.connecting`
+        // intent completed just before subscription, the refreshed handle is
+        // already `.connected`; otherwise the installed waiter receives its
+        // terminal callback.
+        let events = scanner.events()
+        let currentPeripheral = scanner.retrievePeripherals(
+            withIdentifiers: [peripheral.identifier]
+        ).first ?? peripheral
+        let currentState = currentPeripheral.state
+
+        if currentState == .connected {
+            return currentPeripheral
         }
 
-        // Register the waiter before requestConnect. NG serializes both onto its
-        // central queue, preventing an immediate didConnect from being missed.
-        let events = scanner.events()
-        Libre3DiagnosticsLog.traceReconnect(
-            "connect-intent-armed state=\(peripheral.state.rawValue)"
-        )
-        scanner.requestConnect(peripheral)
+        if Libre3ConnectIntentPolicy.shouldRequestConnect(for: currentState) {
+            Libre3DiagnosticsLog.traceReconnect(
+                "connect-intent-armed state=\(currentState.rawValue)"
+            )
+            scanner.requestConnect(currentPeripheral)
+        } else {
+            // `.connecting` already carries the desired wake intent;
+            // `.disconnecting` must reach didDisconnect before a fresh request.
+            Libre3DiagnosticsLog.traceReconnect(
+                "connect-intent-waiting state=\(currentState.rawValue)"
+            )
+        }
 
         for await event in events {
             try Task.checkCancellation()
             switch event {
             case .didConnect(let connected)
-                where connected.identifier == peripheral.identifier:
+                where connected.identifier == currentPeripheral.identifier:
                 return connected
             case .didFailToConnect(let failed, let error)
-                where failed.identifier == peripheral.identifier:
+                where failed.identifier == currentPeripheral.identifier:
                 throw SensorScannerError.connectionFailed(
                     error?.localizedDescription ?? "unknown"
                 )
             case .didDisconnect(let disconnected, let error)
-                where disconnected.identifier == peripheral.identifier:
+                where disconnected.identifier == currentPeripheral.identifier:
                 throw SensorScannerError.connectionFailed(
                     error?.localizedDescription ?? "disconnected"
                 )
