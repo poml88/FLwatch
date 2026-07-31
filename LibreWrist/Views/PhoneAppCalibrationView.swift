@@ -21,6 +21,7 @@ struct Libre3CalibrationLogEntry: Identifiable, Codable, Equatable {
 struct PhoneAppCalibrationView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.libreLinkUpHistory) private var history
+    @AppStorage("developerModeEnabled") private var developerModeEnabled = false
 
     @State private var draftOffsetMgDL: Int
     @State private var entries: [Libre3CalibrationLogEntry]
@@ -62,6 +63,272 @@ struct PhoneAppCalibrationView: View {
         return Double(entries.reduce(0) { $0 + $1.differenceMgDL }) / Double(entries.count)
     }
 
+    // This is deliberately conservative guidance, not a guarantee that blood and
+    // interstitial glucose currently match. A short flat stretch can be a plateau
+    // within a larger post-meal or post-treatment excursion, so assess both the
+    // current trend and the preceding hour before recommending a comparison.
+    private static let stabilityWindowSeconds: TimeInterval = 10 * 60
+    private static let stabilityWindowGraceSeconds: TimeInterval = 60
+    private static let stabilityMinSamples = 7
+    private static let stabilityMinEarlySamples = 2
+    private static let stabilityEarlySampleAgeSeconds: TimeInterval = 8 * 60
+    private static let stabilityMaxLatestSampleAgeSeconds: TimeInterval = 2 * 60
+    private static let stabilityMaxRangeMgDL = 7
+    private static let stabilityMaxAbsoluteSlopeMgDLPerMinute = 0.5
+    private static let recentContextWindowSeconds: TimeInterval = 60 * 60
+    private static let recentContextWindowGraceSeconds: TimeInterval = 5 * 60
+    private static let recentContextMinCoverageSeconds: TimeInterval = 45 * 60
+    private static let recentContextMinSamples = 15
+    private static let recentContextMaxRangeMgDL = 25
+
+    private enum StabilityAssessment {
+        case steady
+        case recentlyChanging
+        case unstable
+        case insufficientData
+
+        var message: LocalizedStringKey {
+            switch self {
+            case .steady:
+                return "Recent sensor readings look steady. This is usually a better time to compare, but the values may still differ."
+            case .recentlyChanging:
+                return "Sensor readings are flat now, but glucose changed substantially during the past hour. Wait longer before comparing."
+            case .unstable:
+                return "Glucose is moving. Wait for a steady stretch before comparing."
+            case .insufficientData:
+                return "Not enough recent sensor history to assess whether glucose has settled."
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .steady: return "checkmark.circle.fill"
+            case .recentlyChanging: return "exclamationmark.triangle.fill"
+            case .unstable: return "exclamationmark.triangle.fill"
+            case .insufficientData: return "clock"
+            }
+        }
+
+        var tint: Color {
+            switch self {
+            case .steady: return .green
+            case .recentlyChanging: return .orange
+            case .unstable: return .orange
+            case .insufficientData: return .secondary
+            }
+        }
+    }
+
+    /// Chronological raw (uncorrected) Libre 3 BLE points for the hour-long
+    /// context, plus one five-minute boundary interval. The regular history
+    /// supplies five-minute points, while the minute history fills the gap between
+    /// its newest point and now. The live point appears in both arrays, so
+    /// de-duplicate by sensor life-count before assessing it.
+    private var recentRawSamples: [(date: Date, valueMgDL: Int)] {
+        let cutoff = Date().addingTimeInterval(
+            -(Self.recentContextWindowSeconds + Self.recentContextWindowGraceSeconds)
+        )
+        let points = history.fullLibreLinkUpGlucose + history.libreLinkUpMinuteGlucose
+        var samplesByLifeCount: [Int: (date: Date, valueMgDL: Int)] = [:]
+
+        for point in points
+        where point.glucose.source == "Libre3 BLE" && point.glucose.date > cutoff {
+            let sample = (
+                date: point.glucose.date,
+                valueMgDL: point.glucose.rawValue / 10
+            )
+            if let existing = samplesByLifeCount[point.glucose.id],
+               existing.date >= sample.date {
+                continue
+            }
+            samplesByLifeCount[point.glucose.id] = sample
+        }
+
+        return samplesByLifeCount.values.sorted { $0.date < $1.date }
+    }
+
+    private var stabilityAssessment: StabilityAssessment? {
+        guard !SharedData.libre3Serial.isEmpty else { return nil }
+        let now = Date()
+        let contextSamples = recentRawSamples
+        let stabilityCutoff = now.addingTimeInterval(-Self.stabilityWindowSeconds)
+        let stabilitySupportCutoff = now.addingTimeInterval(
+            -(Self.stabilityWindowSeconds + Self.stabilityWindowGraceSeconds)
+        )
+        let earlySampleCutoff = now.addingTimeInterval(-Self.stabilityEarlySampleAgeSeconds)
+        let shortSamples = contextSamples.filter { $0.date > stabilityCutoff }
+        let shortAnalysisSamples = contextSamples.filter { $0.date > stabilitySupportCutoff }
+
+        guard shortSamples.count >= Self.stabilityMinSamples,
+              shortAnalysisSamples.filter({ $0.date <= earlySampleCutoff }).count >= Self.stabilityMinEarlySamples,
+              let latestSample = shortSamples.last,
+              now.timeIntervalSince(latestSample.date) <= Self.stabilityMaxLatestSampleAgeSeconds else {
+            return .insufficientData
+        }
+
+        let shortValues = shortAnalysisSamples.map { $0.valueMgDL }
+        let previousValues = shortValues.dropLast().suffix(3)
+        guard let previousMedian = Self.median(Array(previousValues)) else {
+            return .insufficientData
+        }
+
+        // Never smooth away a new turn at the end of the series. Rolling medians
+        // are used only to prevent one isolated interior BLE point from deciding
+        // the result.
+        if abs(Double(latestSample.valueMgDL) - previousMedian) > Double(Self.stabilityMaxRangeMgDL) {
+            return .unstable
+        }
+
+        guard let shortRange = Self.rollingMedianRange(shortValues),
+              shortRange <= Double(Self.stabilityMaxRangeMgDL) else {
+            return .unstable
+        }
+
+        guard let shortSlope = Self.medianPairwiseSlopeMgDLPerMinute(shortAnalysisSamples),
+              abs(shortSlope) <= Self.stabilityMaxAbsoluteSlopeMgDLPerMinute else {
+            return .unstable
+        }
+
+        guard contextSamples.count >= Self.recentContextMinSamples,
+              let oldestContextSample = contextSamples.first,
+              now.timeIntervalSince(oldestContextSample.date) >= Self.recentContextMinCoverageSeconds else {
+            return .insufficientData
+        }
+
+        let contextValues = contextSamples.map { $0.valueMgDL }
+        if let contextRange = Self.rollingMedianRange(contextValues),
+           contextRange > Double(Self.recentContextMaxRangeMgDL) {
+            return .recentlyChanging
+        }
+
+        return .steady
+    }
+
+    private static func rollingMedianRange(_ values: [Int]) -> Double? {
+        guard values.count >= 3 else { return nil }
+        let medians = (1..<(values.count - 1)).compactMap { index in
+            median(Array(values[(index - 1)...(index + 1)]))
+        }
+        guard let low = medians.min(), let high = medians.max() else { return nil }
+        return high - low
+    }
+
+    private static func median(_ values: [Int]) -> Double? {
+        guard !values.isEmpty else { return nil }
+        let sorted = values.sorted()
+        let middle = sorted.count / 2
+        if sorted.count.isMultiple(of: 2) {
+            return Double(sorted[middle - 1] + sorted[middle]) / 2
+        }
+        return Double(sorted[middle])
+    }
+
+    /// The median slope between every pair of points (Theil-Sen style) is robust
+    /// to one noisy BLE value while still detecting a sustained rise or fall.
+    private static func medianPairwiseSlopeMgDLPerMinute(
+        _ samples: [(date: Date, valueMgDL: Int)]
+    ) -> Double? {
+        guard samples.count >= 2 else { return nil }
+        var slopes: [Double] = []
+
+        for earlierIndex in 0..<(samples.count - 1) {
+            for laterIndex in (earlierIndex + 1)..<samples.count {
+                let elapsedMinutes = samples[laterIndex].date.timeIntervalSince(
+                    samples[earlierIndex].date
+                ) / 60
+                guard elapsedMinutes > 0 else { continue }
+                let change = Double(
+                    samples[laterIndex].valueMgDL - samples[earlierIndex].valueMgDL
+                )
+                slopes.append(change / elapsedMinutes)
+            }
+        }
+
+        guard !slopes.isEmpty else { return nil }
+        let sorted = slopes.sorted()
+        let middle = sorted.count / 2
+        if sorted.count.isMultiple(of: 2) {
+            return (sorted[middle - 1] + sorted[middle]) / 2
+        }
+        return sorted[middle]
+    }
+
+    private var stabilityDiagnosticsText: String {
+        let now = Date()
+        let contextSamples = recentRawSamples
+        let stabilityCutoff = now.addingTimeInterval(-Self.stabilityWindowSeconds)
+        let stabilitySupportCutoff = now.addingTimeInterval(
+            -(Self.stabilityWindowSeconds + Self.stabilityWindowGraceSeconds)
+        )
+        let earlySampleCutoff = now.addingTimeInterval(-Self.stabilityEarlySampleAgeSeconds)
+        let shortSamples = contextSamples.filter { $0.date > stabilityCutoff }
+        let shortAnalysisSamples = contextSamples.filter { $0.date > stabilitySupportCutoff }
+        let earlySampleCount = shortAnalysisSamples.filter { $0.date <= earlySampleCutoff }.count
+        let latestAgeSeconds = shortSamples.last.map { now.timeIntervalSince($0.date) }
+        let contextCoverageSeconds = contextSamples.first.map { now.timeIntervalSince($0.date) }
+        let shortRange = Self.rollingMedianRange(shortAnalysisSamples.map { $0.valueMgDL })
+        let shortSlope = Self.medianPairwiseSlopeMgDLPerMinute(shortAnalysisSamples)
+        let contextRange = Self.rollingMedianRange(contextSamples.map { $0.valueMgDL })
+
+        let latestAgePassed = latestAgeSeconds.map {
+            $0 <= Self.stabilityMaxLatestSampleAgeSeconds
+        } ?? false
+        let contextCoveragePassed = contextCoverageSeconds.map {
+            $0 >= Self.recentContextMinCoverageSeconds
+        } ?? false
+        let shortRangePassed = shortRange.map {
+            $0 <= Double(Self.stabilityMaxRangeMgDL)
+        } ?? false
+        let shortSlopePassed = shortSlope.map {
+            abs($0) <= Self.stabilityMaxAbsoluteSlopeMgDLPerMinute
+        } ?? false
+
+        var lines = [
+            "10m samples: \(debugGate(shortSamples.count >= Self.stabilityMinSamples)) \(shortSamples.count) / >=\(Self.stabilityMinSamples)",
+            "8-11m support: \(debugGate(earlySampleCount >= Self.stabilityMinEarlySamples)) \(earlySampleCount) / >=\(Self.stabilityMinEarlySamples)",
+            "Newest age: \(debugGate(latestAgePassed)) \(debugMinutes(latestAgeSeconds)) / <=2.0m",
+            "Hour samples (<=65m): \(debugGate(contextSamples.count >= Self.recentContextMinSamples)) \(contextSamples.count) / >=\(Self.recentContextMinSamples)",
+            "Hour coverage: \(debugGate(contextCoveragePassed)) \(debugMinutes(contextCoverageSeconds)) / >=45.0m",
+            "Short median range (<=11m): \(debugGate(shortRangePassed)) \(debugRange(shortRange)) / <=\(Self.stabilityMaxRangeMgDL) mg/dL",
+            "Short slope: \(debugGate(shortSlopePassed)) \(debugSlope(shortSlope)) / abs <=\(Self.stabilityMaxAbsoluteSlopeMgDLPerMinute) mg/dL/min",
+            "Hour median range (<=65m): \(debugRange(contextRange)) / recent if >\(Self.recentContextMaxRangeMgDL) mg/dL",
+            "",
+            "Samples (* = last 10m, + = 10-11m support; raw mg/dL):"
+        ]
+
+        lines.append(contentsOf: contextSamples.map { sample in
+            let marker = sample.date > stabilityCutoff
+                ? "*"
+                : sample.date > stabilitySupportCutoff ? "+" : " "
+            let age = max(0, now.timeIntervalSince(sample.date)) / 60
+            let ageText = age.formatted(.number.precision(.fractionLength(1)))
+            let time = sample.date.formatted(date: .omitted, time: .standard)
+            return "\(marker) \(ageText)m  \(time)  \(sample.valueMgDL)"
+        })
+        return lines.joined(separator: "\n")
+    }
+
+    private func debugGate(_ passed: Bool) -> String {
+        passed ? "PASS" : "FAIL"
+    }
+
+    private func debugMinutes(_ seconds: TimeInterval?) -> String {
+        guard let seconds else { return "none" }
+        return (seconds / 60).formatted(.number.precision(.fractionLength(1))) + "m"
+    }
+
+    private func debugRange(_ range: Double?) -> String {
+        guard let range else { return "none" }
+        return range.formatted(.number.precision(.fractionLength(1))) + " mg/dL"
+    }
+
+    private func debugSlope(_ slope: Double?) -> String {
+        guard let slope else { return "none" }
+        let sign = slope > 0 ? "+" : slope < 0 ? "−" : ""
+        let magnitude = abs(slope).formatted(.number.precision(.fractionLength(2)))
+        return sign + magnitude + " mg/dL/min"
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -79,6 +346,7 @@ struct PhoneAppCalibrationView: View {
             .sheet(item: $editingEntry) { entry in
                 Libre3CalibrationEntryEditorView(
                     entry: entry,
+                    bloodValueMgDL: entries.first(where: { $0.id == entry.id })?.bloodValueMgDL,
                     glucoseUnit: glucoseUnit,
                     onSave: saveEntry
                 )
@@ -103,6 +371,8 @@ struct PhoneAppCalibrationView: View {
                 .font(.headline)
 
             Text("This setting does not recalibrate the sensor. It applies a local offset only to new glucose readings received by FLwatch. Changes begin with the next received reading and may create a visible step in the graph.")
+
+            Text("Compare only when glucose is reasonably stable; the helper below can guide you. Avoid comparisons while glucose may still be affected by a meal, insulin, exercise, or treatment of a low. Because this correction is a fixed offset, use several steady comparisons near the range that matters to you—for the lower range, about 80–120 mg/dL (4.4–6.7 mmol/L), rather than at a high glucose level.")
 
             Text("Corrected values are used throughout FLwatch, including glucose alerts, Apple Watch, widgets, Live Activities, and Apple Health export.")
 
@@ -169,6 +439,22 @@ struct PhoneAppCalibrationView: View {
                 Label("Add comparison", systemImage: "plus.circle")
             }
             .disabled(SharedData.libre3Serial.isEmpty)
+
+            if let stabilityAssessment {
+                Label(stabilityAssessment.message, systemImage: stabilityAssessment.systemImage)
+                    .font(.footnote)
+                    .foregroundStyle(stabilityAssessment.tint)
+            }
+
+            if developerModeEnabled {
+                DisclosureGroup {
+                    Text(verbatim: stabilityDiagnosticsText)
+                        .font(.caption.monospaced())
+                        .textSelection(.enabled)
+                } label: {
+                    Text(verbatim: "Stability diagnostics")
+                }
+            }
 
             ForEach(entries.sorted { $0.date > $1.date }) { entry in
                 Button {
@@ -273,7 +559,7 @@ private struct Libre3CalibrationEntryEditorView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var sensorValue: Double
-    @State private var bloodValue: Double
+    @State private var bloodValue: Double?
     @State private var date: Date
 
     private let id: UUID
@@ -282,6 +568,7 @@ private struct Libre3CalibrationEntryEditorView: View {
 
     init(
         entry: Libre3CalibrationLogEntry,
+        bloodValueMgDL: Int?,
         glucoseUnit: GlucoseUnit,
         onSave: @escaping (Libre3CalibrationLogEntry) -> Void
     ) {
@@ -289,14 +576,17 @@ private struct Libre3CalibrationEntryEditorView: View {
         self.glucoseUnit = glucoseUnit
         self.onSave = onSave
         _sensorValue = State(initialValue: Self.displayValue(entry.sensorValueMgDL, unit: glucoseUnit))
-        _bloodValue = State(initialValue: Self.displayValue(entry.bloodValueMgDL, unit: glucoseUnit))
+        _bloodValue = State(
+            initialValue: bloodValueMgDL.map { Self.displayValue($0, unit: glucoseUnit) }
+        )
         _date = State(initialValue: entry.date)
     }
 
     private var sensorValueMgDL: Int { convertToMgDL(sensorValue) }
-    private var bloodValueMgDL: Int { convertToMgDL(bloodValue) }
+    private var bloodValueMgDL: Int? { bloodValue.map { convertToMgDL($0) } }
     private var valuesAreValid: Bool {
-        (20...600).contains(sensorValueMgDL) && (20...600).contains(bloodValueMgDL)
+        guard let bloodValueMgDL else { return false }
+        return (20...600).contains(sensorValueMgDL) && (20...600).contains(bloodValueMgDL)
     }
 
     var body: some View {
@@ -335,7 +625,7 @@ private struct Libre3CalibrationEntryEditorView: View {
 
                     DatePicker("Date and time", selection: $date)
                 } footer: {
-                    if !valuesAreValid {
+                    if bloodValue != nil && !valuesAreValid {
                         Text("Enter plausible glucose values between 20 and 600 mg/dL (or the equivalent in mmol/L).")
                             .foregroundStyle(.red)
                     }
@@ -349,6 +639,7 @@ private struct Libre3CalibrationEntryEditorView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        guard let bloodValueMgDL else { return }
                         onSave(
                             Libre3CalibrationLogEntry(
                                 id: id,
