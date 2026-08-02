@@ -63,6 +63,7 @@ enum NightscoutConnectionTestResult: Equatable, Sendable {
 enum NightscoutClientError: Error, LocalizedError {
     case invalidBaseURL
     case missingAccessToken
+    case requestEncoding
     case invalidResponse
     case invalidAuthorizationResponse
     case transport(Error)
@@ -74,6 +75,8 @@ enum NightscoutClientError: Error, LocalizedError {
             return "Enter a valid HTTPS Nightscout URL."
         case .missingAccessToken:
             return "Enter a Nightscout access token."
+        case .requestEncoding:
+            return "A Nightscout document could not be encoded."
         case .invalidResponse:
             return "Nightscout returned an invalid response."
         case .invalidAuthorizationResponse:
@@ -87,11 +90,11 @@ enum NightscoutClientError: Error, LocalizedError {
 
     var isRetryable: Bool {
         switch self {
-        case .transport:
+        case .transport, .invalidResponse:
             return true
         case .httpStatus(let code, _, _):
             return code == 429 || (500...599).contains(code)
-        case .invalidBaseURL, .missingAccessToken, .invalidResponse, .invalidAuthorizationResponse:
+        case .invalidBaseURL, .missingAccessToken, .requestEncoding, .invalidAuthorizationResponse:
             return false
         }
     }
@@ -144,7 +147,15 @@ final class NightscoutClientV3 {
                 exp = nil
             }
 
-            if let groups = try? container.decode([String].self, forKey: .permissionGroups) {
+            // Nightscout emits one permission array per assigned role, e.g.
+            // `[["*"], ["*:*:read"]]`. Accept the older flat shapes too so
+            // connection testing works across supported server versions.
+            if let groupedPermissions = try? container.decode(
+                [[String]].self,
+                forKey: .permissionGroups
+            ) {
+                permissionGroups = groupedPermissions.flatMap { $0 }
+            } else if let groups = try? container.decode([String].self, forKey: .permissionGroups) {
                 permissionGroups = groups
             } else if let group = try? container.decode(String.self, forKey: .permissionGroups) {
                 permissionGroups = [group]
@@ -266,7 +277,7 @@ final class NightscoutClientV3 {
             return .ok
         } catch let error as NightscoutClientError {
             switch error {
-            case .transport, .invalidResponse:
+            case .transport, .invalidResponse, .requestEncoding:
                 return .unreachable
             case .httpStatus(let code, _, _):
                 if code == 401 || code == 403 {
@@ -346,7 +357,7 @@ final class NightscoutClientV3 {
         do {
             bodyData = try encoder.encode(body)
         } catch {
-            throw NightscoutClientError.invalidResponse
+            throw NightscoutClientError.requestEncoding
         }
         return try await authorizedRequest(
             method: method,

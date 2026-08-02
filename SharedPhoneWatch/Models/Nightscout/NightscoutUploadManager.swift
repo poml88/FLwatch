@@ -175,11 +175,10 @@ final class NightscoutUploadManager {
         return result
     }
 
-    func unresolvedCount(baseURLString: String) -> Int {
-        guard NightscoutExecutionContext.isMainAppProcess,
-              let namespace = try? NightscoutBaseURL(normalizing: baseURLString),
-              let outbox = try? outbox() else { return 0 }
-        return outbox.unresolvedCount(namespace: namespace)
+    func unresolvedCount(baseURLString: String) throws -> Int {
+        guard NightscoutExecutionContext.isMainAppProcess else { return 0 }
+        let namespace = try NightscoutBaseURL(normalizing: baseURLString)
+        return try outbox().unresolvedCount(namespace: namespace)
     }
 
     @discardableResult
@@ -571,8 +570,16 @@ final class NightscoutUploadManager {
         insulinRevision: UUID?
     ) -> FailureDisposition {
         let namespaceStatusCodes: Set<Int> = [401, 403, 404, 405, 410]
-        if error.statusCode.map({ namespaceStatusCodes.contains($0) }) == true
-            || (!error.isRetryable && error.statusCode == nil) {
+        let isNamespaceFailure: Bool
+        switch error {
+        case .httpStatus(let code, _, _):
+            isNamespaceFailure = namespaceStatusCodes.contains(code)
+        case .invalidBaseURL, .missingAccessToken, .invalidAuthorizationResponse:
+            isNamespaceFailure = true
+        case .requestEncoding, .invalidResponse, .transport:
+            isNamespaceFailure = false
+        }
+        if isNamespaceFailure {
             openCircuit(for: baseURL, error: error, operation: operation)
             return .namespaceCircuitOpened
         }

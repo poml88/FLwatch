@@ -11,6 +11,37 @@ import ActivityKit
 import UserNotifications
 
 struct PhoneAppSettingsView: View {
+
+    private typealias NightscoutDraftConfiguration = (
+        baseURL: NightscoutBaseURL,
+        accessToken: String
+    )
+
+    private enum NightscoutSettingsStatus {
+        case success(String)
+        case failure(String)
+
+        var message: String {
+            switch self {
+            case .success(let message), .failure(let message):
+                return message
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .success: return "checkmark.circle.fill"
+            case .failure: return "exclamationmark.triangle.fill"
+            }
+        }
+
+        var color: Color {
+            switch self {
+            case .success: return .green
+            case .failure: return .red
+            }
+        }
+    }
     
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
@@ -37,6 +68,7 @@ struct PhoneAppSettingsView: View {
     @AppStorage(DefaultsKey.libre3SignalLossAlertEnabled.rawValue, store: UserDefaults.group) private var libre3SignalLossAlertEnabled: Bool = true
     @AppStorage(DefaultsKey.libre3SignalLossCritical.rawValue, store: UserDefaults.group) private var libre3SignalLossCritical: Bool = false
     @AppStorage(DefaultsKey.libre3CalibrationOffsetMgDL.rawValue, store: UserDefaults.group) private var libre3CalibrationOffsetMgDL: Int = 0
+    @AppStorage(DefaultsKey.nightscoutUploadEnabled.rawValue, store: UserDefaults.group) private var nightscoutUploadEnabled: Bool = false
     @AppStorage("developerModeEnabled") private var developerModeEnabled: Bool = false
     
     
@@ -60,6 +92,14 @@ struct PhoneAppSettingsView: View {
     @State private var appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
     @State private var appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
     @State private var notificationAuthorizationDenied = false
+    @State private var nightscoutURL = SharedData.nightscoutURL
+    @State private var nightscoutAccessToken = ""
+    @State private var nightscoutSettingsStatus: NightscoutSettingsStatus?
+    @State private var isTestingNightscoutConnection = false
+    @State private var isShowingForgetNightscoutConfirmation = false
+    @State private var unresolvedNightscoutItemCount = 0
+    @State private var pendingForgetNightscoutBaseURL: String?
+    @State private var hasLoadedNightscoutToken = false
     @StateObject private var bluetoothHeartbeatManager = BluetoothHeartbeatManager.shared
     private var watchConnector = WatchConnectivityManager.shared
     let updateFrequencyOptions: [Int] = [1, 5, 10, 15, 20]
@@ -260,6 +300,134 @@ struct PhoneAppSettingsView: View {
 
     private var cgmProviderKind: CGMProviderKind {
         CGMProviderKind(rawValue: cgmProviderKindRaw) ?? .libreLinkUp
+    }
+
+    private var normalizedNightscoutURL: String? {
+        try? NightscoutBaseURL(normalizing: nightscoutURL).absoluteString
+    }
+
+    private var nightscoutURLBinding: Binding<String> {
+        Binding(
+            get: { nightscoutURL },
+            set: { newValue in
+                nightscoutURL = newValue
+                if let embeddedToken = embeddedNightscoutToken(in: newValue) {
+                    nightscoutAccessToken = embeddedToken
+                }
+                nightscoutSettingsStatus = nil
+            }
+        )
+    }
+
+    private var nightscoutAccessTokenBinding: Binding<String> {
+        Binding(
+            get: { nightscoutAccessToken },
+            set: { newValue in
+                nightscoutAccessToken = newValue
+                nightscoutSettingsStatus = nil
+            }
+        )
+    }
+
+    @ViewBuilder
+    private var nightscoutSettingsSection: some View {
+        if developerModeEnabled {
+            Section {
+                Toggle(
+                    "Enable Nightscout upload",
+                    isOn: Binding(
+                        get: { nightscoutUploadEnabled },
+                        set: { newValue in
+                            if newValue {
+                                testNightscoutConnection(enableAfterSuccess: true)
+                                return
+                            }
+                            nightscoutUploadEnabled = false
+                        }
+                    )
+                )
+                .disabled(isTestingNightscoutConnection)
+
+                TextField(
+                    "Server URL or token link",
+                    text: nightscoutURLBinding,
+                    prompt: Text("https://nightscout.example.com")
+                )
+                .textInputAutocapitalization(.never)
+                .keyboardType(.URL)
+                .autocorrectionDisabled()
+
+                SecureField(
+                    "Admin access token",
+                    text: nightscoutAccessTokenBinding
+                )
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+
+                Text("Paste the complete Nightscout token link, or enter the server URL and admin access token separately.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if let normalizedNightscoutURL {
+                    LabeledContent("Server to test") {
+                        Text(normalizedNightscoutURL)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.trailing)
+                            .textSelection(.enabled)
+                    }
+                }
+
+                Button {
+                    testNightscoutConnection()
+                } label: {
+                    HStack {
+                        Text("Test connection")
+                        Spacer()
+                        if isTestingNightscoutConnection {
+                            ProgressView()
+                        }
+                    }
+                }
+                .disabled(isTestingNightscoutConnection)
+
+                if let nightscoutSettingsStatus {
+                    Label(
+                        nightscoutSettingsStatus.message,
+                        systemImage: nightscoutSettingsStatus.systemImage
+                    )
+                    .font(.callout)
+                    .foregroundStyle(nightscoutSettingsStatus.color)
+                }
+
+                Button("Forget server", role: .destructive) {
+                    prepareToForgetNightscoutServer()
+                }
+                .disabled(isTestingNightscoutConnection)
+                .confirmationDialog(
+                    "Forget Nightscout server?",
+                    isPresented: $isShowingForgetNightscoutConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button("Forget server", role: .destructive) {
+                        forgetNightscoutServer()
+                    }
+                    Button("Cancel", role: .cancel) {
+                        pendingForgetNightscoutBaseURL = nil
+                    }
+                } message: {
+                    Text(
+                        "This discards \(unresolvedNightscoutItemCount) unresolved upload(s) or deletion(s) for this server. The URL, token, and enable setting remain saved."
+                    )
+                }
+            } header: {
+                Text("Nightscout")
+            } footer: {
+                Text("Developer preview. A configuration is saved only after a successful connection test. Automatic uploads are not wired yet; only direct-Bluetooth CGM data will be eligible.")
+            }
+            .task {
+                loadNightscoutTokenIfNeeded()
+            }
+        }
     }
 
     var body: some View {
@@ -546,6 +714,8 @@ struct PhoneAppSettingsView: View {
             } footer: {
                 Text("Permission is requested only when you turn this on. FLwatch exports insulin injections and glucose values, and tags samples with HealthKit sync identifiers to avoid duplicates.")
             }
+
+            nightscoutSettingsSection
 
             // The Bluetooth heartbeat — and the glucose alerts that ride on it
             // — applies only to the cloud providers: there FLwatch relies on
@@ -1053,6 +1223,169 @@ struct PhoneAppSettingsView: View {
     }
     func sendMessagetoOther(message: [String: Any]) {
         watchConnector.sendMessageToPairedDevice(message)
+    }
+
+    private func loadNightscoutTokenIfNeeded() {
+        guard !hasLoadedNightscoutToken else { return }
+        do {
+            if let embeddedToken = embeddedNightscoutToken(in: nightscoutURL) {
+                nightscoutAccessToken = embeddedToken
+            } else {
+                nightscoutAccessToken = try NightscoutSecretKeychain.read() ?? ""
+            }
+            hasLoadedNightscoutToken = true
+        } catch {
+            nightscoutSettingsStatus = .failure(
+                String(localized: "The Nightscout token could not be read from secure storage.")
+            )
+        }
+    }
+
+    private func embeddedNightscoutToken(in rawValue: String) -> String? {
+        let trimmedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let components = URLComponents(string: trimmedValue),
+              let token = components.queryItems?
+                .first(where: { $0.name.caseInsensitiveCompare("token") == .orderedSame })?
+                .value?
+                .trimmingCharacters(in: .whitespacesAndNewlines),
+              !token.isEmpty else {
+            return nil
+        }
+        return token
+    }
+
+    private func testNightscoutConnection(enableAfterSuccess: Bool = false) {
+        guard let configuration = validatedNightscoutDraft() else {
+            if enableAfterSuccess {
+                nightscoutUploadEnabled = false
+            }
+            return
+        }
+        nightscoutSettingsStatus = nil
+        isTestingNightscoutConnection = true
+
+        Task { @MainActor in
+            let result = await NightscoutUploadManager.shared.testConnection(
+                baseURLString: configuration.baseURL.absoluteString,
+                accessToken: configuration.accessToken
+            )
+            isTestingNightscoutConnection = false
+            guard normalizedNightscoutURL == configuration.baseURL.absoluteString,
+                  nightscoutAccessToken.trimmingCharacters(in: .whitespacesAndNewlines) == configuration.accessToken else {
+                return
+            }
+            switch result {
+            case .ok:
+                guard persistNightscoutConfiguration(configuration) else {
+                    if enableAfterSuccess {
+                        nightscoutUploadEnabled = false
+                    }
+                    return
+                }
+                if enableAfterSuccess {
+                    nightscoutUploadEnabled = true
+                }
+                nightscoutSettingsStatus = .success(
+                    String(localized: "Connection successful. The token grants all required write permissions.")
+                )
+            case .unreachable:
+                if enableAfterSuccess {
+                    nightscoutUploadEnabled = false
+                }
+                nightscoutSettingsStatus = .failure(
+                    String(localized: "Nightscout is unavailable. The saved upload configuration was not changed.")
+                )
+            case .notV3Server:
+                if enableAfterSuccess {
+                    nightscoutUploadEnabled = false
+                }
+                nightscoutSettingsStatus = .failure(
+                    String(localized: "No compatible Nightscout API v3 endpoint was found. The saved upload configuration was not changed.")
+                )
+            case .tokenLacksWrites:
+                if enableAfterSuccess {
+                    nightscoutUploadEnabled = false
+                }
+                nightscoutSettingsStatus = .failure(
+                    String(localized: "The token lacks the required write permissions. The saved upload configuration was not changed.")
+                )
+            }
+        }
+    }
+
+    private func validatedNightscoutDraft() -> NightscoutDraftConfiguration? {
+        let trimmedToken = nightscoutAccessToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let baseURL = try? NightscoutBaseURL(normalizing: nightscoutURL) else {
+            nightscoutSettingsStatus = .failure(
+                String(localized: "Enter a valid HTTPS Nightscout server URL.")
+            )
+            return nil
+        }
+        guard !trimmedToken.isEmpty else {
+            nightscoutSettingsStatus = .failure(
+                String(localized: "Enter a Nightscout admin access token.")
+            )
+            return nil
+        }
+
+        return (baseURL, trimmedToken)
+    }
+
+    private func persistNightscoutConfiguration(
+        _ configuration: NightscoutDraftConfiguration
+    ) -> Bool {
+        do {
+            try NightscoutSecretKeychain.save(configuration.accessToken)
+        } catch {
+            nightscoutSettingsStatus = .failure(
+                String(localized: "The Nightscout token could not be saved securely.")
+            )
+            return false
+        }
+
+        SharedData.nightscoutURL = configuration.baseURL.absoluteString
+        nightscoutURL = configuration.baseURL.absoluteString
+        nightscoutAccessToken = configuration.accessToken
+        return true
+    }
+
+    private func prepareToForgetNightscoutServer() {
+        guard let baseURL = try? NightscoutBaseURL(normalizing: nightscoutURL) else {
+            nightscoutSettingsStatus = .failure(
+                String(localized: "Enter a valid HTTPS Nightscout server URL first.")
+            )
+            return
+        }
+        do {
+            unresolvedNightscoutItemCount = try NightscoutUploadManager.shared.unresolvedCount(
+                baseURLString: baseURL.absoluteString
+            )
+        } catch {
+            pendingForgetNightscoutBaseURL = nil
+            nightscoutSettingsStatus = .failure(
+                String(localized: "Nightscout upload state could not be read, so nothing was discarded.")
+            )
+            return
+        }
+        pendingForgetNightscoutBaseURL = baseURL.absoluteString
+        isShowingForgetNightscoutConfirmation = true
+    }
+
+    private func forgetNightscoutServer() {
+        guard let baseURLString = pendingForgetNightscoutBaseURL else { return }
+        pendingForgetNightscoutBaseURL = nil
+        do {
+            let discardedCount = try NightscoutUploadManager.shared.forgetServer(
+                baseURLString: baseURLString
+            )
+            nightscoutSettingsStatus = .success(
+                String(localized: "Forgot Nightscout upload state for \(discardedCount) unresolved item(s).")
+            )
+        } catch {
+            nightscoutSettingsStatus = .failure(
+                String(localized: "Nightscout upload state could not be removed.")
+            )
+        }
     }
 
     /// Persists the manually-entered sensor settings (stored in mg/dL) and
