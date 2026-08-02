@@ -44,6 +44,9 @@ enum DefaultsKey: String {
     case tapComplicationReloads = "tapComplicationReloadsKey"
     case useLiveActivities = "useLiveActivitiesKey"
     case appleHealthExportEnabled = "appleHealthExportEnabledKey"
+    case nightscoutUploadEnabled = "nightscoutUploadEnabledKey"
+    case nightscoutURL = "nightscoutURLKey"
+    case nightscoutTokenPresent = "nightscoutTokenPresentKey"
     case bluetoothHeartbeatEnabled = "bluetoothHeartbeatEnabledKey"
     case bluetoothHeartbeatDeviceName = "bluetoothHeartbeatDeviceNameKey"
     case bluetoothHeartbeatPeripheralUUID = "bluetoothHeartbeatPeripheralUUIDKey"
@@ -353,6 +356,26 @@ enum SharedData {
     static var appleHealthExportEnabled: Bool {
         get { store.getBool(.appleHealthExportEnabled, defaultValue: false) }
         set { store.setBool(newValue, forKey: .appleHealthExportEnabled) }
+    }
+
+    static var nightscoutUploadEnabled: Bool {
+        get { store.getBool(.nightscoutUploadEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .nightscoutUploadEnabled) }
+    }
+
+    static var nightscoutURL: String {
+        get { store.getString(.nightscoutURL, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.nightscoutURL.rawValue) }
+            else { store.setString(newValue, forKey: .nightscoutURL) }
+        }
+    }
+
+    /// Non-secret mirror used by Settings and extension-safe configuration
+    /// checks. The raw Nightscout access token remains in Keychain.
+    static var nightscoutTokenPresent: Bool {
+        get { store.getBool(.nightscoutTokenPresent, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .nightscoutTokenPresent) }
     }
 
     static var bluetoothHeartbeatEnabled: Bool {

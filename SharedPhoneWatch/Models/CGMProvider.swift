@@ -12,6 +12,15 @@
 
 import Foundation
 
+/// Stable provenance stamps carried by individual glucose readings. Upload
+/// eligibility must check the reading itself as well as the active provider:
+/// provider switches intentionally leave the previous provider's cache in
+/// place until fresh data arrives.
+enum CGMReadingSource {
+    static let libre3BLE = "Libre3 BLE"
+    static let directBLENightscoutSources: Set<String> = [libre3BLE]
+}
+
 // MARK: - Kind
 
 enum CGMProviderKind: String, Codable {
@@ -23,6 +32,16 @@ enum CGMProviderKind: String, Codable {
     /// store. Unlike the cloud kinds there is no network reload — see
     /// `Libre3DirectProvider`.
     case libre3BLE
+
+    /// True for providers whose glucose originates from a sensor connection
+    /// owned directly by FLwatch. Nightscout upload is restricted to these
+    /// providers so cloud-follow data is never re-published.
+    var isDirectBLE: Bool {
+        switch self {
+        case .libre3BLE: return true
+        case .libreLinkUp, .dexcomShare: return false
+        }
+    }
 
     var displayName: String {
         switch self {

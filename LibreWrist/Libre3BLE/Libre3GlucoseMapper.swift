@@ -105,7 +105,7 @@ enum Libre3GlucoseMapper {
             trendArrow: arrow,
             id: Int(reading.lifeCount),
             date: date,
-            source: "Libre3 BLE"
+            source: CGMReadingSource.libre3BLE
         )
         glucose.value = value
         return LibreLinkUpGlucose(
@@ -142,7 +142,7 @@ enum Libre3GlucoseMapper {
             trendArrow: .notDetermined,
             id: Int(sample.lifeCount),
             date: date,
-            source: "Libre3 BLE"
+            source: CGMReadingSource.libre3BLE
         )
         glucose.value = value
         return LibreLinkUpGlucose(
@@ -180,7 +180,7 @@ enum Libre3GlucoseMapper {
             trendArrow: .notDetermined,
             id: Int(reading.historicalLifeCount),
             date: date,
-            source: "Libre3 BLE"
+            source: CGMReadingSource.libre3BLE
         )
         glucose.value = value
         return LibreLinkUpGlucose(
