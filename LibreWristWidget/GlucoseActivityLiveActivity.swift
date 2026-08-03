@@ -340,6 +340,16 @@ private struct MediumSupplementalActivityView: View {
 }
 
 private struct GlucoseLiveActivityChart: View {
+    // The Live Activity updates frequently, and its chart was a major widget-extension
+    // CPU hotspot. This compact model lets Charts render the glucose series as
+    // vectorized plots instead of building a LineMark and custom SwiftUI symbol
+    // subtree for every glucose reading.
+    private struct GlucosePlotPoint {
+        let timestamp: Date
+        let value: Double
+        let color: Color
+    }
+
     let contentState: FLWatchAttributes.ContentState
     let showsAxes: Bool
     let xAxisFont: Font
@@ -420,6 +430,16 @@ private struct GlucoseLiveActivityChart: View {
     }
 
     var body: some View {
+        // Vectorized plots read values through key paths, so resolve the
+        // unit-dependent glucose value and fallback measurement color here.
+        let glucosePlotPoints = contentState.graphPoints.map {
+            GlucosePlotPoint(
+                timestamp: $0.timestamp,
+                value: scaledValue($0.valueInMgPerDl),
+                color: measurementColor(for: $0.colorRawValue).color
+            )
+        }
+
         Chart {
             RectangleMark(
                 xStart: .value("Rect Start Width", chartXScaleMin),
@@ -436,22 +456,29 @@ private struct GlucoseLiveActivityChart: View {
                     .lineStyle(.init(lineWidth: 1, dash: [2]))
             }
 
-            ForEach(contentState.graphPoints) { point in
-                LineMark(
-                    x: .value("Time", point.timestamp),
-                    y: .value("Glucose", scaledValue(point.valueInMgPerDl)),
-                    series: .value("Curve", "Glucose")
-                )
-                .interpolationMethod(.linear)
-                .lineStyle(.init(lineWidth: graphLineWidth))
-//                .foregroundStyle(.white)
-                .symbol {
-                    Circle()
-                        .fill(measurementColor(for: point.colorRawValue).color)
-                        .frame(width: graphPointSize, height: graphPointSize)
-                }
-            }
+            // Keep the continuous line separate from the independently colored
+            // points while rendering each collection as a single plot.
+            LinePlot(
+                glucosePlotPoints,
+                x: .value("Time", \.timestamp),
+                y: .value("Glucose", \.value)
+            )
+            .interpolationMethod(.linear)
+            .lineStyle(.init(lineWidth: graphLineWidth))
 
+            PointPlot(
+                glucosePlotPoints,
+                x: .value("Time", \.timestamp),
+                y: .value("Glucose", \.value)
+            )
+            // Keep vectorized key-path modifiers before modifiers that return
+            // only `some ChartContent`, such as the constant symbol size.
+            .foregroundStyle(\.color)
+            // symbolSize takes an area in pt², while graphPointSize is the diameter
+            // used by the previous Circle frame. Convert that diameter to circle
+            // area to preserve the presentation-specific sizing, calibrated on device.
+            .symbolSize(.pi * graphPointSize * graphPointSize / 4)
+            
             ForEach(contentState.minutePoints) { point in
                 let minuteGlucoseColor = Color(red: 0.96, green: 0.78, blue: 0.18) // #F5C72E
                 PointMark(
