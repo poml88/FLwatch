@@ -222,6 +222,40 @@ final class LibreLinkUpHistoryStore {
             Self.logPersistenceError(error, context: "replaceCacheAndPersist write failed")
             return false
         }
+
+        let nightscoutCandidates: [LibreLinkUpGlucose]
+        if NightscoutExecutionContext.isMainAppProcess,
+           SharedData.cgmProviderKind.isDirectBLE,
+           SharedData.nightscoutUploadEnabled {
+            var changedCandidates: [LibreLinkUpGlucose] = []
+            // The existing Health identifier comparison tells the Nightscout
+            // hot path when the retained historical series changed. This is
+            // safe while retained Libre 3 values/directions remain immutable;
+            // any future historical calibration or trend remapping must make
+            // this a Nightscout-specific change check. The full lifecycle sweep
+            // remains the recovery path. Only the added Nightscout work is O(1)
+            // for steady-state minute pushes.
+            if shouldExportGlucose {
+                changedCandidates.append(contentsOf: changedNightscoutCandidates(
+                    previous: Array(self.fullLibreLinkUpGlucose.dropFirst()),
+                    next: Array(normalizedFullGraphHistory.dropFirst())
+                ))
+            }
+            // Latest is highest precedence, matching the full catch-up order.
+            if let normalizedLatest {
+                let previousLatestSignature = self.latestLibreLinkUpGlucose.flatMap {
+                    nightscoutChangeSignature(for: $0)
+                }
+                if let nextLatestSignature = nightscoutChangeSignature(for: normalizedLatest),
+                   nextLatestSignature != previousLatestSignature {
+                    changedCandidates.append(normalizedLatest)
+                }
+            }
+            nightscoutCandidates = changedCandidates
+        } else {
+            nightscoutCandidates = []
+        }
+
         apply(snapshot: nextSnapshot)
         lastKnownModificationDate = modificationDate
         if shouldExportGlucose {
@@ -229,7 +263,47 @@ final class LibreLinkUpHistoryStore {
                 await AppleHealthExportManager.shared.exportGlucoseSamplesIfNeeded(normalizedFullGraphHistory)
             }
         }
+        if !nightscoutCandidates.isEmpty {
+            NightscoutUploadManager.shared.reconcileGlucose(nightscoutCandidates)
+        }
         return true
+    }
+
+    private func changedNightscoutCandidates(
+        previous: [LibreLinkUpGlucose],
+        next: [LibreLinkUpGlucose]
+    ) -> [LibreLinkUpGlucose] {
+        var previousSignatures: [NightscoutEntryIdentity: NightscoutEntryChangeSignature] = [:]
+        for reading in previous
+        where CGMReadingSource.directBLENightscoutSources.contains(reading.glucose.source) {
+            let signature = NightscoutEntryChangeSignature(reading: reading)
+            previousSignatures[signature.identity] = signature
+        }
+
+        var nextReadings: [
+            NightscoutEntryIdentity: (
+                signature: NightscoutEntryChangeSignature,
+                reading: LibreLinkUpGlucose
+            )
+        ] = [:]
+        for reading in next
+        where CGMReadingSource.directBLENightscoutSources.contains(reading.glucose.source) {
+            let signature = NightscoutEntryChangeSignature(reading: reading)
+            nextReadings[signature.identity] = (signature, reading)
+        }
+
+        return nextReadings.compactMap { identity, value in
+            previousSignatures[identity] == value.signature ? nil : value.reading
+        }
+    }
+
+    private func nightscoutChangeSignature(
+        for reading: LibreLinkUpGlucose
+    ) -> NightscoutEntryChangeSignature? {
+        guard CGMReadingSource.directBLENightscoutSources.contains(reading.glucose.source) else {
+            return nil
+        }
+        return NightscoutEntryChangeSignature(reading: reading)
     }
 
     @discardableResult

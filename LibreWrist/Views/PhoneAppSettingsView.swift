@@ -100,6 +100,7 @@ struct PhoneAppSettingsView: View {
     @State private var unresolvedNightscoutItemCount = 0
     @State private var pendingForgetNightscoutBaseURL: String?
     @State private var hasLoadedNightscoutToken = false
+    @State private var nightscoutUploadStatus = NightscoutUploadManager.shared.status
     @StateObject private var bluetoothHeartbeatManager = BluetoothHeartbeatManager.shared
     private var watchConnector = WatchConnectivityManager.shared
     let updateFrequencyOptions: [Int] = [1, 5, 10, 15, 20]
@@ -329,6 +330,67 @@ struct PhoneAppSettingsView: View {
         )
     }
 
+    private var nightscoutUploadStatusPresentation: (message: String, systemImage: String, color: Color) {
+        guard nightscoutUploadEnabled else {
+            return (
+                String(localized: "Automatic uploads are disabled."),
+                "pause.circle",
+                .secondary
+            )
+        }
+        guard cgmProviderKind.isDirectBLE else {
+            return (
+                String(localized: "Upload is inactive while a cloud CGM provider is selected."),
+                "pause.circle",
+                .secondary
+            )
+        }
+
+        switch nightscoutUploadStatus.activity {
+        case .ready:
+            if nightscoutUploadStatus.lastSuccessfulUploadAt == nil {
+                return (
+                    String(localized: "Waiting for the first glucose upload."),
+                    "clock",
+                    .secondary
+                )
+            }
+            return (String(localized: "Uploads ready."), "checkmark.circle.fill", .green)
+        case .retrying:
+            return (String(localized: "Retrying Nightscout now."), "arrow.clockwise.circle", .orange)
+        case .retryDeferred:
+            return (
+                String(localized: "Upload waiting to retry after a temporary network or server error."),
+                "clock.arrow.circlepath",
+                .orange
+            )
+        case .documentRejected:
+            return (
+                String(localized: "Nightscout rejected one glucose document; other readings remain eligible."),
+                "exclamationmark.triangle.fill",
+                .red
+            )
+        case .paused(let reason, let until):
+            let reasonText: String
+            switch reason {
+            case .credentialsRejected:
+                reasonText = String(localized: "Nightscout rejected the access token")
+            case .endpointUnavailable:
+                reasonText = String(localized: "no compatible Nightscout API v3 endpoint was found")
+            case .authorizationUnavailable:
+                reasonText = String(localized: "Nightscout authorization could not be established")
+            case .invalidServerURL:
+                reasonText = String(localized: "the saved Nightscout server URL is invalid")
+            }
+            let retryTime = until.formatted(date: .omitted, time: .shortened)
+            return (
+                String(localized: "Uploads paused: \(reasonText). Next automatic probe at \(retryTime)."),
+                "exclamationmark.octagon.fill",
+                .red
+            )
+        }
+    }
+
     @ViewBuilder
     private var nightscoutSettingsSection: some View {
         if developerModeEnabled {
@@ -399,6 +461,21 @@ struct PhoneAppSettingsView: View {
                     .foregroundStyle(nightscoutSettingsStatus.color)
                 }
 
+                if let lastSuccessfulUploadAt = nightscoutUploadStatus.lastSuccessfulUploadAt {
+                    LabeledContent("Last successful upload") {
+                        Text(lastSuccessfulUploadAt.formatted(date: .abbreviated, time: .standard))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
+
+                Label(
+                    nightscoutUploadStatusPresentation.message,
+                    systemImage: nightscoutUploadStatusPresentation.systemImage
+                )
+                .font(.callout)
+                .foregroundStyle(nightscoutUploadStatusPresentation.color)
+
                 Button("Forget server", role: .destructive) {
                     prepareToForgetNightscoutServer()
                 }
@@ -422,7 +499,7 @@ struct PhoneAppSettingsView: View {
             } header: {
                 Text("Nightscout")
             } footer: {
-                Text("Developer preview. A configuration is saved only after a successful connection test. Automatic uploads are not wired yet; only direct-Bluetooth CGM data will be eligible.")
+                Text("Developer preview. A configuration is saved only after a successful connection test. Glucose from direct-Bluetooth CGM providers is eligible; insulin upload is not wired yet.")
             }
             .task {
                 loadNightscoutTokenIfNeeded()

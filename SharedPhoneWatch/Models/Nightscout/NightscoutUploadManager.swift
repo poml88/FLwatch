@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import Observation
 import OSLog
 
 enum NightscoutExecutionContext {
@@ -21,13 +22,68 @@ enum NightscoutExecutionContext {
 }
 
 @MainActor
+@Observable
+final class NightscoutUploadStatus {
+    enum PauseReason: Equatable {
+        case credentialsRejected
+        case endpointUnavailable
+        case authorizationUnavailable
+        case invalidServerURL
+    }
+
+    enum Activity: Equatable {
+        case ready
+        case retrying
+        case retryDeferred
+        case documentRejected
+        case paused(reason: PauseReason, until: Date)
+    }
+
+    private(set) var lastSuccessfulUploadAt = SharedData.nightscoutLastSuccessfulUploadDate
+    private(set) var activity: Activity = .ready
+
+    fileprivate func recordSuccessfulPass(at date: Date = Date()) {
+        SharedData.nightscoutLastSuccessfulUploadDate = date
+        lastSuccessfulUploadAt = date
+    }
+
+    fileprivate func markReady() {
+        guard activity != .ready else { return }
+        activity = .ready
+    }
+
+    fileprivate func markRetrying() {
+        guard activity != .retrying else { return }
+        activity = .retrying
+    }
+
+    fileprivate func markRetryDeferred() {
+        guard activity != .retryDeferred else { return }
+        activity = .retryDeferred
+    }
+
+    fileprivate func markDocumentRejected() {
+        guard activity != .documentRejected else { return }
+        activity = .documentRejected
+    }
+
+    fileprivate func markPaused(reason: PauseReason, until: Date) {
+        let nextActivity = Activity.paused(reason: reason, until: until)
+        guard activity != nextActivity else { return }
+        activity = nextActivity
+    }
+}
+
+@MainActor
 final class NightscoutUploadManager {
     static let shared = NightscoutUploadManager()
+    let status = NightscoutUploadStatus()
     private static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "LibreWrist",
         category: "NightscoutUpload"
     )
     private static let circuitHalfOpenInterval: TimeInterval = 30 * 60
+    private static let maximumBackoffDuration: TimeInterval = 5
     private static let documentSuppressionRetention: TimeInterval = 24 * 60 * 60
     private static let maximumGlucoseSuppressions = 5_000
     private static let maximumInsulinSuppressions = 1_000
@@ -52,6 +108,7 @@ final class NightscoutUploadManager {
 
     private struct NamespaceCircuitBreaker {
         let statusCode: Int
+        let reason: NightscoutUploadStatus.PauseReason
         var nextProbeAt: Date
     }
 
@@ -60,16 +117,25 @@ final class NightscoutUploadManager {
         let blockedAt: Date
     }
 
+    /// One serialized reconciliation pass. Deadline-bound lifecycle work is
+    /// kept separate from ordinary hot-path work: merging the two would let an
+    /// expired BG budget discard a newly arrived glucose reading. Completion
+    /// IDs belong to callers awaiting this particular work, not to the worker
+    /// as a whole, because unrelated unbounded work may continue afterwards.
     private struct PendingWork {
         var glucoseUploads: [String: NightscoutEntryUpload] = [:]
         var drainInsulin = false
+        var deadline: Date?
+        var completionIDs = Set<UUID>()
 
         init(
             glucoseUploads: [String: NightscoutEntryUpload] = [:],
-            drainInsulin: Bool = false
+            drainInsulin: Bool = false,
+            deadline: Date? = nil
         ) {
             self.glucoseUploads = glucoseUploads
             self.drainInsulin = drainInsulin
+            self.deadline = deadline
         }
 
         var isEmpty: Bool {
@@ -79,19 +145,32 @@ final class NightscoutUploadManager {
         mutating func merge(_ other: PendingWork) {
             glucoseUploads.merge(other.glucoseUploads) { _, newest in newest }
             drainInsulin = drainInsulin || other.drainInsulin
+            completionIDs.formUnion(other.completionIDs)
+            switch (deadline, other.deadline) {
+            case (nil, let otherDeadline?):
+                deadline = otherDeadline
+            case (let currentDeadline?, let otherDeadline?):
+                deadline = min(currentDeadline, otherDeadline)
+            case (_, nil):
+                break
+            }
         }
     }
 
     private var outboxStorage: NightscoutOutbox?
     private var clients: [String: NightscoutClientV3] = [:]
-    private var pendingWork = PendingWork()
+    private var pendingBoundedWork: [PendingWork] = []
+    private var pendingUnboundedWork = PendingWork()
     private var isWorkerRunning = false
-    private var workerWaiters: [CheckedContinuation<Void, Never>] = []
+    private var workWaiters: [UUID: CheckedContinuation<Void, Never>] = [:]
+    private var workDeadlineTasks: [UUID: Task<Void, Never>] = [:]
     private var namespaceCircuitBreakers: [String: NamespaceCircuitBreaker] = [:]
+    private var retryNotBefore: [String: Date] = [:]
     private var blockedGlucoseFingerprints: [String: GlucoseDocumentSuppression] = [:]
     private var blockedInsulinRevisions: [String: Date] = [:]
     private var lastAutomaticConfigurationSignature: String?
     private var loggedRejectedSources = Set<String>()
+    private var currentPassHadNetworkSuccess = false
 
     private init() {}
 
@@ -104,9 +183,9 @@ final class NightscoutUploadManager {
         enqueue(PendingWork(glucoseUploads: glucoseUploads(from: candidates)))
     }
 
-    /// Awaited lifecycle catch-up: reconciles the complete retained glucose
-    /// window and drains durable insulin desired state before returning.
-    func reconcileRetainedDataAndWait() async {
+    /// Awaited lifecycle catch-up for the complete retained glucose window.
+    /// Insulin desired-state draining is added with the insulin integration.
+    func reconcileRetainedGlucoseAndWait(maximumDuration: TimeInterval? = nil) async {
         guard NightscoutExecutionContext.isMainAppProcess else { return }
         let history = LibreLinkUpHistory.shared
         var candidates = history.fullLibreLinkUpGlucose
@@ -116,14 +195,15 @@ final class NightscoutUploadManager {
             candidates.append(latest)
         }
 
-        var work = PendingWork()
+        let deadline = maximumDuration.map { Date().addingTimeInterval(max(0, $0)) }
+        var work = PendingWork(deadline: deadline)
         if automaticNetworkContext() != nil {
             work.glucoseUploads = glucoseUploads(from: candidates)
-            work.drainInsulin = true
         }
         guard !work.isEmpty else { return }
-        enqueue(work)
-        await waitForWorkerToBecomeIdle()
+        let completionID = UUID()
+        work.completionIDs.insert(completionID)
+        await enqueueAndWait(work, completionID: completionID)
     }
 
     /// Records desired insulin state synchronously before returning to the
@@ -195,7 +275,14 @@ final class NightscoutUploadManager {
 
     private func enqueue(_ work: PendingWork) {
         guard NightscoutExecutionContext.isMainAppProcess, !work.isEmpty else { return }
-        pendingWork.merge(work)
+        if work.deadline == nil {
+            pendingUnboundedWork.merge(work)
+        } else {
+            // A BG deadline belongs only to the lifecycle pass that created it.
+            // Keeping bounded work separate prevents hot-path pushes from
+            // inheriting a deadline that may expire before they are processed.
+            pendingBoundedWork.append(work)
+        }
         guard !isWorkerRunning else { return }
 
         isWorkerRunning = true
@@ -205,39 +292,84 @@ final class NightscoutUploadManager {
     }
 
     private func runWorker() async {
-        while !pendingWork.isEmpty {
-            let work = pendingWork
-            pendingWork = PendingWork()
+        while !pendingBoundedWork.isEmpty || !pendingUnboundedWork.isEmpty {
+            let work: PendingWork
+            if !pendingBoundedWork.isEmpty {
+                work = pendingBoundedWork.removeFirst()
+            } else {
+                work = pendingUnboundedWork
+                pendingUnboundedWork = PendingWork()
+            }
             await perform(work)
+            resumeWorkWaiters(work.completionIDs)
         }
 
         isWorkerRunning = false
-        let waiters = workerWaiters
-        workerWaiters.removeAll()
-        for waiter in waiters {
-            waiter.resume()
+    }
+
+    /// Registers the continuation before enqueueing so even an immediately
+    /// completed pass cannot lose its wake-up. Both normal completion and the
+    /// deadline/cancellation paths remove the continuation before resuming it,
+    /// making races between those paths harmless and resumption idempotent.
+    private func enqueueAndWait(_ work: PendingWork, completionID: UUID) async {
+        await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                workWaiters[completionID] = continuation
+                if let deadline = work.deadline {
+                    workDeadlineTasks[completionID] = Task { @MainActor [weak self] in
+                        let remaining = deadline.timeIntervalSinceNow
+                        if remaining > 0 {
+                            try? await Task.sleep(
+                                nanoseconds: UInt64(remaining * 1_000_000_000)
+                            )
+                        }
+                        guard !Task.isCancelled else { return }
+                        self?.resumeWorkWaiter(completionID)
+                    }
+                }
+                enqueue(work)
+            }
+        } onCancel: {
+            Task { @MainActor [weak self] in
+                self?.resumeWorkWaiter(completionID)
+            }
         }
     }
 
-    private func waitForWorkerToBecomeIdle() async {
-        guard isWorkerRunning else { return }
-        await withCheckedContinuation { continuation in
-            workerWaiters.append(continuation)
+    private func resumeWorkWaiters(_ completionIDs: Set<UUID>) {
+        for completionID in completionIDs {
+            resumeWorkWaiter(completionID)
         }
+    }
+
+    private func resumeWorkWaiter(_ completionID: UUID) {
+        workDeadlineTasks.removeValue(forKey: completionID)?.cancel()
+        workWaiters.removeValue(forKey: completionID)?.resume()
     }
 
     private func perform(_ work: PendingWork) async {
         guard let context = automaticNetworkContext(),
               shouldAttemptNetwork(for: context.baseURL) else { return }
+        guard work.deadline.map({ $0 > Date() }) ?? true else { return }
+
+        currentPassHadNetworkSuccess = false
+        defer {
+            if currentPassHadNetworkSuccess {
+                status.recordSuccessfulPass()
+            }
+            currentPassHadNetworkSuccess = false
+        }
+
         var shouldContinue = true
         if !work.glucoseUploads.isEmpty {
             shouldContinue = await reconcileGlucoseUploads(
                 Array(work.glucoseUploads.values),
-                context: context
+                context: context,
+                deadline: work.deadline
             )
         }
         if work.drainInsulin, shouldContinue {
-            await drainInsulin(context: context)
+            await drainInsulin(context: context, deadline: work.deadline)
         }
     }
 
@@ -245,9 +377,11 @@ final class NightscoutUploadManager {
 
     private func reconcileGlucoseUploads(
         _ uploads: [NightscoutEntryUpload],
-        context: NetworkContext
+        context: NetworkContext,
+        deadline: Date?
     ) async -> Bool {
         for upload in uploads.sorted(by: { $0.eventDate < $1.eventDate }) {
+            guard deadline.map({ $0 > Date() }) ?? true else { return false }
             let identifierKey = context.baseURL.absoluteString
                 + "|"
                 + upload.identifier.uuidString.lowercased()
@@ -266,11 +400,13 @@ final class NightscoutUploadManager {
             }
 
             do {
-                try await withBackoff {
+                try await withBackoff(deadline: deadline) {
+                    markNetworkAttemptStarting(for: context.baseURL)
                     try await context.client.putEntry(
                         identifier: upload.identifier,
                         body: upload.body,
-                        accessToken: context.accessToken
+                        accessToken: context.accessToken,
+                        deadline: deadline
                     )
                 }
                 markNetworkSuccess(for: context.baseURL)
@@ -289,6 +425,9 @@ final class NightscoutUploadManager {
                 case .namespaceCircuitOpened, .retryLater:
                     return false
                 }
+            } catch is CancellationError {
+                markNetworkAttemptDeferred(for: context.baseURL)
+                return false
             } catch {
                 Self.logger.error("Nightscout entry upload stopped after a local persistence or cancellation error.")
                 return false
@@ -299,12 +438,14 @@ final class NightscoutUploadManager {
 
     // MARK: - Insulin convergence
 
-    private func drainInsulin(context: NetworkContext) async {
+    private func drainInsulin(context: NetworkContext, deadline: Date?) async {
         let items = context.outbox.pendingInsulinItems(namespace: context.baseURL)
         for item in items {
+            guard deadline.map({ $0 > Date() }) ?? true else { return }
             let shouldContinue = await convergeInsulinItem(
                 identifier: item.id,
-                context: context
+                context: context,
+                deadline: deadline
             )
             if !shouldContinue { return }
         }
@@ -312,11 +453,16 @@ final class NightscoutUploadManager {
 
     /// Returns false when a namespace-wide or retryable failure should stop
     /// this drain pass.
-    private func convergeInsulinItem(identifier: UUID, context: NetworkContext) async -> Bool {
+    private func convergeInsulinItem(
+        identifier: UUID,
+        context: NetworkContext,
+        deadline: Date?
+    ) async -> Bool {
         while let current = context.outbox.insulinItem(
             identifier: identifier,
             namespace: context.baseURL
         ) {
+            guard deadline.map({ $0 > Date() }) ?? true else { return false }
             let revisionKey = insulinSuppressionKey(
                 revision: current.revision,
                 baseURL: context.baseURL
@@ -344,12 +490,15 @@ final class NightscoutUploadManager {
                     let outcome = try await withInsulinBackoff(
                         identifier: identifier,
                         expectedRevision: started.revision,
-                        context: context
+                        context: context,
+                        deadline: deadline
                     ) {
+                        markNetworkAttemptStarting(for: context.baseURL)
                         try await context.client.putTreatment(
                             identifier: payload.identifier,
                             body: payload.body,
-                            accessToken: context.accessToken
+                            accessToken: context.accessToken,
+                            deadline: deadline
                         )
                     }
                     if case .superseded = outcome { continue }
@@ -388,6 +537,9 @@ final class NightscoutUploadManager {
                     case .namespaceCircuitOpened, .retryLater:
                         return false
                     }
+                } catch is CancellationError {
+                    markNetworkAttemptDeferred(for: context.baseURL)
+                    return false
                 } catch {
                     Self.logger.error("Nightscout insulin upload stopped after a local persistence or cancellation error.")
                     return false
@@ -398,11 +550,14 @@ final class NightscoutUploadManager {
                     let outcome = try await withInsulinBackoff(
                         identifier: identifier,
                         expectedRevision: current.revision,
-                        context: context
+                        context: context,
+                        deadline: deadline
                     ) {
+                        markNetworkAttemptStarting(for: context.baseURL)
                         try await context.client.deleteTreatment(
                             identifier: tombstone.identifier,
-                            accessToken: context.accessToken
+                            accessToken: context.accessToken,
+                            deadline: deadline
                         )
                     }
                     if case .superseded = outcome { continue }
@@ -434,6 +589,9 @@ final class NightscoutUploadManager {
                     case .namespaceCircuitOpened, .retryLater:
                         return false
                     }
+                } catch is CancellationError {
+                    markNetworkAttemptDeferred(for: context.baseURL)
+                    return false
                 } catch {
                     Self.logger.error("Nightscout insulin deletion stopped after a local persistence or cancellation error.")
                     return false
@@ -541,6 +699,10 @@ final class NightscoutUploadManager {
         for baseURL: NightscoutBaseURL,
         now: Date = Date()
     ) -> Bool {
+        if let nextRetryAt = retryNotBefore[baseURL.absoluteString] {
+            guard now >= nextRetryAt else { return false }
+            retryNotBefore.removeValue(forKey: baseURL.absoluteString)
+        }
         guard var breaker = namespaceCircuitBreakers[baseURL.absoluteString] else {
             return true
         }
@@ -550,18 +712,37 @@ final class NightscoutUploadManager {
         // not create a burst if the half-open pass contains no eligible work.
         breaker.nextProbeAt = now.addingTimeInterval(Self.circuitHalfOpenInterval)
         namespaceCircuitBreakers[baseURL.absoluteString] = breaker
+        status.markPaused(reason: breaker.reason, until: breaker.nextProbeAt)
         Self.logger.info(
             "Nightscout circuit half-open; attempting one recovery pass after HTTP \(breaker.statusCode, privacy: .public)."
         )
         return true
     }
 
+    private func markNetworkAttemptStarting(for baseURL: NightscoutBaseURL) {
+        guard namespaceCircuitBreakers[baseURL.absoluteString] != nil else { return }
+        status.markRetrying()
+    }
+
+    private func markNetworkAttemptDeferred(for baseURL: NightscoutBaseURL) {
+        guard let breaker = namespaceCircuitBreakers[baseURL.absoluteString] else { return }
+        status.markPaused(reason: breaker.reason, until: breaker.nextProbeAt)
+    }
+
     private func markNetworkSuccess(for baseURL: NightscoutBaseURL) {
+        retryNotBefore.removeValue(forKey: baseURL.absoluteString)
         if namespaceCircuitBreakers.removeValue(forKey: baseURL.absoluteString) != nil {
             Self.logger.info("Nightscout circuit closed after a successful authenticated v3 request.")
         }
+        currentPassHadNetworkSuccess = true
+        status.markReady()
     }
 
+    /// Applies the failure policy at the narrowest safe scope:
+    /// - authentication and missing-v3-endpoint failures pause the namespace;
+    /// - permanent payload failures suppress only that document revision;
+    /// - retryable transport, rate-limit, and server failures end this pass.
+    /// A later lifecycle/hot-path reconciliation supplies the recovery retry.
     private func handleClientFailure(
         _ error: NightscoutClientError,
         operation: String,
@@ -569,18 +750,30 @@ final class NightscoutUploadManager {
         glucoseSuppression: (key: String, fingerprint: String)?,
         insulinRevision: UUID?
     ) -> FailureDisposition {
-        let namespaceStatusCodes: Set<Int> = [401, 403, 404, 405, 410]
-        let isNamespaceFailure: Bool
+        let namespaceFailureReason: NightscoutUploadStatus.PauseReason?
         switch error {
         case .httpStatus(let code, _, _):
-            isNamespaceFailure = namespaceStatusCodes.contains(code)
-        case .invalidBaseURL, .missingAccessToken, .invalidAuthorizationResponse:
-            isNamespaceFailure = true
+            if code == 401 || code == 403 {
+                namespaceFailureReason = .credentialsRejected
+            } else if code == 404 || code == 405 || code == 410 {
+                namespaceFailureReason = .endpointUnavailable
+            } else {
+                namespaceFailureReason = nil
+            }
+        case .invalidBaseURL:
+            namespaceFailureReason = .invalidServerURL
+        case .missingAccessToken, .invalidAuthorizationResponse:
+            namespaceFailureReason = .authorizationUnavailable
         case .requestEncoding, .invalidResponse, .transport:
-            isNamespaceFailure = false
+            namespaceFailureReason = nil
         }
-        if isNamespaceFailure {
-            openCircuit(for: baseURL, error: error, operation: operation)
+        if let namespaceFailureReason {
+            openCircuit(
+                for: baseURL,
+                error: error,
+                reason: namespaceFailureReason,
+                operation: operation
+            )
             return .namespaceCircuitOpened
         }
 
@@ -598,10 +791,20 @@ final class NightscoutUploadManager {
                 ] = now
             }
             pruneDocumentSuppressions(now: now)
+            status.markDocumentRejected()
             logClientFailure(error, operation: operation, disposition: "document suppressed")
             return .documentSuppressed
         }
 
+        if let retryAfter = error.retryAfter, retryAfter > 0 {
+            let namespace = baseURL.absoluteString
+            let requestedRetryAt = Date().addingTimeInterval(retryAfter)
+            retryNotBefore[namespace] = max(
+                retryNotBefore[namespace] ?? .distantPast,
+                requestedRetryAt
+            )
+        }
+        status.markRetryDeferred()
         logClientFailure(error, operation: operation, disposition: "retry deferred")
         return .retryLater
     }
@@ -609,13 +812,17 @@ final class NightscoutUploadManager {
     private func openCircuit(
         for baseURL: NightscoutBaseURL,
         error: NightscoutClientError,
+        reason: NightscoutUploadStatus.PauseReason,
         operation: String,
         now: Date = Date()
     ) {
+        let nextProbeAt = now.addingTimeInterval(Self.circuitHalfOpenInterval)
         namespaceCircuitBreakers[baseURL.absoluteString] = NamespaceCircuitBreaker(
             statusCode: error.statusCode ?? 0,
-            nextProbeAt: now.addingTimeInterval(Self.circuitHalfOpenInterval)
+            reason: reason,
+            nextProbeAt: nextProbeAt
         )
+        status.markPaused(reason: reason, until: nextProbeAt)
         logClientFailure(error, operation: operation, disposition: "namespace circuit opened")
     }
 
@@ -708,31 +915,42 @@ final class NightscoutUploadManager {
     private func resetBlockingState(for baseURL: NightscoutBaseURL) {
         let prefix = baseURL.absoluteString + "|"
         namespaceCircuitBreakers.removeValue(forKey: baseURL.absoluteString)
+        retryNotBefore.removeValue(forKey: baseURL.absoluteString)
         blockedGlucoseFingerprints = blockedGlucoseFingerprints.filter {
             !$0.key.hasPrefix(prefix)
         }
         blockedInsulinRevisions = blockedInsulinRevisions.filter {
             !$0.key.hasPrefix(prefix)
         }
+        status.markReady()
     }
 
     private func resetAllBlockingState() {
         namespaceCircuitBreakers.removeAll()
+        retryNotBefore.removeAll()
         blockedGlucoseFingerprints.removeAll()
         blockedInsulinRevisions.removeAll()
+        status.markReady()
     }
 
     private func withBackoff<T>(
+        deadline: Date?,
         operation: () async throws -> T
     ) async throws -> T {
         var attempt = 0
         while true {
+            try Task.checkCancellation()
+            let currentDeadline = deadline
+            if let currentDeadline, currentDeadline <= Date() { throw CancellationError() }
             do {
                 return try await operation()
             } catch let error as NightscoutClientError {
                 guard error.isRetryable, attempt < 2 else { throw error }
                 let exponentialDelay = pow(2.0, Double(attempt))
-                let delay = min(max(error.retryAfter ?? exponentialDelay, 1), 30)
+                guard let delay = try retryDelay(
+                    requested: error.retryAfter ?? exponentialDelay,
+                    deadline: deadline
+                ) else { throw error }
                 attempt += 1
                 try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
             }
@@ -746,10 +964,14 @@ final class NightscoutUploadManager {
         identifier: UUID,
         expectedRevision: UUID,
         context: NetworkContext,
+        deadline: Date?,
         operation: () async throws -> T
     ) async throws -> InsulinOperationOutcome<T> {
         var attempt = 0
         while true {
+            try Task.checkCancellation()
+            let currentDeadline = deadline
+            if let currentDeadline, currentDeadline <= Date() { throw CancellationError() }
             do {
                 let value = try await operation()
                 guard context.outbox.insulinItem(
@@ -768,7 +990,10 @@ final class NightscoutUploadManager {
                 }
                 guard error.isRetryable, attempt < 2 else { throw error }
                 let exponentialDelay = pow(2.0, Double(attempt))
-                let delay = min(max(error.retryAfter ?? exponentialDelay, 1), 30)
+                guard let delay = try retryDelay(
+                    requested: error.retryAfter ?? exponentialDelay,
+                    deadline: deadline
+                ) else { throw error }
                 attempt += 1
                 try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                 guard context.outbox.insulinItem(
@@ -780,4 +1005,16 @@ final class NightscoutUploadManager {
             }
         }
     }
+
+    private func retryDelay(requested: TimeInterval, deadline: Date?) throws -> TimeInterval? {
+        // A longer server-directed delay ends this pass. The namespace-level
+        // retryNotBefore value prevents later triggers from retrying early.
+        guard requested <= Self.maximumBackoffDuration else { return nil }
+        let delay = max(requested, 1)
+        if let deadline, deadline.timeIntervalSinceNow <= delay {
+            throw CancellationError()
+        }
+        return delay
+    }
+
 }

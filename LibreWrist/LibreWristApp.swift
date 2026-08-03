@@ -58,7 +58,7 @@ struct LibreWristApp: App {
         // alternatively the session could be started in AppDelegate see https://developer.apple.com/documentation/swiftui/migrating-to-the-swiftui-life-cycle
         appRefreshScheduler.register()
         appRefreshScheduler.scheduleNextRefresh()
-        scheduleAppleHealthCatchUpExport()
+        scheduleLifecycleCatchUps()
         let lowGlucoseAlertsEnabled = SharedData.lowGlucoseNotificationsEnabled
         let highGlucoseAlertsEnabled = SharedData.highGlucoseNotificationsEnabled
         let criticalLowGlucoseAlertsEnabled = SharedData.cgmProviderKind == .libre3BLE &&
@@ -99,7 +99,7 @@ struct LibreWristApp: App {
                     guard newPhase == .active else { return }
                     LibreLinkUpHistory.shared.refreshFromPersistence()
                     SensorSettingsStore.shared.refreshFromPersistence()
-                    scheduleAppleHealthCatchUpExport()
+                    scheduleLifecycleCatchUps()
                     Logger.bgTaskScheduler.info("Scene active: scheduling next BG refresh")
                     appRefreshScheduler.scheduleNextRefresh()
                     if SharedData.bluetoothHeartbeatEnabled {
@@ -115,7 +115,10 @@ struct LibreWristApp: App {
         }
     }
 
-    private func scheduleAppleHealthCatchUpExport() {
+    private func scheduleLifecycleCatchUps() {
+        Task {
+            await NightscoutUploadManager.shared.reconcileRetainedGlucoseAndWait()
+        }
         Task {
             // HealthKit reads may fail while locked, so reconcile both data
             // types when the app becomes active again.
@@ -179,6 +182,9 @@ final class BGAppRefreshScheduler {
         let refreshTask = Task {
             Logger.bgTaskScheduler.info("Calling requestReloadIfNeeded()")
             await LibreLinkUpService.shared.requestReloadIfNeeded()
+            Logger.bgTaskScheduler.info("Running Nightscout glucose catch-up from BG refresh")
+            async let nightscoutCatchUp: Void = NightscoutUploadManager.shared
+                .reconcileRetainedGlucoseAndWait(maximumDuration: 5)
             Logger.bgTaskScheduler.info("Running Apple Health catch-up export from BG refresh")
             await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
             await LiveActivityManager.shared.refreshFromCurrentHistory(
@@ -189,6 +195,9 @@ final class BGAppRefreshScheduler {
             Logger.bgTaskScheduler.info("requestReloadIfNeeded() completed; live activity updated from BG refresh")
             WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
             Logger.bgTaskScheduler.info("new data sent to watch")
+            await nightscoutCatchUp
+            Logger.bgTaskScheduler.info("Nightscout BG catch-up finished or reached its five-second budget")
+            guard !Task.isCancelled else { return }
             task.setTaskCompleted(success: true)
         }
 

@@ -118,6 +118,8 @@ enum NightscoutClientError: Error, LocalizedError {
 @MainActor
 final class NightscoutClientV3 {
     let baseURL: NightscoutBaseURL
+    private static let defaultRequestDuration: TimeInterval = 30
+    private static let maximumBudgetedRequestDuration: TimeInterval = 5
 
     private struct CachedAuthorization {
         let accessTokenDigest: String
@@ -182,7 +184,11 @@ final class NightscoutClientV3 {
         try self.init(baseURL: NightscoutBaseURL(normalizing: baseURLString), session: session)
     }
 
-    func authorization(accessToken: String, forceRefresh: Bool = false) async throws -> NightscoutAuthorization {
+    func authorization(
+        accessToken: String,
+        forceRefresh: Bool = false,
+        deadline: Date? = nil
+    ) async throws -> NightscoutAuthorization {
         let trimmedToken = accessToken.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedToken.isEmpty else { throw NightscoutClientError.missingAccessToken }
 
@@ -202,6 +208,7 @@ final class NightscoutClientV3 {
         var request = URLRequest(url: requestURL)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        try Self.applyTimeout(to: &request, deadline: deadline)
 
         let (data, response) = try await perform(request)
         try validateSuccess(response)
@@ -227,36 +234,45 @@ final class NightscoutClientV3 {
     func putEntry(
         identifier: UUID,
         body: NightscoutEntryBody,
-        accessToken: String
+        accessToken: String,
+        deadline: Date? = nil
     ) async throws {
         _ = try await authorizedRequest(
             method: "PUT",
             pathSegments: ["api", "v3", "entries", identifier.uuidString.lowercased()],
             body: body,
-            accessToken: accessToken
+            accessToken: accessToken,
+            deadline: deadline
         )
     }
 
     func putTreatment(
         identifier: UUID,
         body: NightscoutTreatmentBody,
-        accessToken: String
+        accessToken: String,
+        deadline: Date? = nil
     ) async throws {
         _ = try await authorizedRequest(
             method: "PUT",
             pathSegments: ["api", "v3", "treatments", identifier.uuidString.lowercased()],
             body: body,
-            accessToken: accessToken
+            accessToken: accessToken,
+            deadline: deadline
         )
     }
 
-    func deleteTreatment(identifier: UUID, accessToken: String) async throws -> NightscoutDeleteResult {
+    func deleteTreatment(
+        identifier: UUID,
+        accessToken: String,
+        deadline: Date? = nil
+    ) async throws -> NightscoutDeleteResult {
         let response = try await authorizedRequest(
             method: "DELETE",
             pathSegments: ["api", "v3", "treatments", identifier.uuidString.lowercased()],
             bodyData: nil,
             accessToken: accessToken,
-            acceptedStatusCodes: Set(200...299).union([404])
+            acceptedStatusCodes: Set(200...299).union([404]),
+            deadline: deadline
         )
         return response.statusCode == 404 ? .alreadyAbsent : .deleted
     }
@@ -351,7 +367,8 @@ final class NightscoutClientV3 {
         method: String,
         pathSegments: [String],
         body: T,
-        accessToken: String
+        accessToken: String,
+        deadline: Date? = nil
     ) async throws -> HTTPURLResponse {
         let bodyData: Data
         do {
@@ -363,7 +380,8 @@ final class NightscoutClientV3 {
             method: method,
             pathSegments: pathSegments,
             bodyData: bodyData,
-            accessToken: accessToken
+            accessToken: accessToken,
+            deadline: deadline
         )
     }
 
@@ -372,10 +390,15 @@ final class NightscoutClientV3 {
         pathSegments: [String],
         bodyData: Data?,
         accessToken: String,
-        acceptedStatusCodes: Set<Int> = Set(200...299)
+        acceptedStatusCodes: Set<Int> = Set(200...299),
+        deadline: Date? = nil
     ) async throws -> HTTPURLResponse {
         for attempt in 0...1 {
-            let auth = try await authorization(accessToken: accessToken, forceRefresh: attempt == 1)
+            let auth = try await authorization(
+                accessToken: accessToken,
+                forceRefresh: attempt == 1,
+                deadline: deadline
+            )
             var request = URLRequest(url: try endpointURL(pathSegments: pathSegments))
             request.httpMethod = method
             request.httpBody = bodyData
@@ -384,6 +407,7 @@ final class NightscoutClientV3 {
             if bodyData != nil {
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             }
+            try Self.applyTimeout(to: &request, deadline: deadline)
 
             let (data, response) = try await perform(request)
             if response.statusCode == 401, attempt == 0 {
@@ -412,6 +436,16 @@ final class NightscoutClientV3 {
         components.percentEncodedPath = "/" + pathSegments.map(Self.percentEncodedPathSegment).joined(separator: "/")
         guard let url = components.url else { throw NightscoutClientError.invalidBaseURL }
         return url
+    }
+
+    private static func applyTimeout(to request: inout URLRequest, deadline: Date?) throws {
+        if let deadline {
+            let remaining = deadline.timeIntervalSinceNow
+            guard remaining > 0 else { throw CancellationError() }
+            request.timeoutInterval = min(maximumBudgetedRequestDuration, remaining)
+        } else {
+            request.timeoutInterval = defaultRequestDuration
+        }
     }
 
     private func perform(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {

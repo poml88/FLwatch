@@ -47,6 +47,7 @@ enum DefaultsKey: String {
     case nightscoutUploadEnabled = "nightscoutUploadEnabledKey"
     case nightscoutURL = "nightscoutURLKey"
     case nightscoutTokenPresent = "nightscoutTokenPresentKey"
+    case nightscoutLastSuccessfulUploadDate = "nightscoutLastSuccessfulUploadDateKey"
     case bluetoothHeartbeatEnabled = "bluetoothHeartbeatEnabledKey"
     case bluetoothHeartbeatDeviceName = "bluetoothHeartbeatDeviceNameKey"
     case bluetoothHeartbeatPeripheralUUID = "bluetoothHeartbeatPeripheralUUIDKey"
@@ -376,6 +377,22 @@ enum SharedData {
     static var nightscoutTokenPresent: Bool {
         get { store.getBool(.nightscoutTokenPresent, defaultValue: false) }
         set { store.setBool(newValue, forKey: .nightscoutTokenPresent) }
+    }
+
+    static var nightscoutLastSuccessfulUploadDate: Date? {
+        get {
+            guard store.object(forKey: DefaultsKey.nightscoutLastSuccessfulUploadDate.rawValue) != nil else {
+                return nil
+            }
+            return store.getDate(.nightscoutLastSuccessfulUploadDate)
+        }
+        set {
+            if let newValue {
+                store.setDate(newValue, forKey: .nightscoutLastSuccessfulUploadDate)
+            } else {
+                store.removeObject(forKey: DefaultsKey.nightscoutLastSuccessfulUploadDate.rawValue)
+            }
+        }
     }
 
     static var bluetoothHeartbeatEnabled: Bool {

@@ -19,6 +19,9 @@ struct NightscoutInsulinTombstone: Codable, Equatable, Sendable {
     let requestedAt: Date
 }
 
+/// The latest local intent for one treatment. `uploadAttempted` distinguishes
+/// a purely local pending PUT—which a delete can cancel—from a treatment that
+/// may already exist remotely and therefore requires a durable DELETE.
 enum NightscoutInsulinDesiredState: Codable, Equatable, Sendable {
     case present(payload: NightscoutTreatmentUpload, uploadAttempted: Bool)
     case absent(NightscoutInsulinTombstone)
@@ -62,6 +65,9 @@ enum NightscoutInsulinDesiredState: Codable, Equatable, Sendable {
     }
 }
 
+/// A revision changes whenever local intent changes. Network completions may
+/// resolve only the revision they started with, preventing a stale PUT or
+/// DELETE from erasing a newer desired state queued during its suspension.
 struct NightscoutInsulinOutboxItem: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     let revision: UUID
@@ -140,6 +146,9 @@ final class NightscoutOutbox {
         try persistOrRollBack(to: previousSnapshot)
     }
 
+    /// Replaces the durable desired state with a new, unattempted PUT. An
+    /// identical existing payload is already the same intent and is left
+    /// untouched so its revision and upload-attempt knowledge survive.
     func recordPresent(
         _ payload: NightscoutTreatmentUpload,
         namespace: NightscoutBaseURL,
@@ -164,6 +173,9 @@ final class NightscoutOutbox {
         try persistOrRollBack(to: previousSnapshot)
     }
 
+    /// Cancels an unstarted local PUT without producing network work. Once a
+    /// PUT has started its outcome is uncertain, so absence must instead be
+    /// represented by a durable tombstone and converged with DELETE.
     @discardableResult
     func recordAbsent(
         identifier: UUID,
@@ -223,6 +235,9 @@ final class NightscoutOutbox {
         }
     }
 
+    /// Durably crosses the point after which a local delete must assume that
+    /// the treatment could exist on the server. The revision guard rejects a
+    /// stale worker that was superseded before it reached this point.
     func markUploadAttemptStarted(
         identifier: UUID,
         revision: UUID,
@@ -247,6 +262,8 @@ final class NightscoutOutbox {
         return item
     }
 
+    /// Removes an item only when the completed network operation still matches
+    /// its revision. A concurrent user edit therefore remains queued.
     @discardableResult
     func resolveInsulinItem(
         identifier: UUID,

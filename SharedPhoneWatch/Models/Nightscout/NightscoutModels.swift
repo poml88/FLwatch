@@ -28,12 +28,12 @@ struct NightscoutEntryUpload: Codable, Equatable, Sendable {
 
     init(reading: LibreLinkUpGlucose) {
         let eventDate = reading.glucose.date
-        let source = NightscoutModelFactory.deviceName(from: reading.glucose.source)
-        let epochSeconds = Int64(eventDate.timeIntervalSince1970.rounded(.towardZero))
+        let signature = NightscoutEntryChangeSignature(reading: reading)
+        let source = signature.identity.source
 
         self.identifier = NightscoutDigest.uuidV5(
             namespace: NightscoutDigest.glucoseNamespace,
-            name: "\(source)|sgv|\(epochSeconds)"
+            name: "\(source)|sgv|\(signature.identity.epochSeconds)"
         )
         self.eventDate = eventDate
         self.body = NightscoutEntryBody(
@@ -60,6 +60,33 @@ struct NightscoutEntryUpload: Codable, Equatable, Sendable {
         return NightscoutDigest.sha256Hex(
             of: NightscoutModelFactory.canonicalData(for: significantFields)
         )
+    }
+}
+
+struct NightscoutEntryIdentity: Hashable, Sendable {
+    let source: String
+    let epochSeconds: Int64
+}
+
+/// Cheap hot-path comparison matching every field used by the durable
+/// fingerprint, without constructing a formatter or JSON encoder.
+struct NightscoutEntryChangeSignature: Hashable, Sendable {
+    let identity: NightscoutEntryIdentity
+    let date: Int64
+    let utcOffset: Int
+    let sgv: Int
+    let direction: String
+
+    init(reading: LibreLinkUpGlucose) {
+        let eventDate = reading.glucose.date
+        identity = NightscoutEntryIdentity(
+            source: NightscoutModelFactory.deviceName(from: reading.glucose.source),
+            epochSeconds: Int64(eventDate.timeIntervalSince1970.rounded(.towardZero))
+        )
+        date = NightscoutModelFactory.epochMilliseconds(for: eventDate)
+        utcOffset = NightscoutModelFactory.utcOffsetMinutes(for: eventDate)
+        sgv = reading.glucose.value
+        direction = (reading.trendArrow ?? reading.glucose.trendArrow).nightscoutDirection
     }
 }
 
@@ -133,6 +160,15 @@ extension TrendArrow {
 
 enum NightscoutModelFactory {
     static let appName = "FLwatch"
+    private static let iso8601FormatStyle = Date.ISO8601FormatStyle(
+        includingFractionalSeconds: true,
+        timeZone: TimeZone(secondsFromGMT: 0)!
+    )
+    private static let canonicalEncoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return encoder
+    }()
 
     static func epochMilliseconds(for date: Date) -> Int64 {
         Int64((date.timeIntervalSince1970 * 1_000).rounded())
@@ -143,10 +179,7 @@ enum NightscoutModelFactory {
     }
 
     static func iso8601String(from date: Date) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        return formatter.string(from: date)
+        date.formatted(iso8601FormatStyle)
     }
 
     static func deviceName(from source: String) -> String {
@@ -165,12 +198,10 @@ enum NightscoutModelFactory {
     }
 
     static func canonicalData<T: Encodable>(for value: T) -> Data {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         // All supported Nightscout payload values are directly encodable. An
         // empty value is preferable to a process-random fallback if a future
         // model change accidentally makes encoding fail.
-        return (try? encoder.encode(value)) ?? Data()
+        return (try? canonicalEncoder.encode(value)) ?? Data()
     }
 }
 
