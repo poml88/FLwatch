@@ -350,6 +350,11 @@ private struct GlucoseLiveActivityChart: View {
         let color: Color
     }
 
+    private struct PlotPoint {
+        let timestamp: Date
+        let value: Double
+    }
+
     let contentState: FLWatchAttributes.ContentState
     let showsAxes: Bool
     let xAxisFont: Font
@@ -439,6 +444,25 @@ private struct GlucoseLiveActivityChart: View {
                 color: measurementColor(for: $0.colorRawValue).color
             )
         }
+        let minutePlotPoints = contentState.minutePoints.map {
+            PlotPoint(
+                timestamp: $0.timestamp,
+                value: scaledValue($0.valueInMgPerDl)
+            )
+        }
+        let iobPlotPoints = contentState.iobPoints.map {
+            PlotPoint(
+                timestamp: $0.timestamp,
+                value: scaledIOBValue($0.iobValue)
+            )
+        }
+        let activityPlotPoints = contentState.activityPoints.map {
+            PlotPoint(
+                timestamp: $0.timestamp,
+                value: scaledActivityValue($0.activityValue)
+            )
+        }
+        let minuteGlucoseColor = Color(red: 0.96, green: 0.78, blue: 0.18) // #F5C72E
 
         Chart {
             RectangleMark(
@@ -461,7 +485,8 @@ private struct GlucoseLiveActivityChart: View {
             LinePlot(
                 glucosePlotPoints,
                 x: .value("Time", \.timestamp),
-                y: .value("Glucose", \.value)
+                y: .value("Glucose", \.value),
+                series: .value("Curve", "Glucose")
             )
             .interpolationMethod(.linear)
             .lineStyle(.init(lineWidth: graphLineWidth))
@@ -479,25 +504,22 @@ private struct GlucoseLiveActivityChart: View {
             // area to preserve the presentation-specific sizing, calibrated on device.
             .symbolSize(.pi * graphPointSize * graphPointSize / 4)
             
-            ForEach(contentState.minutePoints) { point in
-                let minuteGlucoseColor = Color(red: 0.96, green: 0.78, blue: 0.18) // #F5C72E
-                PointMark(
-                    x: .value("Time", point.timestamp),
-                    y: .value("Glucose", scaledValue(point.valueInMgPerDl))
-                )
-                .foregroundStyle(minuteGlucoseColor)
-                .symbolSize(minutePointSize)
-            }
+            PointPlot(
+                minutePlotPoints,
+                x: .value("Time", \.timestamp),
+                y: .value("Glucose", \.value)
+            )
+            .foregroundStyle(minuteGlucoseColor)
+            .symbolSize(minutePointSize)
 
             if contentState.showIOBCurve, !contentState.iobPoints.isEmpty {
-                ForEach(contentState.iobPoints) { point in
-                    LineMark(
-                        x: .value("Time", point.timestamp),
-                        y: .value("Insulin", scaledIOBValue(point.iobValue)),
-                        series: .value("Curve", "Insulin")
-                    )
-                    .foregroundStyle(.orange)
-                }
+                LinePlot(
+                    iobPlotPoints,
+                    x: .value("Time", \.timestamp),
+                    y: .value("Insulin", \.value),
+                    series: .value("Curve", "Insulin")
+                )
+                .foregroundStyle(.orange)
             }
 
             if contentState.showInsulinDeliveryMarks, !contentState.insulinMarkers.isEmpty {
@@ -519,14 +541,13 @@ private struct GlucoseLiveActivityChart: View {
             }
 
             if contentState.showActivityCurve, !contentState.activityPoints.isEmpty {
-                ForEach(contentState.activityPoints) { point in
-                    LineMark(
-                        x: .value("Time", point.timestamp),
-                        y: .value("Activity", scaledActivityValue(point.activityValue)),
-                        series: .value("Curve", "Activity")
-                    )
-                    .foregroundStyle(.brown)
-                }
+                LinePlot(
+                    activityPlotPoints,
+                    x: .value("Time", \.timestamp),
+                    y: .value("Activity", \.value),
+                    series: .value("Curve", "Activity")
+                )
+                .foregroundStyle(.brown)
             }
         }
 //        .chartForegroundStyleScale([
