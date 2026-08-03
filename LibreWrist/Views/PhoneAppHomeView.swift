@@ -135,8 +135,7 @@ struct PhoneAppHomeView: View {
             }
             
             
-            if scenePhase == .active,
-               !libreLinkUpHistory.libreLinkUpGlucose.isEmpty {
+            if !libreLinkUpHistory.libreLinkUpGlucose.isEmpty {
                 PhoneAppGraphView()
             }
             
