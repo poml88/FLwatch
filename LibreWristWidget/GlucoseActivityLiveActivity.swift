@@ -585,6 +585,9 @@ private struct GlucoseLiveActivityChart: View {
                 .chartXAxis(.hidden)
                 .chartYAxis(.hidden)
         }
+        // WidgetKit archives accessibility metadata for every Live Activity update.
+        // The surrounding value and trend already summarize this glanceable chart.
+        .accessibilityHidden(true)
     }
 
     private func scaledValue(_ valueInMgPerDl: Int) -> Double {
