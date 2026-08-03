@@ -27,9 +27,15 @@ struct NightscoutEntryUpload: Codable, Equatable, Sendable {
     let body: NightscoutEntryBody
 
     init(reading: LibreLinkUpGlucose) {
-        let eventDate = reading.glucose.date
         let signature = NightscoutEntryChangeSignature(reading: reading)
         let source = signature.identity.source
+        // Nightscout treats `date` as immutable for an existing identifier.
+        // Build both from the same whole-second timestamp so realtime and
+        // historical representations cannot share an identifier while
+        // disagreeing only in fractional milliseconds.
+        let eventDate = Date(
+            timeIntervalSince1970: TimeInterval(signature.identity.epochSeconds)
+        )
 
         self.identifier = NightscoutDigest.uuidV5(
             namespace: NightscoutDigest.glucoseNamespace,
@@ -37,12 +43,12 @@ struct NightscoutEntryUpload: Codable, Equatable, Sendable {
         )
         self.eventDate = eventDate
         self.body = NightscoutEntryBody(
-            date: NightscoutModelFactory.epochMilliseconds(for: eventDate),
-            utcOffset: NightscoutModelFactory.utcOffsetMinutes(for: eventDate),
+            date: signature.date,
+            utcOffset: signature.utcOffset,
             app: NightscoutModelFactory.appName,
             type: "sgv",
-            sgv: reading.glucose.value,
-            direction: (reading.trendArrow ?? reading.glucose.trendArrow).nightscoutDirection,
+            sgv: signature.sgv,
+            direction: signature.direction,
             device: source,
             dateString: NightscoutModelFactory.iso8601String(from: eventDate)
         )
@@ -78,12 +84,15 @@ struct NightscoutEntryChangeSignature: Hashable, Sendable {
     let direction: String
 
     init(reading: LibreLinkUpGlucose) {
-        let eventDate = reading.glucose.date
+        let epochSeconds = Int64(
+            reading.glucose.date.timeIntervalSince1970.rounded(.towardZero)
+        )
+        let eventDate = Date(timeIntervalSince1970: TimeInterval(epochSeconds))
         identity = NightscoutEntryIdentity(
             source: NightscoutModelFactory.deviceName(from: reading.glucose.source),
-            epochSeconds: Int64(eventDate.timeIntervalSince1970.rounded(.towardZero))
+            epochSeconds: epochSeconds
         )
-        date = NightscoutModelFactory.epochMilliseconds(for: eventDate)
+        date = epochSeconds * 1_000
         utcOffset = NightscoutModelFactory.utcOffsetMinutes(for: eventDate)
         sgv = reading.glucose.value
         direction = (reading.trendArrow ?? reading.glucose.trendArrow).nightscoutDirection
