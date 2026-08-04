@@ -199,10 +199,26 @@ private struct FullGraphWidgetChartStyle {
 }
 
 private struct FullGraphWidgetChart: View {
+    // The widget extension redraws this chart on every timeline entry, and it was
+    // the biggest CPU cost there. These compact models let Charts render each
+    // series as a vectorized plot instead of building a LineMark and a custom
+    // SwiftUI symbol subtree for every reading.
+    private struct GlucosePlotPoint {
+        let timestamp: Date
+        let value: Double
+        let color: Color
+        let strokeColor: Color
+    }
+
+    private struct PlotPoint {
+        let timestamp: Date
+        let value: Double
+    }
+
     let entry: FullGraphGlucoseMeasurementIOBEntry
     let showsAxes: Bool
     let style: FullGraphWidgetChartStyle
-    
+
     @Environment(\.colorScheme) private var colorScheme
     
     //    private let glucoseLineColor = Color(red: 0.54, green: 0.56, blue: 0.60)
@@ -305,7 +321,36 @@ private struct FullGraphWidgetChart: View {
     }
     
     private var baseChart: some View {
-        Chart {
+        // Vectorized plots read values through key paths, so resolve the
+        // unit-dependent value and the scheme-dependent colors here.
+        let glucosePlotPoints = entry.graph.map {
+            GlucosePlotPoint(
+                timestamp: $0.glucose.date,
+                value: scaledValue($0.glucose.value),
+                color: $0.color.color,
+                strokeColor: colorScheme == .dark ? $0.color.color : .black
+            )
+        }
+        let minutePlotPoints = entry.minutePoints.map {
+            PlotPoint(timestamp: $0.timestamp, value: scaledValue($0.valueInMgPerDl))
+        }
+        let iobPlotPoints = entry.iobPoints.map {
+            PlotPoint(timestamp: $0.timestamp, value: scaledIOBValue($0.value))
+        }
+        let activityPlotPoints = entry.activityPoints.map {
+            PlotPoint(timestamp: $0.timestamp, value: scaledActivityValue($0.value))
+        }
+        let minuteStrokeColor: Color = colorScheme == .dark ? minuteGlucoseColor : .black
+        // symbolSize takes an area in pt². The previous symbol was a Circle of
+        // graphPointSize diameter whose 0.5 pt strokeBorder is drawn inset, so the
+        // fill shows through one point smaller. Two plots reproduce that: a disc in
+        // the border color, then the fill on top.
+        let glucoseBorderArea: CGFloat = .pi * style.graphPointSize * style.graphPointSize / 4
+        let glucoseFillArea: CGFloat = .pi * (style.graphPointSize - 1) * (style.graphPointSize - 1) / 4
+        let minuteBorderArea: CGFloat = .pi * style.minutePointSize * style.minutePointSize / 4
+        let minuteFillArea: CGFloat = .pi * (style.minutePointSize - 1) * (style.minutePointSize - 1) / 4
+
+        return Chart {
             RectangleMark(
                 xStart: .value("Rect Start Width", chartXScaleMin),
                 xEnd: .value("Rect End Width", chartXScaleMax),
@@ -314,58 +359,70 @@ private struct FullGraphWidgetChart: View {
             )
             .opacity(0.2)
             .foregroundStyle(rangeColorIfGlucoseGreen)
-            
+
             if entry.alarmLow >= SensorSettings.minDrawableAlarmMgDl {
                 RuleMark(y: .value("Lower limit", alarmLow))
                     .foregroundStyle(.red)
                     .lineStyle(.init(lineWidth: 1, dash: [2]))
             }
 
-            ForEach(entry.graph) { item in
-                var strokeColor: Color { colorScheme == .dark ? item.color.color : .black }
-                LineMark(
-                    x: .value("Time", item.glucose.date),
-                    y: .value("Glucose", scaledValue(item.glucose.value)),
-                    series: .value("Curve", "Glucose")
-                )
-                .interpolationMethod(.linear)
-                //                .foregroundStyle(glucoseLineColor)
-                .lineStyle(.init(lineWidth: style.graphLineWidth))
-                .symbol {
-                    Circle()
-                        .fill(item.color.color)
-                        .strokeBorder(strokeColor, lineWidth: 0.5)
-                        .frame(width: style.graphPointSize, height: style.graphPointSize)
-                }
-            }
-            
-            ForEach(entry.minutePoints) { point in
-                var strokeColor: Color { colorScheme == .dark ? minuteGlucoseColor : .black }
-                PointMark(
-                    x: .value("Time", point.timestamp),
-                    y: .value("Glucose", scaledValue(point.valueInMgPerDl))
-                )
-                .foregroundStyle(minuteGlucoseColor)
-                .symbol {
-                    Circle()
-                        .fill(minuteGlucoseColor)
-                        .strokeBorder(strokeColor, lineWidth: 0.5)
-                        .frame(width: style.minutePointSize, height: style.minutePointSize)
-                }
-            }
-            
+            // Keep the continuous line separate from the independently colored
+            // points while rendering each collection as a single plot.
+            LinePlot(
+                glucosePlotPoints,
+                x: .value("Time", \.timestamp),
+                y: .value("Glucose", \.value),
+                series: .value("Curve", "Glucose")
+            )
+            .interpolationMethod(.linear)
+            //                .foregroundStyle(glucoseLineColor)
+            .lineStyle(.init(lineWidth: style.graphLineWidth))
+
+            PointPlot(
+                glucosePlotPoints,
+                x: .value("Time", \.timestamp),
+                y: .value("Glucose", \.value)
+            )
+            // Keep vectorized key-path modifiers before modifiers that return
+            // only `some ChartContent`, such as the constant symbol size.
+            .foregroundStyle(\.strokeColor)
+            .symbolSize(glucoseBorderArea)
+
+            PointPlot(
+                glucosePlotPoints,
+                x: .value("Time", \.timestamp),
+                y: .value("Glucose", \.value)
+            )
+            .foregroundStyle(\.color)
+            .symbolSize(glucoseFillArea)
+
+            PointPlot(
+                minutePlotPoints,
+                x: .value("Time", \.timestamp),
+                y: .value("Glucose", \.value)
+            )
+            .foregroundStyle(minuteStrokeColor)
+            .symbolSize(minuteBorderArea)
+
+            PointPlot(
+                minutePlotPoints,
+                x: .value("Time", \.timestamp),
+                y: .value("Glucose", \.value)
+            )
+            .foregroundStyle(minuteGlucoseColor)
+            .symbolSize(minuteFillArea)
+
             if entry.showIOBCurve, !entry.iobPoints.isEmpty {
-                ForEach(entry.iobPoints) { point in
-                    LineMark(
-                        x: .value("Time", point.timestamp),
-                        y: .value("Insulin", scaledIOBValue(point.value)),
-                        series: .value("Curve", "Insulin")
-                    )
-                    .foregroundStyle(IOBMarksLineColor)
-                    .lineStyle(.init(lineWidth: style.overlayLineWidth))
-                }
+                LinePlot(
+                    iobPlotPoints,
+                    x: .value("Time", \.timestamp),
+                    y: .value("Insulin", \.value),
+                    series: .value("Curve", "Insulin")
+                )
+                .foregroundStyle(IOBMarksLineColor)
+                .lineStyle(.init(lineWidth: style.overlayLineWidth))
             }
-            
+
             if entry.showInsulinDeliveryMarks, !entry.insulinMarkers.isEmpty {
                 
                 
@@ -388,15 +445,14 @@ private struct FullGraphWidgetChart: View {
             }
             
             if entry.showActivityCurve, !entry.activityPoints.isEmpty {
-                ForEach(entry.activityPoints) { point in
-                    LineMark(
-                        x: .value("Time", point.timestamp),
-                        y: .value("Activity", scaledActivityValue(point.value)),
-                        series: .value("Curve", "Activity")
-                    )
-                    .foregroundStyle(.brown)
-                    .lineStyle(.init(lineWidth: style.overlayLineWidth))
-                }
+                LinePlot(
+                    activityPlotPoints,
+                    x: .value("Time", \.timestamp),
+                    y: .value("Activity", \.value),
+                    series: .value("Curve", "Activity")
+                )
+                .foregroundStyle(.brown)
+                .lineStyle(.init(lineWidth: style.overlayLineWidth))
             }
         }
         .chartXScale(domain: [chartXScaleMin, chartXScaleMax])
