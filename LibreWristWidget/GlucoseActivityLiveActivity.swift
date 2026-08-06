@@ -435,6 +435,11 @@ private struct MediumSupplementalActivityView: View {
 /// Canvas keeps the expanded Dynamic Island graph to one drawing view instead of archiving the
 /// large Swift Charts display list on every Live Activity update.
 private struct GlucoseLiveActivityCanvas: View {
+    private struct InsulinMarkerPlotPoint {
+        let marker: FLWatchAttributes.InsulinMarker
+        let yPosition: Double
+    }
+
     private struct PlotGeometry {
         let rect: CGRect
         let xMinimum: Date
@@ -496,15 +501,25 @@ private struct GlucoseLiveActivityCanvas: View {
         contentState.glucoseUnit == 0 ? 3 : 50
     }
     
-    private var quarterYAxisIOBCurve: Double {
-        (chartYScaleMax - chartYScaleMin) / 4 + 0.25
-    }
-    
     var body: some View {
         let chartXScaleMax = Date.now
         let chartXScaleMin = chartXScaleMax.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
         let yScaleMin = chartYScaleMin
         let yScaleMax = chartYScaleMax
+        let yScaleMinIOBCurve = chartYScaleMinIOBCurve
+        let quarterYAxisIOBCurve = (yScaleMax - yScaleMin) / 4 + 0.25
+        let insulinMarkerPlotPoints = contentState.showInsulinDeliveryMarks
+            ? contentState.insulinMarkers.map {
+                InsulinMarkerPlotPoint(
+                    marker: $0,
+                    yPosition: markerYPosition(
+                        for: $0,
+                        yScaleMinIOBCurve: yScaleMinIOBCurve,
+                        quarterYAxisIOBCurve: quarterYAxisIOBCurve
+                    )
+                )
+            }
+            : []
         
         Canvas { context, size in
             let plotRect = CGRect(
@@ -531,7 +546,13 @@ private struct GlucoseLiveActivityCanvas: View {
             drawAxes(in: &plotContext, labelsIn: &context, geometry: geometry)
             drawAlarmLimit(in: &plotContext, geometry: geometry)
             drawGlucosePoints(in: &plotContext, geometry: geometry)
-            drawInsulinCurves(in: &plotContext, geometry: geometry)
+            drawInsulinCurves(
+                in: &plotContext,
+                geometry: geometry,
+                insulinMarkerPlotPoints: insulinMarkerPlotPoints,
+                yScaleMinIOBCurve: yScaleMinIOBCurve,
+                quarterYAxisIOBCurve: quarterYAxisIOBCurve
+            )
         }
         .accessibilityHidden(true)
     }
@@ -637,13 +658,21 @@ private struct GlucoseLiveActivityCanvas: View {
         }
     }
     
-    private func drawInsulinCurves(in context: inout GraphicsContext, geometry: PlotGeometry) {
+    private func drawInsulinCurves(
+        in context: inout GraphicsContext,
+        geometry: PlotGeometry,
+        insulinMarkerPlotPoints: [InsulinMarkerPlotPoint],
+        yScaleMinIOBCurve: Double,
+        quarterYAxisIOBCurve: Double
+    ) {
         if contentState.showIOBCurve, !contentState.iobPoints.isEmpty {
             let path = curvePath(
                 points: contentState.iobPoints,
                 geometry: geometry,
                 pointValue: { $0.iobValue },
-                scaledValue: scaledIOBValue
+                scaledValue: {
+                    yScaleMinIOBCurve + $0 * quarterYAxisIOBCurve / contentState.maxIOB
+                }
             )
             context.stroke(
                 path,
@@ -652,9 +681,9 @@ private struct GlucoseLiveActivityCanvas: View {
             )
         }
         
-        if contentState.showInsulinDeliveryMarks, !contentState.insulinMarkers.isEmpty {
-            for marker in contentState.insulinMarkers {
-                drawInsulinMarker(marker, in: &context, geometry: geometry)
+        if contentState.showInsulinDeliveryMarks, !insulinMarkerPlotPoints.isEmpty {
+            for plotPoint in insulinMarkerPlotPoints {
+                drawInsulinMarker(plotPoint, in: &context, geometry: geometry)
             }
         }
         
@@ -663,7 +692,9 @@ private struct GlucoseLiveActivityCanvas: View {
                 points: contentState.activityPoints,
                 geometry: geometry,
                 pointValue: { $0.activityValue },
-                scaledValue: scaledActivityValue
+                scaledValue: {
+                    yScaleMinIOBCurve + $0 * quarterYAxisIOBCurve / contentState.maxActivity
+                }
             )
             context.stroke(
                 path,
@@ -674,12 +705,13 @@ private struct GlucoseLiveActivityCanvas: View {
     }
     
     private func drawInsulinMarker(
-        _ marker: FLWatchAttributes.InsulinMarker,
+        _ plotPoint: InsulinMarkerPlotPoint,
         in context: inout GraphicsContext,
         geometry: PlotGeometry
     ) {
+        let marker = plotPoint.marker
         let x = geometry.xPosition(for: marker.timestamp)
-        let y = geometry.yPosition(for: markerYPosition(for: marker))
+        let y = geometry.yPosition(for: plotPoint.yPosition)
         let halfWidth = insulinMarkerFontSize * 0.4
         let halfHeight = insulinMarkerFontSize * 0.35
         var markerPath = Path()
@@ -764,19 +796,15 @@ private struct GlucoseLiveActivityCanvas: View {
         valueInMgPerDl.displayedGlucoseValue(glucoseUnitValue: contentState.glucoseUnit)
     }
     
-    private func scaledIOBValue(_ value: Double) -> Double {
-        chartYScaleMinIOBCurve + value * quarterYAxisIOBCurve / contentState.maxIOB
-    }
-    
-    private func scaledActivityValue(_ value: Double) -> Double {
-        chartYScaleMinIOBCurve + value * quarterYAxisIOBCurve / contentState.maxActivity
-    }
-    
-    private func markerYPosition(for marker: FLWatchAttributes.InsulinMarker) -> Double {
+    private func markerYPosition(
+        for marker: FLWatchAttributes.InsulinMarker,
+        yScaleMinIOBCurve: Double,
+        quarterYAxisIOBCurve: Double
+    ) -> Double {
         let shiftInY = contentState.glucoseUnit == 0 ? Double(10).toMmolL() : 10
         let curvePoint = contentState.iobPoints.first(where: { $0.timestamp > marker.timestamp })
         let iobValue = curvePoint?.iobValue ?? 0
-        return chartYScaleMinIOBCurve + shiftInY + iobValue * quarterYAxisIOBCurve / contentState.maxIOB
+        return yScaleMinIOBCurve + shiftInY + iobValue * quarterYAxisIOBCurve / contentState.maxIOB
     }
     
     private func measurementColor(for rawValue: Int) -> MeasurementColor {
@@ -798,6 +826,13 @@ private struct GlucoseLiveActivityChart: View {
     private struct PlotPoint {
         let timestamp: Date
         let value: Double
+    }
+
+    private struct InsulinMarkerPlotPoint: Identifiable {
+        let marker: FLWatchAttributes.InsulinMarker
+        let yPosition: Double
+
+        var id: FLWatchAttributes.InsulinMarker.ID { marker.id }
     }
     
     let contentState: FLWatchAttributes.ContentState
@@ -859,10 +894,6 @@ private struct GlucoseLiveActivityChart: View {
         contentState.glucoseUnit == 0 ? 3 : 50
     }
     
-    private var quarterYAxisIOBCurve: Double {
-        (chartYScaleMax - chartYScaleMin) / 4 + 0.25
-    }
-    
     private var chartYScaleMinIOBCurve: Double {
         contentState.glucoseUnit == 0 ? 3 : 50
     }
@@ -880,6 +911,10 @@ private struct GlucoseLiveActivityChart: View {
     }
     
     var body: some View {
+        let yScaleMin = chartYScaleMin
+        let yScaleMax = chartYScaleMax
+        let yScaleMinIOBCurve = chartYScaleMinIOBCurve
+        let quarterYAxisIOBCurve = (yScaleMax - yScaleMin) / 4 + 0.25
         // Vectorized plots read values through key paths, so resolve the
         // unit-dependent glucose value and fallback measurement color here.
         let glucosePlotPoints = contentState.graphPoints.map {
@@ -898,15 +933,27 @@ private struct GlucoseLiveActivityChart: View {
         let iobPlotPoints = contentState.iobPoints.map {
             PlotPoint(
                 timestamp: $0.timestamp,
-                value: scaledIOBValue($0.iobValue)
+                value: yScaleMinIOBCurve + $0.iobValue * quarterYAxisIOBCurve / contentState.maxIOB
             )
         }
         let activityPlotPoints = contentState.activityPoints.map {
             PlotPoint(
                 timestamp: $0.timestamp,
-                value: scaledActivityValue($0.activityValue)
+                value: yScaleMinIOBCurve + $0.activityValue * quarterYAxisIOBCurve / contentState.maxActivity
             )
         }
+        let insulinMarkerPlotPoints = contentState.showInsulinDeliveryMarks
+            ? contentState.insulinMarkers.map {
+                InsulinMarkerPlotPoint(
+                    marker: $0,
+                    yPosition: markerYPosition(
+                        for: $0,
+                        yScaleMinIOBCurve: yScaleMinIOBCurve,
+                        quarterYAxisIOBCurve: quarterYAxisIOBCurve
+                    )
+                )
+            }
+            : []
         let minuteGlucoseColor = Color(red: 0.96, green: 0.78, blue: 0.18) // #F5C72E
         
         Chart {
@@ -968,19 +1015,19 @@ private struct GlucoseLiveActivityChart: View {
                 .foregroundStyle(.orange)
             }
             
-            if contentState.showInsulinDeliveryMarks, !contentState.insulinMarkers.isEmpty {
-                ForEach(contentState.insulinMarkers) { marker in
+            if contentState.showInsulinDeliveryMarks, !insulinMarkerPlotPoints.isEmpty {
+                ForEach(insulinMarkerPlotPoints) { plotPoint in
                     PointMark(
-                        x: .value("Time", marker.timestamp),
-                        y: .value("Insulin", markerYPosition(for: marker))
+                        x: .value("Time", plotPoint.marker.timestamp),
+                        y: .value("Insulin", plotPoint.yPosition)
                     )
                     .symbol {
                         Image(systemName: "arrowtriangle.down.fill")
                             .foregroundColor(.orange)
                             .font(.system(size: insulinMarkerFontSize))
                     }
-                    .annotation(alignment: markerAlignment(for: marker.timestamp)) {
-                        Text(marker.unitsText)
+                    .annotation(alignment: markerAlignment(for: plotPoint.marker.timestamp)) {
+                        Text(plotPoint.marker.unitsText)
                             .font(insulinAnnotationFont)
                     }
                 }
@@ -1000,7 +1047,7 @@ private struct GlucoseLiveActivityChart: View {
         //            "Glucose": Color.white
         //        ])
         .chartXScale(domain: [chartXScaleMin, chartXScaleMax])
-        .chartYScale(domain: [chartYScaleMin, chartYScaleMax])
+        .chartYScale(domain: [yScaleMin, yScaleMax])
         .if(showsAxes) { chart in
             chart
                 .chartXAxis {
@@ -1040,23 +1087,17 @@ private struct GlucoseLiveActivityChart: View {
         valueInMgPerDl.displayedGlucoseValue(glucoseUnitValue: contentState.glucoseUnit)
     }
     
-    private func scaledIOBValue(_ value: Double) -> Double {
-        chartYScaleMinIOBCurve + value * quarterYAxisIOBCurve / contentState.maxIOB
-    }
-    
-    private func scaledActivityValue(_ value: Double) -> Double {
-        chartYScaleMinIOBCurve + value * quarterYAxisIOBCurve / contentState.maxActivity
-    }
-    
-    private func markerYPosition(for marker: FLWatchAttributes.InsulinMarker) -> Double {
+    private func markerYPosition(
+        for marker: FLWatchAttributes.InsulinMarker,
+        yScaleMinIOBCurve: Double,
+        quarterYAxisIOBCurve: Double
+    ) -> Double {
         let shiftInYValue = showsAxes ? 10 : 5
         let shiftInY = contentState.glucoseUnit == 0 ? Double(shiftInYValue).toMmolL() : Double(shiftInYValue)
         let curvePoint = contentState.iobPoints.first(where: { $0.timestamp > marker.timestamp })
-        return chartYScaleMinIOBCurve + shiftInY + scaledIOBComponent(curvePoint?.iobValue ?? 0, maxValue: contentState.maxIOB)
-    }
-    
-    private func scaledIOBComponent(_ value: Double, maxValue: Double) -> Double {
-        value * quarterYAxisIOBCurve / maxValue
+        return yScaleMinIOBCurve
+            + shiftInY
+            + (curvePoint?.iobValue ?? 0) * quarterYAxisIOBCurve / contentState.maxIOB
     }
     
     private func markerAlignment(for timestamp: Date) -> Alignment {
