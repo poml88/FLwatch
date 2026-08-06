@@ -120,7 +120,7 @@ struct FLWatchLiveActivityWidget: Widget {
                                 startingAt: context.state.latestTimestamp,
                                 showsHours: false,
                                 maxFieldCount: 2,
-                                maxPrecision: .seconds(60)
+                                maxPrecision: .seconds(1)
                             )
                         )
                         //                            .bold()
@@ -150,7 +150,7 @@ struct FLWatchLiveActivityWidget: Widget {
 //                    Text("X")
            
                     
-                    
+#if false
                     GlucoseLiveActivityChart(
                         contentState: context.state,
                         showsAxes: true,
@@ -164,13 +164,16 @@ struct FLWatchLiveActivityWidget: Widget {
                     )
 //                    .padding(.top, 0)
 //                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+#endif
 
-
-#if false
+#if true
                     GlucoseLiveActivityCanvas(
                         contentState: context.state,
                         xAxisFont: Font.system(size: 8, weight: .regular),
                         yAxisFont: Font.system(size: 8, weight: .regular),
+                        yAxisWidth: 29,
+                        xAxisHeight: 14,
+                        graphLineWidth: 3,
                         graphPointSize: 3,
                         minutePointArea: 8,
                         insulinMarkerFontSize: 12,
@@ -207,7 +210,7 @@ struct FLWatchLiveActivityWidget: Widget {
                         startingAt: context.state.latestTimestamp,
                         showsHours: false,
                         maxFieldCount: 2,
-                        maxPrecision: .seconds(60)
+                        maxPrecision: .seconds(1)
                     )
                 )
                 .bold()
@@ -278,7 +281,7 @@ private struct SmallSupplementalActivityView: View {
 //#if false
         let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
         
-        VStack (spacing: 5){
+        VStack (spacing: 0){
             HStack {
                 Text(verbatim: "\(contentState.latestGlucoseValue.units(for: contentState.glucoseUnit)) \(contentState.latestTrend)")
                     .font(.footnote)
@@ -304,7 +307,7 @@ private struct SmallSupplementalActivityView: View {
                         startingAt: contentState.latestTimestamp,
                         showsHours: false,
                         maxFieldCount: 2,
-                        maxPrecision: .seconds(60)
+                        maxPrecision: .seconds(1)
                     )
                 )
                 .font(.footnote)
@@ -316,7 +319,9 @@ private struct SmallSupplementalActivityView: View {
 //#endif
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, 7)
             
+#if false
             GlucoseLiveActivityChart(
                 contentState: contentState,
                 showsAxes: true,
@@ -329,6 +334,24 @@ private struct SmallSupplementalActivityView: View {
                 insulinAnnotationFont: Font.system(size: 8, weight: .regular)
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+#endif
+
+#if true
+            GlucoseLiveActivityCanvas(
+                contentState: contentState,
+                xAxisFont: Font.system(size: 8, weight: .regular),
+                yAxisFont: Font.system(size: 8, weight: .regular),
+                // Use tighter axis reserves in the height-constrained Watch presentation.
+                yAxisWidth: 22,
+                xAxisHeight: 10,
+                graphLineWidth: 2,
+                graphPointSize: 2,
+                minutePointArea: 5,
+                insulinMarkerFontSize: 8,
+                insulinAnnotationFont: Font.system(size: 8, weight: .regular)
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+#endif
         }
         //        .overlay {
         //            if isStale {
@@ -337,7 +360,8 @@ private struct SmallSupplementalActivityView: View {
         //                    .foregroundStyle(.secondary)
         //            }
         //        }
-        .padding(5)
+        .padding(.leading, 5)
+        .padding(.top, 3)
 //#endif
     }
 }
@@ -355,7 +379,7 @@ private struct MediumSupplementalActivityView: View {
         let isUpdateUI: Bool = contentState.latestTimestamp.addingTimeInterval(updateUIAfter) <= Date()
         let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
         
-        VStack (spacing: 8){
+        VStack (spacing: 5){
             HStack {
                 Text(verbatim: "\(contentState.latestGlucoseValue.units(for: contentState.glucoseUnit)) \(contentState.latestTrend)")
                 //                    .font(.title)
@@ -396,7 +420,7 @@ private struct MediumSupplementalActivityView: View {
                         startingAt: contentState.latestTimestamp,
                         showsHours: false,
                         maxFieldCount: 2,
-                        maxPrecision: .seconds(60)
+                        maxPrecision: .seconds(1)
                     )
                 )
                 .monospacedDigit()
@@ -407,6 +431,7 @@ private struct MediumSupplementalActivityView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             
+#if false
             GlucoseLiveActivityChart(
                 contentState: contentState,
                 showsAxes: true,
@@ -419,6 +444,24 @@ private struct MediumSupplementalActivityView: View {
                 insulinAnnotationFont: .footnote
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+#endif
+
+#if true
+            GlucoseLiveActivityCanvas(
+                contentState: contentState,
+                xAxisFont: .footnote,
+                yAxisFont: .footnote,
+                yAxisWidth: 29,
+                xAxisHeight: 14,
+                graphLineWidth: 3,
+                graphPointSize: 3,
+                minutePointArea: 10,
+                insulinMarkerFontSize: 12,
+                insulinAnnotationFont: .footnote
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .layoutPriority(1)
+#endif
         }
         //        .overlay {
         //            if isStaleGlucose {
@@ -428,12 +471,13 @@ private struct MediumSupplementalActivityView: View {
         //            }
         //        }
         .padding()
+        .frame(height: 160)
 //#endif
     }
 }
 
-/// Canvas keeps the expanded Dynamic Island graph to one drawing view instead of archiving the
-/// large Swift Charts display list on every Live Activity update.
+/// Canvas keeps each Live Activity graph to one drawing view instead of archiving the large Swift
+/// Charts display list on every update.
 private struct GlucoseLiveActivityCanvas: View {
     private struct InsulinMarkerPlotPoint {
         let marker: FLWatchAttributes.InsulinMarker
@@ -465,13 +509,14 @@ private struct GlucoseLiveActivityCanvas: View {
     let contentState: FLWatchAttributes.ContentState
     let xAxisFont: Font
     let yAxisFont: Font
+    let yAxisWidth: CGFloat
+    let xAxisHeight: CGFloat
+    let graphLineWidth: CGFloat
     let graphPointSize: CGFloat
     let minutePointArea: CGFloat
     let insulinMarkerFontSize: CGFloat
     let insulinAnnotationFont: Font
     
-    private let yAxisWidth: CGFloat = 29
-    private let xAxisHeight: CGFloat = 14
     private let yAxisLabelInset: CGFloat = 4
     private let curveLineWidth: CGFloat = 2
     
@@ -545,6 +590,7 @@ private struct GlucoseLiveActivityCanvas: View {
             drawTargetRange(in: &plotContext, geometry: geometry)
             drawAxes(in: &plotContext, labelsIn: &context, geometry: geometry)
             drawAlarmLimit(in: &plotContext, geometry: geometry)
+            drawGlucoseLine(in: &plotContext, geometry: geometry)
             drawGlucosePoints(in: &plotContext, geometry: geometry)
             drawInsulinCurves(
                 in: &plotContext,
@@ -594,7 +640,8 @@ private struct GlucoseLiveActivityCanvas: View {
             )
             context.draw(
                 Text(tick.date, format: .dateTime.hour(.defaultDigits(amPM: .narrow)))
-                    .font(xAxisFont),
+                    .font(xAxisFont)
+                    .foregroundStyle(.secondary),
                 at: CGPoint(x: x, y: geometry.rect.maxY + 1),
                 anchor: .top
             )
@@ -609,7 +656,8 @@ private struct GlucoseLiveActivityCanvas: View {
             plotContext.stroke(gridPath, with: .color(.gray.opacity(0.4)), lineWidth: 0.5)
             context.draw(
                 Text(verbatim: String(Int(value.rounded())))
-                    .font(yAxisFont),
+                    .font(yAxisFont)
+                    .foregroundStyle(.secondary),
                 at: CGPoint(x: geometry.rect.maxX + 3, y: y),
                 anchor: .leading
             )
@@ -626,6 +674,26 @@ private struct GlucoseLiveActivityCanvas: View {
             path,
             with: .color(.red),
             style: StrokeStyle(lineWidth: 1, dash: [2])
+        )
+    }
+
+    private func drawGlucoseLine(in context: inout GraphicsContext, geometry: PlotGeometry) {
+        var path = Path()
+        for (index, point) in contentState.graphPoints.enumerated() {
+            let position = CGPoint(
+                x: geometry.xPosition(for: point.timestamp),
+                y: geometry.yPosition(for: scaledValue(point.valueInMgPerDl))
+            )
+            if index == 0 {
+                path.move(to: position)
+            } else {
+                path.addLine(to: position)
+            }
+        }
+        context.stroke(
+            path,
+            with: .color(.blue),
+            style: StrokeStyle(lineWidth: graphLineWidth, lineCap: .round, lineJoin: .round)
         )
     }
     
