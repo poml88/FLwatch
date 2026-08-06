@@ -71,13 +71,16 @@ struct PhoneAppGraphView: View {
         
         let dateSixHoursTenAgo: Date = date.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
         let timeIntervalSince1970: Double = date.timeIntervalSince1970
-        let timeInternvalSixHoursAndTenAgo: Double = timeIntervalSince1970 - 3600 * 6 - 60 * 10
+        let chartStartTimestamp: Double = timeIntervalSince1970 - 3600 * 6 - 60 * 10
         
         let rectXStart: Date = dateSixHoursTenAgo
         let rectXStop: Date = date
         
         //Configuration
-        var chartYScaleMin: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 2.75 : 50 }
+        let sensorSettings = sensorSettingsStore.sensorSettings
+        let glucoseUnit = GlucoseUnit(uom: sensorSettings.uom)
+        let displaysMmol = glucoseUnit == .mmoll
+        let chartYScaleMin: Double = displaysMmol ? 2.75 : 50
         
         
         let maxBG = libreLinkUpHistory.maxBG
@@ -85,22 +88,25 @@ struct PhoneAppGraphView: View {
         let chartXScaleMin: Date = dateSixHoursTenAgo
         let chartXScaleMax: Date = date
         
-        var chartYScaleMax: Double { if maxBG > 350 { sensorSettingsStore.sensorSettings.uom == 0 ? 27 : 500}
-            else if maxBG > 250 { sensorSettingsStore.sensorSettings.uom == 0 ? 21 : 350}
-            else { sensorSettingsStore.sensorSettings.uom == 0 ? 15 : 250}
+        let chartYScaleMax: Double = if maxBG > 350 {
+            displaysMmol ? 27 : 500
+        } else if maxBG > 250 {
+            displaysMmol ? 21 : 350
+        } else {
+            displaysMmol ? 15 : 250
         }
         
         let quarterYAxisIOBCurve: Double = (chartYScaleMax - chartYScaleMin) / 4 + 0.25
-        var chartYScaleMinIOBCurve: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 3 : 50 }
+        let chartYScaleMinIOBCurve: Double = displaysMmol ? 3 : 50
         
-        var yAxisSteps: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 3 : 50 }
+        let yAxisSteps: Double = displaysMmol ? 3 : 50
         
         
-        var chartRectangleYStart: Double { sensorSettingsStore.sensorSettings.uom == 0 ? sensorSettingsStore.sensorSettings.targetLow.toMmolL() : Double(sensorSettingsStore.sensorSettings.targetLow) }
-        var chartRectangleYEnd: Double { sensorSettingsStore.sensorSettings.uom == 0 ? sensorSettingsStore.sensorSettings.targetHigh.toMmolL() : Double(sensorSettingsStore.sensorSettings.targetHigh) }
-        var chartRuleAlarmLL: Double { sensorSettingsStore.sensorSettings.uom == 0 ? sensorSettingsStore.sensorSettings.alarmLow.toMmolL() : Double(sensorSettingsStore.sensorSettings.alarmLow) }
+        let chartRectangleYStart = displaysMmol ? sensorSettings.targetLow.toMmolL() : Double(sensorSettings.targetLow)
+        let chartRectangleYEnd = displaysMmol ? sensorSettings.targetHigh.toMmolL() : Double(sensorSettings.targetHigh)
+        let chartRuleAlarmLL = displaysMmol ? sensorSettings.alarmLow.toMmolL() : Double(sensorSettings.alarmLow)
 
-        let unitString = sensorSettingsStore.sensorSettings.uom == 0 ? "mmol/L" : "mg/dL"
+        let unitString = glucoseUnit.description
         let graphData = libreLinkUpHistory.libreLinkUpGlucose.filter { $0.glucose.date > dateSixHoursTenAgo }
         let minuteGlucose = Array(libreLinkUpHistory.libreLinkUpMinuteGlucose.dropFirst())
         let insulinHistory = InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory
@@ -108,21 +114,26 @@ struct PhoneAppGraphView: View {
         let insulinActivityCurve = currentIOBSingleton.insulinActivityCurve
         let safeMaxIOB = max(currentIOBSingleton.maxIOB, 0.01)
         let safeMaxActivity = max(currentIOBSingleton.maxActivity, 0.01)
+        let iobScale = quarterYAxisIOBCurve / safeMaxIOB
+        let activityScale = quarterYAxisIOBCurve / safeMaxActivity
+        let insulinMarkerShift = displaysMmol ? Double(5).toMmolL() : 5
+        let trailingMarkerThreshold = timeIntervalSince1970 - 30 * 60
+        let leadingMarkerThreshold = timeIntervalSince1970 - 3600 * 6 + 30 * 60
         let glucoseChartPoints: [GlucosePlotPoint] = graphData.compactMap { item in
-            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)
+            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnit: glucoseUnit)
             guard yValue.isFinite else { return nil }
             return GlucosePlotPoint(timestamp: item.glucose.date, value: yValue, color: item.color.color)
         }
 
         let minuteGlucoseChartPoints: [PlotPoint] = minuteGlucose.compactMap { item in
-            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)
+            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnit: glucoseUnit)
             guard yValue.isFinite else { return nil }
             return PlotPoint(timestamp: item.glucose.date, value: yValue)
         }
 
         let iobChartPoints: [PlotPoint] = showIOBCurvePhone
             ? insulinOnBoardCurve.compactMap { item in
-                let yValue = chartYScaleMinIOBCurve + item.value * quarterYAxisIOBCurve / safeMaxIOB
+                let yValue = chartYScaleMinIOBCurve + item.value * iobScale
                 guard yValue.isFinite else { return nil }
                 return PlotPoint(timestamp: item.date, value: yValue)
             }
@@ -130,7 +141,7 @@ struct PhoneAppGraphView: View {
 
         let activityChartPoints: [PlotPoint] = showActivityCurvePhone
             ? insulinActivityCurve.compactMap { item in
-                let yValue = chartYScaleMinIOBCurve + item.value * quarterYAxisIOBCurve / safeMaxActivity
+                let yValue = chartYScaleMinIOBCurve + item.value * activityScale
                 guard yValue.isFinite else { return nil }
                 return PlotPoint(timestamp: item.date, value: yValue)
             }
@@ -138,21 +149,20 @@ struct PhoneAppGraphView: View {
 
         let insulinMarkerPoints: [InsulinMarkerPoint] = showInsulinDeliveryMarksPhone
             ? insulinHistory.compactMap { item in
-                guard item.timeStamp > timeInternvalSixHoursAndTenAgo else { return nil }
+                guard item.timeStamp > chartStartTimestamp else { return nil }
 
+                let markerDate = Date(timeIntervalSince1970: item.timeStamp)
                 let iobValueAtTimestamp = insulinOnBoardCurve.first(where: {
-                    $0.date > Date(timeIntervalSince1970: item.timeStamp)
+                    $0.date > markerDate
                 })?.value ?? 0
 
-                let shiftInYValue = 5
-                let shiftInY = sensorSettingsStore.sensorSettings.uom == 0 ? shiftInYValue.toMmolL() : Double(shiftInYValue)
-                let yValue = chartYScaleMinIOBCurve + shiftInY + iobValueAtTimestamp * quarterYAxisIOBCurve / safeMaxIOB
+                let yValue = chartYScaleMinIOBCurve + insulinMarkerShift + iobValueAtTimestamp * iobScale
                 guard yValue.isFinite else { return nil }
 
                 let alignment: Alignment
-                if item.timeStamp > timeIntervalSince1970 - 30 * 60 {
+                if item.timeStamp > trailingMarkerThreshold {
                     alignment = .trailing
-                } else if item.timeStamp < timeIntervalSince1970 - 3600 * 6 + 30 * 60 {
+                } else if item.timeStamp < leadingMarkerThreshold {
                     alignment = .leading
                 } else {
                     alignment = .center
@@ -160,7 +170,7 @@ struct PhoneAppGraphView: View {
 
                 return InsulinMarkerPoint(
                     id: item.id,
-                    date: Date(timeIntervalSince1970: item.timeStamp),
+                    date: markerDate,
                     value: yValue,
                     insulinUnits: item.insulinUnits,
                     alignment: alignment
@@ -184,7 +194,7 @@ struct PhoneAppGraphView: View {
             .opacity(0.2)
             .foregroundStyle(.green)
             
-            if sensorSettingsStore.sensorSettings.hasDrawableLowAlarm {
+            if sensorSettings.hasDrawableLowAlarm {
                 RuleMark(y: .value("Lower limit", chartRuleAlarmLL))
                     .foregroundStyle(.red)
                     .lineStyle(.init(lineWidth: 1, dash: [2]))
@@ -245,7 +255,7 @@ struct PhoneAppGraphView: View {
                         VStack(alignment: .leading, spacing: 6){
                             Text("\(selectedlibreLinkHistoryPoint.glucose.date.toLocalTime())")
 
-                            Text("\(selectedlibreLinkHistoryPoint.glucose.value.asGlucose(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)) \(unitString)")
+                            Text("\(selectedlibreLinkHistoryPoint.glucose.value.asGlucose(glucoseUnit: glucoseUnit)) \(unitString)")
                                 .font(.title3.bold())
                         }
                         .padding(.horizontal,10)
@@ -351,9 +361,10 @@ struct PhoneAppGraphView: View {
                         .onChanged { value in
                             let currentX = value.location
                             if let currentDate: Date = overlayProxy.value(atX: currentX.x) {
+                                let roundedCurrentDate = currentDate.toRounded(on: 1, .minute)
                                 //                                        let selectedlibreLinkHistoryPoint = libreLinkUpHistory[currentDate.toRounded(on: 1, .minute)]
                                 if let currentItem = libreLinkUpHistory.libreLinkUpGlucose.first(where: { item in
-                                    item.glucose.date.toRounded(on: 1, .minute) == currentDate.toRounded(on: 1, .minute)
+                                    item.glucose.date.toRounded(on: 1, .minute) == roundedCurrentDate
                                 }){
                                     self.selectedlibreLinkHistoryPoint = currentItem
                                 }                                     }
