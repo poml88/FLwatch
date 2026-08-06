@@ -12,17 +12,17 @@
 		<key>FLwatch Watch WidgetExtension.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>3</integer>
-		</dict>
-		<key>FLwatch WidgetExtension.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
 			<integer>2</integer>
 		</dict>
 		<key>FLwatch.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
+		</dict>
+		<key>FLwatchWidgetExtension.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>3</integer>
 		</dict>
 		<key>LibreWristWatchWidgetExtension.xcscheme_^#shared#^_</key>
 		<dict>
@@ -38,6 +38,16 @@
 			<true/>
 		</dict>
 		<key>7BA0AE282C582F63004226FE</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>7BA0AE382C582F64004226FE</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>7BA0AE422C582F64004226FE</key>
 		<dict>
 			<key>primary</key>
 			<true/>
