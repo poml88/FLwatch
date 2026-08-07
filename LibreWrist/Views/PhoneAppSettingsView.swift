@@ -1363,9 +1363,9 @@ struct PhoneAppSettingsView: View {
                     nightscoutUploadEnabled = true
                     // Enabling while the scene is already active does not
                     // produce a lifecycle transition, so explicitly seed the
-                    // server with the complete retained glucose window.
+                    // server with the complete retained glucose and insulin windows.
                     Task { @MainActor in
-                        await NightscoutUploadManager.shared.reconcileRetainedGlucoseAndWait()
+                        await NightscoutUploadManager.shared.reconcileRetainedDataAndWait()
                     }
                 }
                 nightscoutSettingsStatus = .success(

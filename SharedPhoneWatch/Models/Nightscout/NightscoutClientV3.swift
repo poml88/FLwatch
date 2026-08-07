@@ -266,9 +266,14 @@ final class NightscoutClientV3 {
         accessToken: String,
         deadline: Date? = nil
     ) async throws -> NightscoutDeleteResult {
+        // A normal v3 DELETE only sets `isValid=false`; some Nightscout graph
+        // versions continue rendering those treatments. A user deleting a
+        // dose in FLwatch expects it to disappear, so this operation is the
+        // deliberate irreversible form of DELETE.
         let response = try await authorizedRequest(
             method: "DELETE",
             pathSegments: ["api", "v3", "treatments", identifier.uuidString.lowercased()],
+            queryItems: Self.permanentDeleteQueryItems,
             bodyData: nil,
             accessToken: accessToken,
             acceptedStatusCodes: Set(200...299).union([404]),
@@ -388,6 +393,7 @@ final class NightscoutClientV3 {
     private func authorizedRequest(
         method: String,
         pathSegments: [String],
+        queryItems: [URLQueryItem] = [],
         bodyData: Data?,
         accessToken: String,
         acceptedStatusCodes: Set<Int> = Set(200...299),
@@ -399,7 +405,10 @@ final class NightscoutClientV3 {
                 forceRefresh: attempt == 1,
                 deadline: deadline
             )
-            var request = URLRequest(url: try endpointURL(pathSegments: pathSegments))
+            var request = URLRequest(url: try endpointURL(
+                pathSegments: pathSegments,
+                queryItems: queryItems
+            ))
             request.httpMethod = method
             request.httpBody = bodyData
             request.setValue("Bearer \(auth.jwt)", forHTTPHeaderField: "Authorization")
@@ -429,14 +438,22 @@ final class NightscoutClientV3 {
         )
     }
 
-    private func endpointURL(pathSegments: [String]) throws -> URL {
+    func endpointURL(
+        pathSegments: [String],
+        queryItems: [URLQueryItem] = []
+    ) throws -> URL {
         guard var components = URLComponents(url: baseURL.url, resolvingAgainstBaseURL: false) else {
             throw NightscoutClientError.invalidBaseURL
         }
         components.percentEncodedPath = "/" + pathSegments.map(Self.percentEncodedPathSegment).joined(separator: "/")
+        components.queryItems = queryItems.isEmpty ? nil : queryItems
         guard let url = components.url else { throw NightscoutClientError.invalidBaseURL }
         return url
     }
+
+    static let permanentDeleteQueryItems = [
+        URLQueryItem(name: "permanent", value: "true")
+    ]
 
     private static func applyTimeout(to request: inout URLRequest, deadline: Date?) throws {
         if let deadline {

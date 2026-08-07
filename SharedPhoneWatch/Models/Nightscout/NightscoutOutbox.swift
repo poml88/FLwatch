@@ -95,6 +95,14 @@ struct NightscoutInsulinTombstone: Codable, Equatable, Sendable {
     let requestedAt: Date
 }
 
+/// A resolved PUT route is retained for as long as the dose can still be
+/// removed locally. Besides routing later deletes to the correct server, the
+/// confirmed payload prevents lifecycle catch-ups from re-PUTing the dose.
+struct NightscoutTreatmentRouteRecord: Codable, Equatable, Sendable {
+    let confirmedPayload: NightscoutTreatmentUpload
+    let confirmedAt: Date
+}
+
 /// The latest local intent for one treatment. `uploadAttempted` distinguishes
 /// a purely local pending PUT—which a delete can cancel—from a treatment that
 /// may already exist remotely and therefore requires a durable DELETE.
@@ -205,19 +213,21 @@ final class NightscoutOutbox {
     private struct NamespaceState: Codable, Equatable {
         var glucoseFingerprints: [String: NightscoutGlucoseFingerprintRecord] = [:]
         var insulinItems: [String: NightscoutInsulinOutboxItem] = [:]
+        var treatmentRoutes: [String: NightscoutTreatmentRouteRecord] = [:]
         var minuteCoverage: MinuteCoverageState?
 
         private enum CodingKeys: String, CodingKey {
             case glucoseFingerprints
             case insulinItems
+            case treatmentRoutes
             case minuteCoverage
         }
 
         init() {}
 
         init(from decoder: Decoder) throws {
-            // Schema 1 has no minuteCoverage key. decodeIfPresent keeps that
-            // deployed snapshot readable instead of bricking the whole outbox.
+            // Schema 1 has no minuteCoverage and schemas 1–2 have no treatment
+            // routes. Optional decoding keeps every deployed snapshot readable.
             let container = try decoder.container(keyedBy: CodingKeys.self)
             glucoseFingerprints = try container.decodeIfPresent(
                 [String: NightscoutGlucoseFingerprintRecord].self,
@@ -226,6 +236,10 @@ final class NightscoutOutbox {
             insulinItems = try container.decodeIfPresent(
                 [String: NightscoutInsulinOutboxItem].self,
                 forKey: .insulinItems
+            ) ?? [:]
+            treatmentRoutes = try container.decodeIfPresent(
+                [String: NightscoutTreatmentRouteRecord].self,
+                forKey: .treatmentRoutes
             ) ?? [:]
             minuteCoverage = try container.decodeIfPresent(
                 MinuteCoverageState.self,
@@ -241,14 +255,39 @@ final class NightscoutOutbox {
     }
 
     private struct Snapshot: Codable {
-        var schemaVersion: Int = 2
+        var schemaVersion: Int = 3
         var namespaces: [String: NamespaceState] = [:]
+
+        private enum CodingKeys: String, CodingKey {
+            case schemaVersion
+            case namespaces
+        }
+
+        init() {}
+
+        init(from decoder: Decoder) throws {
+            // Defaults here are deliberate: every future top-level field must
+            // remain optional on decode so an older deployed snapshot cannot
+            // make the complete outbox unreadable.
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            schemaVersion = try container.decodeIfPresent(
+                Int.self,
+                forKey: .schemaVersion
+            ) ?? 1
+            namespaces = try container.decodeIfPresent(
+                [String: NamespaceState].self,
+                forKey: .namespaces
+            ) ?? [:]
+        }
     }
 
     // Coverage is the long-lived minute dedup record. Fingerprints only need
     // to span the retained glucose window for historical fills/value changes.
     private static let glucoseFingerprintRetention: TimeInterval = 13 * 60 * 60
     private static let maximumGlucoseFingerprintsPerNamespace = 2_000
+    // Local insulin history is retained for 12 hours. The extra hour avoids a
+    // boundary race between history pruning and a user-initiated deletion.
+    private static let treatmentRouteRetention: TimeInterval = 13 * 60 * 60
 
     private let fileManager: FileManager
     private let storeURL: URL
@@ -284,7 +323,7 @@ final class NightscoutOutbox {
             using: decoder,
             fileManager: fileManager
         ) ?? Snapshot()
-        loadedSnapshot.schemaVersion = 2
+        loadedSnapshot.schemaVersion = 3
         self.snapshot = loadedSnapshot
     }
 
@@ -345,30 +384,49 @@ final class NightscoutOutbox {
     }
 
     /// Replaces the durable desired state with a new, unattempted PUT. An
-    /// identical existing payload is already the same intent and is left
-    /// untouched so its revision and upload-attempt knowledge survive.
+    /// identical pending or confirmed payload is already the same intent and
+    /// is left untouched. The array overload lets lifecycle seeding persist at
+    /// most once even when several retained doses are new to this namespace.
     func recordPresent(
         _ payload: NightscoutTreatmentUpload,
         namespace: NightscoutBaseURL,
         now: Date = Date()
     ) throws {
-        let key = Self.key(for: payload.identifier)
-        if let existing = snapshot.namespaces[namespace.absoluteString]?.insulinItems[key],
-           case .present(let existingPayload, _) = existing.desiredState,
-           existingPayload == payload {
-            return
-        }
+        try recordPresent([payload], namespace: namespace, now: now)
+    }
 
+    func recordPresent(
+        _ payloads: [NightscoutTreatmentUpload],
+        namespace: NightscoutBaseURL,
+        now: Date = Date()
+    ) throws {
         let previousSnapshot = snapshot
         var state = namespaceState(for: namespace)
-        state.insulinItems[key] = NightscoutInsulinOutboxItem(
-            id: payload.identifier,
-            revision: UUID(),
-            desiredState: .present(payload: payload, uploadAttempted: false),
-            updatedAt: now
+        Self.pruneTreatmentRoutes(in: &state, now: now)
+        let oldestManageableEventDate = now.addingTimeInterval(
+            -InsulinDeliveryHistorySingleton.historyRetentionInterval
         )
-        snapshot.namespaces[namespace.absoluteString] = state
-        try persistOrRollBack(to: previousSnapshot)
+        // A dose already outside local history could be uploaded but never
+        // deleted later because FLwatch no longer exposes it to the user.
+        for payload in payloads where payload.eventDate >= oldestManageableEventDate {
+            let key = Self.key(for: payload.identifier)
+            if let existing = state.insulinItems[key],
+               case .present(let existingPayload, _) = existing.desiredState,
+               existingPayload == payload {
+                continue
+            }
+            if state.insulinItems[key] == nil,
+               state.treatmentRoutes[key]?.confirmedPayload == payload {
+                continue
+            }
+            state.insulinItems[key] = NightscoutInsulinOutboxItem(
+                id: payload.identifier,
+                revision: UUID(),
+                desiredState: .present(payload: payload, uploadAttempted: false),
+                updatedAt: now
+            )
+        }
+        try persist(state, for: namespace, replacing: previousSnapshot)
     }
 
     /// Cancels an unstarted local PUT without producing network work. Once a
@@ -381,26 +439,29 @@ final class NightscoutOutbox {
         now: Date = Date()
     ) throws -> NightscoutAbsentRecordingResult {
         let key = Self.key(for: identifier)
-        let existing = snapshot.namespaces[namespace.absoluteString]?.insulinItems[key]
+        let previousSnapshot = snapshot
+        var state = namespaceState(for: namespace)
+        Self.pruneTreatmentRoutes(in: &state, now: now)
+        let existing = state.insulinItems[key]
 
         if let existing {
             switch existing.desiredState {
-            case .present(_, let uploadAttempted) where !uploadAttempted:
-                let previousSnapshot = snapshot
-                var state = namespaceState(for: namespace)
+            case .present(_, let uploadAttempted)
+                where !uploadAttempted && state.treatmentRoutes[key] == nil:
                 state.insulinItems.removeValue(forKey: key)
-                snapshot.namespaces[namespace.absoluteString] = state
-                try persistOrRollBack(to: previousSnapshot)
+                try persist(state, for: namespace, replacing: previousSnapshot)
                 return .cancelledUnstartedUpload
             case .absent:
+                try persist(state, for: namespace, replacing: previousSnapshot)
                 return .unchanged
             case .present:
                 break
             }
+        } else if state.treatmentRoutes[key] == nil {
+            try persist(state, for: namespace, replacing: previousSnapshot)
+            return .unchanged
         }
 
-        let previousSnapshot = snapshot
-        var state = namespaceState(for: namespace)
         state.insulinItems[key] = NightscoutInsulinOutboxItem(
             id: identifier,
             revision: UUID(),
@@ -409,9 +470,43 @@ final class NightscoutOutbox {
             ),
             updatedAt: now
         )
-        snapshot.namespaces[namespace.absoluteString] = state
-        try persistOrRollBack(to: previousSnapshot)
+        try persist(state, for: namespace, replacing: previousSnapshot)
         return .queuedDeletion
+    }
+
+    /// Every namespace with a confirmed route or unresolved desired state must
+    /// observe a later deletion. Inactive namespaces remain durable and drain
+    /// if the user switches back to that server.
+    func insulinNamespaces(
+        for identifier: UUID,
+        now: Date = Date()
+    ) -> [NightscoutBaseURL] {
+        let key = Self.key(for: identifier)
+        let cutoff = now.addingTimeInterval(-Self.treatmentRouteRetention)
+        return snapshot.namespaces.compactMap { namespaceString, state in
+            let hasPendingState = state.insulinItems[key] != nil
+            let hasRetainedRoute = state.treatmentRoutes[key].map {
+                $0.confirmedPayload.eventDate >= cutoff
+            } ?? false
+            guard hasPendingState || hasRetainedRoute else { return nil }
+            return try? NightscoutBaseURL(normalizing: namespaceString)
+        }
+        .sorted { $0.absoluteString < $1.absoluteString }
+    }
+
+    func treatmentRoute(
+        identifier: UUID,
+        namespace: NightscoutBaseURL,
+        now: Date = Date()
+    ) -> NightscoutTreatmentRouteRecord? {
+        guard let route = snapshot.namespaces[namespace.absoluteString]?
+            .treatmentRoutes[Self.key(for: identifier)],
+              route.confirmedPayload.eventDate >= now.addingTimeInterval(
+                -Self.treatmentRouteRetention
+              ) else {
+            return nil
+        }
+        return route
     }
 
     func insulinItem(
@@ -466,18 +561,29 @@ final class NightscoutOutbox {
     func resolveInsulinItem(
         identifier: UUID,
         expectedRevision: UUID,
-        namespace: NightscoutBaseURL
+        namespace: NightscoutBaseURL,
+        now: Date = Date()
     ) throws -> Bool {
         let key = Self.key(for: identifier)
-        guard snapshot.namespaces[namespace.absoluteString]?.insulinItems[key]?.revision == expectedRevision else {
+        guard let resolvedItem = snapshot.namespaces[namespace.absoluteString]?.insulinItems[key],
+              resolvedItem.revision == expectedRevision else {
             return false
         }
 
         let previousSnapshot = snapshot
         var state = namespaceState(for: namespace)
+        switch resolvedItem.desiredState {
+        case .present(let payload, _):
+            state.treatmentRoutes[key] = NightscoutTreatmentRouteRecord(
+                confirmedPayload: payload,
+                confirmedAt: now
+            )
+        case .absent:
+            state.treatmentRoutes.removeValue(forKey: key)
+        }
         state.insulinItems.removeValue(forKey: key)
-        snapshot.namespaces[namespace.absoluteString] = state
-        try persistOrRollBack(to: previousSnapshot)
+        Self.pruneTreatmentRoutes(in: &state, now: now)
+        try persist(state, for: namespace, replacing: previousSnapshot)
         return true
     }
 
@@ -497,6 +603,16 @@ final class NightscoutOutbox {
 
     private func namespaceState(for namespace: NightscoutBaseURL) -> NamespaceState {
         snapshot.namespaces[namespace.absoluteString] ?? NamespaceState()
+    }
+
+    private func persist(
+        _ state: NamespaceState,
+        for namespace: NightscoutBaseURL,
+        replacing previousSnapshot: Snapshot
+    ) throws {
+        guard state != namespaceState(for: namespace) else { return }
+        snapshot.namespaces[namespace.absoluteString] = state
+        try persistOrRollBack(to: previousSnapshot)
     }
 
     private func persistOrRollBack(to previousSnapshot: Snapshot) throws {
@@ -532,6 +648,13 @@ final class NightscoutOutbox {
             .map(\.key)
         for key in oldestKeys {
             state.glucoseFingerprints.removeValue(forKey: key)
+        }
+    }
+
+    private static func pruneTreatmentRoutes(in state: inout NamespaceState, now: Date) {
+        let cutoff = now.addingTimeInterval(-treatmentRouteRetention)
+        state.treatmentRoutes = state.treatmentRoutes.filter { _, route in
+            route.confirmedPayload.eventDate >= cutoff
         }
     }
 }

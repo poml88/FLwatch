@@ -44,7 +44,7 @@ struct ActivityCurveDataPoint: Codable, Identifiable {
     let value: Double
 }
 
-struct InsulinDelivery: Codable, Identifiable {
+struct InsulinDelivery: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     let timeStamp: Double
     let insulinUnits: Double
@@ -77,7 +77,9 @@ struct InsulinTypePresets: Codable, Identifiable {
 @MainActor @Observable class InsulinDeliveryHistorySingleton {
     
     var insulinDeliveryHistory: [InsulinDelivery] = []
-    private nonisolated static let historyRetentionInterval: Double = 12 * 60 * 60
+    /// Local history is the period during which a dose remains user-manageable.
+    /// Nightscout uses the same boundary when accepting new treatment routes.
+    nonisolated static let historyRetentionInterval: Double = 12 * 60 * 60
     
     static let shared: InsulinDeliveryHistorySingleton = {
         // nothing at the moment so can be used as well: static let shared: InsulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton()
@@ -128,6 +130,10 @@ struct InsulinTypePresets: Codable, Identifiable {
     nonisolated static func persistedHistorySnapshot() -> [InsulinDelivery] {
         canonicalized(UserDefaults.group.insulinDeliveryHistory ?? [])
     }
+
+    nonisolated static func retainedPersistedHistorySnapshot() -> [InsulinDelivery] {
+        retainedHistory(from: UserDefaults.group.insulinDeliveryHistory ?? [])
+    }
     
     func save() {
         mergePersistedHistoryIntoMemory()
@@ -143,6 +149,8 @@ struct InsulinTypePresets: Codable, Identifiable {
         if retainedHistory.count != canonicalizedHistory.count {
             UserDefaults.group.insulinDeliveryHistory = retainedHistory
         }
+        // Retention pruning is not user intent. Never route removals from this
+        // method to Nightscout; routing records age independently instead.
     }
     
     func saveAndUpdateIOB() {
@@ -161,6 +169,7 @@ struct InsulinTypePresets: Codable, Identifiable {
     ) -> InsulinDelivery {
         mergePersistedHistoryIntoMemory()
         if let existingDelivery = insulinDeliveryHistory.first(where: { $0.id == id }) {
+            NightscoutUploadManager.shared.recordInsulinPresent(existingDelivery)
             return existingDelivery
         }
 
@@ -172,6 +181,7 @@ struct InsulinTypePresets: Codable, Identifiable {
         )
         insulinDeliveryHistory.append(delivery)
         saveAndUpdateIOB()
+        NightscoutUploadManager.shared.recordInsulinPresent(delivery)
         return delivery
     }
 
@@ -207,37 +217,67 @@ struct InsulinTypePresets: Codable, Identifiable {
     }
 
     func replaceHistory(_ history: [InsulinDelivery]) {
-        insulinDeliveryHistory = Self.canonicalized(history)
+        let previousHistory = historySnapshot()
+        let nextHistory = Self.canonicalized(history)
+        insulinDeliveryHistory = nextHistory
         persistCurrentHistory()
+        recordNightscoutChanges(previous: previousHistory, current: nextHistory)
     }
 
     @discardableResult
     func removeDelivery(id: UUID) -> Bool {
         mergePersistedHistoryIntoMemory()
-        let originalCount = insulinDeliveryHistory.count
+        let removedDelivery = insulinDeliveryHistory.first { $0.id == id }
         insulinDeliveryHistory.removeAll { $0.id == id }
-        let didRemove = insulinDeliveryHistory.count != originalCount
-        if didRemove {
+        if let removedDelivery {
             persistCurrentHistory()
+            NightscoutUploadManager.shared.recordInsulinAbsent(identifier: removedDelivery.id)
+            return true
         }
-        return didRemove
+        return false
     }
 
     @discardableResult
     func removeDeliveries(timestamp: Double) -> Bool {
         mergePersistedHistoryIntoMemory()
-        let originalCount = insulinDeliveryHistory.count
+        let removedDeliveries = insulinDeliveryHistory.filter { $0.timeStamp == timestamp }
         insulinDeliveryHistory.removeAll { $0.timeStamp == timestamp }
-        let didRemove = insulinDeliveryHistory.count != originalCount
-        if didRemove {
+        if !removedDeliveries.isEmpty {
             persistCurrentHistory()
+            for delivery in removedDeliveries {
+                NightscoutUploadManager.shared.recordInsulinAbsent(identifier: delivery.id)
+            }
+            return true
         }
-        return didRemove
+        return false
     }
 
     func clearHistory() {
+        mergePersistedHistoryIntoMemory()
+        let removedDeliveries = historySnapshot()
         insulinDeliveryHistory = []
         persistCurrentHistory()
+        for delivery in removedDeliveries {
+            NightscoutUploadManager.shared.recordInsulinAbsent(identifier: delivery.id)
+        }
+    }
+
+    private func recordNightscoutChanges(
+        previous: [InsulinDelivery],
+        current: [InsulinDelivery]
+    ) {
+        let previousByID = Dictionary(uniqueKeysWithValues: previous.map { ($0.id, $0) })
+        let currentByID = Dictionary(uniqueKeysWithValues: current.map { ($0.id, $0) })
+        for delivery in current where previousByID[delivery.id] != delivery {
+            NightscoutUploadManager.shared.recordInsulinPresent(delivery)
+        }
+        // `replaceHistory` represents user edits only inside the retained
+        // window. An omitted older dose may have disappeared through retention
+        // pruning and must not be interpreted as deletion intent.
+        let retainedPrevious = Self.retainedHistory(from: previous)
+        for delivery in retainedPrevious where currentByID[delivery.id] == nil {
+            NightscoutUploadManager.shared.recordInsulinAbsent(identifier: delivery.id)
+        }
     }
 }
 

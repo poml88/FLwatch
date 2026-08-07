@@ -231,9 +231,10 @@ final class NightscoutUploadManager {
         ))
     }
 
-    /// Awaited lifecycle catch-up for the complete retained glucose window.
-    /// Insulin desired-state draining is added with the insulin integration.
-    func reconcileRetainedGlucoseAndWait(maximumDuration: TimeInterval? = nil) async {
+    /// Seeds the complete retained glucose and insulin windows, then awaits the
+    /// serialized network pass. Insulin seeding is provider-independent; only
+    /// network execution is held until a direct-BLE provider is active.
+    func reconcileRetainedDataAndWait(maximumDuration: TimeInterval? = nil) async {
         guard NightscoutExecutionContext.isMainAppProcess else { return }
         let history = LibreLinkUpHistory.shared
         let sensorSerial = SharedData.libre3Serial
@@ -254,12 +255,30 @@ final class NightscoutUploadManager {
 
         let deadline = maximumDuration.map { Date().addingTimeInterval(max(0, $0)) }
         var work = PendingWork(deadline: deadline)
-        if automaticNetworkContext() != nil, !sensorSerial.isEmpty {
+        if let namespace = recordingNamespace(),
+           let activeOutbox = try? outbox() {
+            let retainedTreatments = InsulinDeliveryHistorySingleton
+                .retainedPersistedHistorySnapshot()
+                .map { NightscoutTreatmentUpload(delivery: $0) }
+            do {
+                try activeOutbox.recordPresent(
+                    retainedTreatments,
+                    namespace: namespace
+                )
+            } catch {
+                Self.logger.error("Failed to seed retained insulin deliveries into the Nightscout outbox.")
+            }
+        }
+        let canRunNetwork = automaticNetworkContext() != nil
+        if canRunNetwork, !sensorSerial.isEmpty {
             work.glucoseUploads = glucoseUploads(
                 minuteCandidates: minuteCandidates,
                 historicalCandidates: historicalCandidates
             )
             work.glucoseSensorSerial = sensorSerial
+        }
+        if canRunNetwork {
+            work.drainInsulin = true
         }
         guard !work.isEmpty else { return }
         let completionID = UUID()
@@ -290,16 +309,22 @@ final class NightscoutUploadManager {
     /// corresponding PUT has never started, the pending upload is cancelled
     /// without scheduling unnecessary network work.
     func recordInsulinAbsent(identifier: UUID) {
-        guard let namespace = recordingNamespace(),
+        guard NightscoutExecutionContext.isMainAppProcess,
+              SharedData.nightscoutUploadEnabled,
               let outbox = try? outbox() else { return }
-        let result: NightscoutAbsentRecordingResult
-        do {
-            result = try outbox.recordAbsent(identifier: identifier, namespace: namespace)
-        } catch {
-            Self.logger.error("Failed to persist a Nightscout insulin deletion state.")
-            return
+        var queuedDeletion = false
+        for namespace in outbox.insulinNamespaces(for: identifier) {
+            do {
+                let result = try outbox.recordAbsent(
+                    identifier: identifier,
+                    namespace: namespace
+                )
+                queuedDeletion = queuedDeletion || result == .queuedDeletion
+            } catch {
+                Self.logger.error("Failed to persist a Nightscout insulin deletion state.")
+            }
         }
-        guard result == .queuedDeletion, automaticNetworkContext() != nil else { return }
+        guard queuedDeletion, automaticNetworkContext() != nil else { return }
         enqueue(PendingWork(drainInsulin: true))
     }
 

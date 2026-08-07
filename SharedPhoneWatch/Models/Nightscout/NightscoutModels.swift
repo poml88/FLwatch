@@ -132,15 +132,22 @@ struct NightscoutTreatmentBody: Codable, Equatable, Sendable {
 
 struct NightscoutTreatmentUpload: Codable, Equatable, Sendable {
     let identifier: UUID
-    let eventDate: Date
     let body: NightscoutTreatmentBody
 
+    /// Derived from the server-visible millisecond timestamp so equality stays
+    /// stable across outbox persistence. Older snapshots may contain a stored
+    /// `eventDate`; synthesized decoding safely ignores that extra key.
+    var eventDate: Date {
+        Date(timeIntervalSince1970: Double(body.date) / 1_000)
+    }
+
     init(delivery: InsulinDelivery) {
-        let eventDate = Date(timeIntervalSince1970: delivery.timeStamp)
+        let sourceDate = Date(timeIntervalSince1970: delivery.timeStamp)
+        let epochMilliseconds = NightscoutModelFactory.epochMilliseconds(for: sourceDate)
+        let eventDate = Date(timeIntervalSince1970: Double(epochMilliseconds) / 1_000)
         self.identifier = delivery.id
-        self.eventDate = eventDate
         self.body = NightscoutTreatmentBody(
-            date: NightscoutModelFactory.epochMilliseconds(for: eventDate),
+            date: epochMilliseconds,
             utcOffset: NightscoutModelFactory.utcOffsetMinutes(for: eventDate),
             app: NightscoutModelFactory.appName,
             eventType: "Correction Bolus",

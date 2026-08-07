@@ -202,6 +202,357 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
+    func testNightscoutOutboxDecodesPreTreatmentRoutingSnapshot() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let storeURL = directory.appendingPathComponent("nightscout-outbox.json")
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let schemaTwoSnapshot = Data(
+            #"{"schemaVersion":2,"namespaces":{"https://example.com":{"glucoseFingerprints":{},"insulinItems":{},"minuteCoverage":{"sensorSerial":"sensor","coveredMinutes":[{"lowerBound":1,"upperBound":2}]}}}}"#.utf8
+        )
+        try schemaTwoSnapshot.write(to: storeURL, options: .atomic)
+
+        let outbox = try NightscoutOutbox(fileManager: .default, storeURL: storeURL)
+        let namespace = try NightscoutBaseURL(normalizing: "https://example.com")
+
+        XCTAssertEqual(
+            outbox.minuteCoverage(namespace: namespace, sensorSerial: "sensor")
+                .coveredMinutes,
+            [1...2]
+        )
+    }
+
+    @MainActor
+    func testNightscoutTreatmentDeleteURLRequestsPermanentRemoval() throws {
+        let identifier = try XCTUnwrap(
+            UUID(uuidString: "11111111-2222-3333-4444-555555555555")
+        )
+        let client = try NightscoutClientV3(baseURLString: "https://example.com")
+
+        let url = try client.endpointURL(
+            pathSegments: [
+                "api",
+                "v3",
+                "treatments",
+                identifier.uuidString.lowercased()
+            ],
+            queryItems: NightscoutClientV3.permanentDeleteQueryItems
+        )
+
+        XCTAssertEqual(
+            url.absoluteString,
+            "https://example.com/api/v3/treatments/11111111-2222-3333-4444-555555555555?permanent=true"
+        )
+    }
+
+    func testNightscoutDeleteBeforeTreatmentPUTCancelsPendingUpload() throws {
+        let fixture = try makeNightscoutOutboxFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let upload = nightscoutTreatment(identifier: UUID(), eventDate: Date())
+
+        try fixture.outbox.recordPresent(upload, namespace: fixture.namespace)
+        let result = try fixture.outbox.recordAbsent(
+            identifier: upload.identifier,
+            namespace: fixture.namespace
+        )
+
+        XCTAssertEqual(result, .cancelledUnstartedUpload)
+        XCTAssertNil(fixture.outbox.insulinItem(
+            identifier: upload.identifier,
+            namespace: fixture.namespace
+        ))
+        XCTAssertTrue(fixture.outbox.insulinNamespaces(for: upload.identifier).isEmpty)
+    }
+
+    func testNightscoutPresentRespectsLocalHistoryRetentionBoundary() throws {
+        let fixture = try makeNightscoutOutboxFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let now = Date(timeIntervalSince1970: 1_786_115_812)
+        let retention = InsulinDeliveryHistorySingleton.historyRetentionInterval
+        let expired = nightscoutTreatment(
+            identifier: UUID(),
+            eventDate: now.addingTimeInterval(-retention - 1)
+        )
+        let retained = nightscoutTreatment(
+            identifier: UUID(),
+            eventDate: now.addingTimeInterval(-retention + 1)
+        )
+
+        try fixture.outbox.recordPresent(
+            expired,
+            namespace: fixture.namespace,
+            now: now
+        )
+
+        XCTAssertNil(fixture.outbox.insulinItem(
+            identifier: expired.identifier,
+            namespace: fixture.namespace
+        ))
+        XCTAssertEqual(fixture.outbox.persistenceWriteCount, 0)
+
+        try fixture.outbox.recordPresent(
+            retained,
+            namespace: fixture.namespace,
+            now: now
+        )
+
+        XCTAssertNotNil(fixture.outbox.insulinItem(
+            identifier: retained.identifier,
+            namespace: fixture.namespace
+        ))
+        XCTAssertEqual(fixture.outbox.persistenceWriteCount, 1)
+    }
+
+    func testNightscoutDeleteAfterTreatmentPUTStartsKeepsTombstone() throws {
+        let fixture = try makeNightscoutOutboxFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let upload = nightscoutTreatment(identifier: UUID(), eventDate: Date())
+        try fixture.outbox.recordPresent(upload, namespace: fixture.namespace)
+        let pending = try XCTUnwrap(fixture.outbox.insulinItem(
+            identifier: upload.identifier,
+            namespace: fixture.namespace
+        ))
+        _ = try fixture.outbox.markUploadAttemptStarted(
+            identifier: upload.identifier,
+            revision: pending.revision,
+            namespace: fixture.namespace
+        )
+
+        XCTAssertEqual(
+            try fixture.outbox.recordAbsent(
+                identifier: upload.identifier,
+                namespace: fixture.namespace
+            ),
+            .queuedDeletion
+        )
+        let tombstone = try XCTUnwrap(fixture.outbox.insulinItem(
+            identifier: upload.identifier,
+            namespace: fixture.namespace
+        ))
+        guard case .absent = tombstone.desiredState else {
+            return XCTFail("Expected a durable deletion tombstone")
+        }
+        XCTAssertFalse(try fixture.outbox.resolveInsulinItem(
+            identifier: upload.identifier,
+            expectedRevision: pending.revision,
+            namespace: fixture.namespace
+        ))
+        XCTAssertEqual(
+            fixture.outbox.insulinItem(
+                identifier: upload.identifier,
+                namespace: fixture.namespace
+            )?.revision,
+            tombstone.revision
+        )
+    }
+
+    func testNightscoutResolvedTreatmentRouteMakesCatchUpNoOp() throws {
+        let fixture = try makeNightscoutOutboxFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        // Exercise precision that ISO-8601 persistence cannot represent so the
+        // upload must already be canonical before its outbox round trip.
+        let now = Date(timeIntervalSince1970: 1_786_115_812.683_742)
+        let upload = nightscoutTreatment(identifier: UUID(), eventDate: now)
+        try fixture.outbox.recordPresent(upload, namespace: fixture.namespace, now: now)
+        let pending = try XCTUnwrap(fixture.outbox.insulinItem(
+            identifier: upload.identifier,
+            namespace: fixture.namespace
+        ))
+
+        XCTAssertTrue(try fixture.outbox.resolveInsulinItem(
+            identifier: upload.identifier,
+            expectedRevision: pending.revision,
+            namespace: fixture.namespace,
+            now: now
+        ))
+        XCTAssertEqual(
+            fixture.outbox.treatmentRoute(
+                identifier: upload.identifier,
+                namespace: fixture.namespace,
+                now: now
+            )?.confirmedPayload,
+            upload
+        )
+        let reloadedOutbox = try NightscoutOutbox(
+            fileManager: .default,
+            storeURL: fixture.directory.appendingPathComponent("nightscout-outbox.json")
+        )
+        XCTAssertEqual(
+            reloadedOutbox.treatmentRoute(
+                identifier: upload.identifier,
+                namespace: fixture.namespace,
+                now: now
+            )?.confirmedPayload,
+            upload
+        )
+
+        try reloadedOutbox.recordPresent(
+            upload,
+            namespace: fixture.namespace,
+            now: now.addingTimeInterval(60)
+        )
+
+        XCTAssertNil(reloadedOutbox.insulinItem(
+            identifier: upload.identifier,
+            namespace: fixture.namespace
+        ))
+        XCTAssertEqual(reloadedOutbox.persistenceWriteCount, 0)
+    }
+
+    func testNightscoutResolvedDeleteRemovesTreatmentRoute() throws {
+        let fixture = try makeNightscoutOutboxFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let now = Date()
+        let upload = nightscoutTreatment(identifier: UUID(), eventDate: now)
+        try resolveNightscoutTreatment(
+            upload,
+            in: fixture.outbox,
+            namespace: fixture.namespace,
+            now: now
+        )
+        XCTAssertEqual(
+            try fixture.outbox.recordAbsent(
+                identifier: upload.identifier,
+                namespace: fixture.namespace,
+                now: now
+            ),
+            .queuedDeletion
+        )
+        let deletion = try XCTUnwrap(fixture.outbox.insulinItem(
+            identifier: upload.identifier,
+            namespace: fixture.namespace
+        ))
+
+        XCTAssertTrue(try fixture.outbox.resolveInsulinItem(
+            identifier: upload.identifier,
+            expectedRevision: deletion.revision,
+            namespace: fixture.namespace,
+            now: now
+        ))
+        XCTAssertNil(fixture.outbox.treatmentRoute(
+            identifier: upload.identifier,
+            namespace: fixture.namespace,
+            now: now
+        ))
+    }
+
+    func testNightscoutTreatmentRoutesRemainURLNamespaced() throws {
+        let fixture = try makeNightscoutOutboxFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let otherNamespace = try NightscoutBaseURL(normalizing: "https://other.example.com")
+        let now = Date()
+        let upload = nightscoutTreatment(identifier: UUID(), eventDate: now)
+        try resolveNightscoutTreatment(
+            upload,
+            in: fixture.outbox,
+            namespace: fixture.namespace,
+            now: now
+        )
+        try resolveNightscoutTreatment(
+            upload,
+            in: fixture.outbox,
+            namespace: otherNamespace,
+            now: now
+        )
+
+        XCTAssertEqual(
+            fixture.outbox.insulinNamespaces(for: upload.identifier, now: now)
+                .map(\.absoluteString),
+            [fixture.namespace.absoluteString, otherNamespace.absoluteString].sorted()
+        )
+    }
+
+    func testNightscoutTreatmentRouteExpiresButTombstoneDoesNot() throws {
+        let fixture = try makeNightscoutOutboxFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let now = Date()
+        let upload = nightscoutTreatment(identifier: UUID(), eventDate: now)
+        try resolveNightscoutTreatment(
+            upload,
+            in: fixture.outbox,
+            namespace: fixture.namespace,
+            now: now
+        )
+        XCTAssertEqual(
+            try fixture.outbox.recordAbsent(
+                identifier: upload.identifier,
+                namespace: fixture.namespace,
+                now: now.addingTimeInterval(12 * 60 * 60)
+            ),
+            .queuedDeletion
+        )
+        let later = now.addingTimeInterval(14 * 60 * 60)
+
+        XCTAssertNil(fixture.outbox.treatmentRoute(
+            identifier: upload.identifier,
+            namespace: fixture.namespace,
+            now: later
+        ))
+        XCTAssertNotNil(fixture.outbox.insulinItem(
+            identifier: upload.identifier,
+            namespace: fixture.namespace
+        ))
+        XCTAssertEqual(
+            fixture.outbox.insulinNamespaces(for: upload.identifier, now: later)
+                .map(\.absoluteString),
+            [fixture.namespace.absoluteString]
+        )
+    }
+
+    private func makeNightscoutOutboxFixture() throws -> (
+        outbox: NightscoutOutbox,
+        namespace: NightscoutBaseURL,
+        directory: URL
+    ) {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let outbox = try NightscoutOutbox(
+            fileManager: .default,
+            storeURL: directory.appendingPathComponent("nightscout-outbox.json")
+        )
+        return (
+            outbox,
+            try NightscoutBaseURL(normalizing: "https://example.com"),
+            directory
+        )
+    }
+
+    private func nightscoutTreatment(
+        identifier: UUID,
+        eventDate: Date,
+        units: Double = 2.5
+    ) -> NightscoutTreatmentUpload {
+        NightscoutTreatmentUpload(delivery: InsulinDelivery(
+            id: identifier,
+            timestamp: eventDate.timeIntervalSince1970,
+            insulinUnits: units,
+            insulinType: InsulinType.rapidActing.rawValue
+        ))
+    }
+
+    private func resolveNightscoutTreatment(
+        _ upload: NightscoutTreatmentUpload,
+        in outbox: NightscoutOutbox,
+        namespace: NightscoutBaseURL,
+        now: Date
+    ) throws {
+        try outbox.recordPresent(upload, namespace: namespace, now: now)
+        let pending = try XCTUnwrap(outbox.insulinItem(
+            identifier: upload.identifier,
+            namespace: namespace
+        ))
+        XCTAssertTrue(try outbox.resolveInsulinItem(
+            identifier: upload.identifier,
+            expectedRevision: pending.revision,
+            namespace: namespace,
+            now: now
+        ))
+    }
+
     func testLibreLinkUpParsesFactoryTimestampAsUTC() throws {
         let parsedDate = try XCTUnwrap(
             LibreLinkUp.parseMeasurementDate(

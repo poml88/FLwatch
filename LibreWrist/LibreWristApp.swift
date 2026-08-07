@@ -117,7 +117,7 @@ struct LibreWristApp: App {
 
     private func scheduleLifecycleCatchUps() {
         Task {
-            await NightscoutUploadManager.shared.reconcileRetainedGlucoseAndWait()
+            await NightscoutUploadManager.shared.reconcileRetainedDataAndWait()
         }
         Task {
             // HealthKit reads may fail while locked, so reconcile both data
@@ -182,9 +182,9 @@ final class BGAppRefreshScheduler {
         let refreshTask = Task {
             Logger.bgTaskScheduler.info("Calling requestReloadIfNeeded()")
             await LibreLinkUpService.shared.requestReloadIfNeeded()
-            Logger.bgTaskScheduler.info("Running Nightscout glucose catch-up from BG refresh")
+            Logger.bgTaskScheduler.info("Running Nightscout data catch-up from BG refresh")
             async let nightscoutCatchUp: Void = NightscoutUploadManager.shared
-                .reconcileRetainedGlucoseAndWait(maximumDuration: 5)
+                .reconcileRetainedDataAndWait(maximumDuration: 5)
             Logger.bgTaskScheduler.info("Running Apple Health catch-up export from BG refresh")
             await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
             await LiveActivityManager.shared.refreshFromCurrentHistory(
