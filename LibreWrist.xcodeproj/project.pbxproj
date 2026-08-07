@@ -7,26 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7BC701012FF0010000C70101 /* NightscoutModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700012FF0000000C70001 /* NightscoutModels.swift */; };
-		7BC701022FF0010000C70102 /* NightscoutClientV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700022FF0000000C70002 /* NightscoutClientV3.swift */; };
-		7BC701032FF0010000C70103 /* NightscoutOutbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700032FF0000000C70003 /* NightscoutOutbox.swift */; };
-		7BC701042FF0010000C70104 /* NightscoutUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700042FF0000000C70004 /* NightscoutUploadManager.swift */; };
-		7BC701052FF0010000C70105 /* NightscoutSecretKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700052FF0000000C70005 /* NightscoutSecretKeychain.swift */; };
-		7BC702012FF0020000C70201 /* NightscoutModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700012FF0000000C70001 /* NightscoutModels.swift */; };
-		7BC702022FF0020000C70202 /* NightscoutClientV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700022FF0000000C70002 /* NightscoutClientV3.swift */; };
-		7BC702032FF0020000C70203 /* NightscoutOutbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700032FF0000000C70003 /* NightscoutOutbox.swift */; };
-		7BC702042FF0020000C70204 /* NightscoutUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700042FF0000000C70004 /* NightscoutUploadManager.swift */; };
-		7BC702052FF0020000C70205 /* NightscoutSecretKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700052FF0000000C70005 /* NightscoutSecretKeychain.swift */; };
-		7BC703012FF0030000C70301 /* NightscoutModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700012FF0000000C70001 /* NightscoutModels.swift */; };
-		7BC703022FF0030000C70302 /* NightscoutClientV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700022FF0000000C70002 /* NightscoutClientV3.swift */; };
-		7BC703032FF0030000C70303 /* NightscoutOutbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700032FF0000000C70003 /* NightscoutOutbox.swift */; };
-		7BC703042FF0030000C70304 /* NightscoutUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700042FF0000000C70004 /* NightscoutUploadManager.swift */; };
-		7BC703052FF0030000C70305 /* NightscoutSecretKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700052FF0000000C70005 /* NightscoutSecretKeychain.swift */; };
-		7BC704012FF0040000C70401 /* NightscoutModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700012FF0000000C70001 /* NightscoutModels.swift */; };
-		7BC704022FF0040000C70402 /* NightscoutClientV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700022FF0000000C70002 /* NightscoutClientV3.swift */; };
-		7BC704032FF0040000C70403 /* NightscoutOutbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700032FF0000000C70003 /* NightscoutOutbox.swift */; };
-		7BC704042FF0040000C70404 /* NightscoutUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700042FF0000000C70004 /* NightscoutUploadManager.swift */; };
-		7BC704052FF0040000C70405 /* NightscoutSecretKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700052FF0000000C70005 /* NightscoutSecretKeychain.swift */; };
 		7A1F7C0C2FDF000100A1B2C3 /* FLwatchFullGraphWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1F7C0B2FDF000100A1B2C3 /* FLwatchFullGraphWidget.swift */; };
 		7A1F7C0E2FDF000200A1B2C3 /* FullGraphGlucoseIOBTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1F7C0D2FDF000200A1B2C3 /* FullGraphGlucoseIOBTimelineProvider.swift */; };
 		7A1F7C102FDF000300A1B2C3 /* FullGraphGlucoseMeasurementIOBEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1F7C0F2FDF000300A1B2C3 /* FullGraphGlucoseMeasurementIOBEntry.swift */; };
@@ -216,6 +196,26 @@
 		7BC51F592C7C8564009542D2 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE01A2C73E4B60074A47F /* Data.swift */; };
 		7BC51F5A2C7C8573009542D2 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B435CD32C6D57F5006F6E53 /* String.swift */; };
 		7BC51F5B2C7C8589009542D2 /* SensorType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BADE0112C73E3440074A47F /* SensorType.swift */; };
+		7BC701012FF0010000C70101 /* NightscoutModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700012FF0000000C70001 /* NightscoutModels.swift */; };
+		7BC701022FF0010000C70102 /* NightscoutClientV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700022FF0000000C70002 /* NightscoutClientV3.swift */; };
+		7BC701032FF0010000C70103 /* NightscoutOutbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700032FF0000000C70003 /* NightscoutOutbox.swift */; };
+		7BC701042FF0010000C70104 /* NightscoutUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700042FF0000000C70004 /* NightscoutUploadManager.swift */; };
+		7BC701052FF0010000C70105 /* NightscoutSecretKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700052FF0000000C70005 /* NightscoutSecretKeychain.swift */; };
+		7BC702012FF0020000C70201 /* NightscoutModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700012FF0000000C70001 /* NightscoutModels.swift */; };
+		7BC702022FF0020000C70202 /* NightscoutClientV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700022FF0000000C70002 /* NightscoutClientV3.swift */; };
+		7BC702032FF0020000C70203 /* NightscoutOutbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700032FF0000000C70003 /* NightscoutOutbox.swift */; };
+		7BC702042FF0020000C70204 /* NightscoutUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700042FF0000000C70004 /* NightscoutUploadManager.swift */; };
+		7BC702052FF0020000C70205 /* NightscoutSecretKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700052FF0000000C70005 /* NightscoutSecretKeychain.swift */; };
+		7BC703012FF0030000C70301 /* NightscoutModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700012FF0000000C70001 /* NightscoutModels.swift */; };
+		7BC703022FF0030000C70302 /* NightscoutClientV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700022FF0000000C70002 /* NightscoutClientV3.swift */; };
+		7BC703032FF0030000C70303 /* NightscoutOutbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700032FF0000000C70003 /* NightscoutOutbox.swift */; };
+		7BC703042FF0030000C70304 /* NightscoutUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700042FF0000000C70004 /* NightscoutUploadManager.swift */; };
+		7BC703052FF0030000C70305 /* NightscoutSecretKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700052FF0000000C70005 /* NightscoutSecretKeychain.swift */; };
+		7BC704012FF0040000C70401 /* NightscoutModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700012FF0000000C70001 /* NightscoutModels.swift */; };
+		7BC704022FF0040000C70402 /* NightscoutClientV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700022FF0000000C70002 /* NightscoutClientV3.swift */; };
+		7BC704032FF0040000C70403 /* NightscoutOutbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700032FF0000000C70003 /* NightscoutOutbox.swift */; };
+		7BC704042FF0040000C70404 /* NightscoutUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700042FF0000000C70004 /* NightscoutUploadManager.swift */; };
+		7BC704052FF0040000C70405 /* NightscoutSecretKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC700052FF0000000C70005 /* NightscoutSecretKeychain.swift */; };
 		7BCA110330D0000100CA1101 /* PhoneAppCalibrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCA110230D0000100CA1101 /* PhoneAppCalibrationView.swift */; };
 		7BCA58692C8A292600C50F11 /* SensorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCA58682C8A292600C50F11 /* SensorSettings.swift */; };
 		7BCA586A2C8A292600C50F11 /* SensorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCA58682C8A292600C50F11 /* SensorSettings.swift */; };
@@ -327,11 +327,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		7BC700012FF0000000C70001 /* NightscoutModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightscoutModels.swift; sourceTree = "<group>"; };
-		7BC700022FF0000000C70002 /* NightscoutClientV3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightscoutClientV3.swift; sourceTree = "<group>"; };
-		7BC700032FF0000000C70003 /* NightscoutOutbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightscoutOutbox.swift; sourceTree = "<group>"; };
-		7BC700042FF0000000C70004 /* NightscoutUploadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightscoutUploadManager.swift; sourceTree = "<group>"; };
-		7BC700052FF0000000C70005 /* NightscoutSecretKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightscoutSecretKeychain.swift; sourceTree = "<group>"; };
 		7A1F7C0B2FDF000100A1B2C3 /* FLwatchFullGraphWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLwatchFullGraphWidget.swift; sourceTree = "<group>"; };
 		7A1F7C0D2FDF000200A1B2C3 /* FullGraphGlucoseIOBTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullGraphGlucoseIOBTimelineProvider.swift; sourceTree = "<group>"; };
 		7A1F7C0F2FDF000300A1B2C3 /* FullGraphGlucoseMeasurementIOBEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullGraphGlucoseMeasurementIOBEntry.swift; sourceTree = "<group>"; };
@@ -445,6 +440,11 @@
 		7BC51F622C7C9D51009542D2 /* LibreWrist.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibreWrist.entitlements; sourceTree = "<group>"; };
 		7BC51F632C7C9E96009542D2 /* LibreWristWatch Watch App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "LibreWristWatch Watch App.entitlements"; sourceTree = "<group>"; };
 		7BC51F642C7CA68D009542D2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7BC700012FF0000000C70001 /* NightscoutModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightscoutModels.swift; sourceTree = "<group>"; };
+		7BC700022FF0000000C70002 /* NightscoutClientV3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightscoutClientV3.swift; sourceTree = "<group>"; };
+		7BC700032FF0000000C70003 /* NightscoutOutbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightscoutOutbox.swift; sourceTree = "<group>"; };
+		7BC700042FF0000000C70004 /* NightscoutUploadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightscoutUploadManager.swift; sourceTree = "<group>"; };
+		7BC700052FF0000000C70005 /* NightscoutSecretKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightscoutSecretKeychain.swift; sourceTree = "<group>"; };
 		7BCA110230D0000100CA1101 /* PhoneAppCalibrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppCalibrationView.swift; sourceTree = "<group>"; };
 		7BCA58682C8A292600C50F11 /* SensorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorSettings.swift; sourceTree = "<group>"; };
 		7BD15EA70000000000000001 /* LibreViewAccountClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibreViewAccountClient.swift; sourceTree = "<group>"; };
@@ -623,18 +623,6 @@
 				7B8965412DC156DD003A50CE /* WatchConnectivityManager.swift */,
 			);
 			path = Models;
-			sourceTree = "<group>";
-		};
-		7BC700002FF0000000C70000 /* Nightscout */ = {
-			isa = PBXGroup;
-			children = (
-				7BC700022FF0000000C70002 /* NightscoutClientV3.swift */,
-				7BC700012FF0000000C70001 /* NightscoutModels.swift */,
-				7BC700032FF0000000C70003 /* NightscoutOutbox.swift */,
-				7BC700052FF0000000C70005 /* NightscoutSecretKeychain.swift */,
-				7BC700042FF0000000C70004 /* NightscoutUploadManager.swift */,
-			);
-			path = Nightscout;
 			sourceTree = "<group>";
 		};
 		7B631AAA2CB85F3300CE9EEF /* AppIntents */ = {
@@ -824,6 +812,18 @@
 				7B4855DE2DB58DC90089409E /* TimeDifferencePicker.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		7BC700002FF0000000C70000 /* Nightscout */ = {
+			isa = PBXGroup;
+			children = (
+				7BC700022FF0000000C70002 /* NightscoutClientV3.swift */,
+				7BC700012FF0000000C70001 /* NightscoutModels.swift */,
+				7BC700032FF0000000C70003 /* NightscoutOutbox.swift */,
+				7BC700052FF0000000C70005 /* NightscoutSecretKeychain.swift */,
+				7BC700042FF0000000C70004 /* NightscoutUploadManager.swift */,
+			);
+			path = Nightscout;
 			sourceTree = "<group>";
 		};
 		7BFD83592C84E47500A9B195 /* InsulinModel */ = {

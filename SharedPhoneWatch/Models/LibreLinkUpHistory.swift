@@ -223,11 +223,20 @@ final class LibreLinkUpHistoryStore {
             return false
         }
 
-        let nightscoutCandidates: [LibreLinkUpGlucose]
+        let nightscoutMinuteCandidates: [LibreLinkUpGlucose]
+        let nightscoutHistoricalCandidates: [LibreLinkUpGlucose]
+        let nightscoutSensorSerial: String?
         if NightscoutExecutionContext.isMainAppProcess,
            SharedData.cgmProviderKind.isDirectBLE,
            SharedData.nightscoutUploadEnabled {
-            var changedCandidates: [LibreLinkUpGlucose] = []
+            nightscoutSensorSerial = SharedData.libre3Serial
+            let previousMinuteLifeCounts = Set(
+                self.libreLinkUpMinuteGlucose.map { $0.glucose.id }
+            )
+            let nextMinuteLifeCounts = Set(
+                libreLinkUpMinuteGlucose.map { $0.glucose.id }
+            )
+            var changedHistoricalCandidates: [LibreLinkUpGlucose] = []
             // The existing Health identifier comparison tells the Nightscout
             // hot path when the retained historical series changed. This is
             // safe while retained Libre 3 values/directions remain immutable;
@@ -236,24 +245,34 @@ final class LibreLinkUpHistoryStore {
             // remains the recovery path. Only the added Nightscout work is O(1)
             // for steady-state minute pushes.
             if shouldExportGlucose {
-                changedCandidates.append(contentsOf: changedNightscoutCandidates(
-                    previous: Array(self.fullLibreLinkUpGlucose.dropFirst()),
-                    next: Array(normalizedFullGraphHistory.dropFirst())
+                changedHistoricalCandidates.append(contentsOf: changedNightscoutCandidates(
+                    previous: self.fullLibreLinkUpGlucose.filter {
+                        !previousMinuteLifeCounts.contains($0.glucose.id)
+                    },
+                    next: normalizedFullGraphHistory.filter {
+                        !nextMinuteLifeCounts.contains($0.glucose.id)
+                    }
                 ))
             }
-            // Latest is highest precedence, matching the full catch-up order.
-            if let normalizedLatest {
+            // `normalizedLatest` can fall back to a historical point. Only
+            // membership in the minute overlay proves raw-minute provenance.
+            var changedMinuteCandidates: [LibreLinkUpGlucose] = []
+            if let normalizedLatest,
+               nextMinuteLifeCounts.contains(normalizedLatest.glucose.id) {
                 let previousLatestSignature = self.latestLibreLinkUpGlucose.flatMap {
                     nightscoutChangeSignature(for: $0)
                 }
                 if let nextLatestSignature = nightscoutChangeSignature(for: normalizedLatest),
                    nextLatestSignature != previousLatestSignature {
-                    changedCandidates.append(normalizedLatest)
+                    changedMinuteCandidates.append(normalizedLatest)
                 }
             }
-            nightscoutCandidates = changedCandidates
+            nightscoutMinuteCandidates = changedMinuteCandidates
+            nightscoutHistoricalCandidates = changedHistoricalCandidates
         } else {
-            nightscoutCandidates = []
+            nightscoutMinuteCandidates = []
+            nightscoutHistoricalCandidates = []
+            nightscoutSensorSerial = nil
         }
 
         apply(snapshot: nextSnapshot)
@@ -263,8 +282,13 @@ final class LibreLinkUpHistoryStore {
                 await AppleHealthExportManager.shared.exportGlucoseSamplesIfNeeded(normalizedFullGraphHistory)
             }
         }
-        if !nightscoutCandidates.isEmpty {
-            NightscoutUploadManager.shared.reconcileGlucose(nightscoutCandidates)
+        if let nightscoutSensorSerial,
+           (!nightscoutMinuteCandidates.isEmpty || !nightscoutHistoricalCandidates.isEmpty) {
+            NightscoutUploadManager.shared.reconcileGlucose(
+                minuteCandidates: nightscoutMinuteCandidates,
+                historicalCandidates: nightscoutHistoricalCandidates,
+                sensorSerial: nightscoutSensorSerial
+            )
         }
         return true
     }

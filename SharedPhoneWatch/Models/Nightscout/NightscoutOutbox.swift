@@ -14,6 +14,82 @@ struct NightscoutGlucoseFingerprintRecord: Codable, Equatable, Sendable {
     let confirmedAt: Date
 }
 
+/// Compact ownership record for lifeCounts that were confirmed from the raw
+/// minute stream. Ranges are always sorted, disjoint, and non-adjacent.
+struct NightscoutMinuteCoverage: Equatable, Sendable {
+    private(set) var coveredMinutes: [ClosedRange<Int>]
+
+    init(_ coveredMinutes: [ClosedRange<Int>] = []) {
+        self.coveredMinutes = Self.normalized(coveredMinutes)
+    }
+
+    func contains(_ lifeCount: Int) -> Bool {
+        coveredMinutes.contains { $0.contains(lifeCount) }
+    }
+
+    mutating func insert(_ lifeCount: Int) {
+        coveredMinutes = Self.normalized(coveredMinutes + [lifeCount...lifeCount])
+    }
+
+    mutating func formUnion(_ lifeCounts: Set<Int>) {
+        guard !lifeCounts.isEmpty else { return }
+        coveredMinutes = Self.normalized(
+            coveredMinutes + lifeCounts.map { $0...$0 }
+        )
+    }
+
+    /// Returns the inclusive width of the uncovered run containing lifeCount,
+    /// bounded by the current candidate batch when coverage is absent on a side.
+    func uncoveredRunWidth(
+        containing lifeCount: Int,
+        batchBounds: ClosedRange<Int>
+    ) -> Int? {
+        guard batchBounds.contains(lifeCount), !contains(lifeCount) else { return nil }
+        let previousUpper = coveredMinutes.last { $0.upperBound < lifeCount }?.upperBound
+        let nextLower = coveredMinutes.first { $0.lowerBound > lifeCount }?.lowerBound
+        let lowerBound = max(
+            previousUpper.map { $0 + 1 } ?? batchBounds.lowerBound,
+            batchBounds.lowerBound
+        )
+        let upperBound = min(
+            nextLower.map { $0 - 1 } ?? batchBounds.upperBound,
+            batchBounds.upperBound
+        )
+        guard lowerBound <= lifeCount, lifeCount <= upperBound else { return nil }
+        return upperBound - lowerBound + 1
+    }
+
+    private static func normalized(
+        _ ranges: [ClosedRange<Int>]
+    ) -> [ClosedRange<Int>] {
+        let sorted = ranges.sorted {
+            if $0.lowerBound == $1.lowerBound {
+                return $0.upperBound < $1.upperBound
+            }
+            return $0.lowerBound < $1.lowerBound
+        }
+        guard var current = sorted.first else { return [] }
+        var result: [ClosedRange<Int>] = []
+        for range in sorted.dropFirst() {
+            let isAdjacent = current.upperBound < Int.max
+                && range.lowerBound == current.upperBound + 1
+            if range.lowerBound <= current.upperBound || isAdjacent {
+                current = current.lowerBound...max(current.upperBound, range.upperBound)
+            } else {
+                result.append(current)
+                current = range
+            }
+        }
+        result.append(current)
+        return result
+    }
+}
+
+struct NightscoutGlucosePassConfirmation: Sendable {
+    let upload: NightscoutEntryUpload
+    let confirmedAt: Date
+}
+
 struct NightscoutInsulinTombstone: Codable, Equatable, Sendable {
     let identifier: UUID
     let requestedAt: Date
@@ -82,43 +158,134 @@ enum NightscoutAbsentRecordingResult: Equatable, Sendable {
 }
 
 final class NightscoutOutbox {
-    private struct NamespaceState: Codable {
+    private struct StoredMinuteRange: Codable, Equatable {
+        let lowerBound: Int
+        let upperBound: Int
+
+        var range: ClosedRange<Int>? {
+            guard lowerBound <= upperBound else { return nil }
+            return lowerBound...upperBound
+        }
+    }
+
+    private struct MinuteCoverageState: Codable, Equatable {
+        let sensorSerial: String
+        let coveredMinutes: [StoredMinuteRange]
+
+        private enum CodingKeys: String, CodingKey {
+            case sensorSerial
+            case coveredMinutes
+        }
+
+        init(sensorSerial: String, coverage: NightscoutMinuteCoverage) {
+            self.sensorSerial = sensorSerial
+            self.coveredMinutes = coverage.coveredMinutes.map {
+                StoredMinuteRange(lowerBound: $0.lowerBound, upperBound: $0.upperBound)
+            }
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let serial = try container.decodeIfPresent(String.self, forKey: .sensorSerial) ?? ""
+            let storedRanges = try container.decodeIfPresent(
+                [StoredMinuteRange].self,
+                forKey: .coveredMinutes
+            ) ?? []
+            self.init(
+                sensorSerial: serial,
+                coverage: NightscoutMinuteCoverage(storedRanges.compactMap(\.range))
+            )
+        }
+
+        var coverage: NightscoutMinuteCoverage {
+            NightscoutMinuteCoverage(coveredMinutes.compactMap(\.range))
+        }
+    }
+
+    private struct NamespaceState: Codable, Equatable {
         var glucoseFingerprints: [String: NightscoutGlucoseFingerprintRecord] = [:]
         var insulinItems: [String: NightscoutInsulinOutboxItem] = [:]
+        var minuteCoverage: MinuteCoverageState?
+
+        private enum CodingKeys: String, CodingKey {
+            case glucoseFingerprints
+            case insulinItems
+            case minuteCoverage
+        }
+
+        init() {}
+
+        init(from decoder: Decoder) throws {
+            // Schema 1 has no minuteCoverage key. decodeIfPresent keeps that
+            // deployed snapshot readable instead of bricking the whole outbox.
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            glucoseFingerprints = try container.decodeIfPresent(
+                [String: NightscoutGlucoseFingerprintRecord].self,
+                forKey: .glucoseFingerprints
+            ) ?? [:]
+            insulinItems = try container.decodeIfPresent(
+                [String: NightscoutInsulinOutboxItem].self,
+                forKey: .insulinItems
+            ) ?? [:]
+            minuteCoverage = try container.decodeIfPresent(
+                MinuteCoverageState.self,
+                forKey: .minuteCoverage
+            )
+            if let minuteCoverage {
+                self.minuteCoverage = MinuteCoverageState(
+                    sensorSerial: minuteCoverage.sensorSerial,
+                    coverage: minuteCoverage.coverage
+                )
+            }
+        }
     }
 
     private struct Snapshot: Codable {
-        var schemaVersion: Int = 1
+        var schemaVersion: Int = 2
         var namespaces: [String: NamespaceState] = [:]
     }
 
-    private static let glucoseFingerprintRetention: TimeInterval = 30 * 24 * 60 * 60
-    private static let maximumGlucoseFingerprintsPerNamespace = 20_000
+    // Coverage is the long-lived minute dedup record. Fingerprints only need
+    // to span the retained glucose window for historical fills/value changes.
+    private static let glucoseFingerprintRetention: TimeInterval = 13 * 60 * 60
+    private static let maximumGlucoseFingerprintsPerNamespace = 2_000
 
     private let fileManager: FileManager
     private let storeURL: URL
     private let encoder: JSONEncoder
     private var snapshot: Snapshot
+    /// Successful atomic writes performed by this instance; exposed internally
+    /// so the catch-up write-amplification regression test can assert one pass.
+    private(set) var persistenceWriteCount = 0
 
-    init(fileManager: FileManager = .default) throws {
-        self.fileManager = fileManager
-        self.storeURL = FileStoreIO.makeStoreURL(
-            fileName: "nightscout-outbox.json",
-            using: fileManager,
-            appGroupID: SharedDefaults.appGroupID
+    convenience init(fileManager: FileManager = .default) throws {
+        try self.init(
+            fileManager: fileManager,
+            storeURL: FileStoreIO.makeStoreURL(
+                fileName: "nightscout-outbox.json",
+                using: fileManager,
+                appGroupID: SharedDefaults.appGroupID
+            )
         )
+    }
+
+    init(fileManager: FileManager, storeURL: URL) throws {
+        self.fileManager = fileManager
+        self.storeURL = storeURL
         self.encoder = JSONEncoder()
         self.encoder.dateEncodingStrategy = .iso8601
         self.encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        self.snapshot = try FileStoreIO.readSnapshot(
+        var loadedSnapshot = try FileStoreIO.readSnapshot(
             Snapshot.self,
             from: storeURL,
             using: decoder,
             fileManager: fileManager
         ) ?? Snapshot()
+        loadedSnapshot.schemaVersion = 2
+        self.snapshot = loadedSnapshot
     }
 
     func glucoseFingerprint(
@@ -129,19 +296,50 @@ final class NightscoutOutbox {
             .glucoseFingerprints[Self.key(for: identifier)]
     }
 
-    func confirmGlucose(
-        _ upload: NightscoutEntryUpload,
+    func minuteCoverage(
         namespace: NightscoutBaseURL,
-        confirmedAt: Date = Date()
+        sensorSerial: String
+    ) -> NightscoutMinuteCoverage {
+        guard !sensorSerial.isEmpty,
+              let storedCoverage = snapshot.namespaces[namespace.absoluteString]?.minuteCoverage,
+              storedCoverage.sensorSerial == sensorSerial else {
+            return NightscoutMinuteCoverage()
+        }
+        return storedCoverage.coverage
+    }
+
+    /// Commits all successful PUT fingerprints and minute-ownership changes in
+    /// one atomic snapshot write. A crash before this commit only causes safe,
+    /// idempotent re-PUTs during the next reconciliation.
+    func confirmGlucosePass(
+        _ confirmations: [NightscoutGlucosePassConfirmation],
+        confirmedMinuteLifeCounts: Set<Int>,
+        sensorSerial: String,
+        namespace: NightscoutBaseURL,
+        persistedAt: Date = Date()
     ) throws {
         let previousSnapshot = snapshot
         var state = namespaceState(for: namespace)
-        state.glucoseFingerprints[Self.key(for: upload.identifier)] = NightscoutGlucoseFingerprintRecord(
-            fingerprint: upload.fingerprint,
-            eventDate: upload.eventDate,
-            confirmedAt: confirmedAt
-        )
-        Self.pruneGlucoseFingerprints(in: &state, now: confirmedAt)
+        for confirmation in confirmations {
+            let upload = confirmation.upload
+            state.glucoseFingerprints[Self.key(for: upload.identifier)] = NightscoutGlucoseFingerprintRecord(
+                fingerprint: upload.fingerprint,
+                eventDate: upload.eventDate,
+                confirmedAt: confirmation.confirmedAt
+            )
+        }
+        if !sensorSerial.isEmpty, !confirmedMinuteLifeCounts.isEmpty {
+            var coverage = state.minuteCoverage?.sensorSerial == sensorSerial
+                ? state.minuteCoverage?.coverage ?? NightscoutMinuteCoverage()
+                : NightscoutMinuteCoverage()
+            coverage.formUnion(confirmedMinuteLifeCounts)
+            state.minuteCoverage = MinuteCoverageState(
+                sensorSerial: sensorSerial,
+                coverage: coverage
+            )
+        }
+        Self.pruneGlucoseFingerprints(in: &state, now: persistedAt)
+        guard state != namespaceState(for: namespace) else { return }
         snapshot.namespaces[namespace.absoluteString] = state
         try persistOrRollBack(to: previousSnapshot)
     }
@@ -309,6 +507,7 @@ final class NightscoutOutbox {
                 using: encoder,
                 fileManager: fileManager
             )
+            persistenceWriteCount += 1
         } catch {
             snapshot = previousSnapshot
             throw error

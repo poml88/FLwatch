@@ -56,6 +56,152 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
+    func testNightscoutMinuteCoverageMergesAdjacentRanges() {
+        var coverage = NightscoutMinuteCoverage([100...105, 107...110])
+
+        coverage.insert(106)
+
+        XCTAssertEqual(coverage.coveredMinutes, [100...110])
+    }
+
+    func testNightscoutGapWidthUsesInclusiveFourteenFifteenBoundary() {
+        let fifteenMinuteGap = NightscoutMinuteCoverage([100...100, 116...120])
+        let fourteenMinuteGap = NightscoutMinuteCoverage([100...100, 115...120])
+
+        XCTAssertEqual(
+            fifteenMinuteGap.uncoveredRunWidth(containing: 105, batchBounds: 100...120),
+            15
+        )
+        XCTAssertEqual(
+            fourteenMinuteGap.uncoveredRunWidth(containing: 105, batchBounds: 100...120),
+            14
+        )
+    }
+
+    func testNightscoutGapWidthBoundsEmptyAndLeadingRunsToBatch() {
+        let emptyCoverage = NightscoutMinuteCoverage()
+        let leadingCoverage = NightscoutMinuteCoverage([60...70])
+        let coverageBeforeBatch = NightscoutMinuteCoverage([100...100])
+
+        XCTAssertEqual(
+            emptyCoverage.uncoveredRunWidth(containing: 55, batchBounds: 50...70),
+            21
+        )
+        XCTAssertEqual(
+            leadingCoverage.uncoveredRunWidth(containing: 55, batchBounds: 50...70),
+            10
+        )
+        XCTAssertEqual(
+            coverageBeforeBatch.uncoveredRunWidth(containing: 155, batchBounds: 150...158),
+            9
+        )
+    }
+
+    func testNightscoutOutboxDecodesPreCoverageSnapshot() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let storeURL = directory.appendingPathComponent("nightscout-outbox.json")
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let preCoverageSnapshot = Data(
+            #"{"schemaVersion":1,"namespaces":{"https://example.com":{"glucoseFingerprints":{},"insulinItems":{}}}}"#.utf8
+        )
+        try preCoverageSnapshot.write(to: storeURL, options: .atomic)
+
+        let outbox = try NightscoutOutbox(
+            fileManager: .default,
+            storeURL: storeURL
+        )
+        let namespace = try NightscoutBaseURL(normalizing: "https://example.com")
+
+        XCTAssertEqual(
+            outbox.minuteCoverage(namespace: namespace, sensorSerial: "test-sensor"),
+            NightscoutMinuteCoverage()
+        )
+    }
+
+    func testNightscoutGlucoseCatchUpPersistsOncePerPass() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let storeURL = directory.appendingPathComponent("nightscout-outbox.json")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let outbox = try NightscoutOutbox(
+            fileManager: .default,
+            storeURL: storeURL
+        )
+        let namespace = try NightscoutBaseURL(normalizing: "https://example.com")
+        let startDate = Date()
+        let confirmations = (0..<200).map { offset in
+            let reading = LibreLinkUpGlucose(
+                glucose: Glucose(
+                    100 + offset % 40,
+                    id: 1_000 + offset,
+                    date: startDate.addingTimeInterval(Double(offset * 60)),
+                    source: CGMReadingSource.libre3BLE
+                ),
+                color: .green,
+                trendArrow: .stable
+            )
+            return NightscoutGlucosePassConfirmation(
+                upload: NightscoutEntryUpload(reading: reading),
+                confirmedAt: startDate
+            )
+        }
+
+        try outbox.confirmGlucosePass(
+            confirmations,
+            confirmedMinuteLifeCounts: Set(1_000..<1_200),
+            sensorSerial: "test-sensor",
+            namespace: namespace,
+            persistedAt: startDate
+        )
+
+        XCTAssertEqual(outbox.persistenceWriteCount, 1)
+        XCTAssertEqual(
+            outbox.minuteCoverage(namespace: namespace, sensorSerial: "test-sensor")
+                .coveredMinutes,
+            [1_000...1_199]
+        )
+    }
+
+    func testNightscoutMinuteCoverageResetsForNewSensorSerial() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let storeURL = directory.appendingPathComponent("nightscout-outbox.json")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let outbox = try NightscoutOutbox(
+            fileManager: .default,
+            storeURL: storeURL
+        )
+        let namespace = try NightscoutBaseURL(normalizing: "https://example.com")
+
+        try outbox.confirmGlucosePass(
+            [],
+            confirmedMinuteLifeCounts: [100, 101],
+            sensorSerial: "old-sensor",
+            namespace: namespace
+        )
+        try outbox.confirmGlucosePass(
+            [],
+            confirmedMinuteLifeCounts: [1, 2],
+            sensorSerial: "new-sensor",
+            namespace: namespace
+        )
+
+        XCTAssertEqual(
+            outbox.minuteCoverage(namespace: namespace, sensorSerial: "old-sensor"),
+            NightscoutMinuteCoverage()
+        )
+        XCTAssertEqual(
+            outbox.minuteCoverage(namespace: namespace, sensorSerial: "new-sensor")
+                .coveredMinutes,
+            [1...2]
+        )
+    }
+
     func testLibreLinkUpParsesFactoryTimestampAsUTC() throws {
         let parsedDate = try XCTUnwrap(
             LibreLinkUp.parseMeasurementDate(

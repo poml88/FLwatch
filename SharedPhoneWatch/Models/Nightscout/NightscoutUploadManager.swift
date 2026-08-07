@@ -84,6 +84,7 @@ final class NightscoutUploadManager {
     )
     private static let circuitHalfOpenInterval: TimeInterval = 30 * 60
     private static let maximumBackoffDuration: TimeInterval = 5
+    private static let minimumFillableGapMinutes = 15
     private static let documentSuppressionRetention: TimeInterval = 24 * 60 * 60
     private static let maximumGlucoseSuppressions = 5_000
     private static let maximumInsulinSuppressions = 1_000
@@ -106,6 +107,11 @@ final class NightscoutUploadManager {
         case retryLater
     }
 
+    private enum NightscoutGlucoseProvenance: Equatable {
+        case minute
+        case historical
+    }
+
     private struct NamespaceCircuitBreaker {
         let statusCode: Int
         let reason: NightscoutUploadStatus.PauseReason
@@ -117,23 +123,38 @@ final class NightscoutUploadManager {
         let blockedAt: Date
     }
 
+    private struct PendingGlucoseUpload {
+        let upload: NightscoutEntryUpload
+        let lifeCount: Int
+        let provenance: NightscoutGlucoseProvenance
+    }
+
+    private enum GlucoseDocumentOutcome {
+        case confirmed
+        case skipped
+        case stop
+    }
+
     /// One serialized reconciliation pass. Deadline-bound lifecycle work is
     /// kept separate from ordinary hot-path work: merging the two would let an
     /// expired BG budget discard a newly arrived glucose reading. Completion
     /// IDs belong to callers awaiting this particular work, not to the worker
     /// as a whole, because unrelated unbounded work may continue afterwards.
     private struct PendingWork {
-        var glucoseUploads: [String: NightscoutEntryUpload] = [:]
+        var glucoseUploads: [String: PendingGlucoseUpload] = [:]
+        var glucoseSensorSerial: String?
         var drainInsulin = false
         var deadline: Date?
         var completionIDs = Set<UUID>()
 
         init(
-            glucoseUploads: [String: NightscoutEntryUpload] = [:],
+            glucoseUploads: [String: PendingGlucoseUpload] = [:],
+            glucoseSensorSerial: String? = nil,
             drainInsulin: Bool = false,
             deadline: Date? = nil
         ) {
             self.glucoseUploads = glucoseUploads
+            self.glucoseSensorSerial = glucoseSensorSerial
             self.drainInsulin = drainInsulin
             self.deadline = deadline
         }
@@ -143,7 +164,23 @@ final class NightscoutUploadManager {
         }
 
         mutating func merge(_ other: PendingWork) {
-            glucoseUploads.merge(other.glucoseUploads) { _, newest in newest }
+            if !other.glucoseUploads.isEmpty {
+                if glucoseSensorSerial == nil || glucoseSensorSerial == other.glucoseSensorSerial {
+                    glucoseUploads.merge(other.glucoseUploads) { current, newest in
+                        if current.provenance == .minute,
+                           newest.provenance == .historical {
+                            return current
+                        }
+                        return newest
+                    }
+                } else {
+                    // A newly paired sensor supersedes queued glucose work from
+                    // the old serial. A later lifecycle sweep safely recovers
+                    // any old document that was not already fingerprinted.
+                    glucoseUploads = other.glucoseUploads
+                }
+                glucoseSensorSerial = other.glucoseSensorSerial
+            }
             drainInsulin = drainInsulin || other.drainInsulin
             completionIDs.formUnion(other.completionIDs)
             switch (deadline, other.deadline) {
@@ -176,11 +213,22 @@ final class NightscoutUploadManager {
 
     // MARK: - Public integration surface
 
-    /// Queues a hot-path glucose reconciliation. Candidates should be ordered
-    /// from lowest to highest precedence; a later duplicate timestamp wins.
-    func reconcileGlucose(_ candidates: [LibreLinkUpGlucose]) {
-        guard automaticNetworkContext() != nil else { return }
-        enqueue(PendingWork(glucoseUploads: glucoseUploads(from: candidates)))
+    /// Queues a provenance-aware hot-path reconciliation. Minute candidates
+    /// always take precedence over historical candidates for the same upload
+    /// identifier, independent of enqueue/merge order.
+    func reconcileGlucose(
+        minuteCandidates: [LibreLinkUpGlucose],
+        historicalCandidates: [LibreLinkUpGlucose],
+        sensorSerial: String
+    ) {
+        guard automaticNetworkContext() != nil, !sensorSerial.isEmpty else { return }
+        enqueue(PendingWork(
+            glucoseUploads: glucoseUploads(
+                minuteCandidates: minuteCandidates,
+                historicalCandidates: historicalCandidates
+            ),
+            glucoseSensorSerial: sensorSerial
+        ))
     }
 
     /// Awaited lifecycle catch-up for the complete retained glucose window.
@@ -188,17 +236,30 @@ final class NightscoutUploadManager {
     func reconcileRetainedGlucoseAndWait(maximumDuration: TimeInterval? = nil) async {
         guard NightscoutExecutionContext.isMainAppProcess else { return }
         let history = LibreLinkUpHistory.shared
-        var candidates = history.fullLibreLinkUpGlucose
-        candidates.append(contentsOf: history.libreLinkUpGlucose)
-        candidates.append(contentsOf: history.libreLinkUpMinuteGlucose)
+        let sensorSerial = SharedData.libre3Serial
+        var minuteCandidates = history.libreLinkUpMinuteGlucose
+        let minuteLifeCounts = Set(minuteCandidates.map { $0.glucose.id })
+        // The full graph conditionally injects its latest minute at index zero.
+        // Membership in the minute overlay is the only reliable provenance.
+        var historicalCandidates = (
+            history.fullLibreLinkUpGlucose + history.libreLinkUpGlucose
+        ).filter { !minuteLifeCounts.contains($0.glucose.id) }
         if let latest = history.latestLibreLinkUpGlucose {
-            candidates.append(latest)
+            if minuteLifeCounts.contains(latest.glucose.id) {
+                minuteCandidates.append(latest)
+            } else {
+                historicalCandidates.append(latest)
+            }
         }
 
         let deadline = maximumDuration.map { Date().addingTimeInterval(max(0, $0)) }
         var work = PendingWork(deadline: deadline)
-        if automaticNetworkContext() != nil {
-            work.glucoseUploads = glucoseUploads(from: candidates)
+        if automaticNetworkContext() != nil, !sensorSerial.isEmpty {
+            work.glucoseUploads = glucoseUploads(
+                minuteCandidates: minuteCandidates,
+                historicalCandidates: historicalCandidates
+            )
+            work.glucoseSensorSerial = sensorSerial
         }
         guard !work.isEmpty else { return }
         let completionID = UUID()
@@ -364,6 +425,7 @@ final class NightscoutUploadManager {
         if !work.glucoseUploads.isEmpty {
             shouldContinue = await reconcileGlucoseUploads(
                 Array(work.glucoseUploads.values),
+                sensorSerial: work.glucoseSensorSerial ?? "",
                 context: context,
                 deadline: work.deadline
             )
@@ -376,15 +438,95 @@ final class NightscoutUploadManager {
     // MARK: - Glucose reconciliation
 
     private func reconcileGlucoseUploads(
-        _ uploads: [NightscoutEntryUpload],
+        _ uploads: [PendingGlucoseUpload],
+        sensorSerial: String,
         context: NetworkContext,
         deadline: Date?
     ) async -> Bool {
-        for upload in uploads.sorted(by: { $0.eventDate < $1.eventDate }) {
-            guard deadline.map({ $0 > Date() }) ?? true else { return false }
-            let identifierKey = context.baseURL.absoluteString
-                + "|"
-                + upload.identifier.uuidString.lowercased()
+        guard !sensorSerial.isEmpty,
+              let lowestLifeCount = uploads.map(\.lifeCount).min(),
+              let highestLifeCount = uploads.map(\.lifeCount).max() else {
+            return true
+        }
+        let batchBounds = lowestLifeCount...highestLifeCount
+        var coverage = context.outbox.minuteCoverage(
+            namespace: context.baseURL,
+            sensorSerial: sensorSerial
+        )
+        var confirmations: [NightscoutGlucosePassConfirmation] = []
+        var confirmedMinuteLifeCounts = Set<Int>()
+
+        func finish(_ shouldContinue: Bool) -> Bool {
+            guard !confirmations.isEmpty || !confirmedMinuteLifeCounts.isEmpty else {
+                return shouldContinue
+            }
+            do {
+                try context.outbox.confirmGlucosePass(
+                    confirmations,
+                    confirmedMinuteLifeCounts: confirmedMinuteLifeCounts,
+                    sensorSerial: sensorSerial,
+                    namespace: context.baseURL
+                )
+                return shouldContinue
+            } catch {
+                Self.logger.error("Failed to persist the completed Nightscout glucose pass.")
+                return false
+            }
+        }
+
+        // Establish minute ownership before evaluating history. A minute and
+        // historical reading for one lifeCount can have different timestamp-
+        // derived identifiers, so dictionary deduplication cannot prevent a
+        // twin; the coverage check below is the authoritative arbitration.
+        let minuteUploads = uploads
+            .filter { $0.provenance == .minute }
+            .sorted { $0.upload.eventDate < $1.upload.eventDate }
+        for candidate in minuteUploads {
+            guard deadline.map({ $0 > Date() }) ?? true else { return finish(false) }
+            let upload = candidate.upload
+            let fingerprint = upload.fingerprint
+            if context.outbox.glucoseFingerprint(
+                for: upload.identifier,
+                namespace: context.baseURL
+            )?.fingerprint == fingerprint {
+                if !coverage.contains(candidate.lifeCount) {
+                    coverage.insert(candidate.lifeCount)
+                    confirmedMinuteLifeCounts.insert(candidate.lifeCount)
+                }
+                continue
+            }
+            switch await putGlucoseDocument(
+                upload,
+                fingerprint: fingerprint,
+                context: context,
+                deadline: deadline
+            ) {
+            case .confirmed:
+                confirmations.append(NightscoutGlucosePassConfirmation(
+                    upload: upload,
+                    confirmedAt: Date()
+                ))
+                coverage.insert(candidate.lifeCount)
+                confirmedMinuteLifeCounts.insert(candidate.lifeCount)
+            case .skipped:
+                continue
+            case .stop:
+                return finish(false)
+            }
+        }
+
+        let historicalUploads = uploads
+            .filter { $0.provenance == .historical }
+            .sorted { $0.upload.eventDate < $1.upload.eventDate }
+        for candidate in historicalUploads {
+            guard deadline.map({ $0 > Date() }) ?? true else { return finish(false) }
+            guard let runWidth = coverage.uncoveredRunWidth(
+                containing: candidate.lifeCount,
+                batchBounds: batchBounds
+            ), runWidth >= Self.minimumFillableGapMinutes else {
+                continue
+            }
+            let upload = candidate.upload
             let fingerprint = upload.fingerprint
             if context.outbox.glucoseFingerprint(
                 for: upload.identifier,
@@ -392,48 +534,71 @@ final class NightscoutUploadManager {
             )?.fingerprint == fingerprint {
                 continue
             }
-            if isGlucoseDocumentSuppressed(
-                key: identifierKey,
-                fingerprint: fingerprint
+            switch await putGlucoseDocument(
+                upload,
+                fingerprint: fingerprint,
+                context: context,
+                deadline: deadline
             ) {
+            case .confirmed:
+                confirmations.append(NightscoutGlucosePassConfirmation(
+                    upload: upload,
+                    confirmedAt: Date()
+                ))
+            case .skipped:
                 continue
-            }
-
-            do {
-                try await withBackoff(deadline: deadline) {
-                    markNetworkAttemptStarting(for: context.baseURL)
-                    try await context.client.putEntry(
-                        identifier: upload.identifier,
-                        body: upload.body,
-                        accessToken: context.accessToken,
-                        deadline: deadline
-                    )
-                }
-                markNetworkSuccess(for: context.baseURL)
-                try context.outbox.confirmGlucose(upload, namespace: context.baseURL)
-                blockedGlucoseFingerprints.removeValue(forKey: identifierKey)
-            } catch let error as NightscoutClientError {
-                switch handleClientFailure(
-                    error,
-                    operation: "entry PUT",
-                    baseURL: context.baseURL,
-                    glucoseSuppression: (identifierKey, fingerprint),
-                    insulinRevision: nil
-                ) {
-                case .documentSuppressed:
-                    continue
-                case .namespaceCircuitOpened, .retryLater:
-                    return false
-                }
-            } catch is CancellationError {
-                markNetworkAttemptDeferred(for: context.baseURL)
-                return false
-            } catch {
-                Self.logger.error("Nightscout entry upload stopped after a local persistence or cancellation error.")
-                return false
+            case .stop:
+                return finish(false)
             }
         }
-        return true
+        return finish(true)
+    }
+
+    private func putGlucoseDocument(
+        _ upload: NightscoutEntryUpload,
+        fingerprint: String,
+        context: NetworkContext,
+        deadline: Date?
+    ) async -> GlucoseDocumentOutcome {
+        let identifierKey = context.baseURL.absoluteString
+            + "|"
+            + upload.identifier.uuidString.lowercased()
+        if isGlucoseDocumentSuppressed(key: identifierKey, fingerprint: fingerprint) {
+            return .skipped
+        }
+        do {
+            try await withBackoff(deadline: deadline) {
+                markNetworkAttemptStarting(for: context.baseURL)
+                try await context.client.putEntry(
+                    identifier: upload.identifier,
+                    body: upload.body,
+                    accessToken: context.accessToken,
+                    deadline: deadline
+                )
+            }
+            markNetworkSuccess(for: context.baseURL)
+            blockedGlucoseFingerprints.removeValue(forKey: identifierKey)
+            return .confirmed
+        } catch let error as NightscoutClientError {
+            switch handleClientFailure(
+                error,
+                operation: "entry PUT",
+                baseURL: context.baseURL,
+                glucoseSuppression: (identifierKey, fingerprint),
+                insulinRevision: nil
+            ) {
+            case .documentSuppressed:
+                return .skipped
+            case .namespaceCircuitOpened, .retryLater:
+                return .stop
+            }
+        } catch is CancellationError {
+            markNetworkAttemptDeferred(for: context.baseURL)
+            return .stop
+        } catch {
+            Self.logger.error("Nightscout entry upload stopped after a local cancellation error.")
+            return .stop
+        }
     }
 
     // MARK: - Insulin convergence
@@ -658,24 +823,42 @@ final class NightscoutUploadManager {
     }
 
     private func glucoseUploads(
-        from candidates: [LibreLinkUpGlucose]
-    ) -> [String: NightscoutEntryUpload] {
-        var uploads: [String: NightscoutEntryUpload] = [:]
-        for candidate in candidates {
-            let source = candidate.glucose.source
-            guard CGMReadingSource.directBLENightscoutSources.contains(source) else {
-                let displaySource = source.isEmpty ? "(empty)" : source
-                if loggedRejectedSources.insert(displaySource).inserted {
-                    Self.logger.info(
-                        "Nightscout skipped cached glucose with non-direct source \(displaySource, privacy: .public)."
-                    )
+        minuteCandidates: [LibreLinkUpGlucose],
+        historicalCandidates: [LibreLinkUpGlucose]
+    ) -> [String: PendingGlucoseUpload] {
+        var uploads: [String: PendingGlucoseUpload] = [:]
+
+        func add(
+            _ candidates: [LibreLinkUpGlucose],
+            provenance: NightscoutGlucoseProvenance
+        ) {
+            for candidate in candidates {
+                let source = candidate.glucose.source
+                guard CGMReadingSource.directBLENightscoutSources.contains(source) else {
+                    let displaySource = source.isEmpty ? "(empty)" : source
+                    if loggedRejectedSources.insert(displaySource).inserted {
+                        Self.logger.info(
+                            "Nightscout skipped cached glucose with non-direct source \(displaySource, privacy: .public)."
+                        )
+                    }
+                    continue
                 }
-                continue
+                guard candidate.glucose.value > 0, !candidate.glucose.hasError else { continue }
+                let upload = NightscoutEntryUpload(reading: candidate)
+                let key = upload.identifier.uuidString.lowercased()
+                let pendingUpload = PendingGlucoseUpload(
+                    upload: upload,
+                    lifeCount: candidate.glucose.id,
+                    provenance: provenance
+                )
+                if uploads[key]?.provenance != .minute || provenance == .minute {
+                    uploads[key] = pendingUpload
+                }
             }
-            guard candidate.glucose.value > 0, !candidate.glucose.hasError else { continue }
-            let upload = NightscoutEntryUpload(reading: candidate)
-            uploads[upload.identifier.uuidString.lowercased()] = upload
         }
+
+        add(historicalCandidates, provenance: .historical)
+        add(minuteCandidates, provenance: .minute)
         return uploads
     }
 
