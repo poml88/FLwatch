@@ -1361,6 +1361,12 @@ struct PhoneAppSettingsView: View {
                 }
                 if enableAfterSuccess {
                     nightscoutUploadEnabled = true
+                    // Enabling while the scene is already active does not
+                    // produce a lifecycle transition, so explicitly seed the
+                    // server with the complete retained glucose window.
+                    Task { @MainActor in
+                        await NightscoutUploadManager.shared.reconcileRetainedGlucoseAndWait()
+                    }
                 }
                 nightscoutSettingsStatus = .success(
                     String(localized: "Connection successful. The token grants all required write permissions.")
