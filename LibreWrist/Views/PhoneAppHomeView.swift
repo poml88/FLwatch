@@ -135,7 +135,7 @@ struct PhoneAppHomeView: View {
             }
             
             
-            if libreLinkUpHistory.libreLinkUpGlucose.count > 0 {
+            if !libreLinkUpHistory.libreLinkUpGlucose.isEmpty {
                 PhoneAppGraphView()
             }
             
@@ -338,6 +338,7 @@ struct PhoneAppHomeView: View {
     }
 
     private func handleTimer() {
+        guard scenePhase == .active else { return }
         Logger.viewDebug.debug("Timer") // Timer fires as well when on a different tab, for example settings tab
         reloadAndUpdateMinutes(refreshLiveActivity: true, trigger: "timer")
     }

@@ -6,6 +6,7 @@ final class LiveActivityManager {
     static let shared = LiveActivityManager()
     private static let maxGraphPoints = 74 // 6h10m at 5-min cadence; keep the newest, drop anything older
     private static let maxMinutePoints = 48
+    private static let liveActivityCurveCadenceSeconds = 15 * 60
     private static let foregroundRestartThreshold: TimeInterval = 60 * 60
 
     private init() {}
@@ -82,6 +83,12 @@ final class LiveActivityManager {
             let showIOBCurve = SharedData.showIOBCurvePhone
             let showActivityCurve = SharedData.showActivityCurvePhone
             let showInsulinDeliveryMarks = SharedData.showInsulinDeliveryMarksPhone
+            let insulinDeliveries = insulinHistory.insulinDeliveryHistory
+                .filter { Date(timeIntervalSince1970: $0.timeStamp) >= cutoffDate }
+                .sorted { $0.timeStamp < $1.timeStamp }
+            let insulinDeliveryDates = insulinDeliveries.map {
+                Date(timeIntervalSince1970: $0.timeStamp)
+            }
 
             let graphPoints = history.libreLinkUpGlucose
                 .filter { $0.glucose.date >= cutoffDate }
@@ -107,33 +114,37 @@ final class LiveActivityManager {
                     )
                 })
 
-            let iobPoints = Array(currentIOB.insulinOnBoardCurve
-                .filter { $0.date >= cutoffDate }
+            let iobPoints = Self.reducedCurveForLiveActivity(
+                currentIOB.insulinOnBoardCurve.filter { $0.date >= cutoffDate },
+                insulinDeliveryDates: insulinDeliveryDates,
+                retainingMaximum: false
+            )
                 .map {
                     FLWatchAttributes.ActivityPoint(
                         timestamp: $0.date,
                         valueInHundredths: Int(($0.value * Double(FLWatchAttributes.iobValueScale)).rounded())
                     )
-                })
+                }
 
-            let activityPoints = Array(currentIOB.insulinActivityCurve
-                .filter { $0.date >= cutoffDate }
+            let activityPoints = Self.reducedCurveForLiveActivity(
+                currentIOB.insulinActivityCurve.filter { $0.date >= cutoffDate },
+                insulinDeliveryDates: insulinDeliveryDates,
+                retainingMaximum: true
+            )
                 .map {
                     FLWatchAttributes.ActivityPoint(
                         timestamp: $0.date,
                         valueInHundredths: Int(($0.value * Double(FLWatchAttributes.activityValueScale)).rounded())
                     )
-                })
+                }
 
-            let insulinMarkers = Array(insulinHistory.insulinDeliveryHistory
-                .filter { Date(timeIntervalSince1970: $0.timeStamp) >= cutoffDate }
-                .sorted { $0.timeStamp < $1.timeStamp }
+            let insulinMarkers = insulinDeliveries
                 .map {
                     FLWatchAttributes.InsulinMarker(
                         timestamp: Date(timeIntervalSince1970: $0.timeStamp),
                         insulinUnitsInHundredths: Int(($0.insulinUnits * 100).rounded())
                     )
-                })
+                }
 
             let state = FLWatchAttributes.ContentState(
                 latestGlucoseValue: history.currentGlucose,
@@ -214,6 +225,47 @@ final class LiveActivityManager {
 
     var foregroundRestartAgeThreshold: TimeInterval {
         Self.foregroundRestartThreshold
+    }
+
+    /// Reduces five-minute insulin curves for the Live Activity presentation while retaining
+    /// endpoints, delivery-adjacent bends, and the activity peak that defines its visible shape.
+    private static func reducedCurveForLiveActivity(
+        _ points: [ActivityCurveDataPoint],
+        insulinDeliveryDates: [Date],
+        retainingMaximum: Bool
+    ) -> [ActivityCurveDataPoint] {
+        guard points.count > 2 else {
+            return points
+        }
+
+        let sortedPoints = points.sorted { $0.date < $1.date }
+        var retainedIndices: Set<Int> = [
+            sortedPoints.startIndex,
+            sortedPoints.index(before: sortedPoints.endIndex)
+        ]
+
+        for index in sortedPoints.indices
+        where sortedPoints[index].id.isMultiple(of: liveActivityCurveCadenceSeconds) {
+            retainedIndices.insert(index)
+        }
+
+        if retainingMaximum,
+           let maximumIndex = sortedPoints.indices.max(by: { sortedPoints[$0].value < sortedPoints[$1].value }) {
+            retainedIndices.insert(maximumIndex)
+        }
+
+        for deliveryDate in insulinDeliveryDates {
+            if let followingIndex = sortedPoints.firstIndex(where: { $0.date > deliveryDate }) {
+                retainedIndices.insert(followingIndex)
+                if followingIndex > sortedPoints.startIndex {
+                    retainedIndices.insert(sortedPoints.index(before: followingIndex))
+                }
+            } else {
+                retainedIndices.insert(sortedPoints.index(before: sortedPoints.endIndex))
+            }
+        }
+
+        return retainedIndices.sorted().map { sortedPoints[$0] }
     }
 
     func endAllActivities() async {

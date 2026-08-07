@@ -9,9 +9,17 @@ import SwiftUI
 import Charts
 
 struct PhoneAppGraphView: View {
-    private struct ChartPoint: Identifiable {
-        let id: Int
-        let date: Date
+    // Charts renders these compact models as vectorized plots instead of building
+    // a LineMark and a custom SwiftUI symbol subtree for every reading, and lets
+    // the per-point color be resolved once here instead of looked up per mark.
+    private struct GlucosePlotPoint {
+        let timestamp: Date
+        let value: Double
+        let color: Color
+    }
+
+    private struct PlotPoint {
+        let timestamp: Date
         let value: Double
     }
 
@@ -40,6 +48,7 @@ struct PhoneAppGraphView: View {
 //        let glucoseLineColor = Color(red: 0.54, green: 0.56, blue: 0.60)
 //        let minuteGlucoseColor = Color(red: 0.58, green: 0.38, blue: 0.95)
         let minuteGlucoseColor = Color(red: 0.96, green: 0.78, blue: 0.18) // #F5C72E
+        let glucosePointDiameter: CGFloat = 6
 
 //        A good option is a slightly deeper golden yellow:
 //
@@ -62,13 +71,16 @@ struct PhoneAppGraphView: View {
         
         let dateSixHoursTenAgo: Date = date.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
         let timeIntervalSince1970: Double = date.timeIntervalSince1970
-        let timeInternvalSixHoursAndTenAgo: Double = timeIntervalSince1970 - 3600 * 6 - 60 * 10
+        let chartStartTimestamp: Double = timeIntervalSince1970 - 3600 * 6 - 60 * 10
         
         let rectXStart: Date = dateSixHoursTenAgo
         let rectXStop: Date = date
         
         //Configuration
-        var chartYScaleMin: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 2.75 : 50 }
+        let sensorSettings = sensorSettingsStore.sensorSettings
+        let glucoseUnit = GlucoseUnit(uom: sensorSettings.uom)
+        let displaysMmol = glucoseUnit == .mmoll
+        let chartYScaleMin: Double = displaysMmol ? 2.75 : 50
         
         
         let maxBG = libreLinkUpHistory.maxBG
@@ -76,22 +88,25 @@ struct PhoneAppGraphView: View {
         let chartXScaleMin: Date = dateSixHoursTenAgo
         let chartXScaleMax: Date = date
         
-        var chartYScaleMax: Double { if maxBG > 350 { sensorSettingsStore.sensorSettings.uom == 0 ? 27 : 500}
-            else if maxBG > 250 { sensorSettingsStore.sensorSettings.uom == 0 ? 21 : 350}
-            else { sensorSettingsStore.sensorSettings.uom == 0 ? 15 : 250}
+        let chartYScaleMax: Double = if maxBG > 350 {
+            displaysMmol ? 27 : 500
+        } else if maxBG > 250 {
+            displaysMmol ? 21 : 350
+        } else {
+            displaysMmol ? 15 : 250
         }
         
         let quarterYAxisIOBCurve: Double = (chartYScaleMax - chartYScaleMin) / 4 + 0.25
-        var chartYScaleMinIOBCurve: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 3 : 50 }
+        let chartYScaleMinIOBCurve: Double = displaysMmol ? 3 : 50
         
-        var yAxisSteps: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 3 : 50 }
+        let yAxisSteps: Double = displaysMmol ? 3 : 50
         
         
-        var chartRectangleYStart: Double { sensorSettingsStore.sensorSettings.uom == 0 ? sensorSettingsStore.sensorSettings.targetLow.toMmolL() : Double(sensorSettingsStore.sensorSettings.targetLow) }
-        var chartRectangleYEnd: Double { sensorSettingsStore.sensorSettings.uom == 0 ? sensorSettingsStore.sensorSettings.targetHigh.toMmolL() : Double(sensorSettingsStore.sensorSettings.targetHigh) }
-        var chartRuleAlarmLL: Double { sensorSettingsStore.sensorSettings.uom == 0 ? sensorSettingsStore.sensorSettings.alarmLow.toMmolL() : Double(sensorSettingsStore.sensorSettings.alarmLow) }
+        let chartRectangleYStart = displaysMmol ? sensorSettings.targetLow.toMmolL() : Double(sensorSettings.targetLow)
+        let chartRectangleYEnd = displaysMmol ? sensorSettings.targetHigh.toMmolL() : Double(sensorSettings.targetHigh)
+        let chartRuleAlarmLL = displaysMmol ? sensorSettings.alarmLow.toMmolL() : Double(sensorSettings.alarmLow)
 
-        let unitString = sensorSettingsStore.sensorSettings.uom == 0 ? "mmol/L" : "mg/dL"
+        let unitString = glucoseUnit.description
         let graphData = libreLinkUpHistory.libreLinkUpGlucose.filter { $0.glucose.date > dateSixHoursTenAgo }
         let minuteGlucose = Array(libreLinkUpHistory.libreLinkUpMinuteGlucose.dropFirst())
         let insulinHistory = InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory
@@ -99,51 +114,55 @@ struct PhoneAppGraphView: View {
         let insulinActivityCurve = currentIOBSingleton.insulinActivityCurve
         let safeMaxIOB = max(currentIOBSingleton.maxIOB, 0.01)
         let safeMaxActivity = max(currentIOBSingleton.maxActivity, 0.01)
-        let glucoseChartPoints: [ChartPoint] = graphData.compactMap { item in
-            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)
+        let iobScale = quarterYAxisIOBCurve / safeMaxIOB
+        let activityScale = quarterYAxisIOBCurve / safeMaxActivity
+        let insulinMarkerShift = displaysMmol ? Double(5).toMmolL() : 5
+        let trailingMarkerThreshold = timeIntervalSince1970 - 30 * 60
+        let leadingMarkerThreshold = timeIntervalSince1970 - 3600 * 6 + 30 * 60
+        let glucoseChartPoints: [GlucosePlotPoint] = graphData.compactMap { item in
+            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnit: glucoseUnit)
             guard yValue.isFinite else { return nil }
-            return ChartPoint(id: item.id, date: item.glucose.date, value: yValue)
+            return GlucosePlotPoint(timestamp: item.glucose.date, value: yValue, color: item.color.color)
         }
 
-        let minuteGlucoseChartPoints: [ChartPoint] = minuteGlucose.compactMap { item in
-            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)
+        let minuteGlucoseChartPoints: [PlotPoint] = minuteGlucose.compactMap { item in
+            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnit: glucoseUnit)
             guard yValue.isFinite else { return nil }
-            return ChartPoint(id: item.id, date: item.glucose.date, value: yValue)
+            return PlotPoint(timestamp: item.glucose.date, value: yValue)
         }
 
-        let iobChartPoints: [ChartPoint] = showIOBCurvePhone
+        let iobChartPoints: [PlotPoint] = showIOBCurvePhone
             ? insulinOnBoardCurve.compactMap { item in
-                let yValue = chartYScaleMinIOBCurve + item.value * quarterYAxisIOBCurve / safeMaxIOB
+                let yValue = chartYScaleMinIOBCurve + item.value * iobScale
                 guard yValue.isFinite else { return nil }
-                return ChartPoint(id: item.id, date: item.date, value: yValue)
+                return PlotPoint(timestamp: item.date, value: yValue)
             }
             : []
 
-        let activityChartPoints: [ChartPoint] = showActivityCurvePhone
+        let activityChartPoints: [PlotPoint] = showActivityCurvePhone
             ? insulinActivityCurve.compactMap { item in
-                let yValue = chartYScaleMinIOBCurve + item.value * quarterYAxisIOBCurve / safeMaxActivity
+                let yValue = chartYScaleMinIOBCurve + item.value * activityScale
                 guard yValue.isFinite else { return nil }
-                return ChartPoint(id: item.id, date: item.date, value: yValue)
+                return PlotPoint(timestamp: item.date, value: yValue)
             }
             : []
 
         let insulinMarkerPoints: [InsulinMarkerPoint] = showInsulinDeliveryMarksPhone
             ? insulinHistory.compactMap { item in
-                guard item.timeStamp > timeInternvalSixHoursAndTenAgo else { return nil }
+                guard item.timeStamp > chartStartTimestamp else { return nil }
 
+                let markerDate = Date(timeIntervalSince1970: item.timeStamp)
                 let iobValueAtTimestamp = insulinOnBoardCurve.first(where: {
-                    $0.date > Date(timeIntervalSince1970: item.timeStamp)
+                    $0.date > markerDate
                 })?.value ?? 0
 
-                let shiftInYValue = 5
-                let shiftInY = sensorSettingsStore.sensorSettings.uom == 0 ? shiftInYValue.toMmolL() : Double(shiftInYValue)
-                let yValue = chartYScaleMinIOBCurve + shiftInY + iobValueAtTimestamp * quarterYAxisIOBCurve / safeMaxIOB
+                let yValue = chartYScaleMinIOBCurve + insulinMarkerShift + iobValueAtTimestamp * iobScale
                 guard yValue.isFinite else { return nil }
 
                 let alignment: Alignment
-                if item.timeStamp > timeIntervalSince1970 - 30 * 60 {
+                if item.timeStamp > trailingMarkerThreshold {
                     alignment = .trailing
-                } else if item.timeStamp < timeIntervalSince1970 - 3600 * 6 + 30 * 60 {
+                } else if item.timeStamp < leadingMarkerThreshold {
                     alignment = .leading
                 } else {
                     alignment = .center
@@ -151,7 +170,7 @@ struct PhoneAppGraphView: View {
 
                 return InsulinMarkerPoint(
                     id: item.id,
-                    date: Date(timeIntervalSince1970: item.timeStamp),
+                    date: markerDate,
                     value: yValue,
                     insulinUnits: item.insulinUnits,
                     alignment: alignment
@@ -175,7 +194,7 @@ struct PhoneAppGraphView: View {
             .opacity(0.2)
             .foregroundStyle(.green)
             
-            if sensorSettingsStore.sensorSettings.hasDrawableLowAlarm {
+            if sensorSettings.hasDrawableLowAlarm {
                 RuleMark(y: .value("Lower limit", chartRuleAlarmLL))
                     .foregroundStyle(.red)
                     .lineStyle(.init(lineWidth: 1, dash: [2]))
@@ -203,76 +222,69 @@ struct PhoneAppGraphView: View {
             //                    }
 
 //MARK: Glucose Graph
-            ForEach(glucoseChartPoints) { item in
-                
-                //                        PointMark(x: .value("Time", item.date),
-                //                                  y: .value("Glucose", item.value)
-                //                        )
-                //                        .foregroundStyle(item.color.color)
-                //                        .symbolSize(12)
-                LineMark(x: .value("Time", item.date),
-                         y: .value("Glucose", item.value),
-                         series: .value("Curve", "Glucose")
-                )
-                .interpolationMethod(.linear)
+            // Keep the continuous line separate from the independently colored
+            // points while rendering each collection as a single plot.
+            LinePlot(
+                glucoseChartPoints,
+                x: .value("Time", \.timestamp),
+                y: .value("Glucose", \.value),
+                series: .value("Curve", "Glucose")
+            )
+            .interpolationMethod(.linear)
 //                .foregroundStyle(glucoseLineColor)
-                .lineStyle(.init(lineWidth: 5))
-                .symbol(){
-                    Circle()
-                        .fill(graphData.first(where: { $0.id == item.id })?.color.color ?? .primary)
-                        .frame(width: 6, height: 6)
-                }
-                //                        .symbolSize(100)
-                
-                
-                if let selectedlibreLinkHistoryPoint, selectedlibreLinkHistoryPoint.id == item.id {
-                    RuleMark(x: .value("Time", item.date))
-                        .annotation(position: .top) {
-                            VStack(alignment: .leading, spacing: 6){
-                                Text("\(selectedlibreLinkHistoryPoint.glucose.date.toLocalTime())")
-                                
-                                Text("\(selectedlibreLinkHistoryPoint.glucose.value.asGlucose(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)) \(unitString)")
-                                    .font(.title3.bold())
-                            }
-                            .padding(.horizontal,10)
-                            .padding(.vertical,4)
-                            .background{
-                                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                    .fill(.background.shadow(.drop(radius: 2)))
-                            }
+            .lineStyle(.init(lineWidth: 5))
+
+            PointPlot(
+                glucoseChartPoints,
+                x: .value("Time", \.timestamp),
+                y: .value("Glucose", \.value)
+            )
+            // Keep vectorized key-path modifiers before modifiers that return
+            // only `some ChartContent`, such as the constant symbol size.
+            .foregroundStyle(\.color)
+            // symbolSize takes an area in pt², while glucosePointDiameter is the
+            // diameter used by the previous Circle frame. Convert that diameter to
+            // circle area to preserve the sizing.
+            .symbolSize(.pi * glucosePointDiameter * glucosePointDiameter / 4)
+
+//MARK: Selected point
+            // Only one rule is ever drawn, so it lives outside the glucose plot.
+            if let selectedlibreLinkHistoryPoint, selectedlibreLinkHistoryPoint.glucose.date > dateSixHoursTenAgo {
+                RuleMark(x: .value("Time", selectedlibreLinkHistoryPoint.glucose.date))
+                    .annotation(position: .top) {
+                        VStack(alignment: .leading, spacing: 6){
+                            Text("\(selectedlibreLinkHistoryPoint.glucose.date.toLocalTime())")
+
+                            Text("\(selectedlibreLinkHistoryPoint.glucose.value.asGlucose(glucoseUnit: glucoseUnit)) \(unitString)")
+                                .font(.title3.bold())
                         }
-                }
+                        .padding(.horizontal,10)
+                        .padding(.vertical,4)
+                        .background{
+                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                .fill(.background.shadow(.drop(radius: 2)))
+                        }
+                    }
             }
-            
+
 //MARK: Minute Glucose Trend
-            ForEach(minuteGlucoseChartPoints) { item in
-                PointMark(x: .value("Time", item.date),
-                          y: .value("Glucose", item.value)
-                )
-                .foregroundStyle(minuteGlucoseColor)
-                .symbolSize(20)
-                
-            }
+            PointPlot(
+                minuteGlucoseChartPoints,
+                x: .value("Time", \.timestamp),
+                y: .value("Glucose", \.value)
+            )
+            .foregroundStyle(minuteGlucoseColor)
+            .symbolSize(20)
             
 //MARK: IOB Curve
-            if showIOBCurvePhone == true {
-                if !insulinHistory.isEmpty, !iobChartPoints.isEmpty {
-                    
-                    ForEach(iobChartPoints) { item in
-                        LineMark(x: .value("Time", item.date),
-                                 y: .value("Insulin", item.value),
-                                 series: .value("Curve", "Insulin")
-                        )
-                        .foregroundStyle(.orange)
-                        //                    .interpolationMethod(.linear)
-                        //                    .lineStyle(.init(lineWidth: 5))
-                        //                    .symbol(){
-                        //                        Circle()
-                        //                            .fill(item.color.color)
-                        //                            .frame(width: 6, height: 6)
-                        //                    }
-                    }
-                }
+            if showIOBCurvePhone, !insulinHistory.isEmpty, !iobChartPoints.isEmpty {
+                LinePlot(
+                    iobChartPoints,
+                    x: .value("Time", \.timestamp),
+                    y: .value("Insulin", \.value),
+                    series: .value("Curve", "Insulin")
+                )
+                .foregroundStyle(.orange)
             }
                 
 //MARK: Insulin delivery marks
@@ -297,23 +309,14 @@ struct PhoneAppGraphView: View {
             
             
 //MARK: Insulin activity graph
-            if showActivityCurvePhone == true {
-                if !insulinHistory.isEmpty, !activityChartPoints.isEmpty {
-                    ForEach(activityChartPoints) { item in
-                        LineMark(x: .value("Time", item.date),
-                                 y: .value("Activity", item.value),
-                                 series: .value("Curve", "Activity")
-                        )
-                        .foregroundStyle(Color.brown)
-                        //                    .interpolationMethod(.linear)
-                        //                    .lineStyle(.init(lineWidth: 5))
-                        //                    .symbol(){
-                        //                        Circle()
-                        //                            .fill(item.color.color)
-                        //                            .frame(width: 6, height: 6)
-                        //                    }
-                    }
-                }
+            if showActivityCurvePhone, !insulinHistory.isEmpty, !activityChartPoints.isEmpty {
+                LinePlot(
+                    activityChartPoints,
+                    x: .value("Time", \.timestamp),
+                    y: .value("Activity", \.value),
+                    series: .value("Curve", "Activity")
+                )
+                .foregroundStyle(Color.brown)
             }
         }
         .chartXScale(domain: [chartXScaleMin, chartXScaleMax])
@@ -358,9 +361,10 @@ struct PhoneAppGraphView: View {
                         .onChanged { value in
                             let currentX = value.location
                             if let currentDate: Date = overlayProxy.value(atX: currentX.x) {
+                                let roundedCurrentDate = currentDate.toRounded(on: 1, .minute)
                                 //                                        let selectedlibreLinkHistoryPoint = libreLinkUpHistory[currentDate.toRounded(on: 1, .minute)]
                                 if let currentItem = libreLinkUpHistory.libreLinkUpGlucose.first(where: { item in
-                                    item.glucose.date.toRounded(on: 1, .minute) == currentDate.toRounded(on: 1, .minute)
+                                    item.glucose.date.toRounded(on: 1, .minute) == roundedCurrentDate
                                 }){
                                     self.selectedlibreLinkHistoryPoint = currentItem
                                 }                                     }

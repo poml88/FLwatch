@@ -10,9 +10,20 @@ import SwiftUI
 import Charts
 
 struct WatchAppGraphView: View {
-    private struct ChartPoint: Identifiable {
+    // On watchOS 11+ Charts renders these compact models as vectorized plots
+    // instead of building a LineMark and a custom SwiftUI symbol subtree for
+    // every reading. Both paths resolve the per-point color once here instead of
+    // looking it up per mark, so `id` is only needed by the watchOS 10 ForEach.
+    private struct GlucosePlotPoint: Identifiable {
         let id: Int
-        let date: Date
+        let timestamp: Date
+        let value: Double
+        let color: Color
+    }
+
+    private struct PlotPoint: Identifiable {
+        let id: Int
+        let timestamp: Date
         let value: Double
     }
 
@@ -37,7 +48,8 @@ struct WatchAppGraphView: View {
 //        let rectXStop: Date = libreLinkUpHistory.libreLinkUpGlucose.first?.glucose.date ?? Date(timeIntervalSinceNow: -1 * 60)
         
         let minuteGlucoseColor = Color(red: 0.96, green: 0.78, blue: 0.18)
-        
+        let glucosePointDiameter: CGFloat = 4
+
         let date: Date = Date.now
         
         let dateSixHoursTenAgo: Date = date.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
@@ -78,31 +90,31 @@ struct WatchAppGraphView: View {
         let insulinActivityCurve = currentIOBSingleton.insulinActivityCurve
         let safeMaxIOB = max(currentIOBSingleton.maxIOB, 0.01)
         let safeMaxActivity = max(currentIOBSingleton.maxActivity, 0.01)
-        let glucoseChartPoints: [ChartPoint] = graphData.compactMap { item in
+        let glucoseChartPoints: [GlucosePlotPoint] = graphData.compactMap { item in
             let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)
             guard yValue.isFinite else { return nil }
-            return ChartPoint(id: item.id, date: item.glucose.date, value: yValue)
+            return GlucosePlotPoint(id: item.id, timestamp: item.glucose.date, value: yValue, color: item.color.color)
         }
 
-        let minuteGlucoseChartPoints: [ChartPoint] = minuteGlucose.compactMap { item in
+        let minuteGlucoseChartPoints: [PlotPoint] = minuteGlucose.compactMap { item in
             let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)
             guard yValue.isFinite else { return nil }
-            return ChartPoint(id: item.id, date: item.glucose.date, value: yValue)
+            return PlotPoint(id: item.id, timestamp: item.glucose.date, value: yValue)
         }
 
-        let iobChartPoints: [ChartPoint] = showIOBCurveWatch
+        let iobChartPoints: [PlotPoint] = showIOBCurveWatch
             ? insulinOnBoardCurve.compactMap { item in
                 let yValue = chartYScaleMinIOBCurve + item.value * quarterYAxisIOBCurve / safeMaxIOB
                 guard yValue.isFinite else { return nil }
-                return ChartPoint(id: item.id, date: item.date, value: yValue)
+                return PlotPoint(id: item.id, timestamp: item.date, value: yValue)
             }
             : []
 
-        let activityChartPoints: [ChartPoint] = showActivityCurveWatch
+        let activityChartPoints: [PlotPoint] = showActivityCurveWatch
             ? insulinActivityCurve.compactMap { item in
                 let yValue = chartYScaleMinIOBCurve + item.value * quarterYAxisIOBCurve / safeMaxActivity
                 guard yValue.isFinite else { return nil }
-                return ChartPoint(id: item.id, date: item.date, value: yValue)
+                return PlotPoint(id: item.id, timestamp: item.date, value: yValue)
             }
             : []
 
@@ -139,145 +151,145 @@ struct WatchAppGraphView: View {
             : []
         
         
-        Chart {
-
+        // The vectorized plots need watchOS 11, so the two chart bodies are kept
+        // apart at the view level. Mixing them inside one Chart is not possible:
+        // ChartContentBuilder swaps buildPartialBlock for a variadic buildBlock
+        // exactly at watchOS 11, so a multi-mark `if #available` block inside a
+        // Chart has no builder that covers both sides. The chart modifiers below
+        // are View modifiers and apply to whichever branch is used.
+        Group {
+            if #available(watchOS 11.0, *) {
+                Chart {
 //MARK: Range Rectangle and Alarm Rules
-            RectangleMark(
-                xStart: .value("Rect Start Width", rectXStart),
-                xEnd: .value("Rect End Width", rectXStop),
-                //                xStart: .value("Rect Start Width", 1),
-                //                xEnd: .value("Rect End Width", 2),
-                yStart: .value("Rect Start Height", chartRectangleYStart),
-                yEnd: .value("Rect End Height", chartRectangleYEnd)
-            )
-            .opacity(0.2)
-            .foregroundStyle(.green)
-            
-            if sensorSettingsStore.sensorSettings.hasDrawableLowAlarm {
-                RuleMark(y: .value("Lower limit", chartRuleAlarmLL))
-                    .foregroundStyle(.red)
-                    .lineStyle(.init(lineWidth: 1, dash: [2]))
-            }
+                    rangeRectangle(xStart: rectXStart, xEnd: rectXStop, yStart: chartRectangleYStart, yEnd: chartRectangleYEnd)
 
-//                    RuleMark(x: .value("Scroll right", rectXStop))
-//                        .foregroundStyle(.yellow)
-//                        .lineStyle(.init(lineWidth: 1))
-            
-//                    RuleMark(y: .value("Upper limit", 225))
-//                        .foregroundStyle(.red)
-//                        .lineStyle(.init(lineWidth: 1, dash: [2]))
-       
+                    if sensorSettingsStore.sensorSettings.hasDrawableLowAlarm {
+                        alarmRule(chartRuleAlarmLL)
+                    }
+
 //MARK: Glucose Graph
-            ForEach(glucoseChartPoints) { item in
-                
-//                        PointMark(x: .value("Time", item.date),
-//                                  y: .value("Glucose", item.value)
-//                        )
-//                        .foregroundStyle(.red)
-//                        .symbolSize(3)
-                
-                LineMark(x: .value("Time", item.date),
-                         y: .value("Glucose", item.value),
-                         series: .value("Curve", "Glucose")
-                )
-                .interpolationMethod(.linear)
-                .lineStyle(.init(lineWidth: 3))
-                .symbol(){
-                    Circle()
-                        .fill(graphData.first(where: { $0.id == item.id })?.color.color ?? .primary)
-                        .frame(width: 4, height: 4)
-                }
-                
-                //                if let selectedlibreLinkHistoryPoint,selectedlibreLinkHistoryPoint.id == item.id {
-                //                    RuleMark(x: .value("Time", selectedlibreLinkHistoryPoint.glucose.date))
-                //                        .annotation(position: .top) {
-                //                            VStack(alignment: .leading, spacing: 6){
-                //                                Text("\(selectedlibreLinkHistoryPoint.glucose.date.toLocalTime())")
-                //
-                //                                Text("\(selectedlibreLinkHistoryPoint.glucose.value) mg/dL")
-                //                                    .font(.title3.bold())
-                //                            }
-                //                            .padding(.horizontal,10)
-                //                            .padding(.vertical,4)
-                //                            .background{
-                //                                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                //                                    .fill(.background.shadow(.drop(radius: 2)))
-                //                            }
-                //                        }
-                //                }
-            }
+                    // Keep the continuous line separate from the independently
+                    // colored points while rendering each as a single plot.
+                    LinePlot(
+                        glucoseChartPoints,
+                        x: .value("Time", \.timestamp),
+                        y: .value("Glucose", \.value),
+                        series: .value("Curve", "Glucose")
+                    )
+                    .interpolationMethod(.linear)
+                    .lineStyle(.init(lineWidth: 3))
+
+                    PointPlot(
+                        glucoseChartPoints,
+                        x: .value("Time", \.timestamp),
+                        y: .value("Glucose", \.value)
+                    )
+                    // Keep vectorized key-path modifiers before modifiers that
+                    // return only `some ChartContent`, such as the symbol size.
+                    .foregroundStyle(\.color)
+                    // symbolSize takes an area in pt², while glucosePointDiameter
+                    // is the diameter the Circle symbol uses below. Convert that
+                    // diameter to circle area so both paths draw the same size.
+                    .symbolSize(.pi * glucosePointDiameter * glucosePointDiameter / 4)
 
 //MARK: Minute Glucose Trend
-            ForEach(minuteGlucoseChartPoints) { item in
-                PointMark(x: .value("Time", item.date),
-                          y: .value("Glucose", item.value)
-                )
-                .foregroundStyle(minuteGlucoseColor)
-                .symbolSize(8)
-            }
+                    PointPlot(
+                        minuteGlucoseChartPoints,
+                        x: .value("Time", \.timestamp),
+                        y: .value("Glucose", \.value)
+                    )
+                    .foregroundStyle(minuteGlucoseColor)
+                    .symbolSize(8)
 
 //MARK: IOB Curve
-            if showIOBCurveWatch == true {
-                if !insulinHistory.isEmpty, !iobChartPoints.isEmpty {
-                    
-                    ForEach(iobChartPoints) { item in
-                        LineMark(x: .value("Time", item.date),
-                                 y: .value("Insulin", item.value),
-                                 series: .value("Curve", "Insulin")
+                    if showIOBCurveWatch, !insulinHistory.isEmpty, !iobChartPoints.isEmpty {
+                        LinePlot(
+                            iobChartPoints,
+                            x: .value("Time", \.timestamp),
+                            y: .value("Insulin", \.value),
+                            series: .value("Curve", "Insulin")
                         )
                         .foregroundStyle(.orange)
-                        //                    .interpolationMethod(.linear)
-                        //                    .lineStyle(.init(lineWidth: 5))
-                        //                    .symbol(){
-                        //                        Circle()
-                        //                            .fill(item.color.color)
-                        //                            .frame(width: 6, height: 6)
-                        //                    }
                     }
-                }
-            }
-                
+
 //MARK: Insulin delivery marks
-            if showInsulinDeliveryMarksWatch == true {
-                if !insulinMarkerPoints.isEmpty {
-                    ForEach(insulinMarkerPoints) { item in
-                            PointMark(x: .value("Time", item.date),
-                                      y: .value("Insulin", item.value)
-                            )
-                            .symbol {
-                                Image(systemName: "arrowtriangle.down.fill")
-                                    .foregroundColor(.orange)
-                                    .font(.system(size: 15))   // default
-                            }
-                            .annotation(alignment: item.alignment) {
-                                Text("\(item.insulinUnits, specifier: "%.1f")u")
-                                    .font(.footnote)
-                            }
+                    if showInsulinDeliveryMarksWatch, !insulinMarkerPoints.isEmpty {
+                        insulinMarkers(insulinMarkerPoints)
+                    }
+
+//MARK: Insulin activity graph
+                    if showActivityCurveWatch, !insulinHistory.isEmpty, !activityChartPoints.isEmpty {
+                        LinePlot(
+                            activityChartPoints,
+                            x: .value("Time", \.timestamp),
+                            y: .value("Activity", \.value),
+                            series: .value("Curve", "Activity")
+                        )
+                        .foregroundStyle(.brown)
                     }
                 }
-            }
-            
-        
+            } else {
+                Chart {
+//MARK: Range Rectangle and Alarm Rules
+                    rangeRectangle(xStart: rectXStart, xEnd: rectXStop, yStart: chartRectangleYStart, yEnd: chartRectangleYEnd)
+
+                    if sensorSettingsStore.sensorSettings.hasDrawableLowAlarm {
+                        alarmRule(chartRuleAlarmLL)
+                    }
+
+//MARK: Glucose Graph
+                    ForEach(glucoseChartPoints) { item in
+                        LineMark(x: .value("Time", item.timestamp),
+                                 y: .value("Glucose", item.value),
+                                 series: .value("Curve", "Glucose")
+                        )
+                        .interpolationMethod(.linear)
+                        .lineStyle(.init(lineWidth: 3))
+                        .symbol(){
+                            Circle()
+                                .fill(item.color)
+                                .frame(width: glucosePointDiameter, height: glucosePointDiameter)
+                        }
+                    }
+
+//MARK: Minute Glucose Trend
+                    ForEach(minuteGlucoseChartPoints) { item in
+                        PointMark(x: .value("Time", item.timestamp),
+                                  y: .value("Glucose", item.value)
+                        )
+                        .foregroundStyle(minuteGlucoseColor)
+                        .symbolSize(8)
+                    }
+
+//MARK: IOB Curve
+                    if showIOBCurveWatch, !insulinHistory.isEmpty, !iobChartPoints.isEmpty {
+                        ForEach(iobChartPoints) { item in
+                            LineMark(x: .value("Time", item.timestamp),
+                                     y: .value("Insulin", item.value),
+                                     series: .value("Curve", "Insulin")
+                            )
+                            .foregroundStyle(.orange)
+                        }
+                    }
+
+//MARK: Insulin delivery marks
+                    if showInsulinDeliveryMarksWatch, !insulinMarkerPoints.isEmpty {
+                        insulinMarkers(insulinMarkerPoints)
+                    }
+
 //MARK: Insulin activity graph
-        if showActivityCurveWatch == true {
-            if !insulinHistory.isEmpty, !activityChartPoints.isEmpty {
-                ForEach(activityChartPoints) { item in
-                    LineMark(x: .value("Time", item.date),
-                             y: .value("Activity", item.value),
-                             series: .value("Curve", "Activity")
-                    )
-                    .foregroundStyle(Color.brown)
-                    //                    .interpolationMethod(.linear)
-                    //                    .lineStyle(.init(lineWidth: 5))
-                    //                    .symbol(){
-                    //                        Circle()
-                    //                            .fill(item.color.color)
-                    //                            .frame(width: 6, height: 6)
-                    //                    }
+                    if showActivityCurveWatch, !insulinHistory.isEmpty, !activityChartPoints.isEmpty {
+                        ForEach(activityChartPoints) { item in
+                            LineMark(x: .value("Time", item.timestamp),
+                                     y: .value("Activity", item.value),
+                                     series: .value("Curve", "Activity")
+                            )
+                            .foregroundStyle(Color.brown)
+                        }
+                    }
                 }
             }
         }
-    }
         .chartXScale(domain: [chartXScaleMin, chartXScaleMax])
         .chartYScale(domain: [chartYScaleMin, chartYScaleMax])
         
@@ -335,6 +347,42 @@ struct WatchAppGraphView: View {
         //                    )
         //            }
         .padding(.top, -20)    }
+
+    // Content that is identical on both paths. Each returns a single mark, so no
+    // result builder is involved and both watchOS generations accept them.
+    private func rangeRectangle(xStart: Date, xEnd: Date, yStart: Double, yEnd: Double) -> some ChartContent {
+        RectangleMark(
+            xStart: .value("Rect Start Width", xStart),
+            xEnd: .value("Rect End Width", xEnd),
+            yStart: .value("Rect Start Height", yStart),
+            yEnd: .value("Rect End Height", yEnd)
+        )
+        .opacity(0.2)
+        .foregroundStyle(.green)
+    }
+
+    private func alarmRule(_ value: Double) -> some ChartContent {
+        RuleMark(y: .value("Lower limit", value))
+            .foregroundStyle(.red)
+            .lineStyle(.init(lineWidth: 1, dash: [2]))
+    }
+
+    private func insulinMarkers(_ points: [InsulinMarkerPoint]) -> some ChartContent {
+        ForEach(points) { item in
+            PointMark(x: .value("Time", item.date),
+                      y: .value("Insulin", item.value)
+            )
+            .symbol {
+                Image(systemName: "arrowtriangle.down.fill")
+                    .foregroundColor(.orange)
+                    .font(.system(size: 15))   // default
+            }
+            .annotation(alignment: item.alignment) {
+                Text("\(item.insulinUnits, specifier: "%.1f")u")
+                    .font(.footnote)
+            }
+        }
+    }
 }
 
 #Preview {
