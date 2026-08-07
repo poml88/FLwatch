@@ -171,15 +171,13 @@ struct FLWatchLiveActivityWidget: Widget {
                         contentState: context.state,
                         xAxisFont: Font.system(size: 8, weight: .regular),
                         yAxisFont: Font.system(size: 8, weight: .regular),
-                        yAxisWidth: 29,
-                        xAxisHeight: 14,
                         graphLineWidth: 3,
                         graphPointSize: 3,
                         minutePointArea: 8,
                         insulinMarkerFontSize: 12,
                         insulinAnnotationFont: Font.system(size: 12, weight: .regular)
                     )
-                    .frame(height: 84)
+                    .frame(height: 96)
                     .frame(maxWidth: .infinity)
                     .dynamicTypeSize(.large)
 #endif
@@ -319,7 +317,7 @@ private struct SmallSupplementalActivityView: View {
 //#endif
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.trailing, 7)
+//            .padding(.trailing, 5)
             
 #if false
             GlucoseLiveActivityChart(
@@ -341,9 +339,6 @@ private struct SmallSupplementalActivityView: View {
                 contentState: contentState,
                 xAxisFont: Font.system(size: 8, weight: .regular),
                 yAxisFont: Font.system(size: 8, weight: .regular),
-                // Use tighter axis reserves in the height-constrained Watch presentation.
-                yAxisWidth: 22,
-                xAxisHeight: 10,
                 graphLineWidth: 2,
                 graphPointSize: 2,
                 minutePointArea: 5,
@@ -360,8 +355,10 @@ private struct SmallSupplementalActivityView: View {
         //                    .foregroundStyle(.secondary)
         //            }
         //        }
-        .padding(.leading, 5)
-        .padding(.top, 3)
+//        .padding(.leading, 5)
+//        .padding(.trailing, 2)
+//        .padding(.top, 3)
+        .padding(5)
 //#endif
     }
 }
@@ -425,6 +422,7 @@ private struct MediumSupplementalActivityView: View {
                 )
                 .monospacedDigit()
                 .lineLimit(1)
+                .multilineTextAlignment(.trailing)
                 .frame(width: 60, alignment: .trailing)
 //#endif
             }
@@ -451,8 +449,6 @@ private struct MediumSupplementalActivityView: View {
                 contentState: contentState,
                 xAxisFont: .footnote,
                 yAxisFont: .footnote,
-                yAxisWidth: 29,
-                xAxisHeight: 14,
                 graphLineWidth: 3,
                 graphPointSize: 3,
                 minutePointArea: 10,
@@ -470,7 +466,7 @@ private struct MediumSupplementalActivityView: View {
         //                    .foregroundStyle(.secondary)
         //            }
         //        }
-        .padding()
+        .padding(15)
         .frame(height: 160)
 //#endif
     }
@@ -482,6 +478,18 @@ private struct GlucoseLiveActivityCanvas: View {
     private struct InsulinMarkerPlotPoint {
         let marker: FLWatchAttributes.InsulinMarker
         let yPosition: Double
+    }
+
+    private struct YAxisLabel {
+        let value: Double
+        let text: GraphicsContext.ResolvedText
+        let size: CGSize
+    }
+
+    private struct XAxisTick {
+        let date: Date
+        let label: GraphicsContext.ResolvedText?
+        let labelSize: CGSize?
     }
 
     private struct PlotGeometry {
@@ -509,15 +517,14 @@ private struct GlucoseLiveActivityCanvas: View {
     let contentState: FLWatchAttributes.ContentState
     let xAxisFont: Font
     let yAxisFont: Font
-    let yAxisWidth: CGFloat
-    let xAxisHeight: CGFloat
     let graphLineWidth: CGFloat
     let graphPointSize: CGFloat
     let minutePointArea: CGFloat
     let insulinMarkerFontSize: CGFloat
     let insulinAnnotationFont: Font
     
-    private let yAxisLabelInset: CGFloat = 4
+    private let yAxisLabelGap: CGFloat = 3
+    private let xAxisLabelGap: CGFloat = 1
     private let curveLineWidth: CGFloat = 2
     
     private var chartYScaleMin: Double {
@@ -567,11 +574,33 @@ private struct GlucoseLiveActivityCanvas: View {
             : []
         
         Canvas { context, size in
+            let xAxisTicks = resolvedXAxisTicks(
+                in: context,
+                minimum: chartXScaleMin,
+                maximum: chartXScaleMax,
+                availableSize: size
+            )
+            let yAxisLabels = resolvedYAxisLabels(
+                in: context,
+                minimum: yScaleMin,
+                maximum: yScaleMax,
+                availableSize: size
+            )
+            let maximumYAxisLabelWidth = yAxisLabels.map { $0.size.width }.max() ?? 0
+            let maximumYAxisLabelHeight = yAxisLabels.map { $0.size.height }.max() ?? 0
+            let maximumXAxisLabelHeight = xAxisTicks.compactMap { $0.labelSize?.height }.max() ?? 0
+            let yAxisWidth = ceil(maximumYAxisLabelWidth) + yAxisLabelGap
+            // Reuse the y-label measurements so edge labels fit without fixed presentation insets.
+            let plotTopInset = ceil(maximumYAxisLabelHeight / 2)
+            let plotBottomInset = max(
+                plotTopInset,
+                ceil(maximumXAxisLabelHeight) + xAxisLabelGap
+            )
             let plotRect = CGRect(
                 x: 0,
-                y: yAxisLabelInset,
+                y: plotTopInset,
                 width: max(0, size.width - yAxisWidth),
-                height: max(0, size.height - xAxisHeight - 2 * yAxisLabelInset)
+                height: max(0, size.height - plotTopInset - plotBottomInset)
             )
             guard plotRect.width > 0, plotRect.height > 0 else { return }
             
@@ -588,7 +617,13 @@ private struct GlucoseLiveActivityCanvas: View {
             plotContext.clip(to: clipPath)
             
             drawTargetRange(in: &plotContext, geometry: geometry)
-            drawAxes(in: &plotContext, labelsIn: &context, geometry: geometry)
+            drawAxes(
+                in: &plotContext,
+                labelsIn: &context,
+                geometry: geometry,
+                xAxisTicks: xAxisTicks,
+                yAxisLabels: yAxisLabels
+            )
             drawAlarmLimit(in: &plotContext, geometry: geometry)
             drawGlucoseLine(in: &plotContext, geometry: geometry)
             drawGlucosePoints(in: &plotContext, geometry: geometry)
@@ -620,16 +655,18 @@ private struct GlucoseLiveActivityCanvas: View {
     private func drawAxes(
         in plotContext: inout GraphicsContext,
         labelsIn context: inout GraphicsContext,
-        geometry: PlotGeometry
+        geometry: PlotGeometry,
+        xAxisTicks: [XAxisTick],
+        yAxisLabels: [YAxisLabel]
     ) {
-        for tick in hourlyTicks(from: geometry.xMinimum, through: geometry.xMaximum) {
+        for tick in xAxisTicks {
             let x = geometry.xPosition(for: tick.date)
             var tickPath = Path()
             tickPath.move(to: CGPoint(x: x, y: geometry.rect.maxY))
             tickPath.addLine(to: CGPoint(x: x, y: geometry.rect.maxY - 5))
             plotContext.stroke(tickPath, with: .color(.gray), lineWidth: 1)
             
-            guard tick.showsLabel else { continue }
+            guard let label = tick.label else { continue }
             var gridPath = Path()
             gridPath.move(to: CGPoint(x: x, y: geometry.rect.minY))
             gridPath.addLine(to: CGPoint(x: x, y: geometry.rect.maxY))
@@ -639,27 +676,66 @@ private struct GlucoseLiveActivityCanvas: View {
                 style: StrokeStyle(lineWidth: 0.5, dash: [2, 3])
             )
             context.draw(
-                Text(tick.date, format: .dateTime.hour(.defaultDigits(amPM: .narrow)))
-                    .font(xAxisFont)
-                    .foregroundStyle(.secondary),
-                at: CGPoint(x: x, y: geometry.rect.maxY + 1),
+                label,
+                at: CGPoint(x: x, y: geometry.rect.maxY + xAxisLabelGap),
                 anchor: .top
             )
         }
         
-        let firstYTick = ceil(geometry.yMinimum / yAxisStride) * yAxisStride
-        for value in stride(from: firstYTick, through: geometry.yMaximum, by: yAxisStride) {
-            let y = geometry.yPosition(for: value)
+        for label in yAxisLabels {
+            let y = geometry.yPosition(for: label.value)
             var gridPath = Path()
             gridPath.move(to: CGPoint(x: geometry.rect.minX, y: y))
             gridPath.addLine(to: CGPoint(x: geometry.rect.maxX, y: y))
             plotContext.stroke(gridPath, with: .color(.gray.opacity(0.4)), lineWidth: 0.5)
             context.draw(
+                label.text,
+                at: CGPoint(x: geometry.rect.maxX + yAxisLabelGap, y: y),
+                anchor: .leading
+            )
+        }
+    }
+
+    private func resolvedXAxisTicks(
+        in context: GraphicsContext,
+        minimum: Date,
+        maximum: Date,
+        availableSize: CGSize
+    ) -> [XAxisTick] {
+        hourlyTicks(from: minimum, through: maximum).map { tick in
+            guard tick.showsLabel else {
+                return XAxisTick(date: tick.date, label: nil, labelSize: nil)
+            }
+            let label = context.resolve(
+                Text(tick.date, format: .dateTime.hour(.defaultDigits(amPM: .narrow)))
+                    .font(xAxisFont)
+                    .foregroundStyle(.secondary)
+            )
+            return XAxisTick(
+                date: tick.date,
+                label: label,
+                labelSize: label.measure(in: availableSize)
+            )
+        }
+    }
+
+    private func resolvedYAxisLabels(
+        in context: GraphicsContext,
+        minimum: Double,
+        maximum: Double,
+        availableSize: CGSize
+    ) -> [YAxisLabel] {
+        let firstTick = ceil(minimum / yAxisStride) * yAxisStride
+        return stride(from: firstTick, through: maximum, by: yAxisStride).map { value in
+            let text = context.resolve(
                 Text(verbatim: String(Int(value.rounded())))
                     .font(yAxisFont)
-                    .foregroundStyle(.secondary),
-                at: CGPoint(x: geometry.rect.maxX + 3, y: y),
-                anchor: .leading
+                    .foregroundStyle(.secondary)
+            )
+            return YAxisLabel(
+                value: value,
+                text: text,
+                size: text.measure(in: availableSize)
             )
         }
     }
