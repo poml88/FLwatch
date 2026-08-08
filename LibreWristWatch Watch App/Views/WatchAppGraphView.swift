@@ -54,35 +54,44 @@ struct WatchAppGraphView: View {
         
         let dateSixHoursTenAgo: Date = date.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
         let timeIntervalSince1970: Double = date.timeIntervalSince1970
-        let timeInternvalSixHoursAndTenAgo: Double = timeIntervalSince1970 - 3600 * 6 - 60 * 10
-        
-        
+        let chartStartTimestamp: Double = timeIntervalSince1970 - 3600 * 6 - 60 * 10
+
+
         let rectXStart: Date = dateSixHoursTenAgo
-        let rectXStop: Date = Date(timeIntervalSinceNow: 0)
-        
+        let rectXStop: Date = date
+
         //Configuration
-        var chartYScaleMin: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 2.75 : 50 }
-        
+        // Resolved once: the per-point loops below would otherwise re-read the
+        // observable settings store and rebuild the unit for every reading.
+        let sensorSettings = sensorSettingsStore.sensorSettings
+        let glucoseUnit = GlucoseUnit(uom: sensorSettings.uom)
+        let displaysMmol = glucoseUnit == .mmoll
+        let chartYScaleMin: Double = displaysMmol ? 2.75 : 50
+
         let maxBG = libreLinkUpHistory.maxBG
-        
+
         let chartXScaleMin: Date = dateSixHoursTenAgo
         let chartXScaleMax: Date = date
-        
-        var chartYScaleMax: Double { if maxBG > 300 { sensorSettingsStore.sensorSettings.uom == 0 ? 21 : 400}
-            else if maxBG > 225 { sensorSettingsStore.sensorSettings.uom == 0 ? 18 : 300}
-            else { sensorSettingsStore.sensorSettings.uom == 0 ? 12.5 : 225}
+
+        // Tighter tiers than the phone: the watch chart is much shorter, so the
+        // usable range is capped lower.
+        let chartYScaleMax: Double = if maxBG > 300 {
+            displaysMmol ? 21 : 400
+        } else if maxBG > 225 {
+            displaysMmol ? 18 : 300
+        } else {
+            displaysMmol ? 12.5 : 225
         }
-        
+
         let quarterYAxisIOBCurve: Double = (chartYScaleMax - chartYScaleMin) / 4 + 0.25
-        var chartYScaleMinIOBCurve: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 3 : 50 }
-        
-//                var chartYScaleMax: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 12.5 : 225 }
-        var yAxisSteps: Double { sensorSettingsStore.sensorSettings.uom == 0 ? 3 : 50 }
-        
-        
-        var chartRectangleYStart: Double { sensorSettingsStore.sensorSettings.uom == 0 ? sensorSettingsStore.sensorSettings.targetLow.toMmolL() : Double(sensorSettingsStore.sensorSettings.targetLow) }
-        var chartRectangleYEnd: Double { sensorSettingsStore.sensorSettings.uom == 0 ? sensorSettingsStore.sensorSettings.targetHigh.toMmolL() : Double(sensorSettingsStore.sensorSettings.targetHigh) }
-        var chartRuleAlarmLL: Double { sensorSettingsStore.sensorSettings.uom == 0 ? sensorSettingsStore.sensorSettings.alarmLow.toMmolL() : Double(sensorSettingsStore.sensorSettings.alarmLow) }
+        let chartYScaleMinIOBCurve: Double = displaysMmol ? 3 : 50
+
+        let yAxisSteps: Double = displaysMmol ? 3 : 50
+
+
+        let chartRectangleYStart = displaysMmol ? sensorSettings.targetLow.toMmolL() : Double(sensorSettings.targetLow)
+        let chartRectangleYEnd = displaysMmol ? sensorSettings.targetHigh.toMmolL() : Double(sensorSettings.targetHigh)
+        let chartRuleAlarmLL = displaysMmol ? sensorSettings.alarmLow.toMmolL() : Double(sensorSettings.alarmLow)
         let graphData = libreLinkUpHistory.libreLinkUpGlucose.filter { $0.glucose.date > dateSixHoursTenAgo }
         let minuteGlucose = Array(libreLinkUpHistory.libreLinkUpMinuteGlucose.dropFirst())
         let insulinHistory = InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory
@@ -90,21 +99,28 @@ struct WatchAppGraphView: View {
         let insulinActivityCurve = currentIOBSingleton.insulinActivityCurve
         let safeMaxIOB = max(currentIOBSingleton.maxIOB, 0.01)
         let safeMaxActivity = max(currentIOBSingleton.maxActivity, 0.01)
+        let iobScale = quarterYAxisIOBCurve / safeMaxIOB
+        let activityScale = quarterYAxisIOBCurve / safeMaxActivity
+        // Wider than the phone's 5 mg/dL so the markers clear the IOB curve on
+        // the shorter watch chart; the alignment thresholds are wider too.
+        let insulinMarkerShift = displaysMmol ? Double(10).toMmolL() : 10
+        let trailingMarkerThreshold = timeIntervalSince1970 - 40 * 60
+        let leadingMarkerThreshold = timeIntervalSince1970 - 3600 * 6 + 40 * 60
         let glucoseChartPoints: [GlucosePlotPoint] = graphData.compactMap { item in
-            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)
+            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnit: glucoseUnit)
             guard yValue.isFinite else { return nil }
             return GlucosePlotPoint(id: item.id, timestamp: item.glucose.date, value: yValue, color: item.color.color)
         }
 
         let minuteGlucoseChartPoints: [PlotPoint] = minuteGlucose.compactMap { item in
-            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnitValue: sensorSettingsStore.sensorSettings.uom)
+            let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnit: glucoseUnit)
             guard yValue.isFinite else { return nil }
             return PlotPoint(id: item.id, timestamp: item.glucose.date, value: yValue)
         }
 
         let iobChartPoints: [PlotPoint] = showIOBCurveWatch
             ? insulinOnBoardCurve.compactMap { item in
-                let yValue = chartYScaleMinIOBCurve + item.value * quarterYAxisIOBCurve / safeMaxIOB
+                let yValue = chartYScaleMinIOBCurve + item.value * iobScale
                 guard yValue.isFinite else { return nil }
                 return PlotPoint(id: item.id, timestamp: item.date, value: yValue)
             }
@@ -112,7 +128,7 @@ struct WatchAppGraphView: View {
 
         let activityChartPoints: [PlotPoint] = showActivityCurveWatch
             ? insulinActivityCurve.compactMap { item in
-                let yValue = chartYScaleMinIOBCurve + item.value * quarterYAxisIOBCurve / safeMaxActivity
+                let yValue = chartYScaleMinIOBCurve + item.value * activityScale
                 guard yValue.isFinite else { return nil }
                 return PlotPoint(id: item.id, timestamp: item.date, value: yValue)
             }
@@ -120,21 +136,20 @@ struct WatchAppGraphView: View {
 
         let insulinMarkerPoints: [InsulinMarkerPoint] = showInsulinDeliveryMarksWatch
             ? insulinHistory.compactMap { item in
-                guard item.timeStamp > timeInternvalSixHoursAndTenAgo else { return nil }
+                guard item.timeStamp > chartStartTimestamp else { return nil }
 
+                let markerDate = Date(timeIntervalSince1970: item.timeStamp)
                 let iobValueAtTimestamp = insulinOnBoardCurve.first(where: {
-                    $0.date > Date(timeIntervalSince1970: item.timeStamp)
+                    $0.date > markerDate
                 })?.value ?? 1
 
-                let shiftInYValue = 10
-                let shiftInY = sensorSettingsStore.sensorSettings.uom == 0 ? shiftInYValue.toMmolL() : Double(shiftInYValue)
-                let yValue = chartYScaleMinIOBCurve + shiftInY + iobValueAtTimestamp * quarterYAxisIOBCurve / safeMaxIOB
+                let yValue = chartYScaleMinIOBCurve + insulinMarkerShift + iobValueAtTimestamp * iobScale
                 guard yValue.isFinite else { return nil }
 
                 let alignment: Alignment
-                if item.timeStamp > timeIntervalSince1970 - 40 * 60 {
+                if item.timeStamp > trailingMarkerThreshold {
                     alignment = .trailing
-                } else if item.timeStamp < timeIntervalSince1970 - 3600 * 6 + 40 * 60 {
+                } else if item.timeStamp < leadingMarkerThreshold {
                     alignment = .leading
                 } else {
                     alignment = .center
@@ -142,7 +157,7 @@ struct WatchAppGraphView: View {
 
                 return InsulinMarkerPoint(
                     id: item.id,
-                    date: Date(timeIntervalSince1970: item.timeStamp),
+                    date: markerDate,
                     value: yValue,
                     insulinUnits: item.insulinUnits,
                     alignment: alignment
@@ -163,7 +178,7 @@ struct WatchAppGraphView: View {
 //MARK: Range Rectangle and Alarm Rules
                     rangeRectangle(xStart: rectXStart, xEnd: rectXStop, yStart: chartRectangleYStart, yEnd: chartRectangleYEnd)
 
-                    if sensorSettingsStore.sensorSettings.hasDrawableLowAlarm {
+                    if sensorSettings.hasDrawableLowAlarm {
                         alarmRule(chartRuleAlarmLL)
                     }
 
@@ -229,11 +244,16 @@ struct WatchAppGraphView: View {
                     }
                 }
             } else {
+                // watchOS 10 fallback. It builds a SwiftUI symbol subtree per
+                // reading, which is the cost the vectorized branch above avoids,
+                // and it only ever runs on Series 4/5/SE1 — the last models that
+                // cannot go past watchOS 10. Deliberately left unoptimized: that
+                // hardware ages out on its own. Keep it working, don't tune it.
                 Chart {
 //MARK: Range Rectangle and Alarm Rules
                     rangeRectangle(xStart: rectXStart, xEnd: rectXStop, yStart: chartRectangleYStart, yEnd: chartRectangleYEnd)
 
-                    if sensorSettingsStore.sensorSettings.hasDrawableLowAlarm {
+                    if sensorSettings.hasDrawableLowAlarm {
                         alarmRule(chartRuleAlarmLL)
                     }
 

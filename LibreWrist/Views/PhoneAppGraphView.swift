@@ -251,7 +251,10 @@ struct PhoneAppGraphView: View {
             // Only one rule is ever drawn, so it lives outside the glucose plot.
             if let selectedlibreLinkHistoryPoint, selectedlibreLinkHistoryPoint.glucose.date > dateSixHoursTenAgo {
                 RuleMark(x: .value("Time", selectedlibreLinkHistoryPoint.glucose.date))
-                    .annotation(position: .top) {
+                    // Without the overflow resolution the detail box is clipped by
+                    // the chart edge for readings near the start or end of the window.
+                    .annotation(position: .top,
+                                overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
                         VStack(alignment: .leading, spacing: 6){
                             Text("\(selectedlibreLinkHistoryPoint.glucose.date.toLocalTime())")
 
@@ -357,19 +360,31 @@ struct PhoneAppGraphView: View {
         .chartOverlay { overlayProxy in
             GeometryReader { geometryProxy in
                 Rectangle().fill(.clear).contentShape(Rectangle())
-                    .gesture(DragGesture()
+                    // minimumDistance 0 so a plain tap already shows the value;
+                    // the plain TabView above has no competing horizontal swipe.
+                    .gesture(DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            let currentX = value.location
-                            if let currentDate: Date = overlayProxy.value(atX: currentX.x) {
-                                let roundedCurrentDate = currentDate.toRounded(on: 1, .minute)
-                                //                                        let selectedlibreLinkHistoryPoint = libreLinkUpHistory[currentDate.toRounded(on: 1, .minute)]
-                                if let currentItem = libreLinkUpHistory.libreLinkUpGlucose.first(where: { item in
-                                    item.glucose.date.toRounded(on: 1, .minute) == roundedCurrentDate
-                                }){
-                                    self.selectedlibreLinkHistoryPoint = currentItem
-                                }                                     }
+                            guard let currentDate: Date = overlayProxy.value(atX: value.location.x) else { return }
+
+                            // Snap to the reading nearest the finger. Matching on the
+                            // rounded minute instead left the marker on its last hit
+                            // whenever the touched minute held no reading. Comparing
+                            // raw time intervals also keeps Calendar out of a gesture
+                            // that fires on every frame.
+                            let currentTimestamp = currentDate.timeIntervalSince1970
+                            let nearestItem = graphData.min { lhs, rhs in
+                                abs(lhs.glucose.date.timeIntervalSince1970 - currentTimestamp)
+                                    < abs(rhs.glucose.date.timeIntervalSince1970 - currentTimestamp)
+                            }
+
+                            // SwiftUI does not coalesce equal @State writes, so
+                            // assigning the same reading again would rebuild the whole
+                            // chart on every drag update.
+                            guard let nearestItem,
+                                  nearestItem.glucose.date != selectedlibreLinkHistoryPoint?.glucose.date else { return }
+                            self.selectedlibreLinkHistoryPoint = nearestItem
                         }
-                             
+
                         .onEnded { value in
                             self.selectedlibreLinkHistoryPoint = nil
                         }
