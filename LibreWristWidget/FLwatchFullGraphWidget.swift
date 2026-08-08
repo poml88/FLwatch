@@ -70,22 +70,68 @@ struct FLwatchFullGraphWidgetEntryView: View {
     var body: some View {
         switch family {
         case .systemSmall:
-            ZStack {
+            VStack {
+                HStack {
+                    Spacer()
+                    Text(verbatim: glucose)
+                        .font(.title2.weight(glucoseFontWeight))
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                        .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
+                        .strikethrough(isStaleGlucose)
+                    Text(verbatim: entry.lastGlucoseMeasurement.trendArrow?.symbol ?? "-")
+                        .font(.title2.weight(.heavy).monospaced())
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                        .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
+                    Spacer()
+                    Button(intent: ReloadWidgetIntent()) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 20, weight: .heavy, design: .monospaced))
+                            .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
+                    }
+                }
+                .padding(.top, 5)
+                .padding(.bottom, -2)
+
+                graphView(style: smallChartStyle)
+
+                HStack {
+                    Spacer()
+                    Text(currentIOB)
+                        .font(.footnote.weight(.heavy).monospaced())
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                        .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
+                    Spacer()
+                    Text(entry.date, style: .timer)
+                        .font(.footnote.weight(.heavy).monospaced())
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                        .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
+                        .frame(width: 60, alignment: .trailing)
+                        .monospacedDigit()
+                    Spacer()
+                }
+                .padding(.bottom, 4)
+            }
+            .containerBackground(for: .widget) {
                 colorScheme == .dark ? Color.black : entry.lastGlucoseMeasurement.color.color
-                VStack {
+            }
+
+        case .systemMedium:
+            HStack {
+                graphView(style: mediumChartStyle)
+                    .padding()
+                    .padding(.trailing, -15)
+
+                VStack(alignment: .center, spacing: 0) {
                     HStack {
                         Spacer()
-                        Text(verbatim: glucose)
-                            .font(.title2.weight(glucoseFontWeight))
-                            .minimumScaleFactor(0.7)
-                            .lineLimit(1)
-                            .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
-                            .strikethrough(isStaleGlucose)
                         Text(verbatim: entry.lastGlucoseMeasurement.trendArrow?.symbol ?? "-")
-                            .font(.title2.weight(.heavy).monospaced())
-                            .minimumScaleFactor(0.7)
-                            .lineLimit(1)
+                            .font(.system(size: 48, weight: .heavy, design: .monospaced))
                             .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
+                            .padding(.leading, 40)
                         Spacer()
                         Button(intent: ReloadWidgetIntent()) {
                             Image(systemName: "arrow.clockwise")
@@ -93,83 +139,31 @@ struct FLwatchFullGraphWidgetEntryView: View {
                                 .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
                         }
                     }
-                    .padding(.top, 5)
-                    .padding(.bottom, -2)
-                    
-                    graphView(style: smallChartStyle)
-                    
-                    HStack {
-                        Spacer()
+                    Text(verbatim: glucose)
+                        .font(.system(size: 52, weight: glucoseFontWeight))
+                        .strikethrough(isStaleGlucose)
+                        .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
+                        .padding(.top, -5)
+                    HStack(spacing: 15) {
                         Text(currentIOB)
-                            .font(.footnote.weight(.heavy).monospaced())
+                            .font(.body.weight(.heavy))
                             .minimumScaleFactor(0.7)
                             .lineLimit(1)
                             .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
-                        Spacer()
                         Text(entry.date, style: .timer)
-                            .font(.footnote.weight(.heavy).monospaced())
+                            .font(.body.weight(.heavy))
                             .minimumScaleFactor(0.7)
                             .lineLimit(1)
                             .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
-                            .frame(width: 60, alignment: .trailing)
+                            .frame(width: 60)
                             .monospacedDigit()
-                        Spacer()
                     }
-                    .padding(.bottom, 4)
+                    .padding(.top, 4)
                 }
+                .padding(.trailing, 10)
             }
             .containerBackground(for: .widget) {
-                background()
-            }
-            
-        case .systemMedium:
-            ZStack {
                 colorScheme == .dark ? Color.black : entry.lastGlucoseMeasurement.color.color
-                HStack {
-                    graphView(style: mediumChartStyle)
-                        .padding()
-                        .padding(.trailing, -15)
-                    
-                    VStack(alignment: .center, spacing: 0) {
-                        HStack {
-                            Spacer()
-                            Text(verbatim: entry.lastGlucoseMeasurement.trendArrow?.symbol ?? "-")
-                                .font(.system(size: 48, weight: .heavy, design: .monospaced))
-                                .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
-                                .padding(.leading, 40)
-                            Spacer()
-                            Button(intent: ReloadWidgetIntent()) {
-                                Image(systemName: "arrow.clockwise")
-                                    .font(.system(size: 20, weight: .heavy, design: .monospaced))
-                                    .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
-                            }
-                        }
-                        Text(verbatim: glucose)
-                            .font(.system(size: 52, weight: glucoseFontWeight))
-                            .strikethrough(isStaleGlucose)
-                            .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
-                            .padding(.top, -5)
-                        HStack(spacing: 15) {
-                            Text(currentIOB)
-                                .font(.body.weight(.heavy))
-                                .minimumScaleFactor(0.7)
-                                .lineLimit(1)
-                                .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
-                            Text(entry.date, style: .timer)
-                                .font(.body.weight(.heavy))
-                                .minimumScaleFactor(0.7)
-                                .lineLimit(1)
-                                .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
-                                .frame(width: 60)
-                                .monospacedDigit()
-                        }
-                        .padding(.top, 4)
-                    }
-                    .padding(.trailing, 10)
-                }
-            }
-            .containerBackground(for: .widget) {
-                background()
             }
             
         default:

@@ -48,141 +48,135 @@ struct FLwatchGraphWidgetEntryView : View {
         
         switch family {
         case .systemSmall:
-            ZStack {
-                colorScheme == .dark ? Color.black : entry.lastGlucoseMeasurement.color.color
-                VStack {
-                    
-                    HStack {
-                        Spacer()
-                        Text(verbatim: glucose)
-                            .font(.title2.weight(glucoseFontWeight))
-                                .minimumScaleFactor(0.7)
-                                .lineLimit(1)
+            VStack {
+
+                HStack {
+                    Spacer()
+                    Text(verbatim: glucose)
+                        .font(.title2.weight(glucoseFontWeight))
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
 //                            .font(.system(size: 25, weight: .heavy))
-                            .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
-                            .strikethrough(isStaleGlucose)
+                        .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
+                        .strikethrough(isStaleGlucose)
 //                            .padding(.leading, 10)
-                        Text(verbatim: entry.lastGlucoseMeasurement.trendArrow?.symbol  ?? "-")
-                            .font(.title2.weight(.heavy).monospaced())
-                                .minimumScaleFactor(0.7)
-                                .lineLimit(1)
+                    Text(verbatim: entry.lastGlucoseMeasurement.trendArrow?.symbol  ?? "-")
+                        .font(.title2.weight(.heavy).monospaced())
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
 //                            .font(.system(size: 25, weight: .heavy, design: .monospaced))
-                            .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
-                        //                                .padding(.leading, 60)
-                        //                                .padding(.trailing, 5)
-                        
-                        Spacer()
-                        Button(intent: ReloadWidgetIntent()) {
-                            Image(systemName: "arrow.clockwise")
+                        .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
+                    //                                .padding(.leading, 60)
+                    //                                .padding(.trailing, 5)
+
+                    Spacer()
+                    Button(intent: ReloadWidgetIntent()) {
+                        Image(systemName: "arrow.clockwise")
 //                                .font(.body.weight(.heavy))
 //                                    .minimumScaleFactor(0.7)
 //                                    .lineLimit(1)
+                            .font(.system(size: 20, weight: .heavy, design: .monospaced))
+                            .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
+                    }
+//                        .padding(.trailing, 5)
+                }
+                .padding(.top, 5)
+                .padding(.bottom, -2)
+
+                //                    .padding(.trailing, 10)
+
+                graphView()
+
+                HStack  {
+                    Spacer()
+                    Text(currentIOB)
+                        .font(.footnote.weight(.heavy).monospaced())
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
+//                            .font(.system(size: 10, weight: .heavy))
+                        .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
+                    Spacer()
+                    //                        Text("88:88")
+                    Text(entry.date, style: .timer)
+                    //Text(verbatim: " ")
+                        .font(.footnote.weight(.heavy).monospaced())
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
+//                            .font(.system(size: 10, weight: .heavy))
+                        .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
+                        .frame(width: 60, alignment: .trailing)
+//                            .border(.red)
+                    //.colorInvert()
+                    //                                .multilineTextAlignment(.center)
+                        .monospacedDigit()
+                    //.frame(width: 10)
+                    Spacer()
+                }
+                .padding(.bottom, 4)
+
+
+            }
+            .containerBackground(for: .widget) {
+                colorScheme == .dark ? Color.black : entry.lastGlucoseMeasurement.color.color
+            }
+
+        case .systemMedium:
+            HStack {
+                graphView()
+                    .padding()
+                    .padding(.trailing, -15)
+                //                    .border(.red)
+
+                VStack(alignment: .center, spacing: 0) {
+                    HStack {
+                        Spacer()
+                        Text(verbatim: entry.lastGlucoseMeasurement.trendArrow?.symbol  ?? "-")
+                            .font(.system(size: 48, weight: .heavy, design: .monospaced))
+                            .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
+                            .padding(.leading, 40)
+//                                .padding(.trailing, 5)
+                        Spacer()
+                        Button(intent: ReloadWidgetIntent()) {
+                            Image(systemName: "arrow.clockwise")
                                 .font(.system(size: 20, weight: .heavy, design: .monospaced))
                                 .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
                         }
-//                        .padding(.trailing, 5)
                     }
-                    .padding(.top, 5)
-                    .padding(.bottom, -2)
-                    
-                    //                    .padding(.trailing, 10)
-                    
-                    graphView()
-                    
-                    HStack  {
-                        Spacer()
+                    Text(verbatim: glucose)
+//                            .font(.largeTitle.weight(.heavy))
+//                                .minimumScaleFactor(0.7)
+//                                .lineLimit(1)
+                         .font(.system(size: 52, weight: glucoseFontWeight))
+                         .strikethrough(isStaleGlucose)
+                        .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
+                        .padding(.top, -5)
+                    HStack (spacing: 15){
                         Text(currentIOB)
-                            .font(.footnote.weight(.heavy).monospaced())
+                            .font(.body.weight(.heavy))
                                 .minimumScaleFactor(0.7)
                                 .lineLimit(1)
-//                            .font(.system(size: 10, weight: .heavy))
+//                                .font(.system(size: 20, weight: .heavy))
                             .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
-                        Spacer()
                         //                        Text("88:88")
                         Text(entry.date, style: .timer)
                         //Text(verbatim: " ")
-                            .font(.footnote.weight(.heavy).monospaced())
+                            .font(.body.weight(.heavy))
                                 .minimumScaleFactor(0.7)
                                 .lineLimit(1)
-//                            .font(.system(size: 10, weight: .heavy))
+//                                .font(.system(size: 20, weight: .heavy))
                             .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
-                            .frame(width: 60, alignment: .trailing)
-//                            .border(.red)
+                            .frame(width: 60)
                         //.colorInvert()
                         //                                .multilineTextAlignment(.center)
                             .monospacedDigit()
                         //.frame(width: 10)
-                        Spacer()
                     }
-                    .padding(.bottom, 4)
-                    
-                    
+                    .padding(.top, 4)
                 }
+                .padding(.trailing, 10)
             }
             .containerBackground(for: .widget) {
-                background()
-            }
-            
-        case .systemMedium:
-            ZStack {
-                colorScheme == .dark ? Color.black : entry.lastGlucoseMeasurement.color.color // this is the background color, lowest layer in the ZStack
-                HStack {
-                    graphView()
-                        .padding()
-                        .padding(.trailing, -15)
-                    //                    .border(.red)
-                    
-                    VStack(alignment: .center, spacing: 0) {
-                        HStack {
-                            Spacer()
-                            Text(verbatim: entry.lastGlucoseMeasurement.trendArrow?.symbol  ?? "-")
-                                .font(.system(size: 48, weight: .heavy, design: .monospaced))
-                                .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
-                                .padding(.leading, 40)
-//                                .padding(.trailing, 5)
-                            Spacer()
-                            Button(intent: ReloadWidgetIntent()) {
-                                Image(systemName: "arrow.clockwise")
-                                    .font(.system(size: 20, weight: .heavy, design: .monospaced))
-                                    .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
-                            }
-                        }
-                        Text(verbatim: glucose)
-//                            .font(.largeTitle.weight(.heavy))
-//                                .minimumScaleFactor(0.7)
-//                                .lineLimit(1)
-                             .font(.system(size: 52, weight: glucoseFontWeight))
-                             .strikethrough(isStaleGlucose)
-                            .foregroundColor(colorScheme == .dark ? entry.lastGlucoseMeasurement.color.color : Color.black)
-                            .padding(.top, -5)
-                        HStack (spacing: 15){
-                            Text(currentIOB)
-                                .font(.body.weight(.heavy))
-                                    .minimumScaleFactor(0.7)
-                                    .lineLimit(1)
-//                                .font(.system(size: 20, weight: .heavy))
-                                .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
-                            //                        Text("88:88")
-                            Text(entry.date, style: .timer)
-                            //Text(verbatim: " ")
-                                .font(.body.weight(.heavy))
-                                    .minimumScaleFactor(0.7)
-                                    .lineLimit(1)
-//                                .font(.system(size: 20, weight: .heavy))
-                                .foregroundColor(colorScheme == .dark ? Color.gray : Color.black)
-                                .frame(width: 60)
-                            //.colorInvert()
-                            //                                .multilineTextAlignment(.center)
-                                .monospacedDigit()
-                            //.frame(width: 10)
-                        }
-                        .padding(.top, 4)
-                    }
-                    .padding(.trailing, 10)
-                }
-            }
-            .containerBackground(for: .widget) {
-                background()
+                colorScheme == .dark ? Color.black : entry.lastGlucoseMeasurement.color.color
             }
             
         default:

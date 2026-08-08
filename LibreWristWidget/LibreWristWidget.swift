@@ -44,47 +44,44 @@ struct LibreWristWidgetEntryView : View {
     var body: some View {
         switch family {
         case .systemSmall:
-            ZStack {
-                colorScheme == .dark ? .black : entry.glucoseMeasurement.measurementColor.color // this is the background color, lowest layer in the ZStack
-                VStack(alignment: .center, spacing: -10) {
-                    HStack {
-                        Spacer()
-                        Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
-                            .font(.system(size: 48, weight: .heavy, design: .monospaced))
-                            .foregroundColor(colorScheme == .dark ? entry.glucoseMeasurement.measurementColor.color : .black)
+            VStack(alignment: .center, spacing: -10) {
+                HStack {
+                    Spacer()
+                    Text(verbatim: entry.glucoseMeasurement.trendArrow?.symbol ?? "-")
+                        .font(.system(size: 48, weight: .heavy, design: .monospaced))
+                        .foregroundColor(colorScheme == .dark ? entry.glucoseMeasurement.measurementColor.color : .black)
 //                            .padding(.leading, 60)
 //                            .padding(.trailing, 5)
-                        Spacer()
-                        Button(intent: ReloadWidgetIntent()) {
-                            Image(systemName: "arrow.clockwise")
-                                .font(.system(size: 20, weight: .heavy, design: .monospaced))
-                                .foregroundColor(colorScheme == .dark ? .gray : .black)
-                        }
-                    }
-                    Text(verbatim: glucose)
-                        .font(.system(size: 52, weight: glucoseFontWeight))
-                        .foregroundColor(colorScheme == .dark ? entry.glucoseMeasurement.measurementColor.color : .black)
-                        .strikethrough(isStaleGlucose)
-                    HStack (spacing: 15){
-                        Text(currentIOB)
-                            .font(.system(size: 20, weight: .heavy))
+                    Spacer()
+                    Button(intent: ReloadWidgetIntent()) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 20, weight: .heavy, design: .monospaced))
                             .foregroundColor(colorScheme == .dark ? .gray : .black)
-//                        Text("88:88")
-                        Text(entry.date, style: .timer)
-                        //Text(verbatim: " ")
-                            .font(.system(size: 20, weight: .heavy))
-                            .foregroundColor(colorScheme == .dark ? .gray : .black)
-                            .frame(width: 60)
-                        //.colorInvert()
-                        //                                .multilineTextAlignment(.center)
-                            .monospacedDigit()
-                        //.frame(width: 10)
                     }
-                    .padding(.top, 4)
                 }
+                Text(verbatim: glucose)
+                    .font(.system(size: 52, weight: glucoseFontWeight))
+                    .foregroundColor(colorScheme == .dark ? entry.glucoseMeasurement.measurementColor.color : .black)
+                    .strikethrough(isStaleGlucose)
+                HStack (spacing: 15){
+                    Text(currentIOB)
+                        .font(.system(size: 20, weight: .heavy))
+                        .foregroundColor(colorScheme == .dark ? .gray : .black)
+//                        Text("88:88")
+                    Text(entry.date, style: .timer)
+                    //Text(verbatim: " ")
+                        .font(.system(size: 20, weight: .heavy))
+                        .foregroundColor(colorScheme == .dark ? .gray : .black)
+                        .frame(width: 60)
+                    //.colorInvert()
+                    //                                .multilineTextAlignment(.center)
+                        .monospacedDigit()
+                    //.frame(width: 10)
+                }
+                .padding(.top, 4)
             }
             .containerBackground(for: .widget) {
-                background()
+                colorScheme == .dark ? Color.black : entry.glucoseMeasurement.measurementColor.color
             }
         case .accessoryCircular:
             ZStack {
