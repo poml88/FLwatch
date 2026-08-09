@@ -56,10 +56,19 @@ enum Libre3DiagnosticsLog {
     private static let notableEventStorageEntryLimit = 50
     private static let stuckSnapshotStorageLimit = 10
 
-    private static let timestampFormatter: ISO8601DateFormatter = {
+    /// Entries stay in UTC internally so persisted rings retain one sortable format.
+    private static let storageTimestampFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
+
+    /// Human-readable diagnostics use the device's current time zone.
+    private static let localTimestampFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        formatter.timeZone = TimeZone.current
         return formatter
     }()
 
@@ -88,7 +97,10 @@ enum Libre3DiagnosticsLog {
 
     static func recentEntries(limit: Int) -> [String] {
         guard limit > 0 else { return [] }
-        return Array(SharedData.libre3DiagnosticEvents.suffix(limit).reversed())
+        return SharedData.libre3DiagnosticEvents
+            .suffix(limit)
+            .reversed()
+            .map { localizedEntry($0) }
     }
 
     /// Records the compact connect/reconnect timeline separately from the
@@ -102,7 +114,7 @@ enum Libre3DiagnosticsLog {
     }
 
     static func notableEntries() -> [String] {
-        Array(SharedData.libre3NotableEvents.reversed())
+        SharedData.libre3NotableEvents.reversed().map { localizedEntry($0) }
     }
 
     // MARK: - Stuck-glucose evidence (local developer diagnostics)
@@ -153,15 +165,15 @@ enum Libre3DiagnosticsLog {
     static func stuckEvidenceExportText() -> String {
         let snapshots = stuckSnapshots()
         guard !snapshots.isEmpty else { return "" }
-        let header = "\(appBuildDescription) — Libre 3 stuck-glucose evidence exported \(timestampFormatter.string(from: Date()))"
+        let header = "\(appBuildDescription) — Libre 3 stuck-glucose evidence exported \(localTimestamp(from: Date()))"
         let blocks = snapshots.map { snapshot -> String in
-            let head = "\(timestampFormatter.string(from: snapshot.detectedAt)) run=\(snapshot.run)"
+            let head = "\(localTimestamp(from: snapshot.detectedAt)) run=\(snapshot.run)"
             let frames = snapshot.frames.map { frame in
                 let glucose = frame.currentGlucoseMgDL.map(String.init) ?? "nil"
                 let word = String(format: "0x%04x", Int(frame.currentWord))
                 let dq = String(format: "0x%04x", Int(frame.dqErrorRaw))
                 let trendStatus = String(format: "0x%02x", Int(frame.trendAndStatusByte))
-                return "    \(timestampFormatter.string(from: frame.receivedAt)) lc=\(frame.lifeCount) glucose=\(glucose) uncapped=\(frame.uncappedCurrentMgDL) word=\(word) dq=\(dq) condition=\(frame.sensorConditionRaw) actionable=\(frame.actionableStatus) rocRaw=\(frame.rateOfChangeRaw) trendStatus=\(trendStatus) usable=\(frame.isUsable)"
+                return "    \(localTimestamp(from: frame.receivedAt)) lc=\(frame.lifeCount) glucose=\(glucose) uncapped=\(frame.uncappedCurrentMgDL) word=\(word) dq=\(dq) condition=\(frame.sensorConditionRaw) actionable=\(frame.actionableStatus) rocRaw=\(frame.rateOfChangeRaw) trendStatus=\(trendStatus) usable=\(frame.isUsable)"
             }
             return ([head] + frames).joined(separator: "\n")
         }
@@ -178,14 +190,15 @@ enum Libre3DiagnosticsLog {
     static func mergedEntries() -> [String] {
         (SharedData.libre3DiagnosticEvents + SharedData.libre3ReconnectTrace)
             .sorted(by: >)
+            .map { localizedEntry($0) }
     }
 
     /// Clipboard export of lifetime stats plus every entry still retained by the
     /// three bounded rings. Unlike email, this applies no additional caps.
     static func fullExportText() -> String {
-        let header = "\(appBuildDescription) — Libre 3 diagnostics exported \(timestampFormatter.string(from: Date()))"
+        let header = "\(appBuildDescription) — Libre 3 diagnostics exported \(localTimestamp(from: Date()))"
         let glucoseOnlyLastSeen = SharedData.libre3GlucoseOnlyDeathLastSeen
-            .map { timestampFormatter.string(from: $0) } ?? "never"
+            .map { localTimestamp(from: $0) } ?? "never"
         let notable = notableEntries()
         let merged = mergedEntries()
         return ([
@@ -226,9 +239,10 @@ enum Libre3DiagnosticsLog {
         var lines = [header]
         var characterCount = header.count
 
-        for entry in SharedData.libre3ReconnectTrace
+        for storedEntry in SharedData.libre3ReconnectTrace
             .suffix(reconnectTraceSupportEntryLimit)
             .reversed() {
+            let entry = localizedEntry(storedEntry)
             let addedCharacters = 1 + entry.count   // separating newline + entry
             guard characterCount + addedCharacters <= reconnectTraceSupportCharacterLimit else { break }
             lines.append(entry)
@@ -279,7 +293,21 @@ enum Libre3DiagnosticsLog {
     }
 
     private static func timestamped(_ event: String, at date: Date) -> String {
-        "\(timestampFormatter.string(from: date)) \(event)"
+        "\(storageTimestampFormatter.string(from: date)) \(event)"
+    }
+
+    private static func localTimestamp(from date: Date) -> String {
+        // Refresh in case the device's time zone changed while the app was running.
+        localTimestampFormatter.timeZone = TimeZone.current
+        return localTimestampFormatter.string(from: date)
+    }
+
+    /// Converts the leading stored timestamp while leaving the diagnostic text intact.
+    private static func localizedEntry(_ entry: String) -> String {
+        guard let separator = entry.firstIndex(of: " ") else { return entry }
+        let timestamp = String(entry[..<separator])
+        guard let date = storageTimestampFormatter.date(from: timestamp) else { return entry }
+        return localTimestamp(from: date) + String(entry[separator...])
     }
 
     private static func appending(_ entry: String, to existing: [String], limit: Int) -> [String] {

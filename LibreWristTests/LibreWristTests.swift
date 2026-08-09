@@ -624,21 +624,22 @@ final class LibreWristTests: XCTestCase {
 
     private func detectedStuckTracker() -> Libre3StuckGlucoseTracker {
         var tracker = Libre3StuckGlucoseTracker()
-        for lifeCount in UInt16(100)...UInt16(104) {
+        for lifeCount in UInt16(100)...UInt16(105) {
             _ = advance(&tracker, lifeCount: lifeCount)
         }
         return tracker
     }
 
-    func testStuckTrackerReportsEpisodeAfterFourAdvancingRepeats() throws {
+    func testStuckTrackerReportsEpisodeAfterSixConsecutiveReadings() throws {
         var tracker = Libre3StuckGlucoseTracker()
         XCTAssertEqual(advance(&tracker, lifeCount: 100), .reset)          // seeds
         XCTAssertEqual(advance(&tracker, lifeCount: 101), .advanced(run: 1))
         XCTAssertEqual(advance(&tracker, lifeCount: 102), .advanced(run: 2))
         XCTAssertEqual(advance(&tracker, lifeCount: 103), .advanced(run: 3))
-        XCTAssertEqual(advance(&tracker, lifeCount: 104), .episodeDetected(run: 4))
+        XCTAssertEqual(advance(&tracker, lifeCount: 104), .advanced(run: 4))
+        XCTAssertEqual(advance(&tracker, lifeCount: 105), .episodeDetected(run: 5))
         // Once per episode, not once per frame.
-        XCTAssertEqual(advance(&tracker, lifeCount: 105), .advanced(run: 5))
+        XCTAssertEqual(advance(&tracker, lifeCount: 106), .advanced(run: 6))
     }
 
     func testStuckTrackerIgnoresSameMinuteResends() throws {
@@ -716,48 +717,48 @@ final class LibreWristTests: XCTestCase {
     /// freezes twice only ever produces one notable event.
     func testStuckTrackerReportsASecondEpisodeAfterRecovery() throws {
         var tracker = Libre3StuckGlucoseTracker()
-        for lifeCount in UInt16(100)...UInt16(104) {
+        for lifeCount in UInt16(100)...UInt16(105) {
             _ = advance(&tracker, lifeCount: lifeCount)
         }
-        XCTAssertEqual(tracker.run, 4)
+        XCTAssertEqual(tracker.run, 5)
 
         // Value changes: the completed episode is reported and its latch clears.
         XCTAssertEqual(
-            advance(&tracker, lifeCount: 105, word: 0x0200),
-            .episodeEnded(run: 4, reason: .valueChanged)
+            advance(&tracker, lifeCount: 106, word: 0x0200),
+            .episodeEnded(run: 5, reason: .valueChanged)
         )
 
-        for lifeCount in UInt16(106)...UInt16(108) {
+        for lifeCount in UInt16(107)...UInt16(110) {
             _ = advance(&tracker, lifeCount: lifeCount, word: 0x0200)
         }
         XCTAssertEqual(
-            advance(&tracker, lifeCount: 109, word: 0x0200),
-            .episodeDetected(run: 4)
+            advance(&tracker, lifeCount: 111, word: 0x0200),
+            .episodeDetected(run: 5)
         )
     }
 
     func testStuckTrackerReportsUncertainEpisodeEndReasons() throws {
         var gap = detectedStuckTracker()
         XCTAssertEqual(
-            advance(&gap, lifeCount: 106),
-            .episodeEnded(run: 4, reason: .lifeCountGap)
+            advance(&gap, lifeCount: 107),
+            .episodeEnded(run: 5, reason: .lifeCountGap)
         )
 
         var backwards = detectedStuckTracker()
         XCTAssertEqual(
-            advance(&backwards, lifeCount: 103),
-            .episodeEnded(run: 4, reason: .lifeCountBackwards)
+            advance(&backwards, lifeCount: 104),
+            .episodeEnded(run: 5, reason: .lifeCountBackwards)
         )
 
         var unusable = detectedStuckTracker()
         XCTAssertEqual(
             unusable.advance(
-                lifeCount: 105,
+                lifeCount: 106,
                 word: 0x0100,
                 uncappedMgDL: 120,
                 isUsable: false
             ),
-            .episodeEnded(run: 4, reason: .unusableReading)
+            .episodeEnded(run: 5, reason: .unusableReading)
         )
     }
 

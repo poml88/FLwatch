@@ -89,9 +89,9 @@ struct Libre3ReadingStatus: Equatable {
 /// A value type so the run rules — which are easy to get subtly wrong — are
 /// unit-testable without a live BLE session.
 struct Libre3StuckGlucoseTracker {
-    /// Advancing repeats required before an episode is reported. Four means the
-    /// value survived five consecutive minutes unchanged.
-    static let episodeThreshold = 4
+    /// Advancing repeats required before an episode is reported. Five means six
+    /// consecutive one-minute readings held the same value over a five-minute span.
+    static let episodeThreshold = 5
 
     enum EndReason: String, Equatable {
         case valueChanged
@@ -362,7 +362,7 @@ enum Libre3LivePacketFormatter {
         guard !records.isEmpty else { return "" }
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.timeZone = TimeZone.current
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
             as? String ?? "unknown"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")
