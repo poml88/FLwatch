@@ -24,6 +24,11 @@ struct ContentView: View {
                 }
                 .tag("Home")
 
+            PhoneAppNotificationsView()
+                .tabItem {
+                    Image(systemName: "bell.badge")
+                }
+                .tag("Alerts")
 
             PhoneAppConnectView()
 //                .environmentObject(watchConnector)

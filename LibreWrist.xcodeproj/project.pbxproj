@@ -88,6 +88,7 @@
 		7B8965432DC156E9003A50CE /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8965412DC156DD003A50CE /* WatchConnectivityManager.swift */; };
 		7B8965452DC17399003A50CE /* PhoneAppSiriSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8965442DC17399003A50CE /* PhoneAppSiriSheetView.swift */; };
 		7B9B7A7B2C875453004B30FD /* PhoneAppSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */; };
+		7BCB110530D0000100CA1101 /* PhoneAppNotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCB110430D0000100CA1101 /* PhoneAppNotificationsView.swift */; };
 		7B9F09A32E73075B0037B091 /* AddInsulinSiri.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F09A22E7307510037B091 /* AddInsulinSiri.swift */; };
 		7B9F09A42E73075B0037B091 /* AddInsulinSiri.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F09A22E7307510037B091 /* AddInsulinSiri.swift */; };
 		7B9F09A62E731F210037B091 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F09A52E731F1A0037B091 /* SharedDefaults.swift */; };
@@ -385,6 +386,7 @@
 		7B8965442DC17399003A50CE /* PhoneAppSiriSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSiriSheetView.swift; sourceTree = "<group>"; };
 		7B8C80112E48C8B300A9DA79 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
 		7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppSettingsView.swift; sourceTree = "<group>"; };
+		7BCB110430D0000100CA1101 /* PhoneAppNotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppNotificationsView.swift; sourceTree = "<group>"; };
 		7B9F09A22E7307510037B091 /* AddInsulinSiri.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddInsulinSiri.swift; sourceTree = "<group>"; };
 		7B9F09A52E731F1A0037B091 /* SharedDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDefaults.swift; sourceTree = "<group>"; };
 		7BA0AE292C582F63004226FE /* FLwatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FLwatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -804,6 +806,7 @@
 				7B62EDB42FACD8F500C9502B /* PhoneAppDexcomShareConnectView.swift */,
 				7BB143182FCC83BF00F31802 /* PhoneAppLibre3ConnectView.swift */,
 				7B9B7A7A2C875453004B30FD /* PhoneAppSettingsView.swift */,
+				7BCB110430D0000100CA1101 /* PhoneAppNotificationsView.swift */,
 				7BCA110230D0000100CA1101 /* PhoneAppCalibrationView.swift */,
 				7BA0AE5C2C5AEB89004226FE /* PhoneAppDonateView.swift */,
 				7B183E9A2C84C9540018A24F /* PhoneAppInsulinDeliveryView.swift */,
@@ -1259,6 +1262,7 @@
 				7B895E942F61E6D10034A79D /* RefreshLiveActivityIntent.swift in Sources */,
 				7BA3041F2F5E30B0005384BF /* GlucoseUnit.swift in Sources */,
 				7B9B7A7B2C875453004B30FD /* PhoneAppSettingsView.swift in Sources */,
+				7BCB110530D0000100CA1101 /* PhoneAppNotificationsView.swift in Sources */,
 				7BCA110330D0000100CA1101 /* PhoneAppCalibrationView.swift in Sources */,
 				7BA0AE5B2C5AE980004226FE /* PhoneAppHomeView.swift in Sources */,
 				7BA0AE5D2C5AEB89004226FE /* PhoneAppDonateView.swift in Sources */,
