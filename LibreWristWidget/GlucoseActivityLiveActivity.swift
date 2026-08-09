@@ -88,7 +88,7 @@ struct FLWatchLiveActivityWidget: Widget {
                     let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
                     
                     HStack {
-                        Text(verbatim: "\(context.state.latestGlucoseValue.units(for: context.state.glucoseUnit)) \(context.state.latestTrend)")
+                        Text(verbatim: "\(context.state.latestGlucoseText) \(context.state.latestTrend)")
                         //                            .font(.headline)
                             .strikethrough(isStaleGlucose)
                             .bold(!isStaleGlucose)
@@ -96,8 +96,8 @@ struct FLWatchLiveActivityWidget: Widget {
                             .lineLimit(1)
                             .padding(.leading, 4)
                         
-                        if context.state.currentIOB > 0 {
-                            Text(context.state.currentIOBText)
+                        if let currentIOBText = context.state.currentIOBText {
+                            Text(verbatim: currentIOBText)
                             //                                .font(.footnote)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
@@ -189,7 +189,7 @@ struct FLWatchLiveActivityWidget: Widget {
                 let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
                 
                 
-                Text(verbatim: "\(context.state.latestGlucoseValue.units(for: context.state.glucoseUnit)) \(context.state.latestTrend)")
+                Text(verbatim: "\(context.state.latestGlucoseText) \(context.state.latestTrend)")
                     .strikethrough(isStaleGlucose)
                     .bold(!isStaleGlucose)
                     .foregroundStyle(context.state.latestMeasurementColor.color)
@@ -228,7 +228,7 @@ struct FLWatchLiveActivityWidget: Widget {
                 let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
                 
                 
-                Text(context.state.latestGlucoseValue.units(for: context.state.glucoseUnit))
+                Text(verbatim: context.state.latestGlucoseText)
                     .strikethrough(isStaleGlucose)
                     .bold(!isStaleGlucose)
                     .foregroundStyle(context.state.latestMeasurementColor.color)
@@ -281,15 +281,15 @@ private struct SmallSupplementalActivityView: View {
         
         VStack (spacing: 0){
             HStack {
-                Text(verbatim: "\(contentState.latestGlucoseValue.units(for: contentState.glucoseUnit)) \(contentState.latestTrend)")
+                Text(verbatim: "\(contentState.latestGlucoseText) \(contentState.latestTrend)")
                     .font(.footnote)
                     .strikethrough(isStaleGlucose)
                     .bold(!isStaleGlucose)
                     .lineLimit(1)
                     .foregroundStyle(contentState.latestMeasurementColor.color)
                 
-                if contentState.currentIOB > 0 {
-                    Text(contentState.currentIOBText)
+                if let currentIOBText = contentState.currentIOBText {
+                    Text(verbatim: currentIOBText)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -378,15 +378,15 @@ private struct MediumSupplementalActivityView: View {
         
         VStack (spacing: 5){
             HStack {
-                Text(verbatim: "\(contentState.latestGlucoseValue.units(for: contentState.glucoseUnit)) \(contentState.latestTrend)")
+                Text(verbatim: "\(contentState.latestGlucoseText) \(contentState.latestTrend)")
                 //                    .font(.title)
                     .strikethrough(isStaleGlucose)
                     .bold(!isStaleGlucose)
                     .lineLimit(1)
                     .foregroundStyle(contentState.latestMeasurementColor.color)
                 
-                if contentState.currentIOB > 0 {
-                    Text(verbatim: "IOB \(contentState.currentIOBText)")
+                if let currentIOBText = contentState.currentIOBText {
+                    Text(verbatim: "IOB \(currentIOBText)")
                     //                        .font(.headline)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -532,17 +532,7 @@ private struct GlucoseLiveActivityCanvas: View {
     }
     
     private var chartYScaleMax: Double {
-        let maxBG = max(
-            contentState.maxGlucoseValue,
-            contentState.graphPoints.map(\.valueInMgPerDl).max() ?? contentState.latestGlucoseValue
-        )
-        if maxBG > 350 {
-            return contentState.glucoseUnit == 0 ? 27 : 500
-        } else if maxBG > 250 {
-            return contentState.glucoseUnit == 0 ? 21 : 350
-        } else {
-            return contentState.glucoseUnit == 0 ? 15 : 250
-        }
+        Double(contentState.chartYScaleMaximum)
     }
     
     private var yAxisStride: Double {
@@ -554,7 +544,7 @@ private struct GlucoseLiveActivityCanvas: View {
     }
     
     var body: some View {
-        let chartXScaleMax = Date.now
+        let chartXScaleMax = contentState.graphReferenceTimestamp
         let chartXScaleMin = chartXScaleMax.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
         let yScaleMin = chartYScaleMin
         let yScaleMax = chartYScaleMax
@@ -1012,11 +1002,11 @@ private struct GlucoseLiveActivityChart: View {
     }
     
     private var chartXScaleMin: Date {
-        Date().addingTimeInterval(-6 * 60 * 60 - 10 * 60)
+        chartXScaleMax.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
     }
     
     private var chartXScaleMax: Date {
-        Date()
+        contentState.graphReferenceTimestamp
     }
     
     private var chartYScaleMin: Double {
@@ -1024,14 +1014,7 @@ private struct GlucoseLiveActivityChart: View {
     }
     
     private var chartYScaleMax: Double {
-        let maxBG = max(contentState.maxGlucoseValue, contentState.graphPoints.map(\.valueInMgPerDl).max() ?? contentState.latestGlucoseValue)
-        if maxBG > 350 {
-            return contentState.glucoseUnit == 0 ? 27 : 500
-        } else if maxBG > 250 {
-            return contentState.glucoseUnit == 0 ? 21 : 350
-        } else {
-            return contentState.glucoseUnit == 0 ? 15 : 250
-        }
+        Double(contentState.chartYScaleMaximum)
     }
     
     private var yAxisStride: Double {
@@ -1268,20 +1251,12 @@ private extension FLWatchAttributes.ContentState {
         glucoseUnit == 0 ? "mmol/L" : "mg/dL"
     }
     
-    var currentIOB: Double {
-        Double(currentIOBInHundredths) / Double(FLWatchAttributes.iobValueScale)
-    }
-    
     var maxIOB: Double {
         max(Double(maxIOBInHundredths) / Double(FLWatchAttributes.iobValueScale), 0.01)
     }
     
     var maxActivity: Double {
         max(Double(maxActivityInHundredths) / Double(FLWatchAttributes.activityValueScale), 0.01)
-    }
-    
-    var currentIOBText: String {
-        String(format: "%.2fu", currentIOB)
     }
     
 }
@@ -1299,12 +1274,6 @@ private extension FLWatchAttributes.ActivityPoint {
 private extension FLWatchAttributes.InsulinMarker {
     var unitsText: String {
         String(format: "%.1fu", Double(insulinUnitsInHundredths) / 100)
-    }
-}
-
-private extension Int {
-    func units(for glucoseUnit: Int) -> String {
-        asGlucose(glucoseUnitValue: glucoseUnit)
     }
 }
 
@@ -1348,9 +1317,10 @@ private extension FLWatchAttributes.ContentState {
         let now = Date.now
         
         return .init(
-            latestGlucoseValue: 142,
+            latestGlucoseText: "142",
             latestTrend: "↗",
             latestTimestamp: now - 30,
+            graphReferenceTimestamp: now,
             latestColor: MeasurementColor.green.rawValue,
             graphPoints: [
                 .init(timestamp: now.addingTimeInterval(-6 * 60 * 60), valueInMgPerDl: 118, colorRawValue: MeasurementColor.green.rawValue),
@@ -1370,8 +1340,8 @@ private extension FLWatchAttributes.ContentState {
             targetLow: 70,
             targetHigh: 180,
             alarmLow: 85,
-            maxGlucoseValue: 180,
-            currentIOBInHundredths: 138,
+            chartYScaleMaximum: 250,
+            currentIOBText: "1.38u",
             iobPoints: [
                 .init(timestamp: now.addingTimeInterval(-3 * 60 * 60), valueInHundredths: 180),
                 .init(timestamp: now.addingTimeInterval(-2 * 60 * 60), valueInHundredths: 160),

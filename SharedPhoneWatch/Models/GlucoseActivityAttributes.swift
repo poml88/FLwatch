@@ -48,10 +48,13 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
     }
 
     public struct ContentState: Codable, Hashable {
-        // dynamic state updated locally by the app (BG refresh + foreground refreshes)
-        public var latestGlucoseValue: Int
+        // Dynamic state updated locally by the app (BG refresh + foreground refreshes).
+        // Presentation-independent formatting and graph domains are resolved before the update so
+        // WidgetKit's repeated Live Activity renders only perform size-dependent drawing work.
+        public var latestGlucoseText: String
         public var latestTrend: String
         public var latestTimestamp: Date
+        public var graphReferenceTimestamp: Date
         public var latestColor: Int
         public var graphPoints: [GraphPoint]
         public var minutePoints: [GraphPoint]
@@ -59,8 +62,8 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
         public var targetLow: Int
         public var targetHigh: Int
         public var alarmLow: Int
-        public var maxGlucoseValue: Int
-        public var currentIOBInHundredths: Int
+        public var chartYScaleMaximum: Int
+        public var currentIOBText: String?
         public var iobPoints: [ActivityPoint]
         public var maxIOBInHundredths: Int
         public var activityPoints: [ActivityPoint]
@@ -71,9 +74,10 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
         public var showInsulinDeliveryMarks: Bool
 
         private enum CodingKeys: String, CodingKey {
-            case latestGlucoseValue = "l"
+            case latestGlucoseText = "l"
             case latestTrend = "r"
             case latestTimestamp = "t"
+            case graphReferenceTimestamp = "x"
             case latestColor = "c"
             case graphPoints = "g"
             case minutePoints = "m"
@@ -81,8 +85,8 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             case targetLow = "lo"
             case targetHigh = "hi"
             case alarmLow = "a"
-            case maxGlucoseValue = "mx"
-            case currentIOBInHundredths = "i"
+            case chartYScaleMaximum = "ym"
+            case currentIOBText = "i"
             case iobPoints = "ic"
             case maxIOBInHundredths = "im"
             case activityPoints = "ac"
@@ -94,9 +98,10 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
         }
 
         public init(
-            latestGlucoseValue: Int,
+            latestGlucoseText: String,
             latestTrend: String,
             latestTimestamp: Date,
+            graphReferenceTimestamp: Date,
             latestColor: Int,
             graphPoints: [GraphPoint],
             minutePoints: [GraphPoint],
@@ -104,8 +109,8 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             targetLow: Int,
             targetHigh: Int,
             alarmLow: Int,
-            maxGlucoseValue: Int,
-            currentIOBInHundredths: Int,
+            chartYScaleMaximum: Int,
+            currentIOBText: String?,
             iobPoints: [ActivityPoint],
             maxIOBInHundredths: Int,
             activityPoints: [ActivityPoint],
@@ -115,9 +120,10 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             showActivityCurve: Bool,
             showInsulinDeliveryMarks: Bool
         ) {
-            self.latestGlucoseValue = latestGlucoseValue
+            self.latestGlucoseText = latestGlucoseText
             self.latestTrend = latestTrend
             self.latestTimestamp = latestTimestamp
+            self.graphReferenceTimestamp = graphReferenceTimestamp
             self.latestColor = latestColor
             self.graphPoints = graphPoints
             self.minutePoints = minutePoints
@@ -125,8 +131,8 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             self.targetLow = targetLow
             self.targetHigh = targetHigh
             self.alarmLow = alarmLow
-            self.maxGlucoseValue = maxGlucoseValue
-            self.currentIOBInHundredths = currentIOBInHundredths
+            self.chartYScaleMaximum = chartYScaleMaximum
+            self.currentIOBText = currentIOBText
             self.iobPoints = iobPoints
             self.maxIOBInHundredths = maxIOBInHundredths
             self.activityPoints = activityPoints
@@ -141,9 +147,12 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             let baseTimestamp = try container.decode(Double.self, forKey: .latestTimestamp)
 
-            latestGlucoseValue = try container.decode(Int.self, forKey: .latestGlucoseValue)
+            latestGlucoseText = try container.decode(String.self, forKey: .latestGlucoseText)
             latestTrend = try container.decode(String.self, forKey: .latestTrend)
             latestTimestamp = Date(timeIntervalSince1970: baseTimestamp)
+            graphReferenceTimestamp = Date(
+                timeIntervalSince1970: try container.decode(Double.self, forKey: .graphReferenceTimestamp)
+            )
             latestColor = try container.decode(Int.self, forKey: .latestColor)
             graphPoints = try Self.decodePoints(from: container, forKey: .graphPoints, baseTimestamp: baseTimestamp)
             minutePoints = try Self.decodePoints(from: container, forKey: .minutePoints, baseTimestamp: baseTimestamp)
@@ -151,25 +160,29 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             targetLow = try container.decode(Int.self, forKey: .targetLow)
             targetHigh = try container.decode(Int.self, forKey: .targetHigh)
             alarmLow = try container.decode(Int.self, forKey: .alarmLow)
-            maxGlucoseValue = try container.decode(Int.self, forKey: .maxGlucoseValue)
-            currentIOBInHundredths = try container.decodeIfPresent(Int.self, forKey: .currentIOBInHundredths) ?? 0
-            iobPoints = try Self.decodeActivityPointsIfPresent(from: container, forKey: .iobPoints, baseTimestamp: baseTimestamp)
-            maxIOBInHundredths = try container.decodeIfPresent(Int.self, forKey: .maxIOBInHundredths) ?? 1
-            activityPoints = try Self.decodeActivityPointsIfPresent(from: container, forKey: .activityPoints, baseTimestamp: baseTimestamp)
-            maxActivityInHundredths = try container.decodeIfPresent(Int.self, forKey: .maxActivityInHundredths) ?? 1
-            insulinMarkers = try Self.decodeInsulinMarkersIfPresent(from: container, forKey: .insulinMarkers, baseTimestamp: baseTimestamp)
-            showIOBCurve = try container.decodeIfPresent(Bool.self, forKey: .showIOBCurve) ?? false
-            showActivityCurve = try container.decodeIfPresent(Bool.self, forKey: .showActivityCurve) ?? false
-            showInsulinDeliveryMarks = try container.decodeIfPresent(Bool.self, forKey: .showInsulinDeliveryMarks) ?? false
+            chartYScaleMaximum = try container.decode(Int.self, forKey: .chartYScaleMaximum)
+            currentIOBText = try container.decodeIfPresent(String.self, forKey: .currentIOBText)
+            iobPoints = try Self.decodeActivityPoints(from: container, forKey: .iobPoints, baseTimestamp: baseTimestamp)
+            maxIOBInHundredths = try container.decode(Int.self, forKey: .maxIOBInHundredths)
+            activityPoints = try Self.decodeActivityPoints(from: container, forKey: .activityPoints, baseTimestamp: baseTimestamp)
+            maxActivityInHundredths = try container.decode(Int.self, forKey: .maxActivityInHundredths)
+            insulinMarkers = try Self.decodeInsulinMarkers(from: container, forKey: .insulinMarkers, baseTimestamp: baseTimestamp)
+            showIOBCurve = try container.decode(Bool.self, forKey: .showIOBCurve)
+            showActivityCurve = try container.decode(Bool.self, forKey: .showActivityCurve)
+            showInsulinDeliveryMarks = try container.decode(Bool.self, forKey: .showInsulinDeliveryMarks)
         }
 
         public func encode(to encoder: any Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             let baseTimestamp = latestTimestamp.timeIntervalSince1970
 
-            try container.encode(latestGlucoseValue, forKey: .latestGlucoseValue)
+            try container.encode(latestGlucoseText, forKey: .latestGlucoseText)
             try container.encode(latestTrend, forKey: .latestTrend)
             try container.encode(baseTimestamp, forKey: .latestTimestamp)
+            try container.encode(
+                graphReferenceTimestamp.timeIntervalSince1970,
+                forKey: .graphReferenceTimestamp
+            )
             try container.encode(latestColor, forKey: .latestColor)
             try Self.encodePoints(graphPoints, to: &container, forKey: .graphPoints, baseTimestamp: baseTimestamp)
             try Self.encodePoints(minutePoints, to: &container, forKey: .minutePoints, baseTimestamp: baseTimestamp)
@@ -177,8 +190,8 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             try container.encode(targetLow, forKey: .targetLow)
             try container.encode(targetHigh, forKey: .targetHigh)
             try container.encode(alarmLow, forKey: .alarmLow)
-            try container.encode(maxGlucoseValue, forKey: .maxGlucoseValue)
-            try container.encode(currentIOBInHundredths, forKey: .currentIOBInHundredths)
+            try container.encode(chartYScaleMaximum, forKey: .chartYScaleMaximum)
+            try container.encodeIfPresent(currentIOBText, forKey: .currentIOBText)
             try Self.encodeActivityPoints(iobPoints, to: &container, forKey: .iobPoints, baseTimestamp: baseTimestamp)
             try container.encode(maxIOBInHundredths, forKey: .maxIOBInHundredths)
             try Self.encodeActivityPoints(activityPoints, to: &container, forKey: .activityPoints, baseTimestamp: baseTimestamp)
@@ -242,17 +255,6 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             }
         }
 
-        private static func decodeActivityPointsIfPresent(
-            from container: KeyedDecodingContainer<CodingKeys>,
-            forKey key: CodingKeys,
-            baseTimestamp: Double
-        ) throws -> [ActivityPoint] {
-            guard container.contains(key) else {
-                return []
-            }
-            return try decodeActivityPoints(from: container, forKey: key, baseTimestamp: baseTimestamp)
-        }
-
         private static func encodeActivityPoints(
             _ points: [ActivityPoint],
             to container: inout KeyedEncodingContainer<CodingKeys>,
@@ -284,17 +286,6 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
                     insulinUnitsInHundredths: encodedMarker[1]
                 )
             }
-        }
-
-        private static func decodeInsulinMarkersIfPresent(
-            from container: KeyedDecodingContainer<CodingKeys>,
-            forKey key: CodingKeys,
-            baseTimestamp: Double
-        ) throws -> [InsulinMarker] {
-            guard container.contains(key) else {
-                return []
-            }
-            return try decodeInsulinMarkers(from: container, forKey: key, baseTimestamp: baseTimestamp)
         }
 
         private static func encodeInsulinMarkers(

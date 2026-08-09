@@ -79,13 +79,17 @@ final class LiveActivityManager {
             }
             _ = SensorSettingsStore.shared.refreshFromPersistence(force: reloadFailed)
             let sensorSettings = SensorSettingsStore.shared.sensorSettings
-            let cutoffDate = Date.now.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
+            let graphReferenceTimestamp = Date.now
+            let cutoffDate = graphReferenceTimestamp.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
             let showIOBCurve = SharedData.showIOBCurvePhone
             let showActivityCurve = SharedData.showActivityCurvePhone
             let showInsulinDeliveryMarks = SharedData.showInsulinDeliveryMarksPhone
-            let insulinDeliveries = insulinHistory.insulinDeliveryHistory
-                .filter { Date(timeIntervalSince1970: $0.timeStamp) >= cutoffDate }
-                .sorted { $0.timeStamp < $1.timeStamp }
+            let needsInsulinDeliveries = showIOBCurve || showActivityCurve || showInsulinDeliveryMarks
+            let insulinDeliveries = needsInsulinDeliveries
+                ? insulinHistory.insulinDeliveryHistory
+                    .filter { Date(timeIntervalSince1970: $0.timeStamp) >= cutoffDate }
+                    .sorted { $0.timeStamp < $1.timeStamp }
+                : []
             let insulinDeliveryDates = insulinDeliveries.map {
                 Date(timeIntervalSince1970: $0.timeStamp)
             }
@@ -114,42 +118,72 @@ final class LiveActivityManager {
                     )
                 })
 
-            let iobPoints = Self.reducedCurveForLiveActivity(
-                currentIOB.insulinOnBoardCurve.filter { $0.date >= cutoffDate },
-                insulinDeliveryDates: insulinDeliveryDates,
-                retainingMaximum: false
+            let maximumGraphValue = graphPoints.max {
+                $0.valueInMgPerDl < $1.valueInMgPerDl
+            }?.valueInMgPerDl ?? history.currentGlucose
+            let chartYScaleMaximum = Self.liveActivityChartYScaleMaximum(
+                maxGlucoseValueInMgPerDl: max(history.maxBG, maximumGraphValue),
+                glucoseUnit: sensorSettings.uom
             )
-                .map {
+
+            let iobPoints: [FLWatchAttributes.ActivityPoint]
+            // Insulin marker height follows the IOB curve, so markers still need these points even
+            // when the IOB curve itself is hidden.
+            if showIOBCurve || showInsulinDeliveryMarks {
+                iobPoints = Self.reducedCurveForLiveActivity(
+                    currentIOB.insulinOnBoardCurve.filter { $0.date >= cutoffDate },
+                    insulinDeliveryDates: insulinDeliveryDates,
+                    retainingMaximum: false
+                ).map {
                     FLWatchAttributes.ActivityPoint(
                         timestamp: $0.date,
                         valueInHundredths: Int(($0.value * Double(FLWatchAttributes.iobValueScale)).rounded())
                     )
                 }
+            } else {
+                iobPoints = []
+            }
 
-            let activityPoints = Self.reducedCurveForLiveActivity(
-                currentIOB.insulinActivityCurve.filter { $0.date >= cutoffDate },
-                insulinDeliveryDates: insulinDeliveryDates,
-                retainingMaximum: true
-            )
-                .map {
+            let activityPoints: [FLWatchAttributes.ActivityPoint]
+            if showActivityCurve {
+                activityPoints = Self.reducedCurveForLiveActivity(
+                    currentIOB.insulinActivityCurve.filter { $0.date >= cutoffDate },
+                    insulinDeliveryDates: insulinDeliveryDates,
+                    retainingMaximum: true
+                ).map {
                     FLWatchAttributes.ActivityPoint(
                         timestamp: $0.date,
                         valueInHundredths: Int(($0.value * Double(FLWatchAttributes.activityValueScale)).rounded())
                     )
                 }
+            } else {
+                activityPoints = []
+            }
 
-            let insulinMarkers = insulinDeliveries
-                .map {
+            let insulinMarkers: [FLWatchAttributes.InsulinMarker]
+            if showInsulinDeliveryMarks {
+                insulinMarkers = insulinDeliveries.map {
                     FLWatchAttributes.InsulinMarker(
                         timestamp: Date(timeIntervalSince1970: $0.timeStamp),
                         insulinUnitsInHundredths: Int(($0.insulinUnits * 100).rounded())
                     )
                 }
+            } else {
+                insulinMarkers = []
+            }
+
+            let latestGlucoseText = history.currentGlucose.asGlucose(
+                glucoseUnitValue: sensorSettings.uom
+            )
+            let currentIOBText = currentIOB.currentIOB > 0
+                ? String(format: "%.2fu", currentIOB.currentIOB)
+                : nil
 
             let state = FLWatchAttributes.ContentState(
-                latestGlucoseValue: history.currentGlucose,
+                latestGlucoseText: latestGlucoseText,
                 latestTrend: history.currentTrendArrow,
                 latestTimestamp: history.lastReadingDate,
+                graphReferenceTimestamp: graphReferenceTimestamp,
                 latestColor: history.latestLibreLinkUpGlucose?.color.rawValue ?? 0,
                 graphPoints: graphPoints,
                 minutePoints: minutePoints,
@@ -157,8 +191,8 @@ final class LiveActivityManager {
                 targetLow: sensorSettings.targetLow,
                 targetHigh: sensorSettings.targetHigh,
                 alarmLow: sensorSettings.alarmLow,
-                maxGlucoseValue: history.maxBG,
-                currentIOBInHundredths: Int((currentIOB.currentIOB * Double(FLWatchAttributes.iobValueScale)).rounded()),
+                chartYScaleMaximum: chartYScaleMaximum,
+                currentIOBText: currentIOBText,
                 iobPoints: iobPoints,
                 maxIOBInHundredths: max(1, Int((currentIOB.maxIOB * Double(FLWatchAttributes.iobValueScale)).rounded())),
                 activityPoints: activityPoints,
@@ -225,6 +259,21 @@ final class LiveActivityManager {
 
     var foregroundRestartAgeThreshold: TimeInterval {
         Self.foregroundRestartThreshold
+    }
+
+    /// Resolves the final display-unit domain once so repeated widget renders do not rescan the
+    /// glucose series or repeat the unit-dependent tier selection.
+    private static func liveActivityChartYScaleMaximum(
+        maxGlucoseValueInMgPerDl: Int,
+        glucoseUnit: Int
+    ) -> Int {
+        if maxGlucoseValueInMgPerDl > 350 {
+            return glucoseUnit == 0 ? 27 : 500
+        } else if maxGlucoseValueInMgPerDl > 250 {
+            return glucoseUnit == 0 ? 21 : 350
+        } else {
+            return glucoseUnit == 0 ? 15 : 250
+        }
     }
 
     /// Reduces five-minute insulin curves for the Live Activity presentation while retaining
