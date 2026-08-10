@@ -38,7 +38,7 @@ enum InsulinType: Int, CaseIterable {
     }
 }
 
-struct ActivityCurveDataPoint: Codable, Identifiable {
+struct ActivityCurveDataPoint: Codable, Identifiable, Equatable {
     let id: Int //timeinterval
     let date: Date
     let value: Double
@@ -328,12 +328,32 @@ struct InsulinTypePresets: Codable, Identifiable {
         return sumIOB
     }
 
+    private nonisolated static func makeModel(_ preset: InsulinTypePresets) -> ExponentialInsulinModel {
+        ExponentialInsulinModel(
+            actionDuration: preset.actionDuration,
+            peakActivityTime: preset.peakActivityTime,
+            delay: preset.delay
+        )
+    }
+
+    /// One model per insulin type, built once.
+    ///
+    /// A model is a pure function of its preset and its initializer runs an `exp()`, yet the
+    /// IOB curve evaluates ~97 grid points per dose on every update — so the old code rebuilt
+    /// the same two models hundreds of times a minute. `InsulinType.presets` stays the single
+    /// source of truth, so editing a preset still flows through here.
+    private nonisolated static let rapidActingModel = makeModel(InsulinType.rapidActing.presets)
+    private nonisolated static let fastRapidActingModel = makeModel(InsulinType.fastRapidActing.presets)
+
+    private nonisolated static func model(for type: InsulinType.RawValue) -> ExponentialInsulinModel {
+        switch InsulinType(rawValue: type) ?? .rapidActing {
+        case .rapidActing: return rapidActingModel
+        case .fastRapidActing: return fastRapidActingModel
+        }
+    }
+
     private nonisolated static func iobFractionRemaining(timeStamp timeInterval: Double, insulinType type: InsulinType.RawValue) -> Double {
-        let insulin: InsulinType = InsulinType(rawValue: type) ?? .rapidActing
-        let preset: InsulinTypePresets = insulin.presets
-        let model = ExponentialInsulinModel(actionDuration: preset.actionDuration, peakActivityTime: preset.peakActivityTime, delay: preset.delay)
-        let result = model.percentEffectRemaining(at: timeInterval)
-        return result
+        model(for: type).percentEffectRemaining(at: timeInterval)
     }
     
     private func calculateInsulinOnBoardCurve(from history: [InsulinDelivery]) -> [ActivityCurveDataPoint] {
@@ -341,20 +361,25 @@ struct InsulinTypePresets: Codable, Identifiable {
         
         if history.isEmpty { return [] }
         
+        // Whether a dose is old enough to be irrelevant does not depend on the grid step, so
+        // test it once here rather than re-testing every dose at all ~97 steps.
+        let InternvalSixHoursAndTen: Double = 6 * 60 * 60 + 10 * 60
+        let contributingHistory = history.filter {
+            timeIntervalSince1970 - $0.timeStamp < InternvalSixHoursAndTen // e.g. 600 sec
+        }
+        if contributingHistory.isEmpty { return [] }
+
         var activityCurve: [ActivityCurveDataPoint] = []
         let minutes = 5 * 60
-        let InternvalSixHoursAndTen: Double = 6 * 60 * 60 + 10 * 60
+        activityCurve.reserveCapacity(97) // (6 h back + 2 h forward) / 5 min, plus the step at 0
         for timeInterval in stride(from: 6 * 60 * 60, through: -2 * 60 * 60, by: -minutes) {
             var sumIOB: Double = 0
-            for item in history {
-                let timeIntervalBetweenDeliveryAndNow = timeIntervalSince1970 - item.timeStamp // e.g. 600 sec
-                if timeIntervalBetweenDeliveryAndNow < InternvalSixHoursAndTen {
-                    let timeIntervalBetweenDeliveryAndTimeStampToBeCalculated = timeIntervalSince1970 - item.timeStamp - Double(timeInterval) // e.g. 600 sec - 300 sec
-//                    print("timeIntervalBetweenDeliveryAndTimeStampToBeCalculated: \(timeIntervalBetweenDeliveryAndTimeStampToBeCalculated)")
-                    if timeIntervalBetweenDeliveryAndTimeStampToBeCalculated >= 0 { // timeIntervalBetweenDeliveryAndTimeStampToBeCalculated < timeIntervalBetweenDeliveryAndNow &&
-                        let IOB =   updateIOB(timeStamp: timeIntervalBetweenDeliveryAndTimeStampToBeCalculated, insulinType: item.insulinType) * item.insulinUnits
-                        sumIOB = sumIOB + IOB
-                    }
+            for item in contributingHistory {
+                let timeIntervalBetweenDeliveryAndTimeStampToBeCalculated = timeIntervalSince1970 - item.timeStamp - Double(timeInterval) // e.g. 600 sec - 300 sec
+//                print("timeIntervalBetweenDeliveryAndTimeStampToBeCalculated: \(timeIntervalBetweenDeliveryAndTimeStampToBeCalculated)")
+                if timeIntervalBetweenDeliveryAndTimeStampToBeCalculated >= 0 {
+                    let IOB =   updateIOB(timeStamp: timeIntervalBetweenDeliveryAndTimeStampToBeCalculated, insulinType: item.insulinType) * item.insulinUnits
+                    sumIOB = sumIOB + IOB
                 }
             }
             if sumIOB > 0 {
@@ -366,10 +391,11 @@ struct InsulinTypePresets: Codable, Identifiable {
         return activityCurve
     }
     
-    func calculateinsulinActivityCurve() -> [ActivityCurveDataPoint] {
-        let currentIOBSingleton = CurrentIOBSingleton.shared
-        let IOBcurve: [ActivityCurveDataPoint] = currentIOBSingleton.insulinOnBoardCurve
-        
+    /// Differences the IOB curve into per-step insulin activity.
+    /// Must be handed the *full* curve including its forward points — the activity value
+    /// at a given step is the IOB drop between that step and the next one, so the newest
+    /// visible value depends on a point that lies in the future.
+    private func calculateinsulinActivityCurve(from IOBcurve: [ActivityCurveDataPoint]) -> [ActivityCurveDataPoint] {
         if IOBcurve.count < 2 { return []}
         
         var activityCurve: [ActivityCurveDataPoint] = []
@@ -384,6 +410,28 @@ struct InsulinTypePresets: Codable, Identifiable {
         return activityCurve
     }
     
+    /// Publishes a fully computed result in one go.
+    ///
+    /// `@Observable` fires a mutation on every write without comparing values, and each
+    /// mutation invalidates every observer — phone home and graph views, watch graph,
+    /// CarPlay, Live Activity rebuilds. Redrawing a ~90-point chart costs orders of
+    /// magnitude more than computing it, so each property is written exactly once per
+    /// update and only when it actually moved. With no insulin on board every value is
+    /// identical minute after minute, and this suppresses the redraws entirely.
+    private func publish(
+        currentIOB newCurrentIOB: Double,
+        insulinOnBoardCurve newIOBCurve: [ActivityCurveDataPoint],
+        insulinActivityCurve newActivityCurve: [ActivityCurveDataPoint],
+        maxIOB newMaxIOB: Double,
+        maxActivity newMaxActivity: Double
+    ) {
+        if currentIOB != newCurrentIOB { currentIOB = newCurrentIOB }
+        if insulinOnBoardCurve != newIOBCurve { insulinOnBoardCurve = newIOBCurve }
+        if insulinActivityCurve != newActivityCurve { insulinActivityCurve = newActivityCurve }
+        if maxIOB != newMaxIOB { maxIOB = newMaxIOB }
+        if maxActivity != newMaxActivity { maxActivity = newMaxActivity }
+    }
+
     func updateCurrentIOBAndGraphs() {
         Logger.insulin.debug("Updating IOB graphs: \(Date.now, privacy: .public)")
         let now = Date().timeIntervalSince1970
@@ -391,46 +439,68 @@ struct InsulinTypePresets: Codable, Identifiable {
         let activeHistory = Self.activeHistory(from: historySnapshot, now: now)
 
         //MARK: Update IOB
-        currentIOB = Self.currentIOB(from: activeHistory, now: now)
-        
+        let newCurrentIOB = Self.currentIOB(from: activeHistory, now: now)
+
+#if os(iOS)
+        let showIOBCurve = SharedData.showIOBCurvePhone
+        let showActivityCurve = SharedData.showActivityCurvePhone
+#endif
+#if os(watchOS)
+        let showIOBCurve = SharedData.showIOBCurveWatch
+        let showActivityCurve = SharedData.showActivityCurveWatch
+#endif
+
         //MARK: Update IOB graph
-#if os(iOS)
-        if SharedData.showIOBCurvePhone == false && SharedData.showActivityCurvePhone == false { insulinOnBoardCurve = []; insulinActivityCurve = []; maxIOB = 1000; return }
-#endif
-#if os(watchOS)
-        if SharedData.showIOBCurveWatch == false && SharedData.showActivityCurveWatch == false { insulinOnBoardCurve = []; insulinActivityCurve = []; maxIOB = 1000; return }
-#endif
-        
-        insulinOnBoardCurve = calculateInsulinOnBoardCurve(from: activeHistory)
-        let indexOfMaxInsulinItem = insulinOnBoardCurve.indices.max(by:
-                                                                        { insulinOnBoardCurve[$0].value < insulinOnBoardCurve[$1].value }
-        ) ?? 0
-        maxIOB = { insulinOnBoardCurve.count > 0 ? insulinOnBoardCurve[indexOfMaxInsulinItem].value : 1 }()
-        
+        guard showIOBCurve || showActivityCurve else {
+            // `maxIOB = 1000` is the established "no curve" sentinel; `maxActivity` is
+            // deliberately left at its previous value, as it always has been.
+            publish(
+                currentIOB: newCurrentIOB,
+                insulinOnBoardCurve: [],
+                insulinActivityCurve: [],
+                maxIOB: 1000,
+                maxActivity: maxActivity
+            )
+            return
+        }
+
+        let fullIOBCurve = calculateInsulinOnBoardCurve(from: activeHistory)
+        // Total IOB never rises after `now` — no future doses are ever added — so its
+        // maximum always lies at or before `now` and the forward points cannot affect it.
+        let newMaxIOB = fullIOBCurve.max { $0.value < $1.value }?.value ?? 1
+
         //MARK: Update insulin activity graph
-#if os(iOS)
-        if SharedData.showActivityCurvePhone == false {
-            insulinActivityCurve = []
-            insulinOnBoardCurve = insulinOnBoardCurve.filter { $0.date < Date.now } // Must use Date.now here, if we get the date further up, it will be before the curve is calculated and filter the first point...
+        guard showActivityCurve else {
+            publish(
+                currentIOB: newCurrentIOB,
+                // Must take Date.now here rather than reusing `now` from the top: that
+                // was sampled before the curve was calculated and would drop its first point.
+                insulinOnBoardCurve: fullIOBCurve.filter { $0.date < Date.now },
+                insulinActivityCurve: [],
+                maxIOB: newMaxIOB,
+                maxActivity: maxActivity
+            )
             return
         }
-#endif
-#if os(watchOS)
-        if SharedData.showActivityCurveWatch == false {
-            insulinActivityCurve = []
-            insulinOnBoardCurve = insulinOnBoardCurve.filter { $0.date < Date.now }
-            return
-        }
-#endif
-        
-        insulinActivityCurve = calculateinsulinActivityCurve()
-        let indexOfMaxActivityItem = insulinActivityCurve.indices.max(by:
-                                                                        { insulinActivityCurve[$0].value < insulinActivityCurve[$1].value }
-        ) ?? 0
-        maxActivity = { insulinActivityCurve.count > 0 ? insulinActivityCurve[indexOfMaxActivityItem].value : 1 }()
-        
-        insulinOnBoardCurve = insulinOnBoardCurve.filter { $0.date < Date.now }
-        insulinActivityCurve = insulinActivityCurve.filter { $0.date < Date.now }
+
+        // `calculateInsulinOnBoardCurve` runs ~2 h past `now` on purpose, and only this
+        // block needs it. Insulin activity is the derivative of IOB and peaks ~83 min
+        // after delivery (10 min delay + 75 min peak), so a dose entered a moment ago has
+        // its activity peak entirely in the future. Differencing the *full* curve and
+        // taking `maxActivity` from it fixes the chart's y-scale immediately; shortening
+        // the window would start a fresh dose near zero and rescale the chart every minute
+        // for the next 90 min as the real peak came into view. The forward points are
+        // dropped below, after the maximum has been taken.
+        let fullActivityCurve = calculateinsulinActivityCurve(from: fullIOBCurve)
+        let newMaxActivity = fullActivityCurve.max { $0.value < $1.value }?.value ?? 1
+
+        publish(
+            currentIOB: newCurrentIOB,
+            insulinOnBoardCurve: fullIOBCurve.filter { $0.date < Date.now },
+            insulinActivityCurve: fullActivityCurve.filter { $0.date < Date.now },
+            maxIOB: newMaxIOB,
+            maxActivity: newMaxActivity
+        )
     }
 }
 

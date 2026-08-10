@@ -8,7 +8,10 @@
 
 import Foundation
 
-public struct ExponentialInsulinModel {
+// `Sendable` is a checked conformance, not `@unchecked`: every stored property is an
+// immutable `Double`. It is required so the models can be cached in a `nonisolated static let`
+// (see `CurrentIOBSingleton`) rather than rebuilt for each of the ~97 curve evaluations.
+public struct ExponentialInsulinModel: Sendable {
     public let actionDuration: TimeInterval
     public let peakActivityTime: TimeInterval
     public let delay: TimeInterval
