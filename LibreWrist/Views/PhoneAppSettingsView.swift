@@ -43,7 +43,11 @@ struct PhoneAppSettingsView: View {
     }
     
     @Environment(\.openURL) private var openURL
-    
+    // Apple Health permissions are changed in the Health app, which leaves this
+    // view on screen — so `onAppear` never fires on the way back and the status
+    // has to be re-read when the scene becomes active again.
+    @Environment(\.scenePhase) private var scenePhase
+
     @AppStorage(DefaultsKey.cgmProviderKind.rawValue, store: UserDefaults.group) private var cgmProviderKindRaw: String = CGMProviderKind.libreLinkUp.rawValue
     @AppStorage(DefaultsKey.showInsulinDeliveryMarksPhone.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksPhone: Bool = false
     @AppStorage(DefaultsKey.showInsulinDeliveryMarksWatch.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksWatch: Bool = false
@@ -79,8 +83,13 @@ struct PhoneAppSettingsView: View {
         let current = SensorSettingsStore.shared.sensorType
         return current.isADexcom ? current : .dexcomG7
     }()
-    @State private var appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
-    @State private var appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
+    // Glucose and insulin are authorized separately, so each carries its own
+    // preference and status. The statuses start from the synchronous snapshot and
+    // `refreshAppleHealthStatus()` refines them on appear.
+    @State private var appleHealthGlucoseExportEnabled = AppleHealthExportManager.shared.isExportEnabled(for: .glucose)
+    @State private var appleHealthInsulinExportEnabled = AppleHealthExportManager.shared.isExportEnabled(for: .insulin)
+    @State private var appleHealthGlucoseState = AppleHealthExportManager.shared.writeAuthorizationSnapshot(for: .glucose)
+    @State private var appleHealthInsulinState = AppleHealthExportManager.shared.writeAuthorizationSnapshot(for: .insulin)
     @State private var nightscoutURL = SharedData.nightscoutURL
     @State private var nightscoutAccessToken = ""
     @State private var nightscoutSettingsStatus: NightscoutSettingsStatus?
@@ -613,40 +622,32 @@ struct PhoneAppSettingsView: View {
             }
 
             Section {
-                Toggle(
-                    "Export glucose and insulin data to Apple Health",
-                    isOn: Binding(
-                        get: { appleHealthExportEnabled },
-                        set: { newValue in
-                            if newValue {
-                                Task {
-                                    let state = await AppleHealthExportManager.shared.requestWriteAuthorizationAndEnableExport()
-                                    await MainActor.run {
-                                        appleHealthAuthorizationState = state
-                                        appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
-                                    }
-                                }
-                            } else {
-                                AppleHealthExportManager.shared.disableExport()
-                                appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
-                                appleHealthExportEnabled = false
-                            }
-                        }
-                    )
+                appleHealthExportToggle(
+                    title: LocalizedStringResource(
+                        "Export glucose values to Apple Health",
+                        comment: "Settings switch enabling writing of CGM glucose readings to Apple Health"
+                    ),
+                    kind: .glucose,
+                    isEnabled: $appleHealthGlucoseExportEnabled,
+                    state: $appleHealthGlucoseState
                 )
-                .disabled(appleHealthAuthorizationState == .unavailable)
 
-                Text(appleHealthAuthorizationState.statusText)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-
-                if appleHealthAuthorizationState == .denied {
-                    Link("Open app settings", destination: URL(string: UIApplication.openSettingsURLString)!)
-                }
+                appleHealthExportToggle(
+                    title: LocalizedStringResource(
+                        "Export insulin injections to Apple Health",
+                        comment: "Settings switch enabling writing of logged insulin injections to Apple Health"
+                    ),
+                    kind: .insulin,
+                    isEnabled: $appleHealthInsulinExportEnabled,
+                    state: $appleHealthInsulinState
+                )
             } header: {
                 Text("Apple Health")
             } footer: {
-                Text("Permission is requested only when you turn this on. FLwatch exports insulin injections and glucose values, and tags samples with HealthKit sync identifiers to avoid duplicates.")
+                Text(
+                    "Each of these asks for its own Apple Health permission, only when you turn it on — you can export just glucose, just insulin, or both. FLwatch checks what Apple Health already holds before it writes, so turning a switch off and on again does not create duplicate entries.",
+                    comment: "Footer of the Apple Health settings section explaining that the two export switches are authorized independently and that re-enabling one does not duplicate data"
+                )
             }
 
             nightscoutSettingsSection
@@ -922,6 +923,11 @@ struct PhoneAppSettingsView: View {
             refreshAppleHealthStatus()
             bluetoothHeartbeatManager.startIfNeeded()
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            // Picks up permission changes the user made in the Health app.
+            guard newPhase == .active else { return }
+            refreshAppleHealthStatus()
+        }
 
     }
     func sendMessagetoOther(message: [String: Any]) {
@@ -1131,15 +1137,80 @@ struct PhoneAppSettingsView: View {
         dexcomSensorType = resolved.isADexcom ? resolved : .dexcomG7
         // Mirror the change to the watch so its stale window and cadence
         // follow without waiting for the next settings sync.
+        // The glucose alerts reconcile themselves: `LowGlucoseNotificationManager`
+        // observes the provider-change notification `switchProvider` posts.
         watchConnector.sendSettingsSnapshotToWatch()
-        Task {
-            await LowGlucoseNotificationManager.shared.providerDidChange()
+    }
+
+    /// One export switch plus its status. Glucose and insulin get one of these
+    /// each: Apple Health tracks write permission per sample type, so refusing
+    /// one must not disable the other.
+    @ViewBuilder
+    private func appleHealthExportToggle(
+        title: LocalizedStringResource,
+        kind: AppleHealthDataKind,
+        isEnabled: Binding<Bool>,
+        state: Binding<AppleHealthAuthorizationState>
+    ) -> some View {
+        Toggle(
+            isOn: Binding(
+                get: { isEnabled.wrappedValue },
+                set: { newValue in
+                    if newValue {
+                        Task {
+                            let newState = await AppleHealthExportManager.shared
+                                .requestWriteAuthorizationAndEnableExport(for: kind)
+                            await MainActor.run {
+                                state.wrappedValue = newState
+                                isEnabled.wrappedValue = AppleHealthExportManager.shared.isExportEnabled(for: kind)
+                            }
+                        }
+                    } else {
+                        AppleHealthExportManager.shared.disableExport(for: kind)
+                        isEnabled.wrappedValue = false
+                        Task {
+                            let newState = await AppleHealthExportManager.shared
+                                .syncPreferenceWithAuthorization(for: kind)
+                            await MainActor.run { state.wrappedValue = newState }
+                        }
+                    }
+                }
+            )
+        ) {
+            Text(title)
+        }
+        .disabled(state.wrappedValue == .unavailable)
+
+        Text(state.wrappedValue.statusText)
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+
+        if state.wrappedValue == .deniedNeedsHealthApp {
+            // HealthKit permissions are not in the app's Settings page — they
+            // live in the Health app under Profile › Apps, so there is no URL we
+            // can link to here.
+            Text(
+                "Open the Health app, tap your profile picture, then Apps › FLwatch, and allow writing.",
+                comment: "Instructions shown when an Apple Health export permission was refused and can only be changed in the Health app"
+            )
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private func refreshAppleHealthStatus() {
-        appleHealthAuthorizationState = AppleHealthExportManager.shared.syncPreferenceWithAuthorization()
-        appleHealthExportEnabled = AppleHealthExportManager.shared.isExportEnabled
+        Task {
+            let glucoseState = await AppleHealthExportManager.shared.syncPreferenceWithAuthorization(for: .glucose)
+            let insulinState = await AppleHealthExportManager.shared.syncPreferenceWithAuthorization(for: .insulin)
+            await MainActor.run {
+                appleHealthGlucoseState = glucoseState
+                appleHealthInsulinState = insulinState
+                appleHealthGlucoseExportEnabled = AppleHealthExportManager.shared.isExportEnabled(for: .glucose)
+                appleHealthInsulinExportEnabled = AppleHealthExportManager.shared.isExportEnabled(for: .insulin)
+            }
+        }
     }
 
     private var formattedCalibrationOffset: String {

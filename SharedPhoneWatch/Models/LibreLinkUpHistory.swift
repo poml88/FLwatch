@@ -123,6 +123,11 @@ final class LibreLinkUpHistoryStore {
         )
         self.encoder = JSONEncoder()
         self.decoder = JSONDecoder()
+        // NOTE: `.iso8601` writes whole seconds — a reading's fractional second does
+        // not survive a persist/reload cycle. Anything keyed on a reading's date has
+        // to be stable under that truncation; see `glucoseSyncIdentifier`, which
+        // floors for exactly this reason and is also the change key a few lines into
+        // `replaceCacheAndPersist`.
         self.encoder.dateEncodingStrategy = .iso8601
         self.decoder.dateDecodingStrategy = .iso8601
 

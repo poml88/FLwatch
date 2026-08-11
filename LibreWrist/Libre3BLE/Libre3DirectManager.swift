@@ -3067,7 +3067,19 @@ final class Libre3DirectManager: ObservableObject {
     /// persist it so timestamps stay stable across reconnects (PLAN §8).
     private func seedAnchorIfNeeded(lifeCount: Int) {
         guard sensorStartDate == nil, lifeCount > 0 else { return }
-        let anchor = Date().addingTimeInterval(-Double(lifeCount) * 60)
+        // Floored to a whole second. Every 5-minute point is `anchor + lifeCount·60`,
+        // so the anchor's fractional second propagates to the whole series — and
+        // LibreLinkUpHistory persists dates as ISO8601, which drops it. A fractional
+        // anchor therefore gives each point one identity in memory and another after
+        // a reload, which the Apple Health export sees as two different samples.
+        // Only new anchors are floored: shifting an existing one would move every
+        // retained timestamp and cause exactly that duplication.
+        let anchor = Date(
+            timeIntervalSince1970: Date()
+                .addingTimeInterval(-Double(lifeCount) * 60)
+                .timeIntervalSince1970
+                .rounded(.down)
+        )
         sensorStartDate = anchor
         SharedData.libre3SensorStartDate = anchor
         // First reliable anchor derivation is the earliest point where expiry

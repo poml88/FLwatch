@@ -12,10 +12,21 @@ import OSLog
 import HealthKit
 #endif
 
+/// The two sample kinds FLwatch writes. Apple Health tracks write permission per
+/// type, and users frequently want only one of them, so authorization and the
+/// export preference are both handled per kind rather than as one bundle.
+enum AppleHealthDataKind: CaseIterable, Sendable {
+    case glucose
+    case insulin
+}
+
 enum AppleHealthAuthorizationState: Equatable {
     case unavailable
     case notDetermined
     case denied
+    /// Denied, and re-requesting would not present a sheet: HealthKit only asks
+    /// once per type, so the user has to change it in the Health app itself.
+    case deniedNeedsHealthApp
     case authorized
 
     var statusText: String {
@@ -26,88 +37,161 @@ enum AppleHealthAuthorizationState: Equatable {
             return String(localized: "Permission has not been requested yet.")
         case .denied:
             return String(localized: "Apple Health write access is not granted.")
+        case .deniedNeedsHealthApp:
+            return String(
+                localized: "Apple Health write access is not granted. Apple Health asks only once, so this has to be changed in the Health app.",
+                comment: "Status under an Apple Health export switch when permission was refused and cannot be re-requested in-app"
+            )
         case .authorized:
             return String(localized: "Apple Health export is authorized.")
         }
     }
 }
 
+/// Serializes the Apple Health writes. Every export reads the sync identifiers
+/// Apple Health already holds and then saves whatever is missing; two overlapping
+/// runs would both observe the same gap and both write it, because HealthKit only
+/// replaces a sample carrying a known sync identifier when the new one has a
+/// *greater* `HKMetadataKeySyncVersion` — ours is a constant, so a repeat save is
+/// stored as an additional sample instead of replacing anything.
+private actor AppleHealthExportGate {
+    private var isBusy = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    func acquire() async {
+        while isBusy {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                waiters.append(continuation)
+            }
+        }
+        isBusy = true
+    }
+
+    func release() {
+        isBusy = false
+        guard !waiters.isEmpty else { return }
+        waiters.removeFirst().resume()
+    }
+}
+
 final class AppleHealthExportManager {
     static let shared = AppleHealthExportManager()
 
+    private let exportGate = AppleHealthExportGate()
+
     private init() {}
 
-    var isExportEnabled: Bool {
-        get { SharedData.appleHealthExportEnabled }
-        set { SharedData.appleHealthExportEnabled = newValue }
+    func isExportEnabled(for kind: AppleHealthDataKind) -> Bool {
+        switch kind {
+        case .glucose: return SharedData.appleHealthExportGlucoseEnabled
+        case .insulin: return SharedData.appleHealthExportInsulinEnabled
+        }
     }
 
-    func authorizationState() -> AppleHealthAuthorizationState {
+    private func setExportEnabled(_ enabled: Bool, for kind: AppleHealthDataKind) {
+        switch kind {
+        case .glucose: SharedData.appleHealthExportGlucoseEnabled = enabled
+        case .insulin: SharedData.appleHealthExportInsulinEnabled = enabled
+        }
+    }
+
+    /// Authorization for one kind without the extra async probe that tells the
+    /// two denied cases apart. Used by the export paths — they only care whether
+    /// writing is allowed — and as the settings UI's initial value, so its status
+    /// line does not flicker while `authorizationState(for:)` refines it.
+    func writeAuthorizationSnapshot(for kind: AppleHealthDataKind) -> AppleHealthAuthorizationState {
 #if os(iOS) && canImport(HealthKit)
         guard HKHealthStore.isHealthDataAvailable() else {
             return .unavailable
         }
 
-        let statuses = requiredWriteTypes.map(healthStore.authorizationStatus(for:))
-        if statuses.allSatisfy({ $0 == .sharingAuthorized }) {
+        switch healthStore.authorizationStatus(for: sampleType(for: kind)) {
+        case .sharingAuthorized:
             return .authorized
-        }
-        if statuses.contains(.sharingDenied) {
+        case .sharingDenied:
             return .denied
+        case .notDetermined:
+            return .notDetermined
+        @unknown default:
+            return .notDetermined
         }
-        return .notDetermined
 #else
         return .unavailable
 #endif
     }
 
-    func syncPreferenceWithAuthorization() -> AppleHealthAuthorizationState {
-        let state = authorizationState()
+    func authorizationState(for kind: AppleHealthDataKind) async -> AppleHealthAuthorizationState {
+        let snapshot = writeAuthorizationSnapshot(for: kind)
+#if os(iOS) && canImport(HealthKit)
+        guard snapshot == .denied else { return snapshot }
+        return await requestingWouldPresentSheet(for: kind) ? .denied : .deniedNeedsHealthApp
+#else
+        return snapshot
+#endif
+    }
+
+    private func isAuthorized(for kind: AppleHealthDataKind) -> Bool {
+        writeAuthorizationSnapshot(for: kind) == .authorized
+    }
+
+    /// Turns a preference back off when its Apple Health permission is gone —
+    /// the user may have revoked it in the Health app while we were not running.
+    func syncPreferenceWithAuthorization(for kind: AppleHealthDataKind) async -> AppleHealthAuthorizationState {
+        let state = await authorizationState(for: kind)
         if state != .authorized {
-            isExportEnabled = false
+            setExportEnabled(false, for: kind)
         }
         return state
     }
 
     @discardableResult
-    func requestWriteAuthorizationAndEnableExport() async -> AppleHealthAuthorizationState {
+    func requestWriteAuthorizationAndEnableExport(for kind: AppleHealthDataKind) async -> AppleHealthAuthorizationState {
 #if os(iOS) && canImport(HealthKit)
         guard HKHealthStore.isHealthDataAvailable() else {
-            isExportEnabled = false
+            setExportEnabled(false, for: kind)
             return .unavailable
         }
 
         do {
-            try await requestAuthorization()
+            try await requestAuthorization(for: kind)
         } catch {
             Logger.healthKit.error("Authorization request failed: \(error.localizedDescription, privacy: .public)")
-            isExportEnabled = false
-            return authorizationState()
+            setExportEnabled(false, for: kind)
+            return await authorizationState(for: kind)
         }
 
-        let state = authorizationState()
-        isExportEnabled = (state == .authorized)
+        let state = await authorizationState(for: kind)
+        setExportEnabled(state == .authorized, for: kind)
         if state == .authorized {
-            await exportAllAvailableDataIfNeeded()
+            await exportAvailableDataIfNeeded(for: kind)
         }
         return state
 #else
-        isExportEnabled = false
+        setExportEnabled(false, for: kind)
         return .unavailable
 #endif
     }
 
-    func disableExport() {
-        isExportEnabled = false
+    func disableExport(for kind: AppleHealthDataKind) {
+        setExportEnabled(false, for: kind)
     }
 
     func exportAllAvailableDataIfNeeded() async {
-        let glucoseReadings = await MainActor.run {
-            LibreLinkUpHistory.shared.fullLibreLinkUpGlucose
+        for kind in AppleHealthDataKind.allCases {
+            await exportAvailableDataIfNeeded(for: kind)
         }
-        await exportGlucoseSamplesIfNeeded(glucoseReadings)
-        let insulinHistory = InsulinDeliveryHistorySingleton.persistedHistorySnapshot()
-        await exportInsulinDeliveriesIfNeeded(insulinHistory)
+    }
+
+    private func exportAvailableDataIfNeeded(for kind: AppleHealthDataKind) async {
+        switch kind {
+        case .glucose:
+            let glucoseReadings = await MainActor.run {
+                LibreLinkUpHistory.shared.fullLibreLinkUpGlucose
+            }
+            await exportGlucoseSamplesIfNeeded(glucoseReadings)
+        case .insulin:
+            await exportInsulinDeliveriesIfNeeded(InsulinDeliveryHistorySingleton.persistedHistorySnapshot())
+        }
     }
 
     func exportInsulinCatchUpIfNeeded() async {
@@ -117,11 +201,21 @@ final class AppleHealthExportManager {
 
     func exportGlucoseSamplesIfNeeded(_ readings: [LibreLinkUpGlucose]) async {
 #if os(iOS) && canImport(HealthKit)
-        guard isExportEnabled, authorizationState() == .authorized else { return }
+        guard isExportEnabled(for: .glucose), isAuthorized(for: .glucose) else { return }
 
         let uniqueReadings = uniqueGlucoseReadings(graphHistoryReadings(from: readings))
         guard !uniqueReadings.isEmpty else { return }
 
+        await exportGate.acquire()
+        await performGlucoseExport(uniqueReadings)
+        await exportGate.release()
+#else
+        _ = readings
+#endif
+    }
+
+#if os(iOS) && canImport(HealthKit)
+    private func performGlucoseExport(_ uniqueReadings: [LibreLinkUpGlucose]) async {
         let dates = uniqueReadings.map(\.glucose.date)
         do {
             let existingIdentifiers = try await existingSyncIdentifiers(
@@ -148,24 +242,38 @@ final class AppleHealthExportManager {
                 )
             }
 
+            // Counts rather than a bare "saved N": a healthy steady state is
+            // "0 new", which is otherwise indistinguishable from an export that
+            // never ran. Duplicate regressions show up here as a non-zero "new"
+            // on a window Apple Health already holds in full.
+            Logger.healthKit.debug("Glucose export: \(uniqueReadings.count, privacy: .public) candidates, \(uniqueReadings.count - newSamples.count, privacy: .public) already present, \(newSamples.count, privacy: .public) new")
+
             guard !newSamples.isEmpty else { return }
             try await save(samples: newSamples)
             Logger.healthKit.info("Saved \(newSamples.count, privacy: .public) glucose sample(s) to Apple Health.")
         } catch {
             Logger.healthKit.error("Glucose export failed: \(error.localizedDescription, privacy: .public)")
         }
-#else
-        _ = readings
-#endif
     }
+#endif
 
     func exportInsulinDeliveriesIfNeeded(_ deliveries: [InsulinDelivery]) async {
 #if os(iOS) && canImport(HealthKit)
-        guard isExportEnabled, authorizationState() == .authorized else { return }
+        guard isExportEnabled(for: .insulin), isAuthorized(for: .insulin) else { return }
 
         let uniqueDeliveries = uniqueInsulinDeliveries(deliveries)
         guard !uniqueDeliveries.isEmpty else { return }
 
+        await exportGate.acquire()
+        await performInsulinExport(uniqueDeliveries)
+        await exportGate.release()
+#else
+        _ = deliveries
+#endif
+    }
+
+#if os(iOS) && canImport(HealthKit)
+    private func performInsulinExport(_ uniqueDeliveries: [InsulinDelivery]) async {
         let dates = uniqueDeliveries.map { Date(timeIntervalSince1970: $0.timeStamp) }
         do {
             let existingIdentifiers = try await existingSyncIdentifiers(
@@ -194,24 +302,38 @@ final class AppleHealthExportManager {
                 )
             }
 
+            Logger.healthKit.debug("Insulin export: \(uniqueDeliveries.count, privacy: .public) candidates, \(uniqueDeliveries.count - newSamples.count, privacy: .public) already present, \(newSamples.count, privacy: .public) new")
+
             guard !newSamples.isEmpty else { return }
             try await save(samples: newSamples)
             Logger.healthKit.info("Saved \(newSamples.count, privacy: .public) insulin sample(s) to Apple Health.")
         } catch {
             Logger.healthKit.error("Insulin export failed: \(error.localizedDescription, privacy: .public)")
         }
+    }
+#endif
+
+    func deleteInsulinDeliveriesIfPresent(_ deliveries: [InsulinDelivery]) async {
+#if os(iOS) && canImport(HealthKit)
+        // No export-preference check on purpose: samples we wrote earlier should
+        // still be cleaned up after the user turns insulin export back off.
+        guard isAuthorized(for: .insulin) else { return }
+
+        let uniqueDeliveries = uniqueInsulinDeliveries(deliveries)
+        guard !uniqueDeliveries.isEmpty else { return }
+
+        // Shares the export gate: a delete racing an export could re-add what it
+        // just removed, or remove what the export is about to write.
+        await exportGate.acquire()
+        await performInsulinDelete(uniqueDeliveries)
+        await exportGate.release()
 #else
         _ = deliveries
 #endif
     }
 
-    func deleteInsulinDeliveriesIfPresent(_ deliveries: [InsulinDelivery]) async {
 #if os(iOS) && canImport(HealthKit)
-        guard authorizationState() == .authorized else { return }
-
-        let uniqueDeliveries = uniqueInsulinDeliveries(deliveries)
-        guard !uniqueDeliveries.isEmpty else { return }
-
+    private func performInsulinDelete(_ uniqueDeliveries: [InsulinDelivery]) async {
         let dates = uniqueDeliveries.map { Date(timeIntervalSince1970: $0.timeStamp) }
         let identifiersToDelete = Set(uniqueDeliveries.map(Self.insulinSyncIdentifier(for:)))
 
@@ -233,13 +355,17 @@ final class AppleHealthExportManager {
         } catch {
             Logger.healthKit.error("Insulin delete failed: \(error.localizedDescription, privacy: .public)")
         }
-#else
-        _ = deliveries
-#endif
     }
+#endif
 
     static func glucoseSyncIdentifier(for reading: LibreLinkUpGlucose) -> String {
-        let timestamp = Int(reading.glucose.date.timeIntervalSince1970.rounded())
+        // Truncated to the whole second, never rounded: LibreLinkUpHistory persists
+        // dates as ISO8601, which drops the fractional second. A reading exported
+        // live (date x.7) and the same reading exported after a reload (date x.0)
+        // must produce the same identity, or the reload writes a second sample —
+        // HealthKit only replaces a known sync identifier when the new sample has a
+        // *greater* sync version, and ours is a constant.
+        let timestamp = Int(reading.glucose.date.timeIntervalSince1970.rounded(.down))
         // Identity must not change when a Libre 3 BLE value is locally corrected.
         // All current providers initialize rawValue as uncorrected mg/dL × 10, so
         // this remains byte-for-byte compatible with existing uncalibrated IDs.
@@ -248,6 +374,10 @@ final class AppleHealthExportManager {
     }
 
     static func insulinSyncIdentifier(for delivery: InsulinDelivery) -> String {
+        // Deliberately still rounded, unlike the glucose identifier above: insulin
+        // timestamps are stored as a TimeInterval and round-trip through JSON
+        // losslessly, so they never shift. Switching this to truncation would give
+        // every already-exported injection a new identity and duplicate it once.
         let timestamp = Int(delivery.timeStamp.rounded())
         let units = Int((delivery.insulinUnits * 100).rounded())
         return "librewrist.insulin.\(timestamp).\(units).\(delivery.insulinType)"
@@ -256,8 +386,11 @@ final class AppleHealthExportManager {
 #if os(iOS) && canImport(HealthKit)
     private let healthStore = HKHealthStore()
 
-    private var requiredWriteTypes: Set<HKSampleType> {
-        [glucoseType, insulinType]
+    private func sampleType(for kind: AppleHealthDataKind) -> HKQuantityType {
+        switch kind {
+        case .glucose: return glucoseType
+        case .insulin: return insulinType
+        }
     }
 
     private var glucoseType: HKQuantityType {
@@ -268,9 +401,11 @@ final class AppleHealthExportManager {
         HKObjectType.quantityType(forIdentifier: .insulinDelivery)!
     }
 
-    private func requestAuthorization() async throws {
+    private func requestAuthorization(for kind: AppleHealthDataKind) async throws {
+        // Only this kind's type is requested, so allowing glucose and refusing
+        // insulin (or the reverse) is a normal, fully supported outcome.
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            healthStore.requestAuthorization(toShare: requiredWriteTypes, read: []) { success, error in
+            healthStore.requestAuthorization(toShare: [sampleType(for: kind)], read: []) { success, error in
                 if let error {
                     continuation.resume(throwing: error)
                     return
@@ -281,6 +416,23 @@ final class AppleHealthExportManager {
                 }
                 continuation.resume(throwing: AppleHealthExportError.authorizationFailed)
             }
+        }
+    }
+
+    /// Whether asking for this kind again would actually show the Apple Health
+    /// sheet. HealthKit asks once per type: once the user has answered, a repeat
+    /// request silently succeeds without changing anything, so the settings UI
+    /// must send them to the Health app instead of a sheet that never appears.
+    private func requestingWouldPresentSheet(for kind: AppleHealthDataKind) async -> Bool {
+        do {
+            let status = try await healthStore.statusForAuthorizationRequest(
+                toShare: [sampleType(for: kind)],
+                read: []
+            )
+            return status == .shouldRequest
+        } catch {
+            Logger.healthKit.error("Request status lookup failed: \(error.localizedDescription, privacy: .public)")
+            return false
         }
     }
 

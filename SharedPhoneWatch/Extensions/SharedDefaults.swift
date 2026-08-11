@@ -43,7 +43,9 @@ enum DefaultsKey: String {
     case widgetUpdateFrequency = "widgetUpdateFrequencyKey"
     case tapComplicationReloads = "tapComplicationReloadsKey"
     case useLiveActivities = "useLiveActivitiesKey"
-    case appleHealthExportEnabled = "appleHealthExportEnabledKey"
+    case appleHealthExportEnabled = "appleHealthExportEnabledKey" // legacy, seeds the two keys below
+    case appleHealthExportGlucoseEnabled = "appleHealthExportGlucoseEnabledKey"
+    case appleHealthExportInsulinEnabled = "appleHealthExportInsulinEnabledKey"
     case nightscoutUploadEnabled = "nightscoutUploadEnabledKey"
     case nightscoutURL = "nightscoutURLKey"
     case nightscoutTokenPresent = "nightscoutTokenPresentKey"
@@ -354,9 +356,21 @@ enum SharedData {
         set { store.setBool(newValue, forKey: .useLiveActivities) }
     }
 
-    static var appleHealthExportEnabled: Bool {
-        get { store.getBool(.appleHealthExportEnabled, defaultValue: false) }
-        set { store.setBool(newValue, forKey: .appleHealthExportEnabled) }
+    /// Legacy combined Apple Health export switch, superseded by the per-type
+    /// switches below. Read-only now: it seeds the new keys once so users who had
+    /// export on keep it, and is never written again.
+    private static var legacyAppleHealthExportEnabled: Bool {
+        store.getBool(.appleHealthExportEnabled, defaultValue: false)
+    }
+
+    static var appleHealthExportGlucoseEnabled: Bool {
+        get { store.getBool(.appleHealthExportGlucoseEnabled, defaultValue: legacyAppleHealthExportEnabled) }
+        set { store.setBool(newValue, forKey: .appleHealthExportGlucoseEnabled) }
+    }
+
+    static var appleHealthExportInsulinEnabled: Bool {
+        get { store.getBool(.appleHealthExportInsulinEnabled, defaultValue: legacyAppleHealthExportEnabled) }
+        set { store.setBool(newValue, forKey: .appleHealthExportInsulinEnabled) }
     }
 
     static var nightscoutUploadEnabled: Bool {

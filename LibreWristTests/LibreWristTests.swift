@@ -46,6 +46,61 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
+    func testGlucoseSyncIdentifierSurvivesHistoryRoundTrip() throws {
+        // LibreLinkUpHistory persists with these strategies, and `.iso8601` drops
+        // the fractional second. An identifier keyed on the *rounded* second would
+        // therefore change on the first reload after a cold start and re-export the
+        // whole retained window as duplicates.
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        // Libre 3 anchors are `Date() − lifeCount·60`, so every 5-minute point of a
+        // sensor's history inherits the same fractional second: the series flips all
+        // together, not point by point.
+        let anchor = Date(timeIntervalSince1970: 1_786_313_175.73)
+        let readings = (0..<3).map { step in
+            LibreLinkUpGlucose(
+                glucose: Glucose(
+                    109,
+                    id: step,
+                    date: anchor.addingTimeInterval(Double(step) * 300),
+                    source: "Libre3 BLE"
+                ),
+                color: .green,
+                trendArrow: .stable
+            )
+        }
+
+        let restored = try decoder.decode([LibreLinkUpGlucose].self, from: encoder.encode(readings))
+
+        XCTAssertEqual(
+            readings.map(AppleHealthExportManager.glucoseSyncIdentifier(for:)),
+            restored.map(AppleHealthExportManager.glucoseSyncIdentifier(for:))
+        )
+    }
+
+    func testGlucoseSyncIdentifierTruncatesTowardTheStoredSecond() throws {
+        // Truncation has to be the direction: the persisted copy of a reading is the
+        // one that survives, so its identifier is what Apple Health already holds.
+        let reading = LibreLinkUpGlucose(
+            glucose: Glucose(
+                109,
+                id: 1,
+                date: Date(timeIntervalSince1970: 1_786_313_475.7),
+                source: "Libre3 BLE"
+            ),
+            color: .green,
+            trendArrow: .stable
+        )
+
+        XCTAssertEqual(
+            AppleHealthExportManager.glucoseSyncIdentifier(for: reading),
+            "librewrist.glucose.1786313475.109"
+        )
+    }
+
     func testInsulinSyncIdentifierIgnoresRecordUUID() throws {
         let first = InsulinDelivery(id: UUID(), timestamp: 1_710_000_000, insulinUnits: 4.5, insulinType: InsulinType.rapidActing.rawValue)
         let second = InsulinDelivery(id: UUID(), timestamp: 1_710_000_000, insulinUnits: 4.5, insulinType: InsulinType.rapidActing.rawValue)

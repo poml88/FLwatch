@@ -132,6 +132,14 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         refreshItem.handler = { [weak self] _, completion in
             Task { @MainActor [weak self] in
                 _ = await LibreLinkUpService.shared.requestReloadIfNeeded(force: true)
+                // The only cloud-side alert evaluation outside the heartbeat
+                // pipeline, and deliberate: this item is offered only when the
+                // heartbeat is off or overdue, so nothing else will look at the
+                // reading just fetched. A dead heartbeat usually means no new
+                // glucose either — the staleness gate inside then suppresses
+                // everything — so the case this really serves is a lost BLE tick
+                // while cloud data keeps flowing. It also clears notifications
+                // and snoozes for tiers that have recovered.
                 await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
                 await LiveActivityManager.shared.refreshFromCurrentHistory(
                     useLiveActivities: SharedData.useLiveActivities,

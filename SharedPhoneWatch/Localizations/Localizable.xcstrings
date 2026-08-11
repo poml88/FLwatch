@@ -2135,6 +2135,64 @@
         }
       }
     },
+    "An alert below is switched on but won't be delivered: glucose alerts need the Bluetooth heartbeat, which is off. Turn it on in Settings, under “Bluetooth Heartbeat”, or switch the alert off here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Warnung unten ist aktiviert, wird aber nicht zugestellt: Glukosewarnungen benötigen den Bluetooth-Heartbeat, der ausgeschaltet ist. Aktiviere ihn in den Einstellungen unter „Bluetooth-Heartbeat“ oder schalte die Warnung hier aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una de las alertas de abajo está activada, pero no se enviará: las alertas de glucosa necesitan el latido de Bluetooth, que está desactivado. Actívalo en Ajustes, en «Latido de Bluetooth», o desactiva la alerta aquí."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une alerte ci-dessous est activée mais ne sera pas envoyée : les alertes de glycémie nécessitent le heartbeat Bluetooth, qui est désactivé. Activez-le dans Réglages, sous « Heartbeat Bluetooth », ou désactivez l’alerte ici."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un avviso qui sotto è attivo ma non verrà recapitato: gli avvisi del glucosio richiedono l’heartbeat Bluetooth, che è disattivato. Attivalo in Impostazioni, alla voce “Heartbeat Bluetooth”, oppure disattiva l’avviso qui."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下のアラートがオンになっていますが、配信されません。グルコースアラートにはBluetoothハートビートが必要ですが、現在オフです。「設定」の「Bluetoothハートビート」でオンにするか、ここでアラートをオフにしてください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een waarschuwing hieronder staat aan, maar wordt niet bezorgd: glucosewaarschuwingen hebben de Bluetooth-heartbeat nodig, en die staat uit. Schakel deze in via Instellingen, onder ‘Bluetooth-heartbeat’, of schakel de waarschuwing hier uit."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeden z alertów poniżej jest włączony, ale nie zostanie dostarczony: alerty poziomu glukozy wymagają heartbeat Bluetooth, który jest wyłączony. Włącz go w Ustawieniach, w sekcji „Heartbeat Bluetooth”, albo wyłącz alert tutaj."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Одно из оповещений ниже включено, но не будет доставлено: для оповещений об уровне глюкозы требуется Bluetooth heartbeat, а он выключен. Включите его в настройках в разделе «Bluetooth heartbeat» или отключите оповещение здесь."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下方有提醒已开启，但不会送达：葡萄糖提醒需要蓝牙心跳，而它当前处于关闭状态。请在“设置”的“蓝牙心跳”中将其打开，或在此处关闭该提醒。"
+          }
+        }
+      }
+    },
     "Apple Health" : {
       "localizations" : {
         "de" : {
@@ -2363,6 +2421,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "尚未授予 Apple Health 写入权限。"
+          }
+        }
+      }
+    },
+    "Apple Health write access is not granted. Apple Health asks only once, so this has to be changed in the Health app." : {
+      "comment" : "Status under an Apple Health export switch when permission was refused and cannot be re-requested in-app",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schreibzugriff auf Apple Health wurde nicht gewährt. Apple Health fragt nur einmal, daher muss dies in der Health-App geändert werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha concedido acceso de escritura a Apple Health. Apple Health solo lo pregunta una vez, por lo que debe cambiarse en la app Salud."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’accès en écriture à Apple Health n’est pas accordé. Apple Health ne le demande qu’une seule fois ; cela doit donc être modifié dans l’app Santé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’accesso in scrittura ad Apple Health non è stato concesso. Apple Health lo chiede una sola volta, quindi va modificato nell’app Salute."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health への書き込みアクセスは許可されていません。Apple Health は一度だけ確認するため、この設定はヘルスケアアプリで変更する必要があります。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schrijftoegang tot Apple Health is niet verleend. Apple Health vraagt dit maar één keer, dus je moet het in de Gezondheid-app wijzigen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie przyznano dostępu do zapisu w Apple Health. Apple Health pyta o to tylko raz, więc trzeba to zmienić w aplikacji Zdrowie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ на запись в Apple Health не предоставлен. Apple Health спрашивает только один раз, поэтому изменить это можно в приложении «Здоровье»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未授予 Apple Health 写入权限。Apple Health 只会询问一次，因此需要在“健康”App 中更改。"
           }
         }
       }
@@ -7925,6 +8042,125 @@
         }
       }
     },
+    "Each of these asks for its own Apple Health permission, only when you turn it on — you can export just glucose, just insulin, or both. FLwatch checks what Apple Health already holds before it writes, so turning a switch off and on again does not create duplicate entries." : {
+      "comment" : "Footer of the Apple Health settings section explaining that the two export switches are authorized independently and that re-enabling one does not duplicate data",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jede dieser Optionen fordert ihre eigene Apple-Health-Berechtigung an, und zwar erst beim Aktivieren – Sie können nur Glukose, nur Insulin oder beides exportieren. FLwatch prüft vor dem Schreiben, welche Daten Apple Health bereits enthält; das Aus- und wieder Einschalten erzeugt daher keine doppelten Einträge."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada una de estas opciones solicita su propio permiso de Apple Health, y solo cuando la activa: puede exportar solo la glucosa, solo la insulina o ambas. FLwatch comprueba qué datos tiene ya Apple Health antes de escribir, por lo que desactivar y volver a activar una opción no crea entradas duplicadas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chacune de ces options demande sa propre autorisation Apple Health, et uniquement lorsque vous l’activez : vous pouvez exporter seulement le glucose, seulement l’insuline, ou les deux. FLwatch vérifie ce qu’Apple Health contient déjà avant d’écrire ; désactiver puis réactiver une option ne crée donc pas de doublons."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciascuna di queste opzioni richiede la propria autorizzazione Apple Health, e solo quando la attiva: può esportare solo il glucosio, solo l’insulina o entrambi. FLwatch controlla che cosa contiene già Apple Health prima di scrivere, quindi disattivare e riattivare un’opzione non crea voci duplicate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "これらはそれぞれ個別に Apple Health の許可を求め、オンにしたときにのみ要求されます。血糖値のみ、インスリンのみ、または両方を書き出せます。FLwatch は書き込む前に Apple Health にすでにあるデータを確認するため、オフにして再びオンにしても重複した項目は作成されません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elk van deze opties vraagt zijn eigen Apple Health-toestemming, en pas wanneer je hem inschakelt — je kunt alleen glucose, alleen insuline of beide exporteren. FLwatch controleert vóór het schrijven wat Apple Health al bevat, dus uit- en weer inschakelen levert geen dubbele items op."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Każda z tych opcji wymaga własnego uprawnienia Apple Health, wymaganego dopiero po jej włączeniu — możesz eksportować tylko glukozę, tylko insulinę albo oba rodzaje danych. FLwatch przed zapisem sprawdza, co Apple Health już zawiera, więc wyłączenie i ponowne włączenie nie tworzy zduplikowanych wpisów."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Каждый из этих переключателей запрашивает собственное разрешение Apple Health, и только при включении: можно экспортировать только глюкозу, только инсулин или и то, и другое. Перед записью FLwatch проверяет, что уже есть в Apple Health, поэтому выключение и повторное включение не создаёт дублирующихся записей."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这两个选项各自请求独立的 Apple Health 权限，且只在你启用时才请求：你可以只导出血糖、只导出胰岛素，或两者都导出。FLwatch 在写入前会检查 Apple Health 中已有的数据，因此关闭后再次开启不会产生重复条目。"
+          }
+        }
+      }
+    },
+    "Each of these asks for its own Apple Health permission, only when you turn it on — you can export just glucose, just insulin, or both. Samples are tagged with HealthKit sync identifiers to avoid duplicates." : {
+      "comment" : "Footer of the Apple Health settings section explaining that the two export switches are authorized independently",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jede dieser Optionen fordert ihre eigene Apple-Health-Berechtigung an, und zwar erst beim Aktivieren – Sie können nur Glukose, nur Insulin oder beides exportieren. Proben werden mit HealthKit-Synchronisierungskennungen versehen, um Duplikate zu vermeiden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada una de estas opciones solicita su propio permiso de Apple Health, y solo cuando la activa: puede exportar solo la glucosa, solo la insulina o ambas. Las muestras se etiquetan con identificadores de sincronización de HealthKit para evitar duplicados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chacune de ces options demande sa propre autorisation Apple Health, et uniquement lorsque vous l’activez : vous pouvez exporter seulement le glucose, seulement l’insuline, ou les deux. Les échantillons reçoivent des identifiants de synchronisation HealthKit afin d’éviter les doublons."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciascuna di queste opzioni richiede la propria autorizzazione Apple Health, e solo quando la attiva: può esportare solo il glucosio, solo l’insulina o entrambi. I campioni vengono contrassegnati con identificatori di sincronizzazione HealthKit per evitare duplicati."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "これらはそれぞれ個別に Apple Health の許可を求め、オンにしたときにのみ要求されます。血糖値のみ、インスリンのみ、または両方を書き出せます。重複を避けるため、サンプルには HealthKit の同期識別子が付与されます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elk van deze opties vraagt zijn eigen Apple Health-toestemming, en pas wanneer je hem inschakelt — je kunt alleen glucose, alleen insuline of beide exporteren. Monsters krijgen HealthKit-synchronisatie-id's om duplicaten te voorkomen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Każda z tych opcji wymaga własnego uprawnienia Apple Health, wymaganego dopiero po jej włączeniu — możesz eksportować tylko glukozę, tylko insulinę albo oba rodzaje danych. Próbki są oznaczane identyfikatorami synchronizacji HealthKit, aby uniknąć duplikatów."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Каждый из этих переключателей запрашивает собственное разрешение Apple Health, и только при включении: можно экспортировать только глюкозу, только инсулин или и то, и другое. Образцы помечаются идентификаторами синхронизации HealthKit, чтобы избежать дубликатов."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这两个选项各自请求独立的 Apple Health 权限，且只在你启用时才请求：你可以只导出血糖、只导出胰岛素，或两者都导出。样本会添加 HealthKit 同步标识符以避免重复。"
+          }
+        }
+      }
+    },
     "Enable Bluetooth heartbeat" : {
       "localizations" : {
         "de" : {
@@ -8531,6 +8767,7 @@
       }
     },
     "Export glucose and insulin data to Apple Health" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8584,6 +8821,124 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "将血糖和胰岛素数据导出到 Apple Health"
+          }
+        }
+      }
+    },
+    "Export glucose values to Apple Health" : {
+      "comment" : "Settings switch enabling writing of CGM glucose readings to Apple Health",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glukosewerte in Apple Health exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar los valores de glucosa a Apple Health"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter les valeurs de glucose vers Apple Health"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esporta i valori di glucosio in Apple Health"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "血糖値をApple Healthに書き出す"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporteer glucosewaarden naar Apple Health"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksportuj wartości glukozy do Apple Health"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспортировать значения глюкозы в Apple Health"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将血糖值导出到 Apple Health"
+          }
+        }
+      }
+    },
+    "Export insulin injections to Apple Health" : {
+      "comment" : "Settings switch enabling writing of logged insulin injections to Apple Health",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insulininjektionen in Apple Health exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar las inyecciones de insulina a Apple Health"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter les injections d’insuline vers Apple Health"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esporta le iniezioni di insulina in Apple Health"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インスリン注射をApple Healthに書き出す"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporteer insuline-injecties naar Apple Health"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksportuj wstrzyknięcia insuliny do Apple Health"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспортировать инъекции инсулина в Apple Health"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将胰岛素注射记录导出到 Apple Health"
           }
         }
       }
@@ -14956,6 +15311,65 @@
         }
       }
     },
+    "Open the Health app, tap your profile picture, then Apps › FLwatch, and allow writing." : {
+      "comment" : "Instructions shown when an Apple Health export permission was refused and can only be changed in the Health app",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnen Sie die Health-App, tippen Sie auf Ihr Profilbild, dann auf Apps › FLwatch, und erlauben Sie das Schreiben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abra la app Salud, toque su foto de perfil, luego Apps › FLwatch, y permita la escritura."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrez l’app Santé, touchez votre photo de profil, puis Apps › FLwatch, et autorisez l’écriture."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apra l’app Salute, tocchi la sua immagine del profilo, quindi App › FLwatch, e consenta la scrittura."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ヘルスケアアプリを開き、プロフィール写真をタップして「App」›「FLwatch」を選び、書き込みを許可してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open de Gezondheid-app, tik op je profielfoto, dan Apps › FLwatch, en sta schrijven toe."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwórz aplikację Zdrowie, dotknij swojego zdjęcia profilowego, następnie Aplikacje › FLwatch i zezwól na zapis."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте приложение «Здоровье», нажмите на фото профиля, затем «Приложения» › FLwatch и разрешите запись."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开“健康”App，轻点你的头像，然后选择“App”›“FLwatch”，并允许写入。"
+          }
+        }
+      }
+    },
     "or: Time since injection" : {
       "localizations" : {
         "de" : {
@@ -15821,6 +16235,7 @@
       }
     },
     "Permission is requested only when you turn this on. FLwatch exports insulin injections and glucose values, and tags samples with HealthKit sync identifiers to avoid duplicates." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

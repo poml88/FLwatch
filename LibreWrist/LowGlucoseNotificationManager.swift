@@ -62,9 +62,25 @@ final class LowGlucoseNotificationManager: NSObject {
     private let notificationCenter = UNUserNotificationCenter.current()
     private var tiersKnownClearInNotificationCenter: Set<GlucoseAlertTier> = []
     private var tiersBeingScheduled: Set<GlucoseAlertTier> = []
+    private var providerChangeObserver: NSObjectProtocol?
 
     private override init() {
         super.init()
+        // Every provider switch has to reconcile the alerts, and the phone has
+        // more than one entry point (the Settings picker and the first-launch
+        // picker). Observing the notification `switchProvider` already posts
+        // catches them all in one place, the same way `BluetoothHeartbeatManager`
+        // reconciles BLE ownership. `SharedData.cgmProviderKind` is written
+        // before the post, so `providerDidChange()` reads the new kind.
+        providerChangeObserver = NotificationCenter.default.addObserver(
+            forName: .activeCGMProviderDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                await self?.providerDidChange()
+            }
+        }
     }
 
     func configureForegroundPresentation() {
@@ -309,11 +325,32 @@ final class LowGlucoseNotificationManager: NSObject {
     func providerDidChange() async {
         if SharedData.cgmProviderKind != .libre3BLE {
             await clearNotifications(for: [.criticalLow], resetCooldown: true, forceCleanup: true)
+            await disableHeartbeatBackedAlertsIfHeartbeatIsOff()
         }
         if !GlucoseAlertTier.allCases.contains(where: isEffectivelyEnabled) {
             clearLowSnoozeIfNeeded()
             clearHighSnoozeIfNeeded()
         }
+    }
+
+    /// On a cloud provider the low/high alerts are only ever evaluated from the
+    /// Bluetooth heartbeat's refresh pipeline, so turning the heartbeat off
+    /// switches them off too (see the heartbeat toggle in `PhoneAppSettingsView`).
+    /// Switching *into* a cloud provider — typically from direct BLE, where the
+    /// alerts need no heartbeat — has to apply the same rule, otherwise they'd
+    /// arrive switched on but never delivered, and the Alerts tab would show two
+    /// toggles that claim to be armed.
+    private func disableHeartbeatBackedAlertsIfHeartbeatIsOff() async {
+        guard !SharedData.bluetoothHeartbeatEnabled else { return }
+        guard SharedData.lowGlucoseNotificationsEnabled || SharedData.highGlucoseNotificationsEnabled else { return }
+
+        SharedData.lowGlucoseNotificationsEnabled = false
+        SharedData.highGlucoseNotificationsEnabled = false
+        await clearNotifications(for: [.low, .high], resetCooldown: true, forceCleanup: true)
+        // The switching code sends its own settings snapshot before this runs,
+        // so the watch needs a second one carrying the now-off preferences.
+        WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()
+        Logger.connectivity.info("Low/high glucose alerts switched off: provider switched to a cloud provider while the Bluetooth heartbeat is disabled")
     }
 
     func isLowGlucoseAlertSnoozed(now: Date = Date()) -> Bool {

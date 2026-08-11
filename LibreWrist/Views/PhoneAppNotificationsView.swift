@@ -75,10 +75,17 @@ struct PhoneAppNotificationsView: View {
     private var heartbeatAlertsSection: some View {
         Section {
             if !bluetoothHeartbeatManager.isEnabled {
-                Text("Glucose alerts need the Bluetooth heartbeat. Turn it on in Settings, under “Bluetooth Heartbeat”.")
-                    .font(.subheadline)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .foregroundStyle(.secondary)
+                if lowGlucoseNotificationsEnabled || highGlucoseNotificationsEnabled {
+                    Text("An alert below is switched on but won't be delivered: glucose alerts need the Bluetooth heartbeat, which is off. Turn it on in Settings, under “Bluetooth Heartbeat”, or switch the alert off here.", comment: "Warning at the top of the Alerts tab, shown only for cloud CGM providers when a glucose alert is switched on while the Bluetooth heartbeat — the mechanism that evaluates those alerts — is off. Offers the user both ways out: enable the heartbeat in the Settings tab, or switch the alert off.")
+                        .font(.subheadline)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(.red)
+                } else {
+                    Text("Glucose alerts need the Bluetooth heartbeat. Turn it on in Settings, under “Bluetooth Heartbeat”.")
+                        .font(.subheadline)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Toggle("Low glucose alerts", isOn: $lowGlucoseNotificationsEnabled)
@@ -92,7 +99,10 @@ struct PhoneAppNotificationsView: View {
                     }
                     handleGlucoseAlertsChanged(.low, isEnabled: isEnabled)
                 }
-                .disabled(!bluetoothHeartbeatManager.isEnabled)
+                // Disabled only while off, never while on: an alert that somehow
+                // ended up switched on without a heartbeat must stay switchable
+                // off, or the user has no way to clear it.
+                .disabled(!bluetoothHeartbeatManager.isEnabled && !lowGlucoseNotificationsEnabled)
 
             if lowGlucoseNotificationsEnabled {
                 Picker("Alert me below", selection: $lowGlucoseNotificationThreshold) {
@@ -133,7 +143,7 @@ struct PhoneAppNotificationsView: View {
                     }
                     handleGlucoseAlertsChanged(.high, isEnabled: isEnabled)
                 }
-                .disabled(!bluetoothHeartbeatManager.isEnabled)
+                .disabled(!bluetoothHeartbeatManager.isEnabled && !highGlucoseNotificationsEnabled)
 
             if highGlucoseNotificationsEnabled {
                 Picker("Alert me above", selection: highGlucoseThresholdBinding) {
