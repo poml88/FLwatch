@@ -45,6 +45,14 @@ struct WatchAppHomeView: View {
     private let minimumWidgetReloadInterval: TimeInterval = 2
     private let minimumHistoryReloadInterval: TimeInterval = 2
 
+    /// Minute-rounded right edge of the graph's time window, derived from the same
+    /// clock sample that drives the staleness overlay so the tick costs one state
+    /// write rather than two. Rounding means the graph only re-renders when the
+    /// minute actually turns, while the overlay keeps using the exact sample.
+    private var chartWindowEnd: Date {
+        .chartWindowEnd(from: currentTime)
+    }
+
     private var minutesSinceLastReading: Int {
         max(Int(currentTime.timeIntervalSince(libreLinkUpHistory.lastReadingDate) / 60), 0)
     }
@@ -102,7 +110,7 @@ struct WatchAppHomeView: View {
                 .padding()
             }
             if libreLinkUpHistory.libreLinkUpGlucose.count > 0 {
-                WatchAppGraphView()
+                WatchAppGraphView(windowEnd: chartWindowEnd)
             }
             
         }
@@ -115,14 +123,12 @@ struct WatchAppHomeView: View {
             Text("!! Not for treatment decisions !!\n\nUse at your own risk!\n\nThe information presented in this app and its extensions must not be used for treatment or dosing decisions. Consult the glucose-monitoring system and/or a healthcare professional.")
         }
         
-        .onReceive(timer) { time in
+        .onReceive(timer) { _ in
             Logger.viewDebug.debug("Timer")
-            currentTime = time
             reloadAndRefreshHistory(trigger: "timer")
         }
         .onAppear() { // fires when switching the Views, e.g. form settings to home view.
             print("onAppear")
-            currentTime = Date()
             if SharedData.hasSeenDisclaimer == false {
                 isShowingDisclaimer = true
             }
@@ -157,7 +163,6 @@ struct WatchAppHomeView: View {
 //                CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
                 
                 reloadWidgetsIfNeeded(trigger: "scenePhase.active")
-                currentTime = Date()
 
                 reloadAndRefreshHistory(trigger: "scenePhase.active")
 
@@ -218,8 +223,13 @@ struct WatchAppHomeView: View {
         }
         lastHistoryReloadAt = now
         Task {
-            currentTime = Date()
             await lluService.requestReloadIfNeeded()
+            // One clock sample per reload, taken *after* it finishes rather than
+            // before. The progress overlay hides the staleness overlay for the
+            // duration of the request, so completion is the moment the staleness
+            // check becomes visible again and it has to reflect the time now — a
+            // reading that crossed the threshold mid-request would otherwise stay
+            // unflagged until the next timer delivery.
             currentTime = Date()
         }
         Logger.viewDebug.debug("reloadAndRefreshHistory() [\(trigger, privacy: .public)]")

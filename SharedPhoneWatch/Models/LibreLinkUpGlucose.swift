@@ -7,7 +7,8 @@
 
 import Foundation
 
-struct LibreLinkUpGlucose: Identifiable, Codable {
+// `id` is computed, so synthesized equality compares the three stored properties.
+struct LibreLinkUpGlucose: Identifiable, Codable, Equatable {
     let glucose: Glucose
     let color: MeasurementColor
     let trendArrow: TrendArrow?

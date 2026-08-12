@@ -8,7 +8,24 @@
 import Foundation
 
 extension Date {
-    
+
+    /// The right-hand edge of a glucose chart's time window, rounded UP to the next
+    /// full minute.
+    ///
+    /// Rounding keeps the value stable within a minute, so a redraw caused by
+    /// anything else re-derives an identical x-domain, filter boundary and marker
+    /// thresholds instead of shifting them by a fraction of a second. Holding it in
+    /// view state also gives the chart an explicit once-a-minute reason to advance:
+    /// the graph views no longer read the clock inside `body`, so without it they
+    /// would sit still whenever no new reading arrived.
+    ///
+    /// Rounds up rather than down so the newest reading — which can be a few
+    /// seconds old — stays inside the scale instead of being clipped at the edge.
+    static func chartWindowEnd(from date: Date = Date()) -> Date {
+        let minutes = date.timeIntervalSince1970 / 60
+        return Date(timeIntervalSince1970: minutes.rounded(.up) * 60)
+    }
+
     func adding(minutes: Int) -> Date {
         Calendar.current.date(byAdding: .minute, value: minutes, to: self)!
     }

@@ -31,10 +31,18 @@ struct PhoneAppGraphView: View {
         let alignment: Alignment
     }
     
+    /// Right-hand edge of the chart window, minute-rounded by the parent (see
+    /// `Date.chartWindowEnd`). Every time value below derives from it, so the whole
+    /// body is a pure function of its inputs: identical inputs redraw identically,
+    /// and the window advances once a minute whether or not new readings arrive.
+    /// Intentionally has no default — a `Date()` default would be re-evaluated on
+    /// each parent body pass and reintroduce the instability this removes.
+    let windowEnd: Date
+
     @Environment(\.libreLinkUpHistory) var libreLinkUpHistory
     @Environment(\.sensorSettingsStore) var sensorSettingsStore
     @Environment(\.currentIOBSingleton) var currentIOBSingleton
-    
+
     @AppStorage(DefaultsKey.showInsulinDeliveryMarksPhone.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksPhone: Bool = false
     @AppStorage(DefaultsKey.showIOBCurvePhone.rawValue, store: UserDefaults.group) private var showIOBCurvePhone: Bool = false
     @AppStorage(DefaultsKey.showActivityCurvePhone.rawValue, store: UserDefaults.group) private var showActivityCurvePhone: Bool = false
@@ -67,8 +75,8 @@ struct PhoneAppGraphView: View {
 //        Color(red: 0.98, green: 0.74, blue: 0.12) // #FABD1F
 
         
-        let date: Date = Date.now
-        
+        let date: Date = windowEnd
+
         let dateSixHoursTenAgo: Date = date.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
         let timeIntervalSince1970: Double = date.timeIntervalSince1970
         let chartStartTimestamp: Double = timeIntervalSince1970 - 3600 * 6 - 60 * 10
@@ -395,5 +403,5 @@ struct PhoneAppGraphView: View {
 }
 
 #Preview {
-    PhoneAppGraphView()
+    PhoneAppGraphView(windowEnd: .chartWindowEnd())
 }

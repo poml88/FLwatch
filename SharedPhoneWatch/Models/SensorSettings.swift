@@ -183,6 +183,31 @@ final class SensorSettingsStore {
     @discardableResult
     func replaceCacheAndPersist(sensorSettings: SensorSettings, sensorType: SensorType, updatedAt: Date = Date()) -> Bool {
         let nextSnapshot = Snapshot(sensorSettings: sensorSettings.normalized(), sensorType: sensorType, updatedAt: updatedAt)
+
+        // Every LibreLinkUp and Dexcom reload re-asserts these settings, and the
+        // watch re-asserts them on every settings snapshot, but the unit and target
+        // range almost never actually change. Rewriting the file anyway would move
+        // its mtime, which makes each *other* process decode the JSON again on its
+        // next `refreshFromPersistence` only to discover nothing moved — so treat
+        // `updatedAt` as a content marker and leave it where it is.
+        //
+        // Skipping is only safe while the file on disk is still the one we last
+        // wrote, so verify the modification date rather than merely having a cached
+        // one: `modificationDate` returns nil for a missing file, which falls
+        // through to the write. That keeps the repair-on-next-write behaviour this
+        // method has always had. Without it, a store that was deleted or replaced
+        // would stay broken, and an extension launching afterwards would persist its
+        // fallback defaults — which the main app would then adopt through
+        // `refreshFromPersistence`'s modification-date branch, silently reverting the
+        // user's unit and target range. The stat costs one call per reload and only
+        // runs when the content already matches.
+        if nextSnapshot.sensorSettings == self.sensorSettings,
+           nextSnapshot.sensorTypeRawValue == self.sensorType.rawValue,
+           let lastKnownModificationDate,
+           FileStoreIO.modificationDate(at: storeURL, fileManager: fileManager) == lastKnownModificationDate {
+            return true
+        }
+
         let modificationDate: Date
         do {
             modificationDate = try FileStoreIO.writeSnapshot(
@@ -281,10 +306,20 @@ final class SensorSettingsStore {
         return true
     }
 
+    /// Writes each property only when it moved. Both graph views read
+    /// `sensorSettings` at the top of their body, so an unconditional write here
+    /// rebuilt the whole chart on every reload even though the unit and target
+    /// range had not changed. See `LibreLinkUpHistoryStore.apply` for the rationale.
     private func apply(snapshot: Snapshot) {
-        sensorSettings = snapshot.sensorSettings
-        sensorType = snapshot.sensorType
-        updatedAt = snapshot.updatedAt
+        if sensorSettings != snapshot.sensorSettings {
+            sensorSettings = snapshot.sensorSettings
+        }
+        if sensorType != snapshot.sensorType {
+            sensorType = snapshot.sensorType
+        }
+        if updatedAt != snapshot.updatedAt {
+            updatedAt = snapshot.updatedAt
+        }
     }
 
     private static func logPersistenceError(_ error: Error, context: String) {

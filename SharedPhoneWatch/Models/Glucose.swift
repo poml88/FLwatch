@@ -8,7 +8,9 @@
 import Foundation
 
 
-struct Glucose: Identifiable, Codable {
+// Equatable so the observable stores can compare an incoming reading against the
+// one they already hold and skip republishing it (see LibreLinkUpHistoryStore.apply).
+struct Glucose: Identifiable, Codable, Equatable {
 
  
     /// id: minutes since sensor start

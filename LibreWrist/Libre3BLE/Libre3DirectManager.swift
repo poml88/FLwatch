@@ -2746,8 +2746,14 @@ final class Libre3DirectManager: ObservableObject {
         }
 
         let status = Libre3ReadingStatus(kind: kind, episodeID: readingStatusEpisodeID)
-        currentReadingStatus = status
-        DebugMessageSingleton.shared.libreLinkUpOverlayError = status.message
+        // An episode holds the same status minute after minute; only the transition
+        // into it is news. The episode ID above still increments once per episode.
+        if currentReadingStatus != status {
+            currentReadingStatus = status
+        }
+        if DebugMessageSingleton.shared.libreLinkUpOverlayError != status.message {
+            DebugMessageSingleton.shared.libreLinkUpOverlayError = status.message
+        }
     }
 
     private func readingStatusKind(
@@ -2788,9 +2794,15 @@ final class Libre3DirectManager: ObservableObject {
         return nil
     }
 
+    /// Runs on every accepted reading, so in the healthy steady state both writes
+    /// are redundant — and both drive view invalidation. Gate them.
     private func clearReadingStatus() {
-        currentReadingStatus = nil
-        DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
+        if currentReadingStatus != nil {
+            currentReadingStatus = nil
+        }
+        if !DebugMessageSingleton.shared.libreLinkUpOverlayError.isEmpty {
+            DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
+        }
     }
 
 #if DEBUG
@@ -2928,8 +2940,21 @@ final class Libre3DirectManager: ObservableObject {
     /// Apply the decoded lifecycle to the published warm-up / expiry state.
     private func applyLifecycle(_ lifecycle: SensorLifecycle) {
         seedAnchorIfNeeded(lifeCount: lifecycle.currentLifeCountMinutes)
-        warmupRemainingMinutes = lifecycle.isWarmingUp ? lifecycle.remainingWarmupMinutes : nil
-        sensorIsExpired = lifecycle.isExpired
+        // Reached from every decoded data-plane packet, not just glucose ones, and
+        // outside warm-up both values are the same on every packet. `@Published`
+        // fires without comparing, and `ObservableObject` has no per-property
+        // granularity, so each redundant write rebuilt every view observing this
+        // manager — including the phone home view and the graph below it.
+        let remainingWarmupMinutes: Int? = lifecycle.isWarmingUp ? lifecycle.remainingWarmupMinutes : nil
+        if warmupRemainingMinutes != remainingWarmupMinutes {
+            warmupRemainingMinutes = remainingWarmupMinutes
+        }
+        if sensorIsExpired != lifecycle.isExpired {
+            sensorIsExpired = lifecycle.isExpired
+        }
+        // Both calls stay unconditional: they re-derive from more than these two
+        // values, so skipping them when the lifecycle looks unchanged would strand
+        // the warm-up reminder and the signal-loss deadline.
         refreshWarmupCompletionReminder()
         reconcileSignalLossArming()
     }

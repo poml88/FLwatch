@@ -72,7 +72,12 @@ struct PhoneAppHomeView: View {
     @State private var onAppearNotToDoFirstStart: Bool = true
     @State private var scenePhaseNotToDoFirstStart: Bool = true
     @State private var showPrompt = false
-    
+    /// Minute-rounded right edge of the graph's time window. The timer advances it
+    /// while the view stays put; `onAppear` and the `.active` scene phase refresh it
+    /// on return, because a suspended app's timer fires once at some unspecified
+    /// point after resume and must not be the only thing keeping the chart current.
+    @State private var chartWindowEnd: Date = .chartWindowEnd()
+
 //    @State var lastReadingDate: Date = Date(timeIntervalSinceNow: -999 * 60)
 //    @State var currentGlucose: Int = 0
 //    @State var trendArrow = "---"
@@ -136,7 +141,7 @@ struct PhoneAppHomeView: View {
             
             
             if !libreLinkUpHistory.libreLinkUpGlucose.isEmpty {
-                PhoneAppGraphView()
+                PhoneAppGraphView(windowEnd: chartWindowEnd)
             }
             
         }
@@ -340,11 +345,25 @@ struct PhoneAppHomeView: View {
     private func handleTimer() {
         guard scenePhase == .active else { return }
         Logger.viewDebug.debug("Timer") // Timer fires as well when on a different tab, for example settings tab
+        advanceChartWindow()
         reloadAndUpdateMinutes(refreshLiveActivity: true, trigger: "timer")
+    }
+
+    /// Moves the graph's window to the current minute. The timer runs at 63 s, so
+    /// this occasionally advances two minute boundaries at once; the window keeps
+    /// its 6 h 10 m span either way, and a 60 s timer would only add wake-ups.
+    private func advanceChartWindow() {
+        let nextWindowEnd = Date.chartWindowEnd()
+        // SwiftUI does not coalesce equal @State writes, so assigning the same edge
+        // again would rebuild the chart to draw exactly what is already on screen.
+        guard nextWindowEnd != chartWindowEnd else { return }
+        chartWindowEnd = nextWindowEnd
     }
 
     private func handleAppear() {
         print("onAppear")
+
+        advanceChartWindow()
 
         if SharedData.hasSeenWelcomeMessage == false {
             isShowingWelcomeMessage = true
@@ -390,6 +409,8 @@ struct PhoneAppHomeView: View {
     private func handleScenePhaseChange(to newPhase: ScenePhase) {
         if newPhase == .active {
             print("Scene Phase Active")
+
+            advanceChartWindow()
 
             // Skip the following on app start.
             if scenePhaseNotToDoFirstStart == false {

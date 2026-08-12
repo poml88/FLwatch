@@ -335,9 +335,18 @@ final class LibreLinkUpHistoryStore {
         return NightscoutEntryChangeSignature(reading: reading)
     }
 
+    /// Records that a reload succeeded without changing any reading.
+    ///
+    /// Deliberately does not route through `replaceCacheAndPersist`. That method
+    /// derives its HealthKit and Nightscout work by diffing the incoming series
+    /// against the stored one, so when the two are the same object the answer is
+    /// always "nothing to export" — this path skips building those comparisons
+    /// instead of computing empty results from them. Persisting and moving
+    /// `updatedAt` is still required: the reload gate uses both timestamps to tell
+    /// peer processes that a refresh completed.
     @discardableResult
     func updateLastSuccessfulLibreLinkUpAPICall(_ lastSuccessfulLibreLinkUpAPICall: Date = Date(), updatedAt: Date = Date()) -> Bool {
-        replaceCacheAndPersist(
+        let snapshot = Snapshot(
             fullLibreLinkUpGlucose: fullLibreLinkUpGlucose,
             libreLinkUpGlucose: libreLinkUpGlucose,
             libreLinkUpMinuteGlucose: libreLinkUpMinuteGlucose,
@@ -349,6 +358,24 @@ final class LibreLinkUpHistoryStore {
             lastSuccessfulLibreLinkUpAPICall: lastSuccessfulLibreLinkUpAPICall,
             updatedAt: updatedAt
         )
+
+        let modificationDate: Date
+        do {
+            modificationDate = try FileStoreIO.writeSnapshot(
+                snapshot,
+                to: storeURL,
+                using: encoder,
+                fileManager: fileManager
+            )
+        } catch {
+            Self.logPersistenceError(error, context: "updateLastSuccessfulLibreLinkUpAPICall write failed")
+            return false
+        }
+
+        // Only the two timestamps can differ here, so `apply` writes just those.
+        apply(snapshot: snapshot)
+        lastKnownModificationDate = modificationDate
+        return true
     }
 
     /// Refreshes the in-memory store from app-group persistence.
@@ -441,19 +468,50 @@ final class LibreLinkUpHistoryStore {
         return true
     }
 
+    /// Publishes a snapshot, writing each property only when it actually moved.
+    ///
+    /// `@Observable` fires a mutation on every write without comparing values, and
+    /// each mutation invalidates every observer — both home views, both graphs, the
+    /// Live Activity and the widgets. Reloads that find nothing new still land here
+    /// (a successful poll with no fresh reading, a duplicate BLE packet, a repeated
+    /// watch snapshot), and rebuilding a chart costs orders of magnitude more than
+    /// comparing the series that produced it, so the comparison always pays for
+    /// itself. The two timestamps below move on nearly every call by design; they
+    /// are gated only so that re-applying an identical snapshot is a complete no-op.
     private func apply(snapshot: Snapshot) {
-        fullLibreLinkUpGlucose = snapshot.fullLibreLinkUpGlucose
-        libreLinkUpGlucose = snapshot.libreLinkUpGlucose
-        libreLinkUpMinuteGlucose = snapshot.libreLinkUpMinuteGlucose
-        latestLibreLinkUpGlucose = snapshot.latestLibreLinkUpGlucose
+        let normalizedLatest = snapshot.latestLibreLinkUpGlucose
             ?? snapshot.libreLinkUpGlucose.first
             ?? snapshot.libreLinkUpMinuteGlucose.first
-        lastReadingDate = snapshot.lastReadingDate
-        currentGlucose = snapshot.currentGlucose
-        currentTrendArrow = snapshot.currentTrendArrow
-        maxBG = snapshot.maxBG
-        lastSuccessfulLibreLinkUpAPICall = snapshot.lastSuccessfulLibreLinkUpAPICall
-        updatedAt = snapshot.updatedAt
+        if fullLibreLinkUpGlucose != snapshot.fullLibreLinkUpGlucose {
+            fullLibreLinkUpGlucose = snapshot.fullLibreLinkUpGlucose
+        }
+        if libreLinkUpGlucose != snapshot.libreLinkUpGlucose {
+            libreLinkUpGlucose = snapshot.libreLinkUpGlucose
+        }
+        if libreLinkUpMinuteGlucose != snapshot.libreLinkUpMinuteGlucose {
+            libreLinkUpMinuteGlucose = snapshot.libreLinkUpMinuteGlucose
+        }
+        if latestLibreLinkUpGlucose != normalizedLatest {
+            latestLibreLinkUpGlucose = normalizedLatest
+        }
+        if lastReadingDate != snapshot.lastReadingDate {
+            lastReadingDate = snapshot.lastReadingDate
+        }
+        if currentGlucose != snapshot.currentGlucose {
+            currentGlucose = snapshot.currentGlucose
+        }
+        if currentTrendArrow != snapshot.currentTrendArrow {
+            currentTrendArrow = snapshot.currentTrendArrow
+        }
+        if maxBG != snapshot.maxBG {
+            maxBG = snapshot.maxBG
+        }
+        if lastSuccessfulLibreLinkUpAPICall != snapshot.lastSuccessfulLibreLinkUpAPICall {
+            lastSuccessfulLibreLinkUpAPICall = snapshot.lastSuccessfulLibreLinkUpAPICall
+        }
+        if updatedAt != snapshot.updatedAt {
+            updatedAt = snapshot.updatedAt
+        }
     }
 
     private static func defaultSnapshot(now: Date = Date()) -> Snapshot {

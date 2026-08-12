@@ -35,6 +35,14 @@ struct WatchAppGraphView: View {
         let alignment: Alignment
     }
     
+    /// Right-hand edge of the chart window, minute-rounded by the parent (see
+    /// `Date.chartWindowEnd`). Every time value below derives from it, so the whole
+    /// body is a pure function of its inputs: identical inputs redraw identically,
+    /// and the window advances once a minute whether or not new readings arrive.
+    /// Intentionally has no default — a `Date()` default would be re-evaluated on
+    /// each parent body pass and reintroduce the instability this removes.
+    let windowEnd: Date
+
     @AppStorage(DefaultsKey.showInsulinDeliveryMarksWatch.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksWatch: Bool = false
     @AppStorage(DefaultsKey.showIOBCurveWatch.rawValue, store: UserDefaults.group) private var showIOBCurveWatch: Bool = false
     @AppStorage(DefaultsKey.showActivityCurveWatch.rawValue, store: UserDefaults.group) private var showActivityCurveWatch: Bool = false
@@ -50,8 +58,8 @@ struct WatchAppGraphView: View {
         let minuteGlucoseColor = Color(red: 0.96, green: 0.78, blue: 0.18)
         let glucosePointDiameter: CGFloat = 4
 
-        let date: Date = Date.now
-        
+        let date: Date = windowEnd
+
         let dateSixHoursTenAgo: Date = date.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
         let timeIntervalSince1970: Double = date.timeIntervalSince1970
         let chartStartTimestamp: Double = timeIntervalSince1970 - 3600 * 6 - 60 * 10
@@ -406,5 +414,5 @@ struct WatchAppGraphView: View {
 }
 
 #Preview {
-    WatchAppGraphView()
+    WatchAppGraphView(windowEnd: .chartWindowEnd())
 }

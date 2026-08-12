@@ -287,8 +287,18 @@ final class LibreLinkUpService: ObservableObject {
 
             Logger.libreLinkUpService.info("requestReloadIfNeeded starting network reload via \(self.activeProvider.kind.rawValue, privacy: .public) provider")
             await self.activeProvider.reload()
-            self.libreLinkUpResponse = self.activeProvider.lastReloadResponseMessage
-            self.didLastReloadFail = self.activeProvider.lastReloadDidFail
+            // Both home views observe this service, and `ObservableObject` has no
+            // per-property granularity, so re-publishing an identical response
+            // string rebuilt them for nothing on every reload. `isReloading` above
+            // is left ungated on purpose — it genuinely toggles each cycle.
+            let reloadResponse = self.activeProvider.lastReloadResponseMessage
+            if self.libreLinkUpResponse != reloadResponse {
+                self.libreLinkUpResponse = reloadResponse
+            }
+            let reloadDidFail = self.activeProvider.lastReloadDidFail
+            if self.didLastReloadFail != reloadDidFail {
+                self.didLastReloadFail = reloadDidFail
+            }
             if self.didLastReloadFail {
                 await self.gate.recordCompletion(
                     succeeded: false,
