@@ -104,6 +104,20 @@ struct PhoneAppHomeView: View {
         return latest.glucose.value == rawMgDL ? nil : rawMgDL
     }
 
+    /// Colour of the reading the big value actually shows. `currentGlucose` is set
+    /// from `latestLibreLinkUpGlucose` by every provider, so the colour has to come
+    /// from there too: `libreLinkUpGlucose[0]` is the same reading in the normal
+    /// case but is not guaranteed to be, and it traps outright when the graph series
+    /// is empty — `pushHistory` can persist an empty display window alongside a
+    /// non-nil latest when a cold start's backfill predates the window.
+    ///
+    /// `.gray` rather than `.primary` for the fallback: this value is a foreground
+    /// in dark mode but a background behind `Color.primary` text in light mode, and
+    /// `.primary` would render black on black there.
+    private var currentReadingColor: Color {
+        libreLinkUpHistory.latestLibreLinkUpGlucose?.color.color ?? .gray
+    }
+
 //    private let startupUpdateNote: StartupUpdateNote? = StartupUpdateNote(
 //        version: 2,
 //        message: "Test note!"
@@ -129,10 +143,10 @@ struct PhoneAppHomeView: View {
     private var homeContent: some View {
         VStack {
             if colorScheme == .dark {
-                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: libreLinkUpHistory.libreLinkUpGlucose[0].color.color, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: homeWarning, calibratedRawMgDL: calibratedReadingRawMgDL)
+                GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: currentReadingColor, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: homeWarning, calibratedRawMgDL: calibratedReadingRawMgDL)
             } else {
                 GlucoseValueView(libreLinkUpHistory: libreLinkUpHistory, foregroundStyleColor: Color.primary, isShowingInsulinDeliverySheet: $isShowingInsulinDeliverySheet, currentIOBSingleton: currentIOBSingleton, warning: homeWarning, calibratedRawMgDL: calibratedReadingRawMgDL)
-                .background(Color(libreLinkUpHistory.libreLinkUpGlucose[0].color.color))
+                .background(Color(currentReadingColor))
 //                .frame(maxWidth: .infinity)
                 .cornerRadius(30)
 //                .safeAreaPadding(.top)

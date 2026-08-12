@@ -16,8 +16,12 @@ struct WatchAppNightView: View {
 //    @State private var currentIOB: Double = 0.0
         
     var body: some View {
-        if libreLinkUpHistory.libreLinkUpGlucose.count > 0 {
-//            let readingDate = libreLinkUpHistory.libreLinkUpGlucose[0].glucose.date
+        // Bound from the latest reading rather than the head of the graph series, so
+        // this screen shows the same value, arrow and colour as the home view — all
+        // three now come from one reading. It also narrows the dependency: the body
+        // no longer observes the whole graph array to render a single point.
+        if let latestReading = libreLinkUpHistory.latestLibreLinkUpGlucose {
+//            let readingDate = latestReading.glucose.date
 
             VStack (spacing: -15) {
     //                if minutesSinceLastReading >= 3 {
@@ -26,9 +30,9 @@ struct WatchAppNightView: View {
     //                    .minimumScaleFactor(0.1)
     //                    .padding()
     //                } else {
-                Text("\(libreLinkUpHistory.libreLinkUpGlucose[0].glucose.value.units)")
+                Text("\(libreLinkUpHistory.currentGlucose.units)")
                     .font(.system(size: 100)) //, weight: .bold
-                    .foregroundStyle(libreLinkUpHistory.libreLinkUpGlucose[0].color.color)
+                    .foregroundStyle(latestReading.color.color)
                         .minimumScaleFactor(0.9)
     //                    .padding()
     //                }
@@ -38,9 +42,9 @@ struct WatchAppNightView: View {
     //                        Text("---")
     //                            .font(.title)
     //                    } else {
-                    Text("\(libreLinkUpHistory.libreLinkUpGlucose[0].trendArrow?.symbol ?? "--")")
+                    Text("\(libreLinkUpHistory.currentTrendArrow)")
                         .font(.system(size: 100)) //, weight: .bold
-                        .foregroundStyle(libreLinkUpHistory.libreLinkUpGlucose[0].color.color)
+                        .foregroundStyle(latestReading.color.color)
                             .minimumScaleFactor(0.7)
     //                        .foregroundStyle(libreLinkUpHistory[0].color.color)
                     

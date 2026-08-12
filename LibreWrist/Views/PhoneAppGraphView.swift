@@ -117,7 +117,6 @@ struct PhoneAppGraphView: View {
         let unitString = glucoseUnit.description
         let graphData = libreLinkUpHistory.libreLinkUpGlucose.filter { $0.glucose.date > dateSixHoursTenAgo }
         let minuteGlucose = Array(libreLinkUpHistory.libreLinkUpMinuteGlucose.dropFirst())
-        let insulinHistory = InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory
         let insulinOnBoardCurve = currentIOBSingleton.insulinOnBoardCurve
         let insulinActivityCurve = currentIOBSingleton.insulinActivityCurve
         let safeMaxIOB = max(currentIOBSingleton.maxIOB, 0.01)
@@ -155,8 +154,11 @@ struct PhoneAppGraphView: View {
             }
             : []
 
+        // Read inside the branch, not above it: an unconditional read registers an
+        // observation dependency on the delivery history even when the marks are
+        // switched off, so every dose logged elsewhere rebuilt this chart for nothing.
         let insulinMarkerPoints: [InsulinMarkerPoint] = showInsulinDeliveryMarksPhone
-            ? insulinHistory.compactMap { item in
+            ? InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.compactMap { item in
                 guard item.timeStamp > chartStartTimestamp else { return nil }
 
                 let markerDate = Date(timeIntervalSince1970: item.timeStamp)
@@ -288,7 +290,7 @@ struct PhoneAppGraphView: View {
             .symbolSize(20)
             
 //MARK: IOB Curve
-            if showIOBCurvePhone, !insulinHistory.isEmpty, !iobChartPoints.isEmpty {
+            if showIOBCurvePhone, !iobChartPoints.isEmpty {
                 LinePlot(
                     iobChartPoints,
                     x: .value("Time", \.timestamp),
@@ -320,7 +322,7 @@ struct PhoneAppGraphView: View {
             
             
 //MARK: Insulin activity graph
-            if showActivityCurvePhone, !insulinHistory.isEmpty, !activityChartPoints.isEmpty {
+            if showActivityCurvePhone, !activityChartPoints.isEmpty {
                 LinePlot(
                     activityChartPoints,
                     x: .value("Time", \.timestamp),

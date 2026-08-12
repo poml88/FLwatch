@@ -76,7 +76,10 @@ struct WatchAppHomeView: View {
                 //                    .minimumScaleFactor(0.1)
                 //                    .padding()
                 //                } else {
-                let fg = libreLinkUpHistory.libreLinkUpGlucose.first?.color.color ?? .white
+                // Colour of the reading the value below actually shows: `currentGlucose`
+                // comes from `latestLibreLinkUpGlucose`, so take the colour from the same
+                // reading rather than from the head of the graph series.
+                let fg = libreLinkUpHistory.latestLibreLinkUpGlucose?.color.color ?? .white
                 Text("\(libreLinkUpHistory.currentGlucose.units)")
                     .font(.system(size: 60)) //, weight: .bold
                     .foregroundStyle(fg)

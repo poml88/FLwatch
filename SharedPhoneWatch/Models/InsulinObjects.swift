@@ -113,14 +113,27 @@ struct InsulinTypePresets: Codable, Identifiable {
         }
     }
 
+    /// `@Observable` fires a mutation on every write without comparing, and both
+    /// graph views observe this array, so re-assigning an identical canonical form
+    /// rebuilt the charts for nothing. `save()` did it twice per call — once here
+    /// and once in `persistCurrentHistory`.
     private func mergePersistedHistoryIntoMemory() {
         let persistedHistory = UserDefaults.group.insulinDeliveryHistory ?? []
-        insulinDeliveryHistory = Self.canonicalized(insulinDeliveryHistory + persistedHistory)
+        let mergedHistory = Self.canonicalized(insulinDeliveryHistory + persistedHistory)
+        if insulinDeliveryHistory != mergedHistory {
+            insulinDeliveryHistory = mergedHistory
+        }
     }
 
     private func persistCurrentHistory() {
-        insulinDeliveryHistory = Self.canonicalized(insulinDeliveryHistory)
-        UserDefaults.group.insulinDeliveryHistory = insulinDeliveryHistory
+        let canonicalHistory = Self.canonicalized(insulinDeliveryHistory)
+        if insulinDeliveryHistory != canonicalHistory {
+            insulinDeliveryHistory = canonicalHistory
+        }
+        // The UserDefaults write stays unconditional: proving it redundant would
+        // mean decoding the stored value, and re-asserting is the safer default for
+        // a store other processes also read.
+        UserDefaults.group.insulinDeliveryHistory = canonicalHistory
     }
 
     func historySnapshot() -> [InsulinDelivery] {
@@ -144,7 +157,11 @@ struct InsulinTypePresets: Codable, Identifiable {
         let persistedHistory = UserDefaults.group.insulinDeliveryHistory ?? []
         let canonicalizedHistory = Self.canonicalized(persistedHistory)
         let retainedHistory = Self.retainedHistory(from: canonicalizedHistory)
-        insulinDeliveryHistory = retainedHistory
+        // Reached from CarPlay, the widgets and the delivery views, usually with
+        // nothing changed — gate it like the two writes above.
+        if insulinDeliveryHistory != retainedHistory {
+            insulinDeliveryHistory = retainedHistory
+        }
 
         if retainedHistory.count != canonicalizedHistory.count {
             UserDefaults.group.insulinDeliveryHistory = retainedHistory

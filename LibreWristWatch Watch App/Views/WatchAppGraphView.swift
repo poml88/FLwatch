@@ -102,7 +102,6 @@ struct WatchAppGraphView: View {
         let chartRuleAlarmLL = displaysMmol ? sensorSettings.alarmLow.toMmolL() : Double(sensorSettings.alarmLow)
         let graphData = libreLinkUpHistory.libreLinkUpGlucose.filter { $0.glucose.date > dateSixHoursTenAgo }
         let minuteGlucose = Array(libreLinkUpHistory.libreLinkUpMinuteGlucose.dropFirst())
-        let insulinHistory = InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory
         let insulinOnBoardCurve = currentIOBSingleton.insulinOnBoardCurve
         let insulinActivityCurve = currentIOBSingleton.insulinActivityCurve
         let safeMaxIOB = max(currentIOBSingleton.maxIOB, 0.01)
@@ -142,8 +141,11 @@ struct WatchAppGraphView: View {
             }
             : []
 
+        // Read inside the branch, not above it: an unconditional read registers an
+        // observation dependency on the delivery history even when the marks are
+        // switched off, so every dose logged elsewhere rebuilt this chart for nothing.
         let insulinMarkerPoints: [InsulinMarkerPoint] = showInsulinDeliveryMarksWatch
-            ? insulinHistory.compactMap { item in
+            ? InsulinDeliveryHistorySingleton.shared.insulinDeliveryHistory.compactMap { item in
                 guard item.timeStamp > chartStartTimestamp else { return nil }
 
                 let markerDate = Date(timeIntervalSince1970: item.timeStamp)
@@ -225,7 +227,7 @@ struct WatchAppGraphView: View {
                     .symbolSize(8)
 
 //MARK: IOB Curve
-                    if showIOBCurveWatch, !insulinHistory.isEmpty, !iobChartPoints.isEmpty {
+                    if showIOBCurveWatch, !iobChartPoints.isEmpty {
                         LinePlot(
                             iobChartPoints,
                             x: .value("Time", \.timestamp),
@@ -241,7 +243,7 @@ struct WatchAppGraphView: View {
                     }
 
 //MARK: Insulin activity graph
-                    if showActivityCurveWatch, !insulinHistory.isEmpty, !activityChartPoints.isEmpty {
+                    if showActivityCurveWatch, !activityChartPoints.isEmpty {
                         LinePlot(
                             activityChartPoints,
                             x: .value("Time", \.timestamp),
@@ -290,7 +292,7 @@ struct WatchAppGraphView: View {
                     }
 
 //MARK: IOB Curve
-                    if showIOBCurveWatch, !insulinHistory.isEmpty, !iobChartPoints.isEmpty {
+                    if showIOBCurveWatch, !iobChartPoints.isEmpty {
                         ForEach(iobChartPoints) { item in
                             LineMark(x: .value("Time", item.timestamp),
                                      y: .value("Insulin", item.value),
@@ -306,7 +308,7 @@ struct WatchAppGraphView: View {
                     }
 
 //MARK: Insulin activity graph
-                    if showActivityCurveWatch, !insulinHistory.isEmpty, !activityChartPoints.isEmpty {
+                    if showActivityCurveWatch, !activityChartPoints.isEmpty {
                         ForEach(activityChartPoints) { item in
                             LineMark(x: .value("Time", item.timestamp),
                                      y: .value("Activity", item.value),
