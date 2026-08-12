@@ -2136,6 +2136,7 @@
       }
     },
     "An alert below is switched on but won't be delivered: glucose alerts need the Bluetooth heartbeat, which is off. Turn it on in Settings, under “Bluetooth Heartbeat”, or switch the alert off here." : {
+      "comment" : "Warning at the top of the Alerts tab, shown only for cloud CGM providers when a glucose alert is switched on while the Bluetooth heartbeat — the mechanism that evaluates those alerts — is off. Offers the user both ways out: enable the heartbeat in the Settings tab, or switch the alert off.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
