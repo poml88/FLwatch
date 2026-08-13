@@ -1032,6 +1032,9 @@ final class Libre3DirectManager: ObservableObject {
             return
         }
         shouldMaintainConnection = true
+        // Show warm-up/expiry from the persisted anchor right away, so a relaunch
+        // mid-warm-up doesn't read as a stale-data outage until the first packet.
+        applyFallbackLifecycleIfUnclassified()
         // Recover before any lifecycle-driven grace arm. This runs only when the
         // paired direct-BLE provider starts, so a cloud-provider relaunch cannot
         // arm a signal-loss alert from an old persisted Libre 3 anchor.
@@ -1108,6 +1111,10 @@ final class Libre3DirectManager: ObservableObject {
     /// is carried by the event-driven owner + CoreBluetooth.
     func recoverIfStale() {
         guard isActiveProvider else { return }
+        // Keeps the anchor-derived warm-up countdown moving while no patch status
+        // has arrived yet — e.g. right after a fresh activation, before the BLE
+        // session exists — instead of leaving the seeded value frozen.
+        applyFallbackLifecycleIfUnclassified()
         // Preserve the old reload-kick behavior when the lifecycle has dropped:
         // `start()` creates the scanner and begins a fresh connection attempt.
         guard lifecycleTask != nil else {
@@ -1155,6 +1162,67 @@ final class Libre3DirectManager: ObservableObject {
         // Disconnecting ends `notifications()`, allowing the existing lifecycle
         // loop to reconnect. Coincident kicks may repeat this harmless request.
         scanner.cancelConnection(session.peripheral)
+    }
+
+    /// Seed the sensor-start anchor from a fresh NFC activation, before any BLE
+    /// packet has been decoded.
+    ///
+    /// This is the one moment where warm-up is certain and its start is known
+    /// without the sensor telling us: LibreCRKit only accepts
+    /// `activateFreshSensor` on a state-0x01 sensor, and that command starts the
+    /// wear clock during the scan. Seeding here shows the warm-up UI and schedules
+    /// the completion reminder immediately instead of ~1–2 minutes later, when the
+    /// first patch status lands.
+    ///
+    /// It is also the *better* anchor: the first patch status already carries
+    /// lifeCount 1, so `seedAnchorIfNeeded`'s `now − lifeCount·60` lands up to a
+    /// minute after the true activation. That method leaves an existing anchor
+    /// alone, so this one wins for the rest of the sensor's life.
+    ///
+    /// Only fresh activation may do this — a takeover/parallel join reads a sensor
+    /// of unknown age, whose start is knowable only from the BLE life count.
+    ///
+    /// `activationDate` must be the timestamp LibreCRKit wrote into the activation
+    /// command — the moment the sensor was told it was activated, which
+    /// `Libre3PairingCoordinator.activationTime(inCommandParameters:receiverID:)`
+    /// recovers from the scan result. Not the time this call runs: the NFC round
+    /// trip, credential persistence and model stamping all sit in between, and
+    /// since the anchor is never corrected that offset would follow the sensor for
+    /// its whole life.
+    func noteFreshActivation(at activationDate: Date) {
+        // Floored to a whole second for the reason spelled out in
+        // `seedAnchorIfNeeded`: every retained point is `anchor + lifeCount·60`, and
+        // a fractional anchor gives each one a second identity after an ISO8601
+        // round-trip. The command timestamp is already whole seconds; this only
+        // guards a caller's fallback `Date()`.
+        let anchor = Date(
+            timeIntervalSince1970: activationDate.timeIntervalSince1970.rounded(.down)
+        )
+        sensorStartDate = anchor
+        SharedData.libre3SensorStartDate = anchor
+        applyFallbackLifecycleIfUnclassified()
+        // The ring stamps its entries at write time, so `age` is what recovers the
+        // anchor — i.e. the sensor's t=0 — from an exported activation log, to read
+        // the connect/first-packet lines against.
+        Libre3DiagnosticsLog.record(
+            "fresh-activation-anchor age=\(Int(Date().timeIntervalSince(anchor)))s"
+        )
+        Logger.libre3.info("Libre3 BLE fresh activation anchored; warm-up \(SharedData.libre3WarmupMinutes, privacy: .public)min")
+        // Expiry reminders deliberately still wait for `refreshExpiryReminders()` at
+        // stream start: they are days out, and scheduling them here would consume
+        // the one-shot `lastScheduledExpiryAnchor` before notification
+        // authorization has been requested.
+    }
+
+    /// Publish the anchor-derived lifecycle while the authoritative one (patch
+    /// status) is still missing, so warm-up/expiry state is visible — and keeps
+    /// advancing — before the first packet of a session. A no-op once patch status
+    /// has landed: that lifecycle is authoritative and `handle(assembled:…)` applies
+    /// it on every packet.
+    private func applyFallbackLifecycleIfUnclassified() {
+        guard dataPlaneState?.latestLifecycle == nil,
+              let lifecycle = fallbackLifecycle() else { return }
+        applyLifecycle(lifecycle)
     }
 
     /// Forget the in-memory session state after the stored sensor is cleared.
@@ -3081,6 +3149,13 @@ final class Libre3DirectManager: ObservableObject {
         guard warmup > 0, lastScheduledWarmupAnchor != anchor else { return }
         lastScheduledWarmupAnchor = anchor
         Task {
+            // Seeding the anchor at the NFC scan makes this the first notification
+            // the app schedules for a user who pairs before enabling any alert, i.e.
+            // possibly before authorization has ever been requested (the stream-start
+            // request comes later). An unauthorized request is dropped, and the
+            // anchor guard above blocks a retry, so ask here first. Idempotent, and
+            // only prompts while authorization is undetermined.
+            await SensorAlertNotificationManager.shared.requestAuthorizationIfNeeded()
             await SensorAlertNotificationManager.shared.scheduleWarmupCompletionReminder(
                 sensorStartDate: anchor,
                 warmupDurationMinutes: warmup

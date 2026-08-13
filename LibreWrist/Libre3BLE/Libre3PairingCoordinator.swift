@@ -160,6 +160,27 @@ final class Libre3PairingCoordinator: ObservableObject {
             // the first reading (the manager re-stamps on connect too).
             Libre3StateStore.stampSensorType()
 
+            if mode == .activateFresh {
+                // The scan just started this sensor's clock, so warm-up is certain
+                // and its start is known. Seed it before BLE so the warm-up UI and
+                // its completion reminder appear with the scan rather than 1–2
+                // minutes later, when the first patch status arrives. Must follow
+                // `save`: the anchor's warm-up/wear durations come from the patch
+                // info it just persisted.
+                //
+                // Anchor on the timestamp the reader put *into* the activation
+                // command, not on "now": everything since — the command's own round
+                // trip, the keychain write above — has already pushed "now" past the
+                // sensor's t=0.
+                let activationTime = Self.activationTime(
+                    inCommandParameters: result.commandParameters,
+                    receiverID: receiverID.value
+                )
+                Libre3DirectManager.shared.noteFreshActivation(
+                    at: activationTime ?? Date()
+                )
+            }
+
             // Reflect "set up" for the rest of the app and kick off the BLE
             // engine: the credentials are now stored, so start connecting and
             // streaming live readings (Phase 3).
@@ -199,6 +220,43 @@ final class Libre3PairingCoordinator: ObservableObject {
 
     func clearCalibrationResetNotice() {
         calibrationResetNotice = nil
+    }
+
+    // MARK: - Activation timestamp
+
+    /// The Unix second the reader wrote into the activation command — what the
+    /// sensor is told its activation moment was, and therefore its t=0.
+    ///
+    /// LibreCRKit picks this timestamp itself, immediately before the tag exchange
+    /// (`CoreNFCActivationReader.defaultActivationTimeSeconds`, deliberately one
+    /// second back), and surfaces it only as the raw command parameters it echoes
+    /// back. Their layout is package API: `NFCActivationCommand.metcrc` builds
+    /// little-endian time ‖ little-endian receiver ID ‖ CRC.
+    ///
+    /// Reading it back beats anchoring on "now" once `scan` returns, which already
+    /// trails the sensor by the NFC round trip plus our own persistence work — an
+    /// offset the anchor would then carry for the sensor's whole life.
+    ///
+    /// The receiver ID we sent is verified as a layout check: on any mismatch (the
+    /// package reorders or reformats these parameters) this returns nil rather than
+    /// a plausible-looking wrong date, and the caller falls back to "now".
+    private static func activationTime(
+        inCommandParameters parameters: Data?,
+        receiverID: UInt32
+    ) -> Date? {
+        guard let parameters, parameters.count >= 8 else { return nil }
+        let bytes = [UInt8](parameters)
+        func littleEndianValue(at offset: Int) -> UInt32 {
+            UInt32(bytes[offset])
+                | UInt32(bytes[offset + 1]) << 8
+                | UInt32(bytes[offset + 2]) << 16
+                | UInt32(bytes[offset + 3]) << 24
+        }
+        guard littleEndianValue(at: 4) == receiverID else {
+            Logger.libre3.error("Activation command parameters didn't match the expected time+receiver layout; anchoring on scan completion instead")
+            return nil
+        }
+        return Date(timeIntervalSince1970: TimeInterval(littleEndianValue(at: 0)))
     }
 
     // MARK: - Mode mapping
