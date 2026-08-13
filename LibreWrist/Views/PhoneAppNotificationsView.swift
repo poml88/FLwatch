@@ -8,6 +8,40 @@
 import SwiftUI
 import UserNotifications
 
+private enum AlertOptionsKind: String, Identifiable {
+    case low
+    case criticalLow
+    case high
+    case signalLoss
+
+    var id: String { rawValue }
+
+    var navigationTitle: LocalizedStringResource {
+        switch self {
+        case .low:
+            LocalizedStringResource(
+                "Low glucose options",
+                comment: "Navigation title for settings that control low-glucose notification delivery."
+            )
+        case .criticalLow:
+            LocalizedStringResource(
+                "Critically low glucose options",
+                comment: "Navigation title for settings that control critically-low-glucose notification delivery."
+            )
+        case .high:
+            LocalizedStringResource(
+                "High glucose options",
+                comment: "Navigation title for settings that control high-glucose notification delivery."
+            )
+        case .signalLoss:
+            LocalizedStringResource(
+                "Signal loss options",
+                comment: "Navigation title for settings that control signal-loss notification delivery."
+            )
+        }
+    }
+}
+
 /// The glucose alert settings, lifted out of `PhoneAppSettingsView` into their
 /// own tab so they're one tap away instead of buried in a long Form.
 ///
@@ -24,17 +58,30 @@ struct PhoneAppNotificationsView: View {
     @AppStorage(DefaultsKey.cgmProviderKind.rawValue, store: UserDefaults.group) private var cgmProviderKindRaw: String = CGMProviderKind.libreLinkUp.rawValue
     @AppStorage(DefaultsKey.lowGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationsEnabled: Bool = false
     @AppStorage(DefaultsKey.lowGlucoseCriticalAlertsEnabled.rawValue, store: UserDefaults.group) private var lowGlucoseCriticalAlertsEnabled: Bool = false
+    @AppStorage(DefaultsKey.lowGlucoseQuietHoursEnabled.rawValue, store: UserDefaults.group) private var lowGlucoseQuietHoursEnabled: Bool = false
+    @AppStorage(DefaultsKey.lowGlucoseQuietHoursStartMinutes.rawValue, store: UserDefaults.group) private var lowGlucoseQuietHoursStartMinutes: Int = QuietHours.defaultStartMinutes
+    @AppStorage(DefaultsKey.lowGlucoseQuietHoursEndMinutes.rawValue, store: UserDefaults.group) private var lowGlucoseQuietHoursEndMinutes: Int = QuietHours.defaultEndMinutes
     @AppStorage(DefaultsKey.lowGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationThreshold: Int = 70
     @AppStorage(DefaultsKey.criticalLowGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var criticalLowGlucoseNotificationsEnabled: Bool = false
     @AppStorage(DefaultsKey.criticalLowGlucoseCriticalAlertsEnabled.rawValue, store: UserDefaults.group) private var criticalLowGlucoseCriticalAlertsEnabled: Bool = false
+    @AppStorage(DefaultsKey.criticalLowGlucoseQuietHoursEnabled.rawValue, store: UserDefaults.group) private var criticalLowGlucoseQuietHoursEnabled: Bool = false
+    @AppStorage(DefaultsKey.criticalLowGlucoseQuietHoursStartMinutes.rawValue, store: UserDefaults.group) private var criticalLowGlucoseQuietHoursStartMinutes: Int = QuietHours.defaultStartMinutes
+    @AppStorage(DefaultsKey.criticalLowGlucoseQuietHoursEndMinutes.rawValue, store: UserDefaults.group) private var criticalLowGlucoseQuietHoursEndMinutes: Int = QuietHours.defaultEndMinutes
     @AppStorage(DefaultsKey.criticalLowGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var criticalLowGlucoseNotificationThreshold: Int = 55
     @AppStorage(DefaultsKey.highGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var highGlucoseNotificationsEnabled: Bool = false
     @AppStorage(DefaultsKey.highGlucoseCriticalAlertsEnabled.rawValue, store: UserDefaults.group) private var highGlucoseCriticalAlertsEnabled: Bool = false
+    @AppStorage(DefaultsKey.highGlucoseQuietHoursEnabled.rawValue, store: UserDefaults.group) private var highGlucoseQuietHoursEnabled: Bool = false
+    @AppStorage(DefaultsKey.highGlucoseQuietHoursStartMinutes.rawValue, store: UserDefaults.group) private var highGlucoseQuietHoursStartMinutes: Int = QuietHours.defaultStartMinutes
+    @AppStorage(DefaultsKey.highGlucoseQuietHoursEndMinutes.rawValue, store: UserDefaults.group) private var highGlucoseQuietHoursEndMinutes: Int = QuietHours.defaultEndMinutes
     @AppStorage(DefaultsKey.highGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var highGlucoseNotificationThreshold: Int = 250
     @AppStorage(DefaultsKey.libre3SignalLossAlertEnabled.rawValue, store: UserDefaults.group) private var libre3SignalLossAlertEnabled: Bool = true
     @AppStorage(DefaultsKey.libre3SignalLossCritical.rawValue, store: UserDefaults.group) private var libre3SignalLossCritical: Bool = false
+    @AppStorage(DefaultsKey.libre3SignalLossQuietHoursEnabled.rawValue, store: UserDefaults.group) private var libre3SignalLossQuietHoursEnabled: Bool = false
+    @AppStorage(DefaultsKey.libre3SignalLossQuietHoursStartMinutes.rawValue, store: UserDefaults.group) private var libre3SignalLossQuietHoursStartMinutes: Int = QuietHours.defaultStartMinutes
+    @AppStorage(DefaultsKey.libre3SignalLossQuietHoursEndMinutes.rawValue, store: UserDefaults.group) private var libre3SignalLossQuietHoursEndMinutes: Int = QuietHours.defaultEndMinutes
 
     @State private var notificationAuthorizationDenied = false
+    @State private var presentedAlertOptions: AlertOptionsKind?
     @StateObject private var bluetoothHeartbeatManager = BluetoothHeartbeatManager.shared
     private var watchConnector = WatchConnectivityManager.shared
 
@@ -64,13 +111,28 @@ struct PhoneAppNotificationsView: View {
             guard newPhase == .active else { return }
             refreshNotificationAuthorizationStatus()
         }
+        .sheet(item: $presentedAlertOptions) { alert in
+            AlertOptionsView(
+                alert: alert,
+                alertEnabled: isAlertEnabled(alert),
+                criticalAlertsEnabled: criticalAlertsBinding(for: alert),
+                quietHours: quietHours(for: alert),
+                onCriticalAlertsChanged: { isEnabled in
+                    handleCriticalAlertsChanged(for: alert, isEnabled: isEnabled)
+                },
+                onQuietHoursChanged: { quietHours in
+                    applyQuietHours(quietHours, for: alert)
+                }
+            )
+        }
     }
 
     // MARK: - Cloud providers (LibreLinkUp / Dexcom Share)
 
     /// Low and high alerts for the polled providers. They can only fire while
     /// the Bluetooth heartbeat is running — that's what schedules the cloud
-    /// polls — so every control is disabled until it's enabled in Settings.
+    /// polls — so an alert cannot be switched on until the heartbeat is enabled
+    /// in Settings. Its delivery options remain available for configuration.
     @ViewBuilder
     private var heartbeatAlertsSection: some View {
         Section {
@@ -88,7 +150,9 @@ struct PhoneAppNotificationsView: View {
                 }
             }
 
-            Toggle("Low glucose alerts", isOn: $lowGlucoseNotificationsEnabled)
+            Toggle(isOn: $lowGlucoseNotificationsEnabled) {
+                alertToggleLabel(for: .low)
+            }
                 .onChange(of: lowGlucoseNotificationsEnabled) { _, isEnabled in
                     guard bluetoothHeartbeatManager.isEnabled || !isEnabled else {
                         lowGlucoseNotificationsEnabled = false
@@ -121,6 +185,8 @@ struct PhoneAppNotificationsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            alertOptionsButton(for: .low)
+
             if notificationAuthorizationDenied {
                 Text("Notifications are off — glucose alerts can't be delivered")
                     .font(.subheadline)
@@ -135,7 +201,9 @@ struct PhoneAppNotificationsView: View {
 
             Divider()
 
-            Toggle("High glucose alerts", isOn: $highGlucoseNotificationsEnabled)
+            Toggle(isOn: $highGlucoseNotificationsEnabled) {
+                alertToggleLabel(for: .high)
+            }
                 .onChange(of: highGlucoseNotificationsEnabled) { _, isEnabled in
                     guard bluetoothHeartbeatManager.isEnabled || !isEnabled else {
                         highGlucoseNotificationsEnabled = false
@@ -152,15 +220,12 @@ struct PhoneAppNotificationsView: View {
                             .tag(threshold)
                     }
                 }
-
-                Toggle("Use critical alerts", isOn: $highGlucoseCriticalAlertsEnabled)
-                    .onChange(of: highGlucoseCriticalAlertsEnabled) { _, isEnabled in
-                        handleCriticalAlertsChanged(for: .high, isEnabled: isEnabled)
-                    }
             } else {
                 LabeledContent("Alert me above", value: lowGlucoseThresholdText(for: highGlucoseNotificationThreshold))
                     .foregroundStyle(.secondary)
             }
+
+            alertOptionsButton(for: .high)
 
             Text("You’ll get a notification when a new reading is above \(lowGlucoseThresholdText(for: highGlucoseNotificationThreshold)). Alerts repeat at most every 5 minutes while glucose stays high. Alerts depend on a stable Bluetooth connection to your sensor and an internet connection. Always rely on the manufacturer's alerts first.")
                 .font(.subheadline)
@@ -182,7 +247,9 @@ struct PhoneAppNotificationsView: View {
     @ViewBuilder
     private var directBLEAlertsSection: some View {
         Section {
-            Toggle("Low glucose alerts", isOn: $lowGlucoseNotificationsEnabled)
+            Toggle(isOn: $lowGlucoseNotificationsEnabled) {
+                alertToggleLabel(for: .low)
+            }
                 .onChange(of: lowGlucoseNotificationsEnabled) { _, isEnabled in
                     // Re-wire the graph's red low-alarm line: it tracks the
                     // threshold while alerts are on, hidden otherwise.
@@ -200,15 +267,12 @@ struct PhoneAppNotificationsView: View {
                 .onChange(of: lowGlucoseNotificationThreshold) { _, _ in
                     handleLowGlucoseThresholdChanged(persistSensorSettings: true)
                 }
-
-                Toggle("Use critical alerts", isOn: $lowGlucoseCriticalAlertsEnabled)
-                    .onChange(of: lowGlucoseCriticalAlertsEnabled) { _, isEnabled in
-                        handleCriticalAlertsChanged(for: .low, isEnabled: isEnabled)
-                    }
             } else {
                 LabeledContent("Alert me below", value: lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold))
                     .foregroundStyle(.secondary)
             }
+
+            alertOptionsButton(for: .low)
 
             Text("Notifies you when a new sensor reading is below \(lowGlucoseThresholdText(for: lowGlucoseNotificationThreshold)). Alerts may repeat every 5 minutes while glucose remains low and require a stable Bluetooth connection. Alerts can be snoozed for 15 minutes.")
                 .font(.subheadline)
@@ -217,7 +281,9 @@ struct PhoneAppNotificationsView: View {
 
             Divider()
 
-            Toggle("Critically low glucose alerts", isOn: $criticalLowGlucoseNotificationsEnabled)
+            Toggle(isOn: $criticalLowGlucoseNotificationsEnabled) {
+                alertToggleLabel(for: .criticalLow)
+            }
                 .onChange(of: criticalLowGlucoseNotificationsEnabled) { _, isEnabled in
                     handleGlucoseAlertsChanged(.criticalLow, isEnabled: isEnabled)
                 }
@@ -229,11 +295,6 @@ struct PhoneAppNotificationsView: View {
                             .tag(threshold)
                     }
                 }
-
-                Toggle("Use critical alerts", isOn: $criticalLowGlucoseCriticalAlertsEnabled)
-                    .onChange(of: criticalLowGlucoseCriticalAlertsEnabled) { _, isEnabled in
-                        handleCriticalAlertsChanged(for: .criticalLow, isEnabled: isEnabled)
-                    }
             } else {
                 LabeledContent(
                     "Alert me below",
@@ -242,6 +303,8 @@ struct PhoneAppNotificationsView: View {
                 .foregroundStyle(.secondary)
             }
 
+            alertOptionsButton(for: .criticalLow)
+
             Text("Notifies you when a new sensor reading is critically low, below \(lowGlucoseThresholdText(for: criticalLowGlucoseNotificationThreshold)). This alert takes precedence over the low glucose alert. Alerts may repeat every 5 minutes and share the 15-minute snooze.")
                 .font(.subheadline)
                 .fixedSize(horizontal: false, vertical: true)
@@ -249,7 +312,9 @@ struct PhoneAppNotificationsView: View {
 
             Divider()
 
-            Toggle("High glucose alerts", isOn: $highGlucoseNotificationsEnabled)
+            Toggle(isOn: $highGlucoseNotificationsEnabled) {
+                alertToggleLabel(for: .high)
+            }
                 .onChange(of: highGlucoseNotificationsEnabled) { _, isEnabled in
                     handleGlucoseAlertsChanged(.high, isEnabled: isEnabled)
                 }
@@ -261,11 +326,6 @@ struct PhoneAppNotificationsView: View {
                             .tag(threshold)
                     }
                 }
-
-                Toggle("Use critical alerts", isOn: $highGlucoseCriticalAlertsEnabled)
-                    .onChange(of: highGlucoseCriticalAlertsEnabled) { _, isEnabled in
-                        handleCriticalAlertsChanged(for: .high, isEnabled: isEnabled)
-                    }
             } else {
                 LabeledContent(
                     "Alert me above",
@@ -274,6 +334,8 @@ struct PhoneAppNotificationsView: View {
                 .foregroundStyle(.secondary)
             }
 
+            alertOptionsButton(for: .high)
+
             Text("Notifies you when a new sensor reading is above \(lowGlucoseThresholdText(for: highGlucoseNotificationThreshold)). Alerts may repeat every 5 minutes while glucose remains high and require a stable Bluetooth connection. Alerts can be snoozed for 15 minutes.")
                 .font(.subheadline)
                 .fixedSize(horizontal: false, vertical: true)
@@ -281,16 +343,14 @@ struct PhoneAppNotificationsView: View {
 
             Divider()
 
-            Toggle("Signal loss alert", isOn: $libre3SignalLossAlertEnabled)
+            Toggle(isOn: $libre3SignalLossAlertEnabled) {
+                alertToggleLabel(for: .signalLoss)
+            }
                 .onChange(of: libre3SignalLossAlertEnabled) { _, isEnabled in
                     handleSignalLossAlertChanged(isEnabled)
                 }
 
-            Toggle("Use critical alerts", isOn: $libre3SignalLossCritical)
-                .disabled(!libre3SignalLossAlertEnabled)
-                .onChange(of: libre3SignalLossCritical) { _, isEnabled in
-                    handleSignalLossCriticalChanged(isEnabled)
-                }
+            alertOptionsButton(for: .signalLoss)
 
             Text("Notifies you when no sensor readings have arrived for 20 minutes. Keep your iPhone near the sensor to maintain the Bluetooth connection.")
                 .font(.subheadline)
@@ -308,6 +368,143 @@ struct PhoneAppNotificationsView: View {
         } footer: {
             Text("Critical alerts can play a sound even when your iPhone is muted or a Focus is active. iOS will ask for permission the first time you enable one.\nFLwatch alerts are delivered on a best-effort basis and may be delayed or missed. Always confirm your glucose reading before taking action.")
         }
+    }
+
+    @ViewBuilder
+    private func alertToggleLabel(for alert: AlertOptionsKind) -> some View {
+        HStack(spacing: 6) {
+            switch alert {
+            case .low:
+                Text(
+                    "Low glucose alerts",
+                    comment: "Toggle label for notifications when glucose is below the configured low threshold."
+                )
+            case .criticalLow:
+                Text(
+                    "Critically low glucose alerts",
+                    comment: "Toggle label for notifications when glucose is below the configured critically-low threshold."
+                )
+            case .high:
+                Text(
+                    "High glucose alerts",
+                    comment: "Toggle label for notifications when glucose is above the configured high threshold."
+                )
+            case .signalLoss:
+                Text(
+                    "Signal loss alert",
+                    comment: "Toggle label for a notification when the phone has stopped receiving sensor readings."
+                )
+            }
+
+            TimelineView(.everyMinute) { context in
+                if isAlertEnabled(alert), quietHours(for: alert).isMuted(at: context.date) {
+                    Image(systemName: "bell.slash")
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel(
+                            Text(
+                                "Currently muted by Do Not Disturb",
+                                comment: "Accessibility label for an icon showing that this alert is currently inside its configured Do Not Disturb window."
+                            )
+                        )
+                }
+            }
+        }
+    }
+
+    private func alertOptionsButton(for alert: AlertOptionsKind) -> some View {
+        Button {
+            presentedAlertOptions = alert
+        } label: {
+            HStack {
+                Text(
+                    "Options",
+                    comment: "Button that opens critical-delivery and Do Not Disturb settings for one notification type."
+                )
+                Spacer()
+                if isAlertEnabled(alert) {
+                    if criticalAlertsEnabled(for: alert) {
+                        Image(systemName: "speaker.wave.3.fill")
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel(
+                                Text(
+                                    "Critical alerts enabled",
+                                    comment: "Accessibility label for the Options-row icon showing that critical delivery is enabled for this alert."
+                                )
+                            )
+                    }
+                    if quietHours(for: alert).enabled {
+                        Text(verbatim: formattedQuietHours(quietHours(for: alert)))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .contentShape(Rectangle())
+        }
+    }
+
+    private func isAlertEnabled(_ alert: AlertOptionsKind) -> Bool {
+        switch alert {
+        case .low: lowGlucoseNotificationsEnabled
+        case .criticalLow: criticalLowGlucoseNotificationsEnabled
+        case .high: highGlucoseNotificationsEnabled
+        case .signalLoss: libre3SignalLossAlertEnabled
+        }
+    }
+
+    private func criticalAlertsEnabled(for alert: AlertOptionsKind) -> Bool {
+        switch alert {
+        case .low: lowGlucoseCriticalAlertsEnabled
+        case .criticalLow: criticalLowGlucoseCriticalAlertsEnabled
+        case .high: highGlucoseCriticalAlertsEnabled
+        case .signalLoss: libre3SignalLossCritical
+        }
+    }
+
+    private func quietHours(for alert: AlertOptionsKind) -> QuietHours {
+        switch alert {
+        case .low:
+            QuietHours(
+                enabled: lowGlucoseQuietHoursEnabled,
+                startMinutes: lowGlucoseQuietHoursStartMinutes,
+                endMinutes: lowGlucoseQuietHoursEndMinutes
+            )
+        case .criticalLow:
+            QuietHours(
+                enabled: criticalLowGlucoseQuietHoursEnabled,
+                startMinutes: criticalLowGlucoseQuietHoursStartMinutes,
+                endMinutes: criticalLowGlucoseQuietHoursEndMinutes
+            )
+        case .high:
+            QuietHours(
+                enabled: highGlucoseQuietHoursEnabled,
+                startMinutes: highGlucoseQuietHoursStartMinutes,
+                endMinutes: highGlucoseQuietHoursEndMinutes
+            )
+        case .signalLoss:
+            QuietHours(
+                enabled: libre3SignalLossQuietHoursEnabled,
+                startMinutes: libre3SignalLossQuietHoursStartMinutes,
+                endMinutes: libre3SignalLossQuietHoursEndMinutes
+            )
+        }
+    }
+
+    private func criticalAlertsBinding(for alert: AlertOptionsKind) -> Binding<Bool> {
+        switch alert {
+        case .low: $lowGlucoseCriticalAlertsEnabled
+        case .criticalLow: $criticalLowGlucoseCriticalAlertsEnabled
+        case .high: $highGlucoseCriticalAlertsEnabled
+        case .signalLoss: $libre3SignalLossCritical
+        }
+    }
+
+    private func formattedQuietHours(_ quietHours: QuietHours) -> String {
+        let start = alertOptionsTimePickerDate(for: quietHours.startMinutes)
+        let end = alertOptionsTimePickerDate(for: quietHours.endMinutes)
+        return "\(start.formatted(date: .omitted, time: .shortened)) – \(end.formatted(date: .omitted, time: .shortened))"
     }
 
     // MARK: - Alert plumbing
@@ -340,6 +537,19 @@ struct PhoneAppNotificationsView: View {
     /// the standard grant; if the user declines the system prompt, revert the
     /// toggle so it reflects reality. Re-evaluates so a currently-triggered
     /// reading is re-delivered at the new level.
+    private func handleCriticalAlertsChanged(for alert: AlertOptionsKind, isEnabled: Bool) {
+        switch alert {
+        case .low:
+            handleCriticalAlertsChanged(for: GlucoseAlertTier.low, isEnabled: isEnabled)
+        case .criticalLow:
+            handleCriticalAlertsChanged(for: GlucoseAlertTier.criticalLow, isEnabled: isEnabled)
+        case .high:
+            handleCriticalAlertsChanged(for: GlucoseAlertTier.high, isEnabled: isEnabled)
+        case .signalLoss:
+            handleSignalLossCriticalChanged(isEnabled)
+        }
+    }
+
     private func handleCriticalAlertsChanged(for tier: GlucoseAlertTier, isEnabled: Bool) {
         Task {
             if isEnabled {
@@ -362,6 +572,46 @@ struct PhoneAppNotificationsView: View {
             // so a currently-triggered reading is re-delivered at the new level.
             watchConnector.sendSettingsSnapshotToWatch()
             await LowGlucoseNotificationManager.shared.rearmNotifications(for: [tier])
+        }
+    }
+
+    private func applyQuietHours(_ quietHours: QuietHours, for alert: AlertOptionsKind) {
+        guard quietHours != self.quietHours(for: alert) else { return }
+
+        switch alert {
+        case .low:
+            lowGlucoseQuietHoursEnabled = quietHours.enabled
+            lowGlucoseQuietHoursStartMinutes = quietHours.startMinutes
+            lowGlucoseQuietHoursEndMinutes = quietHours.endMinutes
+        case .criticalLow:
+            criticalLowGlucoseQuietHoursEnabled = quietHours.enabled
+            criticalLowGlucoseQuietHoursStartMinutes = quietHours.startMinutes
+            criticalLowGlucoseQuietHoursEndMinutes = quietHours.endMinutes
+        case .high:
+            highGlucoseQuietHoursEnabled = quietHours.enabled
+            highGlucoseQuietHoursStartMinutes = quietHours.startMinutes
+            highGlucoseQuietHoursEndMinutes = quietHours.endMinutes
+        case .signalLoss:
+            libre3SignalLossQuietHoursEnabled = quietHours.enabled
+            libre3SignalLossQuietHoursStartMinutes = quietHours.startMinutes
+            libre3SignalLossQuietHoursEndMinutes = quietHours.endMinutes
+        }
+
+        switch alert {
+        case .low:
+            Task {
+                await LowGlucoseNotificationManager.shared.rearmNotifications(for: [.low])
+            }
+        case .criticalLow:
+            Task {
+                await LowGlucoseNotificationManager.shared.rearmNotifications(for: [.criticalLow])
+            }
+        case .high:
+            Task {
+                await LowGlucoseNotificationManager.shared.rearmNotifications(for: [.high])
+            }
+        case .signalLoss:
+            Libre3DirectManager.shared.signalLossSettingsChanged()
         }
     }
 
@@ -434,13 +684,16 @@ struct PhoneAppNotificationsView: View {
 
     private func handleSignalLossCriticalChanged(_ isEnabled: Bool) {
         // Preserve the deadline while immediately applying an off transition.
-        // After an on prompt completes, re-apply at that same deadline so a newly
-        // granted critical setting takes effect on the pending request.
+        // After an on prompt completes, roll back a declined preference and
+        // re-apply at that same deadline so the pending request stays accurate.
         Libre3DirectManager.shared.signalLossSettingsChanged()
         guard isEnabled else { return }
         Task {
-            _ = await LowGlucoseNotificationManager.shared.requestCriticalAuthorizationIfNeeded()
+            let granted = await LowGlucoseNotificationManager.shared.requestCriticalAuthorizationIfNeeded()
             await MainActor.run {
+                if !granted {
+                    libre3SignalLossCritical = false
+                }
                 Libre3DirectManager.shared.signalLossSettingsChanged()
             }
             refreshNotificationAuthorizationStatus()
@@ -481,6 +734,161 @@ struct PhoneAppNotificationsView: View {
         let glucoseUnit = GlucoseUnit(uom: SensorSettingsStore.shared.sensorSettings.uom)
         return value.asGlucose(glucoseUnit: glucoseUnit, withUnit: true)
     }
+}
+
+private struct AlertOptionsView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let alert: AlertOptionsKind
+    let alertEnabled: Bool
+    @Binding var criticalAlertsEnabled: Bool
+    let onCriticalAlertsChanged: (Bool) -> Void
+    let onQuietHoursChanged: (QuietHours) -> Void
+
+    @State private var quietHoursEnabled: Bool
+    @State private var quietHoursStartMinutes: Int
+    @State private var quietHoursEndMinutes: Int
+    private let initialQuietHours: QuietHours
+
+    init(
+        alert: AlertOptionsKind,
+        alertEnabled: Bool,
+        criticalAlertsEnabled: Binding<Bool>,
+        quietHours: QuietHours,
+        onCriticalAlertsChanged: @escaping (Bool) -> Void,
+        onQuietHoursChanged: @escaping (QuietHours) -> Void
+    ) {
+        self.alert = alert
+        self.alertEnabled = alertEnabled
+        _criticalAlertsEnabled = criticalAlertsEnabled
+        initialQuietHours = quietHours
+        _quietHoursEnabled = State(initialValue: quietHours.enabled)
+        _quietHoursStartMinutes = State(initialValue: quietHours.startMinutes)
+        _quietHoursEndMinutes = State(initialValue: quietHours.endMinutes)
+        self.onCriticalAlertsChanged = onCriticalAlertsChanged
+        self.onQuietHoursChanged = onQuietHoursChanged
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Toggle(isOn: $criticalAlertsEnabled) {
+                        Text(
+                            "Use critical alerts",
+                            comment: "Toggle that makes this notification type use iOS critical-alert delivery."
+                        )
+                    }
+                    .disabled(!alertEnabled)
+                    .onChange(of: criticalAlertsEnabled) { _, isEnabled in
+                        onCriticalAlertsChanged(isEnabled)
+                    }
+                } footer: {
+                    Text(
+                        "Critical alerts can play a sound even when your iPhone is muted or a Focus is active.",
+                        comment: "Footer explaining the effect of critical notification delivery."
+                    )
+                }
+
+                Section {
+                    Toggle(isOn: $quietHoursEnabled) {
+                        Text(
+                            "Enable Do Not Disturb",
+                            comment: "Toggle that enables a daily period during which this notification type is suppressed."
+                        )
+                    }
+
+                    if quietHoursEnabled {
+                        DatePicker(selection: startTimeBinding, displayedComponents: .hourAndMinute) {
+                            Text(
+                                "From",
+                                comment: "Label for the start time of an alert's daily Do Not Disturb window."
+                            )
+                        }
+                        DatePicker(selection: endTimeBinding, displayedComponents: .hourAndMinute) {
+                            Text(
+                                "To",
+                                comment: "Label for the end time of an alert's daily Do Not Disturb window."
+                            )
+                        }
+
+                        if quietHoursStartMinutes == quietHoursEndMinutes {
+                            Text(
+                                "Do Not Disturb is inactive when From and To are the same.",
+                                comment: "Caption explaining that equal Do Not Disturb start and end times create a zero-length interval and do not suppress alerts."
+                            )
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+                } header: {
+                    Text(
+                        "Do Not Disturb",
+                        comment: "Section title for an alert's daily suppression window."
+                    )
+                } footer: {
+                    Text(
+                        "This alert will not be delivered during the selected window, even when critical alerts are enabled.",
+                        comment: "Footer explaining that an alert's app-specific Do Not Disturb window also suppresses critical delivery."
+                    )
+                }
+            }
+            .navigationTitle(Text(alert.navigationTitle))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text(
+                            "Done",
+                            comment: "Button that closes an alert Options sheet and applies its Do Not Disturb settings."
+                        )
+                    }
+                }
+            }
+        }
+        .onDisappear {
+            let updatedQuietHours = QuietHours(
+                enabled: quietHoursEnabled,
+                startMinutes: quietHoursStartMinutes,
+                endMinutes: quietHoursEndMinutes
+            )
+            guard updatedQuietHours != initialQuietHours else { return }
+            onQuietHoursChanged(updatedQuietHours)
+        }
+    }
+
+    private var startTimeBinding: Binding<Date> {
+        Binding(
+            get: { alertOptionsTimePickerDate(for: quietHoursStartMinutes) },
+            set: { quietHoursStartMinutes = minutesOfDay(from: $0) }
+        )
+    }
+
+    private var endTimeBinding: Binding<Date> {
+        Binding(
+            get: { alertOptionsTimePickerDate(for: quietHoursEndMinutes) },
+            set: { quietHoursEndMinutes = minutesOfDay(from: $0) }
+        )
+    }
+
+    private func minutesOfDay(from date: Date) -> Int {
+        let components = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return (components.hour ?? 0) * 60 + (components.minute ?? 0)
+    }
+}
+
+private func alertOptionsTimePickerDate(for minutes: Int) -> Date {
+    var components = DateComponents()
+    components.calendar = .current
+    components.timeZone = Calendar.current.timeZone
+    components.year = 2001
+    components.month = 1
+    components.day = 15
+    components.hour = minutes / 60
+    components.minute = minutes % 60
+    return Calendar.current.date(from: components) ?? .distantPast
 }
 
 #Preview {

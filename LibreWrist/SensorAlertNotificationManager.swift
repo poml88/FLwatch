@@ -25,6 +25,7 @@ final class SensorAlertNotificationManager {
 
     private static let requestIdentifier = "libre3-sensor-alert.terminal"
     nonisolated static let signalLossIdentifier = "libre3-sensor-alert.signal-loss"
+    private static let signalLossOriginalDeadlineKey = "signalLossOriginalDeadline"
     private static let applicationTerminatedIdentifier = "libre3-sensor-alert.application-terminated"
     private static let reconnectFailingIdentifier = "libre3-sensor-alert.reconnect-failing"
     private static let warmupCompletionIdentifier = "libre3-sensor-alert.warmup-complete"
@@ -113,15 +114,23 @@ final class SensorAlertNotificationManager {
         ensureSignalLossReconciliationWorker()
     }
 
-    /// Returns the OS-scheduled signal-loss deadline, if one is still pending.
-    /// Used once at manager startup so an earlier, nearer dead-man deadline is
-    /// adopted without being replaced by a fresh grace window.
+    /// Returns the original dead-man deadline for a pending signal-loss alert,
+    /// even when quiet hours moved its OS trigger later. Used once at manager
+    /// startup so an earlier deadline is not replaced by a fresh grace window.
     func pendingSignalLossDeadline() async -> Date? {
         let requests = await notificationCenter.pendingNotificationRequests()
-        let trigger = requests
-            .first { $0.identifier == Self.signalLossIdentifier }?
-            .trigger as? UNTimeIntervalNotificationTrigger
-        return trigger?.nextTriggerDate()
+        guard let request = requests.first(where: {
+            $0.identifier == Self.signalLossIdentifier
+        }) else { return nil }
+
+        // New requests retain the dead-man deadline even when their actual fire
+        // date was clamped to quiet-hours end. Older requests have no payload,
+        // so keep recovering their trigger date for upgrade compatibility.
+        if let storedDeadline = request.content.userInfo[Self.signalLossOriginalDeadlineKey] as? NSNumber,
+           storedDeadline.doubleValue.isFinite {
+            return Date(timeIntervalSince1970: storedDeadline.doubleValue)
+        }
+        return (request.trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate()
     }
 
     private func ensureSignalLossReconciliationWorker() {
@@ -159,6 +168,9 @@ final class SensorAlertNotificationManager {
         let content = UNMutableNotificationContent()
         content.title = String(localized: "No glucose data")
         content.body = String(localized: "Your phone hasn't received readings for 20 minutes. Move closer to your sensor or check it.")
+        content.userInfo = [
+            Self.signalLossOriginalDeadlineKey: deadline.timeIntervalSince1970
+        ]
         // The preference alone cannot authorize critical delivery. Gate it on
         // the system's current critical-alert setting and otherwise fall back to
         // a time-sensitive notification.
@@ -177,11 +189,15 @@ final class SensorAlertNotificationManager {
         // Reusing an identifier replaces only a pending request. Retract an
         // already-delivered outage banner when a new reading resumes the stream.
         notificationCenter.removeDeliveredNotifications(withIdentifiers: ids)
+        let quietHours = QuietHours.signalLoss
+        let fireAt = quietHours.isMuted(at: deadline)
+            ? quietHours.end(after: deadline) ?? deadline
+            : deadline
         let request = UNNotificationRequest(
             identifier: Self.signalLossIdentifier,
             content: content,
             trigger: UNTimeIntervalNotificationTrigger(
-                timeInterval: max(1, deadline.timeIntervalSinceNow),
+                timeInterval: max(1, fireAt.timeIntervalSinceNow),
                 repeats: false
             )
         )

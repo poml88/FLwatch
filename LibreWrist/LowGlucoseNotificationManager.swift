@@ -146,7 +146,9 @@ final class LowGlucoseNotificationManager: NSObject {
     }
 
     func evaluateCurrentReading(now: Date = Date()) async {
-        let effectiveTiers = GlucoseAlertTier.allCases.filter(isEffectivelyEnabled)
+        let effectiveTiers = GlucoseAlertTier.allCases.filter {
+            isEffectivelyEnabled($0, now: now)
+        }
         let ineffectiveTiers = Set(GlucoseAlertTier.allCases.filter { !effectiveTiers.contains($0) })
 
         await clearNotifications(for: ineffectiveTiers, resetCooldown: true)
@@ -194,6 +196,10 @@ final class LowGlucoseNotificationManager: NSObject {
         }
 
         var winningTiers: [GlucoseAlertTier] = []
+        // Quiet hours participate before precedence. If critically-low alerts
+        // are muted but regular-low alerts are not, a critically-low reading is
+        // deliberately allowed to fall back to the regular-low alert rather
+        // than becoming completely silent.
         if triggeredTiers.contains(.criticalLow) {
             winningTiers.append(.criticalLow)
         } else if triggeredTiers.contains(.low) {
@@ -228,7 +234,8 @@ final class LowGlucoseNotificationManager: NSObject {
         // Another evaluation may have completed while notification settings were
         // being fetched. Re-check the persisted gate before scheduling.
         for tier in dueTiers where
-            pendingRepeat(for: tier) || notificationIsDue(for: tier, now: now) {
+            isEffectivelyEnabled(tier, now: now) &&
+            (pendingRepeat(for: tier) || notificationIsDue(for: tier, now: now)) {
             await scheduleNotification(
                 for: tier,
                 history: history,
@@ -322,12 +329,14 @@ final class LowGlucoseNotificationManager: NSObject {
         await evaluateCurrentReading(now: now)
     }
 
-    func providerDidChange() async {
+    func providerDidChange(now: Date = Date()) async {
         if SharedData.cgmProviderKind != .libre3BLE {
             await clearNotifications(for: [.criticalLow], resetCooldown: true, forceCleanup: true)
             await disableHeartbeatBackedAlertsIfHeartbeatIsOff()
         }
-        if !GlucoseAlertTier.allCases.contains(where: isEffectivelyEnabled) {
+        if !GlucoseAlertTier.allCases.contains(where: {
+            isEffectivelyEnabled($0, now: now)
+        }) {
             clearLowSnoozeIfNeeded()
             clearHighSnoozeIfNeeded()
         }
@@ -358,7 +367,9 @@ final class LowGlucoseNotificationManager: NSObject {
     }
 
     func shouldShowSnoozeAction(now: Date = Date()) -> Bool {
-        let effectiveTiers: [GlucoseAlertTier] = [.low, .criticalLow].filter(isEffectivelyEnabled)
+        let effectiveTiers: [GlucoseAlertTier] = [.low, .criticalLow].filter {
+            isEffectivelyEnabled($0, now: now)
+        }
         guard !effectiveTiers.isEmpty else {
             return false
         }
@@ -375,7 +386,7 @@ final class LowGlucoseNotificationManager: NSObject {
     }
 
     func shouldShowHighGlucoseSnoozeAction(now: Date = Date()) -> Bool {
-        guard isEffectivelyEnabled(.high) else { return false }
+        guard isEffectivelyEnabled(.high, now: now) else { return false }
 
         let history = LibreLinkUpHistory.shared
         guard history.currentGlucose > 0,
@@ -392,7 +403,7 @@ final class LowGlucoseNotificationManager: NSObject {
         let lowTiers: Set<GlucoseAlertTier> = [.low, .criticalLow]
         await removePendingAndDeliveredNotifications(for: lowTiers)
         SharedData.lowGlucoseNotificationSnoozeUntilDate = now.addingTimeInterval(LowGlucoseNotificationConfig.snoozeInterval)
-        for tier in lowTiers where isEffectivelyEnabled(tier) {
+        for tier in lowTiers where isEffectivelyEnabled(tier, now: now) {
             setPendingRepeat(true, for: tier)
         }
     }
@@ -400,7 +411,7 @@ final class LowGlucoseNotificationManager: NSObject {
     func snoozeHighGlucoseAlerts(now: Date = Date()) async {
         await removePendingAndDeliveredNotifications(for: [.high])
         SharedData.highGlucoseNotificationSnoozeUntilDate = now.addingTimeInterval(LowGlucoseNotificationConfig.snoozeInterval)
-        if isEffectivelyEnabled(.high) {
+        if isEffectivelyEnabled(.high, now: now) {
             setPendingRepeat(true, for: .high)
         }
     }
@@ -413,8 +424,9 @@ final class LowGlucoseNotificationManager: NSObject {
             (SharedData.highGlucoseNotificationsEnabled && SharedData.highGlucoseCriticalAlertsEnabled)
     }
 
-    private func isEffectivelyEnabled(_ tier: GlucoseAlertTier) -> Bool {
-        switch tier {
+    private func isEffectivelyEnabled(_ tier: GlucoseAlertTier, now: Date) -> Bool {
+        guard !QuietHours.forTier(tier).isMuted(at: now) else { return false }
+        return switch tier {
         case .low:
             SharedData.lowGlucoseNotificationsEnabled
         case .criticalLow:

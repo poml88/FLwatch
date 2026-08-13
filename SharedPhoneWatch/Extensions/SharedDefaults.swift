@@ -30,6 +30,90 @@ enum GlucoseAlertTier: String, Codable, CaseIterable, Sendable {
     case high
 }
 
+/// A daily, local-time interval during which one alert is suppressed.
+/// The start is inclusive and the end is exclusive. Equal endpoints represent
+/// a zero-length interval so an accidentally matched pair never mutes all day.
+struct QuietHours: Equatable, Sendable {
+    static let defaultStartMinutes = 23 * 60
+    static let defaultEndMinutes = 6 * 60
+
+    let enabled: Bool
+    let startMinutes: Int
+    let endMinutes: Int
+
+    init(enabled: Bool, startMinutes: Int, endMinutes: Int) {
+        self.enabled = enabled
+        self.startMinutes = Self.normalized(startMinutes)
+        self.endMinutes = Self.normalized(endMinutes)
+    }
+
+    func isMuted(at date: Date, calendar: Calendar = .current) -> Bool {
+        guard enabled, startMinutes != endMinutes else { return false }
+        let components = calendar.dateComponents([.hour, .minute], from: date)
+        guard let hour = components.hour, let minute = components.minute else { return false }
+        let currentMinutes = hour * 60 + minute
+
+        if startMinutes < endMinutes {
+            return currentMinutes >= startMinutes && currentMinutes < endMinutes
+        }
+        return currentMinutes >= startMinutes || currentMinutes < endMinutes
+    }
+
+    /// Finds the next local occurrence of the interval's end. `.nextTime`
+    /// advances a nonexistent wall-clock time on a spring-forward day to the
+    /// next valid time instead of skipping that day's end altogether.
+    func end(after date: Date, calendar: Calendar = .current) -> Date? {
+        guard enabled, startMinutes != endMinutes else { return nil }
+        return calendar.nextDate(
+            after: date,
+            matching: DateComponents(
+                hour: endMinutes / 60,
+                minute: endMinutes % 60,
+                second: 0
+            ),
+            matchingPolicy: .nextTime,
+            // On a fall-back night, prefer the second occurrence so a deadline
+            // in the repeated hour never rolls forward to the following day.
+            repeatedTimePolicy: .last
+        )
+    }
+
+    static func forTier(_ tier: GlucoseAlertTier) -> QuietHours {
+        switch tier {
+        case .low:
+            QuietHours(
+                enabled: SharedData.lowGlucoseQuietHoursEnabled,
+                startMinutes: SharedData.lowGlucoseQuietHoursStartMinutes,
+                endMinutes: SharedData.lowGlucoseQuietHoursEndMinutes
+            )
+        case .criticalLow:
+            QuietHours(
+                enabled: SharedData.criticalLowGlucoseQuietHoursEnabled,
+                startMinutes: SharedData.criticalLowGlucoseQuietHoursStartMinutes,
+                endMinutes: SharedData.criticalLowGlucoseQuietHoursEndMinutes
+            )
+        case .high:
+            QuietHours(
+                enabled: SharedData.highGlucoseQuietHoursEnabled,
+                startMinutes: SharedData.highGlucoseQuietHoursStartMinutes,
+                endMinutes: SharedData.highGlucoseQuietHoursEndMinutes
+            )
+        }
+    }
+
+    static var signalLoss: QuietHours {
+        QuietHours(
+            enabled: SharedData.libre3SignalLossQuietHoursEnabled,
+            startMinutes: SharedData.libre3SignalLossQuietHoursStartMinutes,
+            endMinutes: SharedData.libre3SignalLossQuietHoursEndMinutes
+        )
+    }
+
+    private static func normalized(_ minutes: Int) -> Int {
+        ((minutes % (24 * 60)) + (24 * 60)) % (24 * 60)
+    }
+}
+
 // MARK: - All keys in one place
 enum DefaultsKey: String {
     // SharedData keys
@@ -59,23 +143,35 @@ enum DefaultsKey: String {
     case watchPeerSnapshotLastReceivedDate = "watchPeerSnapshotLastReceivedDateKey"
     case lowGlucoseNotificationsEnabled = "lowGlucoseNotificationsEnabledKey"
     case lowGlucoseCriticalAlertsEnabled = "lowGlucoseCriticalAlertsEnabledKey"
+    case lowGlucoseQuietHoursEnabled = "lowGlucoseQuietHoursEnabledKey"
+    case lowGlucoseQuietHoursStartMinutes = "lowGlucoseQuietHoursStartMinutesKey"
+    case lowGlucoseQuietHoursEndMinutes = "lowGlucoseQuietHoursEndMinutesKey"
     case lowGlucoseNotificationThreshold = "lowGlucoseNotificationThresholdKey"
     case lowGlucoseNotificationLastSentDate = "lowGlucoseNotificationLastSentDateKey"
     case lowGlucoseNotificationPendingRepeat = "lowGlucoseNotificationPendingRepeatKey"
     case lowGlucoseNotificationSnoozeUntilDate = "lowGlucoseNotificationSnoozeUntilDateKey"
     case criticalLowGlucoseNotificationsEnabled = "criticalLowGlucoseNotificationsEnabledKey"
     case criticalLowGlucoseCriticalAlertsEnabled = "criticalLowGlucoseCriticalAlertsEnabledKey"
+    case criticalLowGlucoseQuietHoursEnabled = "criticalLowGlucoseQuietHoursEnabledKey"
+    case criticalLowGlucoseQuietHoursStartMinutes = "criticalLowGlucoseQuietHoursStartMinutesKey"
+    case criticalLowGlucoseQuietHoursEndMinutes = "criticalLowGlucoseQuietHoursEndMinutesKey"
     case criticalLowGlucoseNotificationThreshold = "criticalLowGlucoseNotificationThresholdKey"
     case criticalLowGlucoseNotificationLastSentDate = "criticalLowGlucoseNotificationLastSentDateKey"
     case criticalLowGlucoseNotificationPendingRepeat = "criticalLowGlucoseNotificationPendingRepeatKey"
     case highGlucoseNotificationsEnabled = "highGlucoseNotificationsEnabledKey"
     case highGlucoseCriticalAlertsEnabled = "highGlucoseCriticalAlertsEnabledKey"
+    case highGlucoseQuietHoursEnabled = "highGlucoseQuietHoursEnabledKey"
+    case highGlucoseQuietHoursStartMinutes = "highGlucoseQuietHoursStartMinutesKey"
+    case highGlucoseQuietHoursEndMinutes = "highGlucoseQuietHoursEndMinutesKey"
     case highGlucoseNotificationThreshold = "highGlucoseNotificationThresholdKey"
     case highGlucoseNotificationLastSentDate = "highGlucoseNotificationLastSentDateKey"
     case highGlucoseNotificationPendingRepeat = "highGlucoseNotificationPendingRepeatKey"
     case highGlucoseNotificationSnoozeUntilDate = "highGlucoseNotificationSnoozeUntilDateKey"
     case libre3SignalLossAlertEnabled = "libre3SignalLossAlertEnabledKey"
     case libre3SignalLossCritical = "libre3SignalLossCriticalKey"
+    case libre3SignalLossQuietHoursEnabled = "libre3SignalLossQuietHoursEnabledKey"
+    case libre3SignalLossQuietHoursStartMinutes = "libre3SignalLossQuietHoursStartMinutesKey"
+    case libre3SignalLossQuietHoursEndMinutes = "libre3SignalLossQuietHoursEndMinutesKey"
     case icrGramsPerUnit = "icrGramsPerUnitKey"
     case roundingStep = "roundingStepKey"
     case carbsPer100g = "carbsPer100gKey"
@@ -458,6 +554,21 @@ enum SharedData {
         set { store.setBool(newValue, forKey: .lowGlucoseCriticalAlertsEnabled) }
     }
 
+    static var lowGlucoseQuietHoursEnabled: Bool {
+        get { store.getBool(.lowGlucoseQuietHoursEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .lowGlucoseQuietHoursEnabled) }
+    }
+
+    static var lowGlucoseQuietHoursStartMinutes: Int {
+        get { store.getInt(.lowGlucoseQuietHoursStartMinutes, defaultValue: QuietHours.defaultStartMinutes) }
+        set { store.setInt(newValue, forKey: .lowGlucoseQuietHoursStartMinutes) }
+    }
+
+    static var lowGlucoseQuietHoursEndMinutes: Int {
+        get { store.getInt(.lowGlucoseQuietHoursEndMinutes, defaultValue: QuietHours.defaultEndMinutes) }
+        set { store.setInt(newValue, forKey: .lowGlucoseQuietHoursEndMinutes) }
+    }
+
     static var lowGlucoseNotificationThreshold: Int {
         get { store.getInt(.lowGlucoseNotificationThreshold, defaultValue: 70) }
         set { store.setInt(newValue, forKey: .lowGlucoseNotificationThreshold) }
@@ -488,6 +599,21 @@ enum SharedData {
         set { store.setBool(newValue, forKey: .criticalLowGlucoseCriticalAlertsEnabled) }
     }
 
+    static var criticalLowGlucoseQuietHoursEnabled: Bool {
+        get { store.getBool(.criticalLowGlucoseQuietHoursEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .criticalLowGlucoseQuietHoursEnabled) }
+    }
+
+    static var criticalLowGlucoseQuietHoursStartMinutes: Int {
+        get { store.getInt(.criticalLowGlucoseQuietHoursStartMinutes, defaultValue: QuietHours.defaultStartMinutes) }
+        set { store.setInt(newValue, forKey: .criticalLowGlucoseQuietHoursStartMinutes) }
+    }
+
+    static var criticalLowGlucoseQuietHoursEndMinutes: Int {
+        get { store.getInt(.criticalLowGlucoseQuietHoursEndMinutes, defaultValue: QuietHours.defaultEndMinutes) }
+        set { store.setInt(newValue, forKey: .criticalLowGlucoseQuietHoursEndMinutes) }
+    }
+
     static var criticalLowGlucoseNotificationThreshold: Int {
         get { store.getInt(.criticalLowGlucoseNotificationThreshold, defaultValue: 55) }
         set { store.setInt(newValue, forKey: .criticalLowGlucoseNotificationThreshold) }
@@ -511,6 +637,21 @@ enum SharedData {
     static var highGlucoseCriticalAlertsEnabled: Bool {
         get { store.getBool(.highGlucoseCriticalAlertsEnabled, defaultValue: false) }
         set { store.setBool(newValue, forKey: .highGlucoseCriticalAlertsEnabled) }
+    }
+
+    static var highGlucoseQuietHoursEnabled: Bool {
+        get { store.getBool(.highGlucoseQuietHoursEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .highGlucoseQuietHoursEnabled) }
+    }
+
+    static var highGlucoseQuietHoursStartMinutes: Int {
+        get { store.getInt(.highGlucoseQuietHoursStartMinutes, defaultValue: QuietHours.defaultStartMinutes) }
+        set { store.setInt(newValue, forKey: .highGlucoseQuietHoursStartMinutes) }
+    }
+
+    static var highGlucoseQuietHoursEndMinutes: Int {
+        get { store.getInt(.highGlucoseQuietHoursEndMinutes, defaultValue: QuietHours.defaultEndMinutes) }
+        set { store.setInt(newValue, forKey: .highGlucoseQuietHoursEndMinutes) }
     }
 
     static var highGlucoseNotificationThreshold: Int {
@@ -545,6 +686,21 @@ enum SharedData {
     static var libre3SignalLossCritical: Bool {
         get { store.getBool(.libre3SignalLossCritical, defaultValue: false) }
         set { store.setBool(newValue, forKey: .libre3SignalLossCritical) }
+    }
+
+    static var libre3SignalLossQuietHoursEnabled: Bool {
+        get { store.getBool(.libre3SignalLossQuietHoursEnabled, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .libre3SignalLossQuietHoursEnabled) }
+    }
+
+    static var libre3SignalLossQuietHoursStartMinutes: Int {
+        get { store.getInt(.libre3SignalLossQuietHoursStartMinutes, defaultValue: QuietHours.defaultStartMinutes) }
+        set { store.setInt(newValue, forKey: .libre3SignalLossQuietHoursStartMinutes) }
+    }
+
+    static var libre3SignalLossQuietHoursEndMinutes: Int {
+        get { store.getInt(.libre3SignalLossQuietHoursEndMinutes, defaultValue: QuietHours.defaultEndMinutes) }
+        set { store.setInt(newValue, forKey: .libre3SignalLossQuietHoursEndMinutes) }
     }
     
     static var libreLinkUpScrapingLogbook: Bool {

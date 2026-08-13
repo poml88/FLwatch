@@ -6289,6 +6289,20 @@
         }
       }
     },
+    "Critical alerts can play a sound even when your iPhone is muted or a Focus is active." : {
+      "comment" : "Footer explaining the effect of critical notification delivery.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kritische Hinweise können auch dann einen Ton abspielen, wenn dein iPhone stummgeschaltet oder ein Fokus aktiv ist." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las alertas críticas pueden reproducir un sonido incluso si el iPhone está silenciado o hay un modo de concentración activo." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les alertes critiques peuvent émettre un son même si votre iPhone est en mode silencieux ou si un mode de concentration est actif." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Gli avvisi critici possono riprodurre un suono anche quando iPhone è in modalità silenziosa o è attiva una full immersion." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "重大な通知は、iPhoneが消音モードでも集中モードが有効でも音を鳴らせます。" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Kritieke meldingen kunnen geluid afspelen, ook wanneer je iPhone is gedempt of een focus actief is." } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Alerty krytyczne mogą odtwarzać dźwięk nawet wtedy, gdy iPhone jest wyciszony lub aktywny jest tryb skupienia." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Критические уведомления могут воспроизводить звук, даже если iPhone переведён в бесшумный режим или включён режим фокусирования." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "即使iPhone已静音或专注模式处于开启状态，关键警报也可以播放声音。" } }
+      }
+    },
     "Critical alerts can play a sound even when your iPhone is muted or a Focus is active. iOS will ask for permission the first time you enable one.\nFLwatch alerts are delivered on a best-effort basis and may be delayed or missed. Always confirm your glucose reading before taking action." : {
       "localizations" : {
         "de" : {
@@ -6347,7 +6361,22 @@
         }
       }
     },
+    "Critical alerts enabled" : {
+      "comment" : "Accessibility label for the Options-row icon showing that critical delivery is enabled for this alert.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kritische Hinweise aktiviert" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Alertas críticas activadas" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Alertes critiques activées" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvisi critici abilitati" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "重大な通知が有効" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Kritieke meldingen ingeschakeld" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Alerty krytyczne włączone" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Критические уведомления включены" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关键警报已启用" } }
+      }
+    },
     "Critically low glucose alerts" : {
+      "comment" : "Toggle label for notifications when glucose is below the configured critically-low threshold.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6403,6 +6432,20 @@
             "value" : "葡萄糖严重偏低提醒"
           }
         }
+      }
+    },
+    "Critically low glucose options" : {
+      "comment" : "Navigation title for settings that control critically-low-glucose notification delivery.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Optionen für kritisch niedrige Glukose" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Opciones de glucosa críticamente baja" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Options de glycémie très basse" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Opzioni glucosio criticamente basso" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "重度の低グルコースのオプション" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Opties voor kritiek lage glucose" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Opcje krytycznie niskiego poziomu glukozy" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Параметры критически низкой глюкозы" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "葡萄糖严重偏低选项" } }
       }
     },
     "Current glucose & IOB" : {
@@ -6585,6 +6628,20 @@
             "value" : "当前传感器原始值"
           }
         }
+      }
+    },
+    "Currently muted by Do Not Disturb" : {
+      "comment" : "Accessibility label for an icon showing that this alert is currently inside its configured Do Not Disturb window.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Derzeit durch „Nicht stören“ stummgeschaltet" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Silenciada actualmente por No molestar" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Actuellement désactivée par Ne pas déranger" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Attualmente silenziato da Non disturbare" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "現在、おやすみモードで消音中" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Momenteel gedempt door Niet storen" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Obecnie wyciszony przez tryb Nie przeszkadzać" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сейчас отключено режимом «Не беспокоить»" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前已被勿扰模式静音" } }
       }
     },
     "Curve" : {
@@ -7811,6 +7868,34 @@
         }
       }
     },
+    "Do Not Disturb" : {
+      "comment" : "Section title for an alert's daily suppression window.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht stören" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No molestar" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ne pas déranger" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non disturbare" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "おやすみモード" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Niet storen" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Nie przeszkadzać" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не беспокоить" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "勿扰模式" } }
+      }
+    },
+    "Do Not Disturb is inactive when From and To are the same." : {
+      "comment" : "Caption explaining that equal Do Not Disturb start and end times create a zero-length interval and do not suppress alerts.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "„Nicht stören“ ist inaktiv, wenn „Von“ und „Bis“ identisch sind." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No molestar está inactivo cuando Desde y Hasta coinciden." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ne pas déranger est inactif lorsque De et À sont identiques." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non disturbare è inattivo quando Da e A coincidono." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "開始時刻と終了時刻が同じ場合、おやすみモードは無効です。" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Niet storen is inactief wanneer Van en Tot gelijk zijn." } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Tryb Nie przeszkadzać jest nieaktywny, gdy wartości Od i Do są takie same." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Режим «Не беспокоить» неактивен, если время начала и окончания совпадает." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开始和结束时间相同时，勿扰模式不会启用。" } }
+      }
+    },
     "Do you want to add %.1f units?" : {
       "localizations" : {
         "de" : {
@@ -7986,6 +8071,7 @@
       }
     },
     "Done" : {
+      "comment" : "Button that closes an alert Options sheet and applies its Do Not Disturb settings.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8218,6 +8304,20 @@
             "value" : "启用蓝牙心跳"
           }
         }
+      }
+    },
+    "Enable Do Not Disturb" : {
+      "comment" : "Toggle that enables a daily period during which this notification type is suppressed.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "„Nicht stören“ aktivieren" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Activar No molestar" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Activer Ne pas déranger" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Abilita Non disturbare" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "おやすみモードを有効にする" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Niet storen inschakelen" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Włącz tryb Nie przeszkadzać" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Включить режим «Не беспокоить»" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启用勿扰模式" } }
       }
     },
     "Enable Live Activities" : {
@@ -9917,6 +10017,20 @@
         }
       }
     },
+    "From" : {
+      "comment" : "Label for the start time of an alert's daily Do Not Disturb window.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Von" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desde" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "De" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Da" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "開始" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Van" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Od" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "С" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开始" } }
+      }
+    },
     "g" : {
 
     },
@@ -11002,6 +11116,7 @@
 
     },
     "High glucose alerts" : {
+      "comment" : "Toggle label for notifications when glucose is above the configured high threshold.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -11057,6 +11172,20 @@
             "value" : "高血糖提醒"
           }
         }
+      }
+    },
+    "High glucose options" : {
+      "comment" : "Navigation title for settings that control high-glucose notification delivery.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Optionen für hohe Glukose" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Opciones de glucosa alta" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Options de glycémie élevée" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Opzioni glucosio alto" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "高グルコースのオプション" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Opties voor hoge glucose" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Opcje wysokiego poziomu glukozy" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Параметры высокой глюкозы" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "葡萄糖偏高选项" } }
       }
     },
     "Hold sensor to phone to pair" : {
@@ -13229,6 +13358,7 @@
       }
     },
     "Low glucose alerts" : {
+      "comment" : "Toggle label for notifications when glucose is below the configured low threshold.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -13284,6 +13414,20 @@
             "value" : "低血糖提醒"
           }
         }
+      }
+    },
+    "Low glucose options" : {
+      "comment" : "Navigation title for settings that control low-glucose notification delivery.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Optionen für niedrige Glukose" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Opciones de glucosa baja" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Options de glycémie basse" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Opzioni glucosio basso" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "低グルコースのオプション" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Opties voor lage glucose" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Opcje niskiego poziomu glukozy" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Параметры низкой глюкозы" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "葡萄糖偏低选项" } }
       }
     },
     "Lower limit" : {
@@ -15369,6 +15513,20 @@
             "value" : "打开“健康”App，轻点你的头像，然后选择“App”›“FLwatch”，并允许写入。"
           }
         }
+      }
+    },
+    "Options" : {
+      "comment" : "Button that opens critical-delivery and Do Not Disturb settings for one notification type.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Optionen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Opciones" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Options" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Opzioni" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "オプション" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Opties" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Opcje" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Параметры" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选项" } }
       }
     },
     "or: Time since injection" : {
@@ -20756,6 +20914,7 @@
       }
     },
     "Signal loss alert" : {
+      "comment" : "Toggle label for a notification when the phone has stopped receiving sensor readings.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -20811,6 +20970,20 @@
             "value" : "信号丢失警报"
           }
         }
+      }
+    },
+    "Signal loss options" : {
+      "comment" : "Navigation title for settings that control signal-loss notification delivery.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Optionen bei Signalverlust" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Opciones de pérdida de señal" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Options de perte du signal" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Opzioni perdita del segnale" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "信号消失のオプション" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Opties voor signaalverlies" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Opcje utraty sygnału" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Параметры потери сигнала" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "信号丢失选项" } }
       }
     },
     "Siri integration" : {
@@ -22869,6 +23042,20 @@
       "comment" : "Error message displayed when the Nightscout token lacks the required write permissions.",
       "isCommentAutoGenerated" : true
     },
+    "This alert will not be delivered during the selected window, even when critical alerts are enabled." : {
+      "comment" : "Footer explaining that an alert's app-specific Do Not Disturb window also suppresses critical delivery.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dieser Hinweis wird im ausgewählten Zeitraum nicht zugestellt, auch wenn kritische Hinweise aktiviert sind." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esta alerta no se enviará durante el intervalo seleccionado, aunque las alertas críticas estén activadas." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cette alerte ne sera pas envoyée pendant la période sélectionnée, même si les alertes critiques sont activées." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Questo avviso non verrà inviato durante l’intervallo selezionato, anche se gli avvisi critici sono abilitati." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "重大な通知が有効でも、選択した時間帯にはこの通知は配信されません。" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Deze melding wordt tijdens de geselecteerde periode niet afgeleverd, ook niet wanneer kritieke meldingen zijn ingeschakeld." } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Ten alert nie zostanie dostarczony w wybranym przedziale czasu, nawet jeśli alerty krytyczne są włączone." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Это уведомление не будет доставлено в выбранный период, даже если критические уведомления включены." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "即使已启用关键警报，此警报也不会在所选时段内送达。" } }
+      }
+    },
     "This discards %lld unresolved upload(s) or deletion(s) for this server. The URL, token, and enable setting remain saved." : {
       "comment" : "A message that appears when the user is about to forget their Nightscout server.",
       "isCommentAutoGenerated" : true
@@ -23595,6 +23782,20 @@
         }
       }
     },
+    "To" : {
+      "comment" : "Label for the end time of an alert's daily Do Not Disturb window.",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bis" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Hasta" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "À" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "A" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "終了" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Tot" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Do" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "До" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "结束" } }
+      }
+    },
     "To discover your sensor transmitter, first fully close the LibreLink or Libre 3 app. After the transmitter connects in FLwatch, you can open the app again." : {
       "localizations" : {
         "de" : {
@@ -24251,6 +24452,7 @@
       }
     },
     "Use critical alerts" : {
+      "comment" : "Toggle that makes this notification type use iOS critical-alert delivery.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
