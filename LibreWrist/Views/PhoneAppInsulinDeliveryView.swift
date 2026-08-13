@@ -77,12 +77,52 @@ struct PhoneAppInsulinDeliveryView: View {
     
     @FocusState private var focused: Field?
     
-    private let keyboardToolbarClearance: CGFloat = 56
     private let manualEntryTopID = "manualEntryTop"
 
-    
+    // Accessory bar for the numeric keypads, shown above the keyboard while a field
+    // is focused.
+    //
+    // Deliberately NOT `ToolbarItemGroup(placement: .keyboard)`. That toolbar lives
+    // outside our view hierarchy, which caused both bugs we hit with it: it reserves
+    // no layout space (the focused field ended up hidden behind it), and SwiftUI kept
+    // dropping it after a few focus changes without ever rebuilding it.
+    //
+    // As a `.safeAreaInset` this is an ordinary view driven by our own `@FocusState`,
+    // so nothing can elide it, and the inset it creates is exactly what keeps the
+    // focused field clear of it. Keyboard avoidance raises the bottom safe area, so
+    // the bar rides directly above the keyboard.
+    private var keyboardAccessoryBar: some View {
+        HStack(spacing: 16) {
+            Button(action: focusPrevious) {
+                Image(systemName: "chevron.left")
+            }
+            .disabled(focused == .carbsPer100g)
+
+            Button(action: focusNext) {
+                Image(systemName: "chevron.right")
+            }
+            .disabled(focused == .icrGramsPerUnit)
+
+            Spacer()
+
+            Button("Clear") { clearFocused() }
+
+            Spacer()
+
+            Button("Done") { focused = nil }
+                .fontWeight(.semibold)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
+        .background(.bar)
+        .overlay(alignment: .top) { Divider() }
+    }
+
     var body: some View {
-        NavigationStack(path: $navigationPath) { // necessary for the toolbar of the numeric keyboard
+        // The keypad toolbar used to be the reason for this NavigationStack; it is now a
+        // plain view (`keyboardAccessoryBar`), so the stack only provides the Form's
+        // navigation context.
+        NavigationStack(path: $navigationPath) {
             VStack {
                 Button { dismiss() } label: { Text("Dismiss") }
                     .buttonStyle(.borderedProminent)
@@ -362,59 +402,16 @@ struct PhoneAppInsulinDeliveryView: View {
                             }
                         }
                     }
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
-                        Color.clear
-                            .frame(height: focused == nil ? 0 : keyboardToolbarClearance)
-                            .allowsHitTesting(false)
-                    }
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Button(action: focusPrevious) {
-                                Image(systemName: "chevron.left")
-                            }
-                            .disabled(focused == nil || focused == .carbsPer100g)
-                            .opacity(focused == nil ? 0.35 : 1)
-
-                            Button(action: focusNext) {
-                                Image(systemName: "chevron.right")
-                            }
-                            .disabled(focused == nil || focused == .icrGramsPerUnit)
-                            .opacity(focused == nil ? 0.35 : 1)
-
-                            Spacer()
-
-                            Button("Clear") { clearFocused() }
-                                .disabled(focused == nil)
-                                .opacity(focused == nil ? 0.35 : 1)
-
-                            Spacer()
-
-                            Button("Done") {
-                                focused = nil
-                            }
-                            .disabled(focused == nil)
-                            .opacity(focused == nil ? 0.35 : 1)
+                    // `spacing` is the gap between the form's content and the bar. It is not
+                    // cosmetic: focusing a field scrolls it only just far enough to clear the
+                    // safe area, so without this the field sits flush against the bar and is
+                    // hard to read while typing. Tune this rather than the bar's own padding,
+                    // which would only make the bar taller.
+                    .safeAreaInset(edge: .bottom, spacing: 12) {
+                        if focused != nil {
+                            keyboardAccessoryBar
                         }
                     }
-//                .toolbar {
-//                    ToolbarItemGroup(placement: .keyboard) {
-//                        
-//                        
-//                        Button("Clear") { clearFocused() }
-//                        Spacer()
-//                        Button("Done") {
-//                            // Preferred: dismiss via FocusState
-//                            focused = nil
-//                            
-//                            // Fallback: resign first responder via UIKit
-//                            UIApplication.shared.sendAction(
-//                                #selector(UIResponder.resignFirstResponder),
-//                                to: nil, from: nil, for: nil
-//                            )
-//                        }
-//                        
-//                    }
-//                }
                     .scrollDismissesKeyboard(.interactively)
                 }
                 
@@ -479,15 +476,6 @@ struct PhoneAppInsulinDeliveryView: View {
                 }
                 
             }
-            //        .toolbar {
-            //            // Keyboard toolbar to dismiss number pads
-            //            ToolbarItemGroup(placement: .keyboard) {
-            //                Spacer()
-            //                Button("Done") {
-            //                    // Dismiss keyboard
-            //                 }
-            //            }
-            //        }
             .onAppear {
                 insulinDeliveryHistorySingleton.read()
                 if icrGramsPerUnit <= 0 { icrGramsPerUnit = 10 }
