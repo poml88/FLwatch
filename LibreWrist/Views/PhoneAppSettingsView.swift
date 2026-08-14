@@ -17,18 +17,20 @@ struct PhoneAppSettingsView: View {
     )
 
     private enum NightscoutSettingsStatus {
+        case checking(String)
         case success(String)
         case failure(String)
 
         var message: String {
             switch self {
-            case .success(let message), .failure(let message):
+            case .checking(let message), .success(let message), .failure(let message):
                 return message
             }
         }
 
         var systemImage: String {
             switch self {
+            case .checking: return "hourglass"
             case .success: return "checkmark.circle.fill"
             case .failure: return "exclamationmark.triangle.fill"
             }
@@ -36,6 +38,7 @@ struct PhoneAppSettingsView: View {
 
         var color: Color {
             switch self {
+            case .checking: return .secondary
             case .success: return .green
             case .failure: return .red
             }
@@ -94,9 +97,8 @@ struct PhoneAppSettingsView: View {
     @State private var nightscoutAccessToken = ""
     @State private var nightscoutSettingsStatus: NightscoutSettingsStatus?
     @State private var isTestingNightscoutConnection = false
-    @State private var isShowingForgetNightscoutConfirmation = false
-    @State private var unresolvedNightscoutItemCount = 0
-    @State private var pendingForgetNightscoutBaseURL: String?
+    @State private var isShowingRemoveNightscoutConfirmation = false
+    @State private var queuedNightscoutInsulinChangeCount = 0
     @State private var hasLoadedNightscoutToken = false
     @State private var nightscoutUploadStatus = NightscoutUploadManager.shared.status
     @StateObject private var bluetoothHeartbeatManager = BluetoothHeartbeatManager.shared
@@ -173,6 +175,19 @@ struct PhoneAppSettingsView: View {
         try? NightscoutBaseURL(normalizing: nightscoutURL).absoluteString
     }
 
+    private var nightscoutRemovalConfirmationMessage: String {
+        let removalSummary = String(
+            localized: "The server URL and token will be removed from this iPhone. Data already in Nightscout will not be deleted.",
+            comment: "Explanation shown before removing the Nightscout configuration."
+        )
+        guard queuedNightscoutInsulinChangeCount > 0 else { return removalSummary }
+        let queuedChangesWarning = String(
+            localized: "\(queuedNightscoutInsulinChangeCount) queued insulin changes will be discarded.",
+            comment: "Warning before Nightscout removal. The number is a count of queued insulin uploads or deletions."
+        )
+        return "\(removalSummary) \(queuedChangesWarning)"
+    }
+
     private var nightscoutURLBinding: Binding<String> {
         Binding(
             get: { nightscoutURL },
@@ -199,40 +214,58 @@ struct PhoneAppSettingsView: View {
     private var nightscoutUploadStatusPresentation: (message: String, systemImage: String, color: Color) {
         guard nightscoutUploadEnabled else {
             return (
-                String(localized: "Automatic uploads are disabled."),
+                String(
+                    localized: "Automatic uploads are disabled.",
+                    comment: "Nightscout status shown when automatic uploads are switched off."
+                ),
                 "pause.circle",
                 .secondary
             )
         }
-        guard cgmProviderKind.isDirectBLE else {
-            return (
-                String(localized: "Upload is inactive while a cloud CGM provider is selected."),
-                "pause.circle",
-                .secondary
-            )
-        }
-
         switch nightscoutUploadStatus.activity {
         case .ready:
             if nightscoutUploadStatus.lastSuccessfulUploadAt == nil {
                 return (
-                    String(localized: "Waiting for the first glucose upload."),
+                    String(
+                        localized: "Waiting for the first glucose upload.",
+                        comment: "Nightscout status before the first glucose reading has uploaded successfully."
+                    ),
                     "clock",
                     .secondary
                 )
             }
-            return (String(localized: "Uploads ready."), "checkmark.circle.fill", .green)
+            return (
+                String(
+                    localized: "Uploads are up to date.",
+                    comment: "Nightscout status indicating that all currently queued data has uploaded."
+                ),
+                "checkmark.circle.fill",
+                .green
+            )
         case .retrying:
-            return (String(localized: "Retrying Nightscout now."), "arrow.clockwise.circle", .orange)
+            return (
+                String(
+                    localized: "Retrying upload…",
+                    comment: "Nightscout status shown while an upload retry is running."
+                ),
+                "arrow.clockwise.circle",
+                .orange
+            )
         case .retryDeferred:
             return (
-                String(localized: "Upload waiting to retry after a temporary network or server error."),
+                String(
+                    localized: "Waiting to retry after a network or server error.",
+                    comment: "Nightscout status shown while an upload waits for another retry."
+                ),
                 "clock.arrow.circlepath",
                 .orange
             )
         case .documentRejected:
             return (
-                String(localized: "Nightscout rejected one glucose document; other readings remain eligible."),
+                String(
+                    localized: "Nightscout rejected one glucose or insulin entry. Everything else keeps uploading.",
+                    comment: "Nightscout status for one rejected data entry that does not stop other uploads."
+                ),
                 "exclamationmark.triangle.fill",
                 .red
             )
@@ -240,17 +273,32 @@ struct PhoneAppSettingsView: View {
             let reasonText: String
             switch reason {
             case .credentialsRejected:
-                reasonText = String(localized: "Nightscout rejected the access token")
+                reasonText = String(
+                    localized: "Nightscout rejected the access token",
+                    comment: "Reason fragment in a paused Nightscout upload status."
+                )
             case .endpointUnavailable:
-                reasonText = String(localized: "no compatible Nightscout API v3 endpoint was found")
+                reasonText = String(
+                    localized: "no compatible Nightscout API v3 endpoint was found",
+                    comment: "Reason fragment in a paused Nightscout upload status."
+                )
             case .authorizationUnavailable:
-                reasonText = String(localized: "Nightscout authorization could not be established")
+                reasonText = String(
+                    localized: "Nightscout authorization could not be established",
+                    comment: "Reason fragment in a paused Nightscout upload status."
+                )
             case .invalidServerURL:
-                reasonText = String(localized: "the saved Nightscout server URL is invalid")
+                reasonText = String(
+                    localized: "the saved Nightscout server URL is invalid",
+                    comment: "Reason fragment in a paused Nightscout upload status."
+                )
             }
             let retryTime = until.formatted(date: .omitted, time: .shortened)
             return (
-                String(localized: "Uploads paused: \(reasonText). Next automatic probe at \(retryTime)."),
+                String(
+                    localized: "Uploads paused: \(reasonText). FLwatch tries again at \(retryTime).",
+                    comment: "Nightscout status explaining why uploads are paused and when FLwatch will retry."
+                ),
                 "exclamationmark.octagon.fill",
                 .red
             )
@@ -259,10 +307,9 @@ struct PhoneAppSettingsView: View {
 
     @ViewBuilder
     private var nightscoutSettingsSection: some View {
-        if developerModeEnabled {
+        if developerModeEnabled && cgmProviderKind == .libre3BLE {
             Section {
                 Toggle(
-                    "Enable Nightscout upload",
                     isOn: Binding(
                         get: { nightscoutUploadEnabled },
                         set: { newValue in
@@ -273,35 +320,61 @@ struct PhoneAppSettingsView: View {
                             nightscoutUploadEnabled = false
                         }
                     )
-                )
+                ) {
+                    Text(
+                        "Enable Nightscout upload",
+                        comment: "Toggle that enables automatic uploads to the user's Nightscout server."
+                    )
+                }
                 .disabled(isTestingNightscoutConnection)
 
                 TextField(
-                    "Server URL or token link",
                     text: nightscoutURLBinding,
-                    prompt: Text("https://nightscout.example.com")
-                )
+                    prompt: Text(verbatim: "https://nightscout.example.com")
+                ) {
+                    Text(
+                        "Server URL or token link",
+                        comment: "Label for the Nightscout server URL or complete token-link field."
+                    )
+                }
                 .textInputAutocapitalization(.never)
                 .keyboardType(.URL)
                 .autocorrectionDisabled()
+                .submitLabel(.done)
+                .disabled(isTestingNightscoutConnection)
 
                 SecureField(
-                    "Admin access token",
                     text: nightscoutAccessTokenBinding
-                )
+                ) {
+                    Text(
+                        "Admin access token",
+                        comment: "Label for the secret Nightscout token that grants upload permission."
+                    )
+                }
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .submitLabel(.done)
+                .disabled(isTestingNightscoutConnection)
 
-                Text("Paste the complete Nightscout token link, or enter the server URL and admin access token separately.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Paste a complete Nightscout token link (\(Text(verbatim: "https://nightscout.example.net/?token=1234567890abcdef"))), or enter the server URL (\(Text(verbatim: "nightscout.example.net"))) and admin access token (\(Text(verbatim: "1234567890abcdef"))) separately.",
+                    comment: "Instructions for entering Nightscout connection credentials, with examples of a complete token link, server URL, and token."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .textSelection(.enabled)
 
                 if let normalizedNightscoutURL {
-                    LabeledContent("Server to test") {
+                    LabeledContent {
                         Text(normalizedNightscoutURL)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.trailing)
                             .textSelection(.enabled)
+                    } label: {
+                        Text(
+                            "Server",
+                            comment: "Label for the normalized Nightscout server URL that will be tested."
+                        )
                     }
                 }
 
@@ -309,7 +382,10 @@ struct PhoneAppSettingsView: View {
                     testNightscoutConnection()
                 } label: {
                     HStack {
-                        Text("Test connection")
+                        Text(
+                            "Test connection",
+                            comment: "Button that tests the entered Nightscout server and token."
+                        )
                         Spacer()
                         if isTestingNightscoutConnection {
                             ProgressView()
@@ -328,10 +404,15 @@ struct PhoneAppSettingsView: View {
                 }
 
                 if let lastSuccessfulUploadAt = nightscoutUploadStatus.lastSuccessfulUploadAt {
-                    LabeledContent("Last successful upload") {
-                        Text(lastSuccessfulUploadAt.formatted(date: .abbreviated, time: .standard))
+                    LabeledContent {
+                        Text(lastSuccessfulUploadAt.formatted(date: .abbreviated, time: .shortened))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.trailing)
+                    } label: {
+                        Text(
+                            "Last successful upload",
+                            comment: "Label for the date and time of the last successful Nightscout upload."
+                        )
                     }
                 }
 
@@ -342,30 +423,51 @@ struct PhoneAppSettingsView: View {
                 .font(.callout)
                 .foregroundStyle(nightscoutUploadStatusPresentation.color)
 
-                Button("Forget server", role: .destructive) {
-                    prepareToForgetNightscoutServer()
+                Button(role: .destructive) {
+                    prepareToRemoveNightscoutConfiguration()
+                } label: {
+                    Text(
+                        "Remove Nightscout configuration",
+                        comment: "Destructive button that removes the saved Nightscout server and token."
+                    )
                 }
                 .disabled(isTestingNightscoutConnection)
                 .confirmationDialog(
-                    "Forget Nightscout server?",
-                    isPresented: $isShowingForgetNightscoutConfirmation,
+                    String(
+                        localized: "Remove Nightscout configuration?",
+                        comment: "Title of the confirmation dialog for removing Nightscout settings."
+                    ),
+                    isPresented: $isShowingRemoveNightscoutConfirmation,
                     titleVisibility: .visible
                 ) {
-                    Button("Forget server", role: .destructive) {
-                        forgetNightscoutServer()
+                    Button(role: .destructive) {
+                        removeNightscoutConfiguration()
+                    } label: {
+                        Text(
+                            "Remove",
+                            comment: "Destructive confirmation button that removes Nightscout settings."
+                        )
                     }
-                    Button("Cancel", role: .cancel) {
-                        pendingForgetNightscoutBaseURL = nil
+                    Button(role: .cancel) {
+                    } label: {
+                        Text(
+                            "Cancel",
+                            comment: "Button that cancels removal of the Nightscout configuration."
+                        )
                     }
                 } message: {
-                    Text(
-                        "This discards \(unresolvedNightscoutItemCount) unresolved upload(s) or deletion(s) for this server. The URL, token, and enable setting remain saved."
-                    )
+                    Text(verbatim: nightscoutRemovalConfirmationMessage)
                 }
             } header: {
-                Text("Nightscout")
+                Text(
+                    "Nightscout",
+                    comment: "Title of the Nightscout upload settings section."
+                )
             } footer: {
-                Text("Developer preview. A configuration is saved only after a successful connection test. Glucose from direct-Bluetooth CGM providers is eligible; insulin upload is not wired yet.")
+                Text(
+                    "Uploads glucose and insulin to your own Nightscout server. The server URL and token are saved only after a successful connection test.",
+                    comment: "Explains what Nightscout upload sends and when the server credentials are saved."
+                )
             }
             .task {
                 loadNightscoutTokenIfNeeded()
@@ -945,7 +1047,10 @@ struct PhoneAppSettingsView: View {
             hasLoadedNightscoutToken = true
         } catch {
             nightscoutSettingsStatus = .failure(
-                String(localized: "The Nightscout token could not be read from secure storage.")
+                String(
+                    localized: "The Nightscout token could not be read from secure storage.",
+                    comment: "Nightscout settings error when the saved token cannot be read from Keychain."
+                )
             )
         }
     }
@@ -970,7 +1075,12 @@ struct PhoneAppSettingsView: View {
             }
             return
         }
-        nightscoutSettingsStatus = nil
+        nightscoutSettingsStatus = .checking(
+            String(
+                localized: "Checking the connection…",
+                comment: "Nightscout status shown while testing the entered server and token."
+            )
+        )
         isTestingNightscoutConnection = true
 
         Task { @MainActor in
@@ -1001,28 +1111,40 @@ struct PhoneAppSettingsView: View {
                     }
                 }
                 nightscoutSettingsStatus = .success(
-                    String(localized: "Connection successful. The token grants all required write permissions.")
+                    String(
+                        localized: "Connection successful. The token grants all required write permissions.",
+                        comment: "Nightscout connection-test success message."
+                    )
                 )
             case .unreachable:
                 if enableAfterSuccess {
                     nightscoutUploadEnabled = false
                 }
                 nightscoutSettingsStatus = .failure(
-                    String(localized: "Nightscout is unavailable. The saved upload configuration was not changed.")
+                    String(
+                        localized: "Nightscout is unavailable. The saved upload configuration was not changed.",
+                        comment: "Nightscout connection-test error when the server cannot be reached."
+                    )
                 )
             case .notV3Server:
                 if enableAfterSuccess {
                     nightscoutUploadEnabled = false
                 }
                 nightscoutSettingsStatus = .failure(
-                    String(localized: "No compatible Nightscout API v3 endpoint was found. The saved upload configuration was not changed.")
+                    String(
+                        localized: "No compatible Nightscout API v3 endpoint was found. The saved upload configuration was not changed.",
+                        comment: "Nightscout connection-test error when the server lacks the required API."
+                    )
                 )
             case .tokenLacksWrites:
                 if enableAfterSuccess {
                     nightscoutUploadEnabled = false
                 }
                 nightscoutSettingsStatus = .failure(
-                    String(localized: "The token lacks the required write permissions. The saved upload configuration was not changed.")
+                    String(
+                        localized: "The token lacks the required write permissions. The saved upload configuration was not changed.",
+                        comment: "Nightscout connection-test error when the token cannot upload all required data."
+                    )
                 )
             }
         }
@@ -1032,13 +1154,19 @@ struct PhoneAppSettingsView: View {
         let trimmedToken = nightscoutAccessToken.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let baseURL = try? NightscoutBaseURL(normalizing: nightscoutURL) else {
             nightscoutSettingsStatus = .failure(
-                String(localized: "Enter a valid HTTPS Nightscout server URL.")
+                String(
+                    localized: "Enter a valid HTTPS Nightscout server URL.",
+                    comment: "Nightscout validation error for a missing or invalid server URL."
+                )
             )
             return nil
         }
         guard !trimmedToken.isEmpty else {
             nightscoutSettingsStatus = .failure(
-                String(localized: "Enter a Nightscout admin access token.")
+                String(
+                    localized: "Enter a Nightscout admin access token.",
+                    comment: "Nightscout validation error for a missing upload token."
+                )
             )
             return nil
         }
@@ -1053,7 +1181,10 @@ struct PhoneAppSettingsView: View {
             try NightscoutSecretKeychain.save(configuration.accessToken)
         } catch {
             nightscoutSettingsStatus = .failure(
-                String(localized: "The Nightscout token could not be saved securely.")
+                String(
+                    localized: "The Nightscout token could not be saved securely.",
+                    comment: "Nightscout settings error when the token cannot be saved to Keychain."
+                )
             )
             return false
         }
@@ -1064,41 +1195,45 @@ struct PhoneAppSettingsView: View {
         return true
     }
 
-    private func prepareToForgetNightscoutServer() {
-        guard let baseURL = try? NightscoutBaseURL(normalizing: nightscoutURL) else {
-            nightscoutSettingsStatus = .failure(
-                String(localized: "Enter a valid HTTPS Nightscout server URL first.")
-            )
+    private func prepareToRemoveNightscoutConfiguration() {
+        guard let baseURL = try? NightscoutBaseURL(normalizing: SharedData.nightscoutURL) else {
+            queuedNightscoutInsulinChangeCount = 0
+            isShowingRemoveNightscoutConfirmation = true
             return
         }
         do {
-            unresolvedNightscoutItemCount = try NightscoutUploadManager.shared.unresolvedCount(
+            queuedNightscoutInsulinChangeCount = try NightscoutUploadManager.shared.unresolvedCount(
                 baseURLString: baseURL.absoluteString
             )
         } catch {
-            pendingForgetNightscoutBaseURL = nil
             nightscoutSettingsStatus = .failure(
-                String(localized: "Nightscout upload state could not be read, so nothing was discarded.")
+                String(
+                    localized: "Nightscout upload state could not be read, so nothing was removed.",
+                    comment: "Nightscout removal error when the queued upload count cannot be read."
+                )
             )
             return
         }
-        pendingForgetNightscoutBaseURL = baseURL.absoluteString
-        isShowingForgetNightscoutConfirmation = true
+        isShowingRemoveNightscoutConfirmation = true
     }
 
-    private func forgetNightscoutServer() {
-        guard let baseURLString = pendingForgetNightscoutBaseURL else { return }
-        pendingForgetNightscoutBaseURL = nil
+    private func removeNightscoutConfiguration() {
         do {
-            let discardedCount = try NightscoutUploadManager.shared.forgetServer(
-                baseURLString: baseURLString
-            )
+            try NightscoutUploadManager.shared.removeConfiguration()
+            nightscoutURL = ""
+            nightscoutAccessToken = ""
             nightscoutSettingsStatus = .success(
-                String(localized: "Forgot Nightscout upload state for \(discardedCount) unresolved item(s).")
+                String(
+                    localized: "Nightscout configuration removed.",
+                    comment: "Success message after removing the saved Nightscout server and token."
+                )
             )
         } catch {
             nightscoutSettingsStatus = .failure(
-                String(localized: "Nightscout upload state could not be removed.")
+                String(
+                    localized: "The Nightscout configuration could not be removed.",
+                    comment: "Error shown when removing the saved Nightscout configuration fails."
+                )
             )
         }
     }

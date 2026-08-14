@@ -362,6 +362,90 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(fixture.outbox.persistenceWriteCount, 1)
     }
 
+    func testNightscoutPrunesStalePresentItemsButKeepsBoundaryAndTombstone() throws {
+        let fixture = try makeNightscoutOutboxFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let absentNamespace = try NightscoutBaseURL(normalizing: "https://other.example.com")
+        let now = Date(timeIntervalSince1970: 1_786_115_812)
+        let retention = InsulinDeliveryHistorySingleton.historyRetentionInterval
+        let boundaryDate = now.addingTimeInterval(-retention)
+        let staleDate = boundaryDate.addingTimeInterval(-1)
+
+        let staleViaPresent = nightscoutTreatment(identifier: UUID(), eventDate: staleDate)
+        let retainedViaPresent = nightscoutTreatment(identifier: UUID(), eventDate: boundaryDate)
+        let tombstoneUpload = nightscoutTreatment(identifier: UUID(), eventDate: staleDate)
+        try fixture.outbox.recordPresent(
+            [staleViaPresent, tombstoneUpload],
+            namespace: fixture.namespace,
+            now: boundaryDate
+        )
+        let pendingTombstone = try XCTUnwrap(fixture.outbox.insulinItem(
+            identifier: tombstoneUpload.identifier,
+            namespace: fixture.namespace
+        ))
+        _ = try fixture.outbox.markUploadAttemptStarted(
+            identifier: tombstoneUpload.identifier,
+            revision: pendingTombstone.revision,
+            namespace: fixture.namespace,
+            now: boundaryDate
+        )
+        XCTAssertEqual(
+            try fixture.outbox.recordAbsent(
+                identifier: tombstoneUpload.identifier,
+                namespace: fixture.namespace,
+                now: boundaryDate
+            ),
+            .queuedDeletion
+        )
+
+        try fixture.outbox.recordPresent(
+            retainedViaPresent,
+            namespace: fixture.namespace,
+            now: now
+        )
+
+        XCTAssertNil(fixture.outbox.insulinItem(
+            identifier: staleViaPresent.identifier,
+            namespace: fixture.namespace
+        ))
+        XCTAssertNotNil(fixture.outbox.insulinItem(
+            identifier: retainedViaPresent.identifier,
+            namespace: fixture.namespace
+        ))
+        let retainedTombstone = try XCTUnwrap(fixture.outbox.insulinItem(
+            identifier: tombstoneUpload.identifier,
+            namespace: fixture.namespace
+        ))
+        guard case .absent = retainedTombstone.desiredState else {
+            return XCTFail("Expected pruning to retain the deletion tombstone")
+        }
+
+        let staleViaAbsent = nightscoutTreatment(identifier: UUID(), eventDate: staleDate)
+        let retainedViaAbsent = nightscoutTreatment(identifier: UUID(), eventDate: boundaryDate)
+        try fixture.outbox.recordPresent(
+            [staleViaAbsent, retainedViaAbsent],
+            namespace: absentNamespace,
+            now: boundaryDate
+        )
+
+        XCTAssertEqual(
+            try fixture.outbox.recordAbsent(
+                identifier: UUID(),
+                namespace: absentNamespace,
+                now: now
+            ),
+            .unchanged
+        )
+        XCTAssertNil(fixture.outbox.insulinItem(
+            identifier: staleViaAbsent.identifier,
+            namespace: absentNamespace
+        ))
+        XCTAssertNotNil(fixture.outbox.insulinItem(
+            identifier: retainedViaAbsent.identifier,
+            namespace: absentNamespace
+        ))
+    }
+
     func testNightscoutDeleteAfterTreatmentPUTStartsKeepsTombstone() throws {
         let fixture = try makeNightscoutOutboxFixture()
         defer { try? FileManager.default.removeItem(at: fixture.directory) }

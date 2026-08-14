@@ -403,6 +403,7 @@ final class NightscoutOutbox {
         let previousSnapshot = snapshot
         var state = namespaceState(for: namespace)
         Self.pruneTreatmentRoutes(in: &state, now: now)
+        Self.pruneUnresolvedInsulinItems(in: &state, now: now)
         let oldestManageableEventDate = now.addingTimeInterval(
             -InsulinDeliveryHistorySingleton.historyRetentionInterval
         )
@@ -442,6 +443,7 @@ final class NightscoutOutbox {
         let previousSnapshot = snapshot
         var state = namespaceState(for: namespace)
         Self.pruneTreatmentRoutes(in: &state, now: now)
+        Self.pruneUnresolvedInsulinItems(in: &state, now: now)
         let existing = state.insulinItems[key]
 
         if let existing {
@@ -655,6 +657,28 @@ final class NightscoutOutbox {
         let cutoff = now.addingTimeInterval(-treatmentRouteRetention)
         state.treatmentRoutes = state.treatmentRoutes.filter { _, route in
             route.confirmedPayload.eventDate >= cutoff
+        }
+    }
+
+    private static func pruneUnresolvedInsulinItems(
+        in state: inout NamespaceState,
+        now: Date
+    ) {
+        let cutoff = now.addingTimeInterval(
+            -InsulinDeliveryHistorySingleton.historyRetentionInterval
+        )
+        state.insulinItems = state.insulinItems.filter { _, item in
+            switch item.desiredState {
+            case .present(let payload, _):
+                // Once a dose has left local history, the user can no longer
+                // delete it. This also accepts losing the delete path for an
+                // attempted PUT without a confirmed route, matching the policy
+                // that prevents newly queueing equally old doses above.
+                return payload.eventDate >= cutoff
+            case .absent:
+                // A DELETE remains durable until Nightscout confirms absence.
+                return true
+            }
         }
     }
 }
