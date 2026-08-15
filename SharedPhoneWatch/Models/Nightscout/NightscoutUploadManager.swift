@@ -90,7 +90,14 @@ final class NightscoutUploadManager {
     )
     private static let circuitHalfOpenInterval: TimeInterval = 30 * 60
     private static let maximumBackoffDuration: TimeInterval = 5
-    private static let minimumFillableGapMinutes = 15
+    /// Narrowest uncovered minute run a historical (5-min) reading may fill.
+    /// Five is the spacing of the sensor's historical grid, so the rule reads
+    /// "fill any hole at least as wide as one historical step". This is only a
+    /// worth-it policy — twins are prevented by the minute coverage check, not
+    /// by this threshold. The cost of a low value is cosmetic: a filled point
+    /// carries the sensor's downsampled value, which can sit slightly off the
+    /// realtime minute trace on either side of the hole.
+    private static let minimumFillableGapMinutes = 5
     private static let documentSuppressionRetention: TimeInterval = 24 * 60 * 60
     private static let maximumGlucoseSuppressions = 5_000
     private static let maximumInsulinSuppressions = 1_000

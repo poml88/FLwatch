@@ -119,7 +119,7 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(coverage.coveredMinutes, [100...110])
     }
 
-    func testNightscoutGapWidthUsesInclusiveFourteenFifteenBoundary() {
+    func testNightscoutGapWidthMeasuresInclusiveRunLength() {
         let fifteenMinuteGap = NightscoutMinuteCoverage([100...100, 116...120])
         let fourteenMinuteGap = NightscoutMinuteCoverage([100...100, 115...120])
 
