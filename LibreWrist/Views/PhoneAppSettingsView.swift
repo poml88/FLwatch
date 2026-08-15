@@ -307,7 +307,7 @@ struct PhoneAppSettingsView: View {
 
     @ViewBuilder
     private var nightscoutSettingsSection: some View {
-        if developerModeEnabled && cgmProviderKind == .libre3BLE {
+        if cgmProviderKind == .libre3BLE {
             Section {
                 Toggle(
                     isOn: Binding(
@@ -713,7 +713,7 @@ struct PhoneAppSettingsView: View {
                 }
             }
 
-            if cgmProviderKind == .libre3BLE && developerModeEnabled {
+            if cgmProviderKind == .libre3BLE {
                 Section {
                     Button {
                         isShowingCalibrationSheet = true
