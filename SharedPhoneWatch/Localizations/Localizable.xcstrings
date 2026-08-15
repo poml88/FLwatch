@@ -557,16 +557,198 @@
     "%lld queued insulin changes will be discarded." : {
       "comment" : "Warning before Nightscout removal. The number is a count of queued insulin uploads or deletions.",
       "localizations" : {
-        "de" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld ausstehende Insulinänderung wird verworfen." } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld ausstehende Insulinänderungen werden verworfen." } } } } },
-        "en" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld queued insulin change will be discarded." } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld queued insulin changes will be discarded." } } } } },
-        "es" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "Se descartará %lld cambio de insulina en cola." } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "Se descartarán %lld cambios de insulina en cola." } } } } },
-        "fr" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld modification d’insuline en attente sera supprimée." } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld modifications d’insuline en attente seront supprimées." } } } } },
-        "it" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "Verrà eliminata %lld modifica dell’insulina in coda." } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "Verranno eliminate %lld modifiche dell’insulina in coda." } } } } },
-        "ja" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "保留中のインスリン変更%lld件が破棄されます。" } } } } },
-        "nl" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld insulinewijziging in de wachtrij wordt verwijderd." } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld insulinewijzigingen in de wachtrij worden verwijderd." } } } } },
-        "pl" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld oczekująca zmiana dotycząca insuliny zostanie odrzucona." } }, "few" : { "stringUnit" : { "state" : "translated", "value" : "%lld oczekujące zmiany dotyczące insuliny zostaną odrzucone." } }, "many" : { "stringUnit" : { "state" : "translated", "value" : "%lld oczekujących zmian dotyczących insuliny zostanie odrzuconych." } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld oczekujących zmian dotyczących insuliny zostanie odrzuconych." } } } } },
-        "ru" : { "variations" : { "plural" : { "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld ожидающее изменение данных об инсулине будет отброшено." } }, "few" : { "stringUnit" : { "state" : "translated", "value" : "%lld ожидающих изменения данных об инсулине будут отброшены." } }, "many" : { "stringUnit" : { "state" : "translated", "value" : "%lld ожидающих изменений данных об инсулине будут отброшены." } }, "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld ожидающих изменений данных об инсулине будут отброшены." } } } } },
-        "zh-Hans" : { "variations" : { "plural" : { "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld 项排队中的胰岛素更改将被丢弃。" } } } } }
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ausstehende Insulinänderung wird verworfen."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ausstehende Insulinänderungen werden verworfen."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld queued insulin change will be discarded."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld queued insulin changes will be discarded."
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Se descartará %lld cambio de insulina en cola."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Se descartarán %lld cambios de insulina en cola."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld modification d’insuline en attente sera supprimée."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld modifications d’insuline en attente seront supprimées."
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Verrà eliminata %lld modifica dell’insulina in coda."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Verranno eliminate %lld modifiche dell’insulina in coda."
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "保留中のインスリン変更%lld件が破棄されます。"
+                }
+              }
+            }
+          }
+        },
+        "nl" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld insulinewijziging in de wachtrij wordt verwijderd."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld insulinewijzigingen in de wachtrij worden verwijderd."
+                }
+              }
+            }
+          }
+        },
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld oczekujące zmiany dotyczące insuliny zostaną odrzucone."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld oczekujących zmian dotyczących insuliny zostanie odrzuconych."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld oczekująca zmiana dotycząca insuliny zostanie odrzucona."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld oczekujących zmian dotyczących insuliny zostanie odrzuconych."
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ожидающих изменения данных об инсулине будут отброшены."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ожидающих изменений данных об инсулине будут отброшены."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ожидающее изменение данных об инсулине будет отброшено."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ожидающих изменений данных об инсулине будут отброшены."
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 项排队中的胰岛素更改将被丢弃。"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "0" : {
@@ -2033,15 +2215,60 @@
     "Admin access token" : {
       "comment" : "Label for the secret Nightscout token that grants upload permission.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Administrator-Zugriffstoken" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Token de acceso de administrador" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Jeton d’accès administrateur" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Token di accesso amministratore" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "管理者アクセストークン" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Beheerderstoegangstoken" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Token dostępu administratora" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Токен доступа администратора" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "管理员访问令牌" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Administrator-Zugriffstoken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token de acceso de administrador"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeton d’accès administrateur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token di accesso amministratore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理者アクセストークン"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beheerderstoegangstoken"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token dostępu administratora"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Токен доступа администратора"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理员访问令牌"
+          }
+        }
       }
     },
     "Alert me above" : {
@@ -2220,6 +2447,7 @@
       }
     },
     "Apple Health" : {
+      "comment" : "Subtitle listing Apple Health as the available service in Data Sharing settings.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2273,6 +2501,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apple Health"
+          }
+        }
+      }
+    },
+    "Apple Health and Nightscout" : {
+      "comment" : "Subtitle listing the services configured in Data Sharing settings when Nightscout is available.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health und Nightscout"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health y Nightscout"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health et Nightscout"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health e Nightscout"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple HealthとNightscout"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health en Nightscout"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health i Nightscout"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health и Nightscout"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health 和 Nightscout"
           }
         }
       }
@@ -2749,15 +3036,60 @@
     "Automatic uploads are disabled." : {
       "comment" : "Nightscout status shown when automatic uploads are switched off.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Automatische Uploads sind deaktiviert." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las cargas automáticas están desactivadas." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les envois automatiques sont désactivés." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "I caricamenti automatici sono disattivati." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "自動アップロードは無効です。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Automatische uploads zijn uitgeschakeld." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Automatyczne przesyłanie jest wyłączone." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Автоматическая отправка отключена." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "自动上传已关闭。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatische Uploads sind deaktiviert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las cargas automáticas están desactivadas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les envois automatiques sont désactivés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I caricamenti automatici sono disattivati."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動アップロードは無効です。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatische uploads zijn uitgeschakeld."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatyczne przesyłanie jest wyłączone."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматическая отправка отключена."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动上传已关闭。"
+          }
+        }
       }
     },
     "Average difference" : {
@@ -4658,15 +4990,60 @@
     "Checking the connection…" : {
       "comment" : "Nightscout status shown while testing the entered server and token.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verbindung wird überprüft…" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Comprobando la conexión…" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vérification de la connexion…" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Verifica della connessione…" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続を確認中…" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Verbinding controleren…" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Sprawdzanie połączenia…" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Проверка подключения…" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在检查连接…" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung wird überprüft…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando la conexión…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérification de la connexion…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica della connessione…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続を確認中…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinding controleren…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprawdzanie połączenia…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверка подключения…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在检查连接…"
+          }
+        }
       }
     },
     "Choose which CGM service FLwatch reads from." : {
@@ -5615,15 +5992,60 @@
     "Connection successful. The token grants all required write permissions." : {
       "comment" : "Nightscout connection-test success message.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verbindung erfolgreich. Das Token gewährt alle erforderlichen Schreibberechtigungen." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conexión correcta. El token concede todos los permisos de escritura necesarios." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connexion réussie. Le jeton accorde toutes les autorisations d’écriture requises." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Connessione riuscita. Il token concede tutte le autorizzazioni di scrittura necessarie." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続に成功しました。トークンには必要なすべての書き込み権限があります。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Verbinding geslaagd. Het token verleent alle vereiste schrijfrechten." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Połączenie powiodło się. Token zapewnia wszystkie wymagane uprawnienia do zapisu." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Подключение выполнено. Токен предоставляет все необходимые разрешения на запись." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "连接成功。令牌授予了所有必需的写入权限。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung erfolgreich. Das Token gewährt alle erforderlichen Schreibberechtigungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conexión correcta. El token concede todos los permisos de escritura necesarios."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connexion réussie. Le jeton accorde toutes les autorisations d’écriture requises."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connessione riuscita. Il token concede tutte le autorizzazioni di scrittura necessarie."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続に成功しました。トークンには必要なすべての書き込み権限があります。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinding geslaagd. Het token verleent alle vereiste schrijfrechten."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Połączenie powiodło się. Token zapewnia wszystkie wymagane uprawnienia do zapisu."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключение выполнено. Токен предоставляет все необходимые разрешения на запись."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接成功。令牌授予了所有必需的写入权限。"
+          }
+        }
       }
     },
     "Connects directly to a Libre 3 / Libre 3 Plus sensor over Bluetooth — no follower account or cloud needed. You pair by holding your phone to the sensor." : {
@@ -6920,6 +7342,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Кривая"
+          }
+        }
+      }
+    },
+    "Data Sharing" : {
+      "comment" : "Navigation title for settings that send glucose and insulin data to other services.\nSettings row that opens controls for sending data to Apple Health and Nightscout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenfreigabe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir datos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partage des données"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Condivisione dati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "データ共有"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gegevens delen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Udostępnianie danych"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Передача данных"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据共享"
           }
         }
       }
@@ -8752,15 +9233,60 @@
     "Enable Nightscout upload" : {
       "comment" : "Toggle that enables automatic uploads to the user's Nightscout server.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout-Upload aktivieren" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Activar la carga a Nightscout" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Activer l’envoi vers Nightscout" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Abilita caricamento su Nightscout" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutへのアップロードを有効にする" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Uploaden naar Nightscout inschakelen" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Włącz przesyłanie do Nightscout" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Включить отправку в Nightscout" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启用 Nightscout 上传" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout-Upload aktivieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activar la carga a Nightscout"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activer l’envoi vers Nightscout"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abilita caricamento su Nightscout"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutへのアップロードを有効にする"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploaden naar Nightscout inschakelen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Włącz przesyłanie do Nightscout"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включить отправку в Nightscout"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用 Nightscout 上传"
+          }
+        }
       }
     },
     "Ended" : {
@@ -8942,29 +9468,119 @@
     "Enter a Nightscout admin access token." : {
       "comment" : "Nightscout validation error for a missing upload token.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gib ein Nightscout-Administrator-Zugriffstoken ein." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Introduce un token de acceso de administrador de Nightscout." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Saisissez un jeton d’accès administrateur Nightscout." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Inserisci un token di accesso amministratore Nightscout." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutの管理者アクセストークンを入力してください。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Voer een Nightscout-beheerderstoegangstoken in." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Wprowadź token dostępu administratora Nightscout." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Введите токен доступа администратора Nightscout." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请输入 Nightscout 管理员访问令牌。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib ein Nightscout-Administrator-Zugriffstoken ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce un token de acceso de administrador de Nightscout."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez un jeton d’accès administrateur Nightscout."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserisci un token di accesso amministratore Nightscout."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutの管理者アクセストークンを入力してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer een Nightscout-beheerderstoegangstoken in."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wprowadź token dostępu administratora Nightscout."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите токен доступа администратора Nightscout."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入 Nightscout 管理员访问令牌。"
+          }
+        }
       }
     },
     "Enter a valid HTTPS Nightscout server URL." : {
       "comment" : "Nightscout validation error for a missing or invalid server URL.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gib eine gültige HTTPS-URL für den Nightscout-Server ein." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Introduce una URL HTTPS válida del servidor Nightscout." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Saisissez une URL HTTPS valide pour le serveur Nightscout." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Inserisci un URL HTTPS valido per il server Nightscout." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "有効なNightscoutサーバのHTTPS URLを入力してください。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Voer een geldige HTTPS-URL voor de Nightscout-server in." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Wprowadź prawidłowy adres URL HTTPS serwera Nightscout." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Введите допустимый HTTPS-адрес сервера Nightscout." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请输入有效的 Nightscout 服务器 HTTPS URL。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib eine gültige HTTPS-URL für den Nightscout-Server ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce una URL HTTPS válida del servidor Nightscout."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez une URL HTTPS valide pour le serveur Nightscout."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserisci un URL HTTPS valido per il server Nightscout."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有効なNightscoutサーバのHTTPS URLを入力してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer een geldige HTTPS-URL voor de Nightscout-server in."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wprowadź prawidłowy adres URL HTTPS serwera Nightscout."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите допустимый HTTPS-адрес сервера Nightscout."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入有效的 Nightscout 服务器 HTTPS URL。"
+          }
+        }
       }
     },
     "Enter grams per 1U (e.g., 10 ≙ 1U/10g)." : {
@@ -13236,15 +13852,60 @@
     "Last successful upload" : {
       "comment" : "Label for the date and time of the last successful Nightscout upload.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Letzter erfolgreicher Upload" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Última carga correcta" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Dernier envoi réussi" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ultimo caricamento riuscito" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "前回成功したアップロード" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Laatste geslaagde upload" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Ostatnie pomyślne przesłanie" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Последняя успешная отправка" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上次成功上传" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzter erfolgreicher Upload"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última carga correcta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dernier envoi réussi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ultimo caricamento riuscito"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前回成功したアップロード"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatste geslaagde upload"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostatnie pomyślne przesłanie"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Последняя успешная отправка"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次成功上传"
+          }
+        }
       }
     },
     "Libre 3 (Bluetooth)" : {
@@ -14295,127 +14956,532 @@
     "Nightscout" : {
       "comment" : "Title of the Nightscout upload settings section.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout"
+          }
+        }
       }
     },
     "Nightscout authorization could not be established" : {
       "comment" : "Reason fragment in a paused Nightscout upload status.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "die Nightscout-Autorisierung konnte nicht hergestellt werden" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "no se pudo establecer la autorización de Nightscout" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "l’autorisation Nightscout n’a pas pu être établie" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "non è stato possibile stabilire l’autorizzazione Nightscout" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutの認証を確立できませんでした" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout-autorisatie kon niet tot stand worden gebracht" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "nie udało się uzyskać autoryzacji Nightscout" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "не удалось выполнить авторизацию Nightscout" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法建立 Nightscout 授权" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "die Nightscout-Autorisierung konnte nicht hergestellt werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no se pudo establecer la autorización de Nightscout"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l’autorisation Nightscout n’a pas pu être établie"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "non è stato possibile stabilire l’autorizzazione Nightscout"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutの認証を確立できませんでした"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout-autorisatie kon niet tot stand worden gebracht"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nie udało się uzyskać autoryzacji Nightscout"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не удалось выполнить авторизацию Nightscout"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法建立 Nightscout 授权"
+          }
+        }
       }
     },
     "Nightscout configuration removed." : {
       "comment" : "Success message after removing the saved Nightscout server and token.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout-Konfiguration entfernt." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Configuración de Nightscout eliminada." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Configuration Nightscout supprimée." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Configurazione Nightscout rimossa." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutの設定を削除しました。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout-configuratie verwijderd." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Konfiguracja Nightscout została usunięta." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Конфигурация Nightscout удалена." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout 配置已移除。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout-Konfiguration entfernt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuración de Nightscout eliminada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration Nightscout supprimée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurazione Nightscout rimossa."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutの設定を削除しました。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout-configuratie verwijderd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfiguracja Nightscout została usunięta."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конфигурация Nightscout удалена."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout 配置已移除。"
+          }
+        }
       }
     },
     "Nightscout is unavailable. The saved upload configuration was not changed." : {
       "comment" : "Nightscout connection-test error when the server cannot be reached.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout ist nicht erreichbar. Die gespeicherte Upload-Konfiguration wurde nicht geändert." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout no está disponible. La configuración de carga guardada no se ha modificado." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout est indisponible. La configuration d’envoi enregistrée n’a pas été modifiée." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout non è disponibile. La configurazione di caricamento salvata non è stata modificata." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutを利用できません。保存済みのアップロード設定は変更されていません。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout is niet beschikbaar. De opgeslagen uploadconfiguratie is niet gewijzigd." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout jest niedostępny. Zapisana konfiguracja przesyłania nie została zmieniona." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout недоступен. Сохранённая конфигурация отправки не изменена." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout 不可用。已保存的上传配置未更改。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout ist nicht erreichbar. Die gespeicherte Upload-Konfiguration wurde nicht geändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout no está disponible. La configuración de carga guardada no se ha modificado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout est indisponible. La configuration d’envoi enregistrée n’a pas été modifiée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout non è disponibile. La configurazione di caricamento salvata non è stata modificata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutを利用できません。保存済みのアップロード設定は変更されていません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout is niet beschikbaar. De opgeslagen uploadconfiguratie is niet gewijzigd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout jest niedostępny. Zapisana konfiguracja przesyłania nie została zmieniona."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout недоступен. Сохранённая конфигурация отправки не изменена."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout 不可用。已保存的上传配置未更改。"
+          }
+        }
       }
     },
     "Nightscout rejected one glucose or insulin entry. Everything else keeps uploading." : {
       "comment" : "Nightscout status for one rejected data entry that does not stop other uploads.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout hat einen Glukose- oder Insulineintrag abgelehnt. Alles andere wird weiter hochgeladen." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout ha rechazado una entrada de glucosa o insulina. Todo lo demás continúa cargándose." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout a rejeté une entrée de glycémie ou d’insuline. Tout le reste continue à être envoyé." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout ha rifiutato una voce relativa a glucosio o insulina. Tutto il resto continua a essere caricato." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutがグルコースまたはインスリンのエントリを1件拒否しました。その他のデータのアップロードは続行されます。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout heeft één glucose- of insuline-item geweigerd. De rest wordt verder geüpload." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout odrzucił jeden wpis glukozy lub insuliny. Pozostałe dane są nadal przesyłane." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout отклонил одну запись о глюкозе или инсулине. Остальные данные продолжают отправляться." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout 拒绝了一条血糖或胰岛素记录。其他内容会继续上传。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout hat einen Glukose- oder Insulineintrag abgelehnt. Alles andere wird weiter hochgeladen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout ha rechazado una entrada de glucosa o insulina. Todo lo demás continúa cargándose."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout a rejeté une entrée de glycémie ou d’insuline. Tout le reste continue à être envoyé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout ha rifiutato una voce relativa a glucosio o insulina. Tutto il resto continua a essere caricato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutがグルコースまたはインスリンのエントリを1件拒否しました。その他のデータのアップロードは続行されます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout heeft één glucose- of insuline-item geweigerd. De rest wordt verder geüpload."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout odrzucił jeden wpis glukozy lub insuliny. Pozostałe dane są nadal przesyłane."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout отклонил одну запись о глюкозе или инсулине. Остальные данные продолжают отправляться."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout 拒绝了一条血糖或胰岛素记录。其他内容会继续上传。"
+          }
+        }
       }
     },
     "Nightscout rejected the access token" : {
       "comment" : "Reason fragment in a paused Nightscout upload status.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout hat das Zugriffstoken abgelehnt" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout rechazó el token de acceso" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout a rejeté le jeton d’accès" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout ha rifiutato il token di accesso" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutがアクセストークンを拒否しました" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout heeft het toegangstoken geweigerd" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout odrzucił token dostępu" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout отклонил токен доступа" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout 拒绝了访问令牌" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout hat das Zugriffstoken abgelehnt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout rechazó el token de acceso"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout a rejeté le jeton d’accès"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout ha rifiutato il token di accesso"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutがアクセストークンを拒否しました"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout heeft het toegangstoken geweigerd"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout odrzucił token dostępu"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout отклонил токен доступа"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout 拒绝了访问令牌"
+          }
+        }
       }
     },
     "Nightscout upload state could not be read, so nothing was removed." : {
       "comment" : "Nightscout removal error when the queued upload count cannot be read.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Nightscout-Uploadstatus konnte nicht gelesen werden. Es wurde nichts entfernt." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se ha podido leer el estado de carga de Nightscout, por lo que no se ha eliminado nada." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Impossible de lire l’état d’envoi Nightscout. Rien n’a donc été supprimé." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impossibile leggere lo stato di caricamento Nightscout, quindi non è stato rimosso nulla." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutのアップロード状態を読み取れなかったため、何も削除されませんでした。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De Nightscout-uploadstatus kon niet worden gelezen. Er is daarom niets verwijderd." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Nie udało się odczytać stanu przesyłania do Nightscout, więc niczego nie usunięto." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не удалось прочитать состояние отправки в Nightscout, поэтому ничего не было удалено." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法读取 Nightscout 上传状态，因此未移除任何内容。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Nightscout-Uploadstatus konnte nicht gelesen werden. Es wurde nichts entfernt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido leer el estado de carga de Nightscout, por lo que no se ha eliminado nada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de lire l’état d’envoi Nightscout. Rien n’a donc été supprimé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile leggere lo stato di caricamento Nightscout, quindi non è stato rimosso nulla."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutのアップロード状態を読み取れなかったため、何も削除されませんでした。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Nightscout-uploadstatus kon niet worden gelezen. Er is daarom niets verwijderd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się odczytać stanu przesyłania do Nightscout, więc niczego nie usunięto."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось прочитать состояние отправки в Nightscout, поэтому ничего не было удалено."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取 Nightscout 上传状态，因此未移除任何内容。"
+          }
+        }
       }
     },
     "no compatible Nightscout API v3 endpoint was found" : {
       "comment" : "Reason fragment in a paused Nightscout upload status.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "kein kompatibler Nightscout-API-v3-Endpunkt gefunden" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "no se encontró ningún endpoint compatible con la API v3 de Nightscout" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "aucun point de terminaison compatible avec l’API v3 de Nightscout n’a été trouvé" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "non è stato trovato alcun endpoint API v3 Nightscout compatibile" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "互換性のあるNightscout API v3エンドポイントが見つかりませんでした" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "er geen compatibel Nightscout API v3-eindpunt is gevonden" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "nie znaleziono zgodnego punktu końcowego API v3 Nightscout" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "не найдена совместимая конечная точка API v3 Nightscout" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未找到兼容的 Nightscout API v3 端点" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kein kompatibler Nightscout-API-v3-Endpunkt gefunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no se encontró ningún endpoint compatible con la API v3 de Nightscout"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aucun point de terminaison compatible avec l’API v3 de Nightscout n’a été trouvé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "non è stato trovato alcun endpoint API v3 Nightscout compatibile"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "互換性のあるNightscout API v3エンドポイントが見つかりませんでした"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "er geen compatibel Nightscout API v3-eindpunt is gevonden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nie znaleziono zgodnego punktu końcowego API v3 Nightscout"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не найдена совместимая конечная точка API v3 Nightscout"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到兼容的 Nightscout API v3 端点"
+          }
+        }
       }
     },
     "No compatible Nightscout API v3 endpoint was found. The saved upload configuration was not changed." : {
       "comment" : "Nightscout connection-test error when the server lacks the required API.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Es wurde kein kompatibler Nightscout-API-v3-Endpunkt gefunden. Die gespeicherte Upload-Konfiguration wurde nicht geändert." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se encontró ningún endpoint compatible con la API v3 de Nightscout. La configuración de carga guardada no se ha modificado." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun point de terminaison compatible avec l’API v3 de Nightscout n’a été trouvé. La configuration d’envoi enregistrée n’a pas été modifiée." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non è stato trovato alcun endpoint API v3 Nightscout compatibile. La configurazione di caricamento salvata non è stata modificata." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "互換性のあるNightscout API v3エンドポイントが見つかりませんでした。保存済みのアップロード設定は変更されていません。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Er is geen compatibel Nightscout API v3-eindpunt gevonden. De opgeslagen uploadconfiguratie is niet gewijzigd." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Nie znaleziono zgodnego punktu końcowego API v3 Nightscout. Zapisana konfiguracja przesyłania nie została zmieniona." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не найдена совместимая конечная точка API v3 Nightscout. Сохранённая конфигурация отправки не изменена." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未找到兼容的 Nightscout API v3 端点。已保存的上传配置未更改。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es wurde kein kompatibler Nightscout-API-v3-Endpunkt gefunden. Die gespeicherte Upload-Konfiguration wurde nicht geändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontró ningún endpoint compatible con la API v3 de Nightscout. La configuración de carga guardada no se ha modificado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun point de terminaison compatible avec l’API v3 de Nightscout n’a été trouvé. La configuration d’envoi enregistrée n’a pas été modifiée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è stato trovato alcun endpoint API v3 Nightscout compatibile. La configurazione di caricamento salvata non è stata modificata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "互換性のあるNightscout API v3エンドポイントが見つかりませんでした。保存済みのアップロード設定は変更されていません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er is geen compatibel Nightscout API v3-eindpunt gevonden. De opgeslagen uploadconfiguratie is niet gewijzigd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie znaleziono zgodnego punktu końcowego API v3 Nightscout. Zapisana konfiguracja przesyłania nie została zmieniona."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не найдена совместимая конечная точка API v3 Nightscout. Сохранённая конфигурация отправки не изменена."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到兼容的 Nightscout API v3 端点。已保存的上传配置未更改。"
+          }
+        }
       }
     },
     "No connection. Network?" : {
@@ -16704,21 +17770,66 @@
     "Paste a complete Nightscout token link (%@), or enter the server URL (%@) and admin access token (%@) separately." : {
       "comment" : "Instructions for entering Nightscout connection credentials, with examples of a complete token link, server URL, and token.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Füge einen vollständigen Nightscout-Token-Link (%1$@) ein oder gib die Server-URL (%2$@) und das Administrator-Zugriffstoken (%3$@) separat ein." } },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füge einen vollständigen Nightscout-Token-Link (%1$@) ein oder gib die Server-URL (%2$@) und das Administrator-Zugriffstoken (%3$@) separat ein."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paste a complete Nightscout token link (%1$@), or enter the server URL (%2$@) and admin access token (%3$@) separately."
           }
         },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pega un enlace completo con token de Nightscout (%1$@), o introduce por separado la URL del servidor (%2$@) y el token de acceso de administrador (%3$@)." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Collez un lien de jeton Nightscout complet (%1$@), ou saisissez séparément l’URL du serveur (%2$@) et le jeton d’accès administrateur (%3$@)." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Incolla un link completo con token Nightscout (%1$@), oppure inserisci separatamente l’URL del server (%2$@) e il token di accesso amministratore (%3$@)." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "完全なNightscoutトークンリンク（%1$@）を貼り付けるか、サーバURL（%2$@）と管理者アクセストークン（%3$@）を個別に入力してください。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Plak een volledige Nightscout-tokenlink (%1$@), of voer de server-URL (%2$@) en het beheerderstoegangstoken (%3$@) afzonderlijk in." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Wklej pełny link z tokenem Nightscout (%1$@) albo wprowadź osobno adres URL serwera (%2$@) i token dostępu administratora (%3$@)." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вставьте полную ссылку с токеном Nightscout (%1$@) или отдельно введите адрес сервера (%2$@) и токен доступа администратора (%3$@)." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "粘贴完整的 Nightscout 令牌链接（%1$@），或分别输入服务器 URL（%2$@）和管理员访问令牌（%3$@）。" } }
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pega un enlace completo con token de Nightscout (%1$@), o introduce por separado la URL del servidor (%2$@) y el token de acceso de administrador (%3$@)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collez un lien de jeton Nightscout complet (%1$@), ou saisissez séparément l’URL du serveur (%2$@) et le jeton d’accès administrateur (%3$@)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incolla un link completo con token Nightscout (%1$@), oppure inserisci separatamente l’URL del server (%2$@) e il token di accesso amministratore (%3$@)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完全なNightscoutトークンリンク（%1$@）を貼り付けるか、サーバURL（%2$@）と管理者アクセストークン（%3$@）を個別に入力してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plak een volledige Nightscout-tokenlink (%1$@), of voer de server-URL (%2$@) en het beheerderstoegangstoken (%3$@) afzonderlijk in."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wklej pełny link z tokenem Nightscout (%1$@) albo wprowadź osobno adres URL serwera (%2$@) i token dostępu administratora (%3$@)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставьте полную ссылку с токеном Nightscout (%1$@) или отдельно введите адрес сервера (%2$@) и токен доступа администратора (%3$@)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴完整的 Nightscout 令牌链接（%1$@），或分别输入服务器 URL（%2$@）和管理员访问令牌（%3$@）。"
+          }
+        }
       }
     },
     "Patient" : {
@@ -18855,43 +19966,178 @@
     "Remove" : {
       "comment" : "Destructive confirmation button that removes Nightscout settings.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Entfernen" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminar" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "削除" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Verwijder" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Usuń" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijder"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除"
+          }
+        }
       }
     },
     "Remove Nightscout configuration" : {
       "comment" : "Destructive button that removes the saved Nightscout server and token.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout-Konfiguration entfernen" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminar la configuración de Nightscout" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer la configuration Nightscout" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi configurazione Nightscout" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutの設定を削除" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout-configuratie verwijderen" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Usuń konfigurację Nightscout" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить конфигурацию Nightscout" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除 Nightscout 配置" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout-Konfiguration entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar la configuración de Nightscout"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer la configuration Nightscout"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovi configurazione Nightscout"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutの設定を削除"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout-configuratie verwijderen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń konfigurację Nightscout"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить конфигурацию Nightscout"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除 Nightscout 配置"
+          }
+        }
       }
     },
     "Remove Nightscout configuration?" : {
       "comment" : "Title of the confirmation dialog for removing Nightscout settings.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout-Konfiguration entfernen?" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Eliminar la configuración de Nightscout?" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer la configuration Nightscout ?" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovere la configurazione Nightscout?" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutの設定を削除しますか？" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nightscout-configuratie verwijderen?" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Usunąć konfigurację Nightscout?" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить конфигурацию Nightscout?" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "要移除 Nightscout 配置吗？" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout-Konfiguration entfernen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar la configuración de Nightscout?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer la configuration Nightscout ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovere la configurazione Nightscout?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutの設定を削除しますか？"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscout-configuratie verwijderen?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usunąć konfigurację Nightscout?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить конфигурацию Nightscout?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要移除 Nightscout 配置吗？"
+          }
+        }
       }
     },
     "Replace it to resume readings." : {
@@ -19310,15 +20556,60 @@
     "Retrying upload…" : {
       "comment" : "Nightscout status shown while an upload retry is running.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Upload wird erneut versucht…" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reintentando la carga…" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nouvelle tentative d’envoi…" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nuovo tentativo di caricamento…" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アップロードを再試行中…" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Upload opnieuw proberen…" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Ponawianie przesyłania…" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Повторная отправка…" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在重试上传…" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload wird erneut versucht…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintentando la carga…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouvelle tentative d’envoi…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuovo tentativo di caricamento…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップロードを再試行中…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload opnieuw proberen…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ponawianie przesyłania…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторная отправка…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在重试上传…"
+          }
+        }
       }
     },
     "Return the current blood glucose." : {
@@ -21223,15 +22514,60 @@
     "Server" : {
       "comment" : "Label for the normalized Nightscout server URL that will be tested.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Server" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Servidor" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Serveur" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Server" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サーバ" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Server" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Serwer" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сервер" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servidor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバ"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serwer"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器"
+          }
+        }
       }
     },
     "Server maintenance." : {
@@ -21297,15 +22633,60 @@
     "Server URL or token link" : {
       "comment" : "Label for the Nightscout server URL or complete token-link field.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Server-URL oder Token-Link" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "URL del servidor o enlace con token" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "URL du serveur ou lien de jeton" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "URL del server o link con token" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サーバURLまたはトークンリンク" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Server-URL of tokenlink" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Adres URL serwera lub link z tokenem" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Адрес сервера или ссылка с токеном" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器 URL 或令牌链接" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server-URL oder Token-Link"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL del servidor o enlace con token"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL du serveur ou lien de jeton"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL del server o link con token"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバURLまたはトークンリンク"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server-URL of tokenlink"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adres URL serwera lub link z tokenem"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Адрес сервера или ссылка с токеном"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器 URL 或令牌链接"
+          }
+        }
       }
     },
     "Session-only and memory-only. Off after every app launch. Captures up to 300 decrypted and decoded packets from channels FLwatch already uses; nothing is persisted or added to a support email." : {
@@ -23230,15 +24611,60 @@
     "Test connection" : {
       "comment" : "Button that tests the entered Nightscout server and token.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verbindung testen" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Probar conexión" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tester la connexion" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Verifica connessione" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続をテスト" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Verbinding testen" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Sprawdź połączenie" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Проверить подключение" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "测试连接" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung testen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probar conexión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tester la connexion"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica connessione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続をテスト"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinding testen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprawdź połączenie"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверить подключение"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试连接"
+          }
+        }
       }
     },
     "Thank you for downloading FLwatch. I hope it will prove useful.\n\nTo get startet, please read the SETUP AND USAGE guide. In case of questions, please contact support. More info on the Settings tab." : {
@@ -23418,43 +24844,178 @@
     "The Nightscout configuration could not be removed." : {
       "comment" : "Error shown when removing the saved Nightscout configuration fails.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Nightscout-Konfiguration konnte nicht entfernt werden." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se ha podido eliminar la configuración de Nightscout." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La configuration Nightscout n’a pas pu être supprimée." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impossibile rimuovere la configurazione Nightscout." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutの設定を削除できませんでした。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De Nightscout-configuratie kon niet worden verwijderd." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Nie udało się usunąć konfiguracji Nightscout." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не удалось удалить конфигурацию Nightscout." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法移除 Nightscout 配置。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Nightscout-Konfiguration konnte nicht entfernt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido eliminar la configuración de Nightscout."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuration Nightscout n’a pas pu être supprimée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile rimuovere la configurazione Nightscout."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutの設定を削除できませんでした。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Nightscout-configuratie kon niet worden verwijderd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się usunąć konfiguracji Nightscout."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось удалить конфигурацию Nightscout."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法移除 Nightscout 配置。"
+          }
+        }
       }
     },
     "The Nightscout token could not be read from secure storage." : {
       "comment" : "Nightscout settings error when the saved token cannot be read from Keychain.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Nightscout-Token konnte nicht aus dem sicheren Speicher gelesen werden." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se ha podido leer el token de Nightscout del almacenamiento seguro." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le jeton Nightscout n’a pas pu être lu depuis le stockage sécurisé." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impossibile leggere il token Nightscout dall’archivio sicuro." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutトークンをセキュアストレージから読み取れませんでした。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Het Nightscout-token kon niet uit de beveiligde opslag worden gelezen." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Nie udało się odczytać tokenu Nightscout z bezpiecznej pamięci." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не удалось прочитать токен Nightscout из защищённого хранилища." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法从安全存储中读取 Nightscout 令牌。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Nightscout-Token konnte nicht aus dem sicheren Speicher gelesen werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido leer el token de Nightscout del almacenamiento seguro."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le jeton Nightscout n’a pas pu être lu depuis le stockage sécurisé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile leggere il token Nightscout dall’archivio sicuro."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutトークンをセキュアストレージから読み取れませんでした。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het Nightscout-token kon niet uit de beveiligde opslag worden gelezen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się odczytać tokenu Nightscout z bezpiecznej pamięci."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось прочитать токен Nightscout из защищённого хранилища."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法从安全存储中读取 Nightscout 令牌。"
+          }
+        }
       }
     },
     "The Nightscout token could not be saved securely." : {
       "comment" : "Nightscout settings error when the token cannot be saved to Keychain.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Nightscout-Token konnte nicht sicher gespeichert werden." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se ha podido guardar de forma segura el token de Nightscout." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le jeton Nightscout n’a pas pu être enregistré de manière sécurisée." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impossibile salvare in modo sicuro il token Nightscout." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Nightscoutトークンを安全に保存できませんでした。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Het Nightscout-token kon niet veilig worden opgeslagen." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Nie udało się bezpiecznie zapisać tokenu Nightscout." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не удалось безопасно сохранить токен Nightscout." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法安全地保存 Nightscout 令牌。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Nightscout-Token konnte nicht sicher gespeichert werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido guardar de forma segura el token de Nightscout."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le jeton Nightscout n’a pas pu être enregistré de manière sécurisée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile salvare in modo sicuro il token Nightscout."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nightscoutトークンを安全に保存できませんでした。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het Nightscout-token kon niet veilig worden opgeslagen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się bezpiecznie zapisać tokenu Nightscout."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось безопасно сохранить токен Nightscout."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法安全地保存 Nightscout 令牌。"
+          }
+        }
       }
     },
     "The previous sensor's FLwatch calibration and calibration log were cleared. The new sensor will use its factory calibration." : {
@@ -23518,15 +25079,60 @@
     "the saved Nightscout server URL is invalid" : {
       "comment" : "Reason fragment in a paused Nightscout upload status.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "die gespeicherte Nightscout-Server-URL ist ungültig" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "la URL guardada del servidor Nightscout no es válida" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "l’URL enregistrée du serveur Nightscout n’est pas valide" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "l’URL salvato del server Nightscout non è valido" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "保存済みのNightscoutサーバURLが無効です" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "de opgeslagen URL van de Nightscout-server is ongeldig" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "zapisany adres URL serwera Nightscout jest nieprawidłowy" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "сохранённый адрес сервера Nightscout недействителен" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已保存的 Nightscout 服务器 URL 无效" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "die gespeicherte Nightscout-Server-URL ist ungültig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la URL guardada del servidor Nightscout no es válida"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l’URL enregistrée du serveur Nightscout n’est pas valide"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l’URL salvato del server Nightscout non è valido"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存済みのNightscoutサーバURLが無効です"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "de opgeslagen URL van de Nightscout-server is ongeldig"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zapisany adres URL serwera Nightscout jest nieprawidłowy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "сохранённый адрес сервера Nightscout недействителен"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存的 Nightscout 服务器 URL 无效"
+          }
+        }
       }
     },
     "The scan timed out. Try again and hold the phone against the sensor." : {
@@ -23890,29 +25496,119 @@
     "The server URL and token will be removed from this iPhone. Data already in Nightscout will not be deleted." : {
       "comment" : "Explanation shown before removing the Nightscout configuration.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Server-URL und das Token werden von diesem iPhone entfernt. Daten, die bereits in Nightscout gespeichert sind, werden nicht gelöscht." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "La URL del servidor y el token se eliminarán de este iPhone. Los datos que ya están en Nightscout no se eliminarán." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L’URL du serveur et le jeton seront supprimés de cet iPhone. Les données déjà présentes dans Nightscout ne seront pas supprimées." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "L’URL del server e il token verranno rimossi da questo iPhone. I dati già presenti in Nightscout non verranno eliminati." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "サーバURLとトークンがこのiPhoneから削除されます。Nightscoutにすでに存在するデータは削除されません。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De server-URL en het token worden van deze iPhone verwijderd. Gegevens die al in Nightscout staan, worden niet verwijderd." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Adres URL serwera i token zostaną usunięte z tego iPhone’a. Dane znajdujące się już w Nightscout nie zostaną usunięte." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Адрес сервера и токен будут удалены с этого iPhone. Данные, уже находящиеся в Nightscout, удалены не будут." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "服务器 URL 和令牌将从此 iPhone 中移除。Nightscout 中已有的数据不会被删除。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Server-URL und das Token werden von diesem iPhone entfernt. Daten, die bereits in Nightscout gespeichert sind, werden nicht gelöscht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La URL del servidor y el token se eliminarán de este iPhone. Los datos que ya están en Nightscout no se eliminarán."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’URL du serveur et le jeton seront supprimés de cet iPhone. Les données déjà présentes dans Nightscout ne seront pas supprimées."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’URL del server e il token verranno rimossi da questo iPhone. I dati già presenti in Nightscout non verranno eliminati."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバURLとトークンがこのiPhoneから削除されます。Nightscoutにすでに存在するデータは削除されません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De server-URL en het token worden van deze iPhone verwijderd. Gegevens die al in Nightscout staan, worden niet verwijderd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adres URL serwera i token zostaną usunięte z tego iPhone’a. Dane znajdujące się już w Nightscout nie zostaną usunięte."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Адрес сервера и токен будут удалены с этого iPhone. Данные, уже находящиеся в Nightscout, удалены не будут."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器 URL 和令牌将从此 iPhone 中移除。Nightscout 中已有的数据不会被删除。"
+          }
+        }
       }
     },
     "The token lacks the required write permissions. The saved upload configuration was not changed." : {
       "comment" : "Nightscout connection-test error when the token cannot upload all required data.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dem Token fehlen die erforderlichen Schreibberechtigungen. Die gespeicherte Upload-Konfiguration wurde nicht geändert." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "El token no tiene los permisos de escritura necesarios. La configuración de carga guardada no se ha modificado." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le jeton ne dispose pas des autorisations d’écriture requises. La configuration d’envoi enregistrée n’a pas été modifiée." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il token non dispone delle autorizzazioni di scrittura necessarie. La configurazione di caricamento salvata non è stata modificata." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "トークンに必要な書き込み権限がありません。保存済みのアップロード設定は変更されていません。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Het token heeft niet de vereiste schrijfrechten. De opgeslagen uploadconfiguratie is niet gewijzigd." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Token nie ma wymaganych uprawnień do zapisu. Zapisana konfiguracja przesyłania nie została zmieniona." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "У токена нет необходимых разрешений на запись. Сохранённая конфигурация отправки не изменена." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "令牌缺少必需的写入权限。已保存的上传配置未更改。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dem Token fehlen die erforderlichen Schreibberechtigungen. Die gespeicherte Upload-Konfiguration wurde nicht geändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El token no tiene los permisos de escritura necesarios. La configuración de carga guardada no se ha modificado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le jeton ne dispose pas des autorisations d’écriture requises. La configuration d’envoi enregistrée n’a pas été modifiée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il token non dispone delle autorizzazioni di scrittura necessarie. La configurazione di caricamento salvata non è stata modificata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トークンに必要な書き込み権限がありません。保存済みのアップロード設定は変更されていません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het token heeft niet de vereiste schrijfrechten. De opgeslagen uploadconfiguratie is niet gewijzigd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token nie ma wymaganych uprawnień do zapisu. Zapisana konfiguracja przesyłania nie została zmieniona."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У токена нет необходимых разрешений на запись. Сохранённая конфигурация отправки не изменена."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "令牌缺少必需的写入权限。已保存的上传配置未更改。"
+          }
+        }
       }
     },
     "This alert will not be delivered during the selected window, even when critical alerts are enabled." : {
@@ -25331,49 +27027,184 @@
     "Uploads are up to date." : {
       "comment" : "Nightscout status indicating that all currently queued data has uploaded.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Uploads sind auf dem neuesten Stand." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las cargas están al día." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les envois sont à jour." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "I caricamenti sono aggiornati." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アップロードは最新です。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Uploads zijn bijgewerkt." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Przesyłanie jest aktualne." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Все данные отправлены." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上传内容已是最新。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploads sind auf dem neuesten Stand."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las cargas están al día."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les envois sont à jour."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I caricamenti sono aggiornati."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップロードは最新です。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploads zijn bijgewerkt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przesyłanie jest aktualne."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все данные отправлены."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上传内容已是最新。"
+          }
+        }
       }
     },
     "Uploads glucose and insulin to your own Nightscout server. The server URL and token are saved only after a successful connection test." : {
       "comment" : "Explains what Nightscout upload sends and when the server credentials are saved.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lädt Glukose- und Insulindaten auf deinen eigenen Nightscout-Server hoch. Die Server-URL und das Token werden erst nach einem erfolgreichen Verbindungstest gespeichert." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Carga datos de glucosa e insulina en tu propio servidor Nightscout. La URL del servidor y el token solo se guardan después de comprobar correctamente la conexión." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Envoie les données de glycémie et d’insuline vers votre propre serveur Nightscout. L’URL du serveur et le jeton ne sont enregistrés qu’après un test de connexion réussi." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Carica i dati di glucosio e insulina sul tuo server Nightscout. L’URL del server e il token vengono salvati solo dopo una verifica della connessione riuscita." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "自分のNightscoutサーバにグルコースとインスリンのデータをアップロードします。サーバURLとトークンは、接続テストに成功した後にのみ保存されます。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Uploadt glucose- en insulinegegevens naar je eigen Nightscout-server. De server-URL en het token worden pas na een geslaagde verbindingstest opgeslagen." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Przesyła dane dotyczące glukozy i insuliny na własny serwer Nightscout. Adres URL serwera i token są zapisywane dopiero po pomyślnym teście połączenia." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отправляет данные о глюкозе и инсулине на ваш сервер Nightscout. Адрес сервера и токен сохраняются только после успешной проверки подключения." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将血糖和胰岛素数据上传到您自己的 Nightscout 服务器。服务器 URL 和令牌仅在连接测试成功后保存。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt Glukose- und Insulindaten auf deinen eigenen Nightscout-Server hoch. Die Server-URL und das Token werden erst nach einem erfolgreichen Verbindungstest gespeichert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carga datos de glucosa e insulina en tu propio servidor Nightscout. La URL del servidor y el token solo se guardan después de comprobar correctamente la conexión."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoie les données de glycémie et d’insuline vers votre propre serveur Nightscout. L’URL du serveur et le jeton ne sont enregistrés qu’après un test de connexion réussi."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carica i dati di glucosio e insulina sul tuo server Nightscout. L’URL del server e il token vengono salvati solo dopo una verifica della connessione riuscita."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自分のNightscoutサーバにグルコースとインスリンのデータをアップロードします。サーバURLとトークンは、接続テストに成功した後にのみ保存されます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploadt glucose- en insulinegegevens naar je eigen Nightscout-server. De server-URL en het token worden pas na een geslaagde verbindingstest opgeslagen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przesyła dane dotyczące glukozy i insuliny na własny serwer Nightscout. Adres URL serwera i token są zapisywane dopiero po pomyślnym teście połączenia."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправляет данные о глюкозе и инсулине на ваш сервер Nightscout. Адрес сервера и токен сохраняются только после успешной проверки подключения."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将血糖和胰岛素数据上传到您自己的 Nightscout 服务器。服务器 URL 和令牌仅在连接测试成功后保存。"
+          }
+        }
       }
     },
     "Uploads paused: %@. FLwatch tries again at %@." : {
       "comment" : "Nightscout status explaining why uploads are paused and when FLwatch will retry.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Uploads pausiert: %1$@. FLwatch versucht es um %2$@ erneut." } },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploads pausiert: %1$@. FLwatch versucht es um %2$@ erneut."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uploads paused: %1$@. FLwatch tries again at %2$@."
           }
         },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cargas en pausa: %1$@. FLwatch vuelve a intentarlo a las %2$@." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Envois suspendus : %1$@. FLwatch réessaiera à %2$@." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Caricamenti in pausa: %1$@. FLwatch riprova alle %2$@." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アップロードは一時停止中です：%1$@。FLwatchは%2$@に再試行します。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Uploads gepauzeerd: %1$@. FLwatch probeert het opnieuw om %2$@." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Przesyłanie wstrzymane: %1$@. FLwatch spróbuje ponownie o %2$@." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отправка приостановлена: %1$@. FLwatch повторит попытку в %2$@." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上传已暂停：%1$@。FLwatch 将在 %2$@ 重试。" } }
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargas en pausa: %1$@. FLwatch vuelve a intentarlo a las %2$@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envois suspendus : %1$@. FLwatch réessaiera à %2$@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caricamenti in pausa: %1$@. FLwatch riprova alle %2$@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップロードは一時停止中です：%1$@。FLwatchは%2$@に再試行します。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploads gepauzeerd: %1$@. FLwatch probeert het opnieuw om %2$@."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przesyłanie wstrzymane: %1$@. FLwatch spróbuje ponownie o %2$@."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправка приостановлена: %1$@. FLwatch повторит попытку в %2$@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上传已暂停：%1$@。FLwatch 将在 %2$@ 重试。"
+          }
+        }
       }
     },
     "Use average as offset" : {
@@ -25976,29 +27807,119 @@
     "Waiting for the first glucose upload." : {
       "comment" : "Nightscout status before the first glucose reading has uploaded successfully.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Warten auf den ersten Glukose-Upload." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esperando la primera carga de glucosa." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "En attente du premier envoi de glycémie." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "In attesa del primo caricamento del glucosio." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最初のグルコースアップロードを待っています。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Wachten op de eerste glucose-upload." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Oczekiwanie na pierwsze przesłanie danych o glukozie." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ожидание первой отправки данных о глюкозе." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在等待首次血糖上传。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf den ersten Glukose-Upload."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando la primera carga de glucosa."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente du premier envoi de glycémie."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa del primo caricamento del glucosio."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最初のグルコースアップロードを待っています。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachten op de eerste glucose-upload."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oczekiwanie na pierwsze przesłanie danych o glukozie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ожидание первой отправки данных о глюкозе."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待首次血糖上传。"
+          }
+        }
       }
     },
     "Waiting to retry after a network or server error." : {
       "comment" : "Nightscout status shown while an upload waits for another retry.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Warten auf einen erneuten Versuch nach einem Netzwerk- oder Serverfehler." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esperando para volver a intentarlo tras un error de red o del servidor." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "En attente d’une nouvelle tentative après une erreur réseau ou serveur." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "In attesa di riprovare dopo un errore di rete o del server." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ネットワークまたはサーバエラー後の再試行を待っています。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Wachten op een nieuwe poging na een netwerk- of serverfout." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Oczekiwanie na ponowną próbę po błędzie sieci lub serwera." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ожидание повторной попытки после ошибки сети или сервера." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "网络或服务器出错，正在等待重试。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf einen erneuten Versuch nach einem Netzwerk- oder Serverfehler."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando para volver a intentarlo tras un error de red o del servidor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente d’une nouvelle tentative après une erreur réseau ou serveur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa di riprovare dopo un errore di rete o del server."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ネットワークまたはサーバエラー後の再試行を待っています。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachten op een nieuwe poging na een netwerk- of serverfout."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oczekiwanie na ponowną próbę po błędzie sieci lub serwera."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ожидание повторной попытки после ошибки сети или сервера."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络或服务器出错，正在等待重试。"
+          }
+        }
       }
     },
     "Warm-up" : {

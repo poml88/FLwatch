@@ -475,6 +475,47 @@ struct PhoneAppSettingsView: View {
         }
     }
 
+    private var dataSharingSettingsView: some View {
+        Form {
+            Section {
+                appleHealthExportToggle(
+                    title: LocalizedStringResource(
+                        "Export glucose values to Apple Health",
+                        comment: "Settings switch enabling writing of CGM glucose readings to Apple Health"
+                    ),
+                    kind: .glucose,
+                    isEnabled: $appleHealthGlucoseExportEnabled,
+                    state: $appleHealthGlucoseState
+                )
+
+                appleHealthExportToggle(
+                    title: LocalizedStringResource(
+                        "Export insulin injections to Apple Health",
+                        comment: "Settings switch enabling writing of logged insulin injections to Apple Health"
+                    ),
+                    kind: .insulin,
+                    isEnabled: $appleHealthInsulinExportEnabled,
+                    state: $appleHealthInsulinState
+                )
+            } header: {
+                Text("Apple Health")
+            } footer: {
+                Text(
+                    "Each of these asks for its own Apple Health permission, only when you turn it on — you can export just glucose, just insulin, or both. FLwatch checks what Apple Health already holds before it writes, so turning a switch off and on again does not create duplicate entries.",
+                    comment: "Footer of the Apple Health settings section explaining that the two export switches are authorized independently and that re-enabling one does not duplicate data"
+                )
+            }
+
+            nightscoutSettingsSection
+        }
+        .navigationTitle(
+            Text(
+                "Data Sharing",
+                comment: "Navigation title for settings that send glucose and insulin data to other services."
+            )
+        )
+    }
+
     var body: some View {
         Form {
             Section {
@@ -724,35 +765,32 @@ struct PhoneAppSettingsView: View {
             }
 
             Section {
-                appleHealthExportToggle(
-                    title: LocalizedStringResource(
-                        "Export glucose values to Apple Health",
-                        comment: "Settings switch enabling writing of CGM glucose readings to Apple Health"
-                    ),
-                    kind: .glucose,
-                    isEnabled: $appleHealthGlucoseExportEnabled,
-                    state: $appleHealthGlucoseState
-                )
-
-                appleHealthExportToggle(
-                    title: LocalizedStringResource(
-                        "Export insulin injections to Apple Health",
-                        comment: "Settings switch enabling writing of logged insulin injections to Apple Health"
-                    ),
-                    kind: .insulin,
-                    isEnabled: $appleHealthInsulinExportEnabled,
-                    state: $appleHealthInsulinState
-                )
-            } header: {
-                Text("Apple Health")
-            } footer: {
-                Text(
-                    "Each of these asks for its own Apple Health permission, only when you turn it on — you can export just glucose, just insulin, or both. FLwatch checks what Apple Health already holds before it writes, so turning a switch off and on again does not create duplicate entries.",
-                    comment: "Footer of the Apple Health settings section explaining that the two export switches are authorized independently and that re-enabling one does not duplicate data"
-                )
+                NavigationLink {
+                    dataSharingSettingsView
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(
+                            "Data Sharing",
+                            comment: "Settings row that opens controls for sending data to Apple Health and Nightscout."
+                        )
+                        Group {
+                            if developerModeEnabled && cgmProviderKind == .libre3BLE {
+                                Text(
+                                    "Apple Health and Nightscout",
+                                    comment: "Subtitle listing the services configured in Data Sharing settings when Nightscout is available."
+                                )
+                            } else {
+                                Text(
+                                    "Apple Health",
+                                    comment: "Subtitle listing Apple Health as the available service in Data Sharing settings."
+                                )
+                            }
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                }
             }
-
-            nightscoutSettingsSection
 
             // The Bluetooth heartbeat — and the glucose alerts that ride on it
             // (now in the Alerts tab) — applies only to the cloud providers:

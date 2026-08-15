@@ -38,12 +38,14 @@ struct ContentView: View {
                 }
                 .tag("Connect")
 
-            PhoneAppSettingsView()
-                .tabItem {
-                    Image(systemName: "gear")
+            NavigationStack {
+                PhoneAppSettingsView()
+            }
+            .tabItem {
+                Image(systemName: "gear")
 //                    Text ("Tab 2")
-                }
-                .tag("Settings")
+            }
+            .tag("Settings")
 
             PhoneAppDonateView()
                 .tabItem {
