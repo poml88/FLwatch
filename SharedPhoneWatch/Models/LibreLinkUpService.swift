@@ -58,6 +58,10 @@ final class LibreLinkUpService: ObservableObject {
     /// throttle's job (`hasFreshEnoughReading`); sizing this to the cadence is
     /// what made Dexcom drift a whole publish cycle behind the sensor.
     private static let peerReloadDedupeWindow: TimeInterval = 60
+    /// Placeholder shown while no reload has reported anything. Also the value
+    /// `clearReloadFailure()` restores, so a stale error string never outlives
+    /// the failure it described.
+    private static let idleResponseMessage = "[...]"
 #if os(watchOS)
     private static let watchReloadStartDelaySeconds: TimeInterval = 1
 #endif
@@ -66,7 +70,7 @@ final class LibreLinkUpService: ObservableObject {
     private(set) var activeProvider: CGMProvider = CGMProviderRegistry.makeProvider(for: SharedData.cgmProviderKind)
 
     @Published var isReloading = false
-    @Published private(set) var libreLinkUpResponse = "[...]"
+    @Published private(set) var libreLinkUpResponse = LibreLinkUpService.idleResponseMessage
     @Published private(set) var didLastReloadFail = false
 
     /// Switches the active CGM backend. Decision 7.1: this is a "disconnect"
@@ -155,6 +159,32 @@ final class LibreLinkUpService: ObservableObject {
     private func canReload() -> Bool {
         let connected = UserDefaults.group.connected
         return connected == .connected
+    }
+
+    /// Drops a latched reload failure. Called only from the paths that skip the
+    /// fetch *because the data is already good* — a cached reading younger than
+    /// the cadence, or a peer process that just reloaded successfully. Either is
+    /// positive evidence the source is healthy, so a failure recorded by an
+    /// earlier cycle must not survive it.
+    ///
+    /// Without this, a provider throttled by reading age can never clear a
+    /// failure. `.libre3BLE` is push-based: once it streams again every reload
+    /// takes the skip path, so a failure sampled during a momentary BLE
+    /// reconnect stayed latched until the next app launch and re-armed the phone
+    /// home view's alert on every appear and timer tick. A genuinely broken
+    /// provider never reaches here — it produces no fresh reading, so the reload
+    /// runs and re-stamps the real state.
+    ///
+    /// Both writes are change-gated for the same reason the reload path gates
+    /// them: `ObservableObject` has no per-property granularity and both home
+    /// views observe this service.
+    private func clearReloadFailure() {
+        if didLastReloadFail {
+            didLastReloadFail = false
+        }
+        if libreLinkUpResponse != Self.idleResponseMessage {
+            libreLinkUpResponse = Self.idleResponseMessage
+        }
     }
 
     /// True when a fetch can be skipped because the cached reading is younger
@@ -255,11 +285,13 @@ final class LibreLinkUpService: ObservableObject {
         // cadence-aware pacer; the recent-success guard below is only a 60s
         // anti-hammer/dedup window, not a per-cadence throttle.
         if hasFreshEnoughReading(maxAgeMinutes: maxAgeMinutes, force: force, context: "before lease") {
+            clearReloadFailure()
             return false
         }
 
         if !force,
            await self.consumeRecentSuccessfulPeerResultIfAvailable() {
+            clearReloadFailure()
             return false
         }
 
@@ -276,10 +308,12 @@ final class LibreLinkUpService: ObservableObject {
             // Re-check reading-age inside the lease — a peer process may have
             // refreshed the cache while we were waiting on the gate.
             if self.hasFreshEnoughReading(maxAgeMinutes: maxAgeMinutes, force: force, context: "after lease") {
+                self.clearReloadFailure()
                 return false
             }
             if !force,
                await self.consumeRecentSuccessfulPeerResultIfAvailable() {
+                self.clearReloadFailure()
                 return false
             }
             self.isReloading = true
