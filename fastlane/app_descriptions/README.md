@@ -1,5 +1,7 @@
 # Localized App Descriptions
 
+The app description in the Apple App Store can have up to 4000 characters.
+
 Before running `bundle exec fastlane ios upload_descriptions`, add a nonempty
 `description.txt` file for every supported locale:
 

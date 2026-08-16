@@ -1,0 +1,74 @@
+FLwatch displays blood glucose readings from Abbott FreeStyle Libre 2, Libre 3 and Libre 3+ sensors, as well as Dexcom G6 / G7 / ONE+ sensors, on your iPhone and Apple Watch.
+
+Glucose data can be received through the LibreLinkUp cloud, Dexcom Share, or a direct Bluetooth connection to Libre 3 and Libre 3+ sensors.
+
+FLwatch also lets you record insulin doses and visualizes insulin-on-board and insulin activity with dedicated graphs, helping you better understand how insulin and glucose levels interact.
+
+Glucose readings and recorded insulin doses can be exported to Apple Health. When using a direct Libre 3 or Libre 3+ Bluetooth connection, they can also be exported to your own Nightscout server.
+
+With native Apple Watch support, widgets, Live Activities, and configurable glucose and sensor alerts, your glucose data is always visible across your Apple devices, helping support daily diabetes management.
+
+FLwatch is free and open source.
+
+FEATURES
+
+Glucose Monitoring
+• Blood glucose graph on iPhone and Apple Watch
+• Interactive chart on iPhone — tap to inspect individual readings
+• Optional calibration offset for directly connected Libre 3 and Libre 3+ sensors
+• Check your current glucose and trend using Shortcuts or Siri
+• Optional always-on display mode for quick viewing
+
+CGM Providers
+• Direct Bluetooth connection to Libre 3 and Libre 3+ sensors
+• LibreLinkUp cloud
+• Dexcom Share
+
+Alerts
+• Configurable low and high-glucose alerts on iPhone, Apple Watch, and CarPlay
+• Additional critical-low and signal-loss alerts for directly connected Libre 3 and Libre 3+ sensors
+• Libre 3 and Libre 3+ warm-up status, remaining sensor life, and expiry and replacement notifications
+• Optional critical delivery and individual Do Not Disturb times
+
+Insulin Tracking
+• Record insulin doses on iPhone, or with Shortcuts and Siri on iPhone and Apple Watch
+• Basic carbohydrate and insulin calculator using portion size and a configurable insulin-to-carbohydrate ratio
+• Insulin on Board (IOB) calculation
+• Supports rapid-acting and fast-rapid-acting bolus insulins
+• Insulin on board graph
+• Insulin activity graph
+
+Widgets, Live Activities and CarPlay
+• iOS Home Screen widgets, with and without graphs
+• Lock Screen widgets
+• StandBy widgets for bedside view
+• Live Activities for quick glucose updates
+• CarPlay view showing current glucose and IOB
+• Glucose graphs in CarPlay through widgets and Live Activities
+
+Apple Watch
+• Native watchOS app
+• A wide range of widgets and watch face complications
+• Glucose graph directly on the watch
+• On watchOS 11 or later, Live Activities can be mirrored to the Smart Stack
+
+Data Sharing
+• Export glucose readings and recorded insulin doses to Apple Health
+• When using a direct Libre 3 or Libre 3+ Bluetooth connection, export glucose readings and recorded insulin doses to your own Nightscout server
+
+MORE INFORMATION
+
+For documentation, feature details, and the open-source code, visit:
+https://flwatch.app/
+
+DISCLAIMER
+
+Not for treatment decisions.
+
+The information provided by this app and its extensions must not be used for treatment or insulin dosing decisions. Always rely on your glucose monitoring system and consult a healthcare professional when making medical decisions.
+
+TRADEMARK NOTICE
+
+All product names, trademarks, and registered trademarks are the property of their respective owners. Their use here is for identification purposes only and does not imply affiliation with or endorsement by the trademark holders.
+
+This app is not affiliated with or endorsed by Abbott Diabetes Care Inc. or Dexcom Inc.

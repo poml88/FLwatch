@@ -273,6 +273,28 @@ platform :ios do
     end
   end
 
+  desc "Upload the English What's New text to all localizations on the editable App Store version"
+  lane :upload_whats_new do
+    with_deliver_api_key_json do |api_key_json_path|
+      # Authorize the direct Connect API lookup used to require an existing editable version.
+      app_store_connect_api_key_if_configured
+
+      app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+      app_version = editable_app_store_version_string(
+        app_identifier: app_identifier,
+        platform: "ios"
+      )
+
+      with_cleared_auth_env do
+        set_changelog(
+          api_key_path: api_key_json_path,
+          version: app_version,
+          changelog: whats_new_text
+        )
+      end
+    end
+  end
+
   desc "Upload localized app descriptions to the existing editable App Store version"
   lane :upload_descriptions do
     validate_app_descriptions!

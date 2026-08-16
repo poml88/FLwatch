@@ -1,0 +1,74 @@
+FLwatch toont glucosemetingen van Abbott FreeStyle Libre 2-, Libre 3- en Libre 3+-sensoren en van Dexcom G6 / G7 / ONE+-sensoren op je iPhone en Apple Watch.
+
+Glucosegegevens kunnen worden ontvangen via de LibreLinkUp-cloud, Dexcom Share of een rechtstreekse Bluetooth-verbinding met Libre 3- en Libre 3+-sensoren.
+
+Met FLwatch kun je ook insulinedoses vastleggen. Aparte grafieken tonen de actieve insuline (Insulin on Board, IOB) en insulineactiviteit, zodat je beter inzicht krijgt in de samenhang tussen insuline en glucose.
+
+Glucosemetingen en vastgelegde insulinedoses kunnen naar de Gezondheid-app worden geëxporteerd. Bij een rechtstreekse Bluetooth-verbinding met Libre 3 of Libre 3+ kun je ze ook naar je eigen Nightscout-server exporteren.
+
+Dankzij native Apple Watch-ondersteuning, widgets, Live Activiteiten en instelbare glucose- en sensormeldingen blijven je glucosegegevens gemakkelijk zichtbaar op je Apple apparaten en ondersteunen ze je bij je dagelijkse diabetesmanagement.
+
+FLwatch is gratis en open source.
+
+FUNCTIES
+
+Glucosemonitoring
+• Bloedglucosegrafiek op iPhone en Apple Watch
+• Interactieve grafiek op iPhone: tik om afzonderlijke metingen te bekijken
+• Optionele kalibratie-offset voor rechtstreeks verbonden Libre 3- en Libre 3+-sensoren
+• Vraag je huidige glucose en trend op met Opdrachten of Siri
+• Optionele modus die het scherm aanhoudt voor snel aflezen
+
+CGM-aanbieders
+• Rechtstreekse Bluetooth-verbinding met Libre 3- en Libre 3+-sensoren
+• LibreLinkUp-cloud
+• Dexcom Share
+
+Meldingen
+• Instelbare meldingen voor lage en hoge glucose op iPhone, Apple Watch en CarPlay
+• Extra meldingen voor kritiek lage glucose en signaalverlies bij rechtstreeks verbonden Libre 3- en Libre 3+-sensoren
+• Opwarmstatus, resterende sensorlevensduur en meldingen over verlopen of te vervangen Libre 3- en Libre 3+-sensoren
+• Optionele kritieke meldingen en afzonderlijke Niet storen-tijden
+
+Insuline bijhouden
+• Leg insulinedoses vast op iPhone, of met Opdrachten en Siri op iPhone en Apple Watch
+• Eenvoudige koolhydraat- en insulinecalculator op basis van portiegrootte en een instelbare insuline-koolhydraatverhouding
+• Berekening van actieve insuline (IOB)
+• Ondersteuning voor snelwerkende en ultrasnelwerkende bolusinsuline
+• Grafiek van actieve insuline
+• Grafiek van insulineactiviteit
+
+Widgets, Live Activiteiten en CarPlay
+• iOS-beginschermwidgets met en zonder grafiek
+• Toegangsschermwidgets
+• StandBy-widgets voor naast het bed
+• Live Activiteiten voor snelle glucose-updates
+• CarPlay-weergave met de huidige glucose en IOB
+• Glucosegrafieken in CarPlay via widgets en Live Activiteiten
+
+Apple Watch
+• Native watchOS-app
+• Een ruime keuze aan widgets en wijzerplaatcomplicaties
+• Glucosegrafiek rechtstreeks op het horloge
+• Vanaf watchOS 11 kunnen Live Activiteiten naar de Slimme stapel worden gespiegeld
+
+Gegevens delen
+• Exporteer glucosemetingen en vastgelegde insulinedoses naar de Gezondheid-app
+• Exporteer bij een rechtstreekse Bluetooth-verbinding met Libre 3 of Libre 3+ glucosemetingen en vastgelegde insulinedoses naar je eigen Nightscout-server
+
+MEER INFORMATIE
+
+Ga voor documentatie, functiedetails en de open-sourcecode naar:
+https://flwatch.app/
+
+DISCLAIMER
+
+Niet gebruiken voor behandelbeslissingen.
+
+De informatie van deze app en de bijbehorende extensies mag niet worden gebruikt voor beslissingen over behandeling of insulinedosering. Raadpleeg voor medische beslissingen altijd je glucosemonitoringsysteem en een zorgprofessional.
+
+HANDELSMERKEN
+
+Alle productnamen, handelsmerken en geregistreerde handelsmerken zijn eigendom van hun respectieve eigenaren. Ze worden hier alleen ter identificatie gebruikt en dit houdt geen verbondenheid met of goedkeuring door de merkhouders in.
+
+Deze app is niet verbonden met en wordt niet ondersteund door Abbott Diabetes Care Inc. of Dexcom Inc.

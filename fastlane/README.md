@@ -31,6 +31,22 @@ Build and upload a build for internal TestFlight testers
 
 Build and upload a build for external TestFlight testers
 
+### ios upload_whats_new
+
+```sh
+[bundle exec] fastlane ios upload_whats_new
+```
+
+Upload the English What's New text to all localizations on the editable App Store version
+
+### ios upload_descriptions
+
+```sh
+[bundle exec] fastlane ios upload_descriptions
+```
+
+Upload localized app descriptions to the existing editable App Store version
+
 ### ios release
 
 ```sh

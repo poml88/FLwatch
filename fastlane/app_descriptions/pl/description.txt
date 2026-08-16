@@ -1,0 +1,74 @@
+FLwatch wyświetla na iPhonie i Apple Watch odczyty glukozy z sensorów Abbott FreeStyle Libre 2, Libre 3 i Libre 3+ oraz Dexcom G6 / G7 / ONE+.
+
+Dane o glukozie mogą być odbierane przez chmurę LibreLinkUp, Dexcom Share lub bezpośrednie połączenie Bluetooth z sensorami Libre 3 i Libre 3+.
+
+FLwatch pozwala również zapisywać dawki insuliny. Osobne wykresy pokazują aktywną insulinę (Insulin on Board, IOB) i aktywność insuliny, pomagając lepiej zrozumieć zależność między insuliną a poziomem glukozy.
+
+Odczyty glukozy i zapisane dawki insuliny można eksportować do aplikacji Zdrowie. Przy bezpośrednim połączeniu Bluetooth z Libre 3 lub Libre 3+ można je także eksportować na własny serwer Nightscout.
+
+Dzięki natywnej obsłudze Apple Watch, widżetom, Aktywnościom na żywo oraz konfigurowalnym alertom glukozy i sensora dane są łatwo dostępne na urządzeniach Apple i pomagają w codziennym zarządzaniu cukrzycą.
+
+FLwatch jest bezpłatny i ma otwarty kod źródłowy.
+
+FUNKCJE
+
+Monitorowanie glukozy
+• Wykres glukozy na iPhonie i Apple Watch
+• Interaktywny wykres na iPhonie — dotknij wybranego odczytu, aby zobaczyć szczegóły
+• Opcjonalna korekta kalibracyjna dla bezpośrednio połączonych sensorów Libre 3 i Libre 3+
+• Sprawdzanie aktualnej glukozy i trendu za pomocą Skrótów lub Siri
+• Opcjonalny tryb stale włączonego ekranu do szybkiego podglądu
+
+Dostawcy CGM
+• Bezpośrednie połączenie Bluetooth z sensorami Libre 3 i Libre 3+
+• Chmura LibreLinkUp
+• Dexcom Share
+
+Alerty
+• Konfigurowalne alerty niskiej i wysokiej glukozy na iPhonie, Apple Watch i w CarPlay
+• Dodatkowe alerty krytycznie niskiej glukozy i utraty sygnału dla bezpośrednio połączonych sensorów Libre 3 i Libre 3+
+• Stan rozgrzewania, pozostały czas działania sensora oraz powiadomienia o wygaśnięciu i wymianie Libre 3 i Libre 3+
+• Opcjonalne powiadomienia krytyczne i osobne godziny trybu Nie przeszkadzać
+
+Rejestrowanie insuliny
+• Zapisuj dawki insuliny na iPhonie albo przez Skróty i Siri na iPhonie i Apple Watch
+• Podstawowy kalkulator węglowodanów i insuliny korzystający z wielkości porcji oraz konfigurowalnego przelicznika insulina–węglowodany
+• Obliczanie aktywnej insuliny (IOB)
+• Obsługa szybko i ultraszybko działających insulin bolusowych
+• Wykres aktywnej insuliny
+• Wykres aktywności insuliny
+
+Widżety, Aktywności na żywo i CarPlay
+• Widżety ekranu początkowego iOS z wykresami lub bez
+• Widżety ekranu blokady
+• Widżety trybu Czuwanie do podglądu przy łóżku
+• Aktywności na żywo do szybkiego sprawdzania glukozy
+• Widok CarPlay z aktualną glukozą i IOB
+• Wykresy glukozy w CarPlay przez widżety i Aktywności na żywo
+
+Apple Watch
+• Natywna aplikacja watchOS
+• Wiele widżetów i komplikacji tarczy zegarka
+• Wykres glukozy bezpośrednio na zegarku
+• Od watchOS 11 Aktywności na żywo mogą być wyświetlane w Stosie inteligentnym
+
+Udostępnianie danych
+• Eksportuj odczyty glukozy i zapisane dawki insuliny do aplikacji Zdrowie
+• Przy bezpośrednim połączeniu Bluetooth z Libre 3 lub Libre 3+ eksportuj odczyty glukozy i zapisane dawki insuliny na własny serwer Nightscout
+
+WIĘCEJ INFORMACJI
+
+Dokumentację, szczegóły funkcji i otwarty kod źródłowy znajdziesz na:
+https://flwatch.app/
+
+ZASTRZEŻENIE
+
+Nie używać do podejmowania decyzji terapeutycznych.
+
+Informacji udostępnianych przez tę aplikację i jej rozszerzenia nie wolno używać do podejmowania decyzji dotyczących leczenia ani dawkowania insuliny. Przy podejmowaniu decyzji medycznych zawsze korzystaj ze swojego systemu monitorowania glukozy i skonsultuj się z personelem medycznym.
+
+INFORMACJA O ZNAKACH TOWAROWYCH
+
+Wszystkie nazwy produktów, znaki towarowe i zarejestrowane znaki towarowe należą do ich właścicieli. Zostały użyte wyłącznie w celu identyfikacji i nie oznaczają powiązania ani rekomendacji ze strony właścicieli znaków.
+
+Ta aplikacja nie jest powiązana z Abbott Diabetes Care Inc. ani Dexcom Inc. i nie jest przez te firmy rekomendowana.

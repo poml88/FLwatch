@@ -1,3 +1,6 @@
-* added support to directly connect to Libre 3 / Libre 3+ via Bluetooth. Please report any trouble.
-* lots of other smaller improvements along with that.
+* work on direct connection to Libre 3 / Libre 3+ via Bluetooth.
+* Sensor calibration offset (Libre 3(+) BLE only)
+* export to Nightscout server (Libre 3(+) BLE only)
+* more notifications for Libre 3(+) BLE
+* reduce battery usage of the LiveActivity
 

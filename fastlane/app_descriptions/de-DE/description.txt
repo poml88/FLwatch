@@ -1,0 +1,74 @@
+FLwatch zeigt Blutzuckerwerte von Abbott FreeStyle Libre 2-, Libre 3- und Libre 3 Plus-Sensoren sowie von Dexcom G6 / G7 / ONE+ auf iPhone und Apple Watch an.
+
+Die Glukosedaten können über die LibreLinkUp-Cloud, Dexcom Share oder eine direkte Bluetooth-Verbindung zu Libre 3- und Libre 3 Plus-Sensoren empfangen werden.
+
+Mit FLwatch kannst du außerdem Insulindosen erfassen. Diagramme für aktives Insulin (Insulin on Board, IOB) und Insulinaktivität helfen dir, das Zusammenspiel von Insulin und Glukose besser zu verstehen.
+
+Glukosewerte und erfasste Insulindosen können nach Apple Health exportiert werden. Bei einer direkten Bluetooth-Verbindung mit einem Libre 3- oder Libre 3 Plus-Sensor ist auch der Export auf deinen eigenen Nightscout-Server möglich.
+
+Mit Apple Watch-Unterstützung, Widgets, Live Activities und konfigurierbaren Alarmen bleiben deine Glukosedaten auf deinen Apple-Geräten gut im Blick.
+
+FLwatch ist kostenlos und Open Source.
+
+FUNKTIONEN
+
+Glukoseüberwachung
+• Blutzuckerdiagramm auf iPhone und Apple Watch
+• Interaktives Diagramm auf dem iPhone – tippe auf einzelne Messwerte, um Details anzuzeigen
+• Optionaler Kalibrierungs-Offset für direkt verbundene Libre 3- und Libre 3 Plus-Sensoren
+• Aktuellen Glukosewert und Trend über Kurzbefehle oder Siri abfragen
+• Optionaler Modus mit dauerhaft eingeschaltetem Display für einen schnellen Blick
+
+CGM-Anbieter
+• Direkte Bluetooth-Verbindung zu Libre 3- und Libre 3 Plus-Sensoren
+• LibreLinkUp-Cloud
+• Dexcom Share
+
+Alarme
+• Konfigurierbare Alarme bei niedriger und hoher Glukose auf iPhone, Apple Watch und CarPlay
+• Zusätzliche Alarme bei kritisch niedriger Glukose und Signalverlust für direkt verbundene Libre 3- und Libre 3 Plus-Sensoren
+• Aufwärmstatus, verbleibende Sensorlaufzeit sowie Ablauf- und Austauschhinweise für Libre 3 und Libre 3 Plus
+• Optionale kritische Zustellung und individuelle „Nicht stören“-Zeiten
+
+Insulinprotokoll
+• Insulindosen auf dem iPhone oder mit Kurzbefehlen und Siri auf iPhone und Apple Watch erfassen
+• Einfacher Kohlenhydrat- und Insulinrechner anhand von Portionsgröße und einstellbarem Insulin-Kohlenhydrat-Verhältnis
+• Berechnung des aktiven Insulins (IOB)
+• Unterstützung für schnell und ultraschnell wirkende Bolusinsuline
+• Diagramm für aktives Insulin
+• Diagramm für Insulinaktivität
+
+Widgets, Live Activities und CarPlay
+• iOS-Homescreen-Widgets mit und ohne Diagramm
+• Sperrbildschirm-Widgets
+• StandBy-Widgets für die Ansicht am Bett
+• Live Activities für schnelle Glukose-Updates
+• CarPlay-Ansicht mit aktuellem Glukosewert und IOB
+• Glukosediagramme in CarPlay über Widgets und Live Activities
+
+Apple Watch
+• Native watchOS-App
+• Viele Widgets und Komplikationen für Zifferblätter
+• Glukosediagramm direkt auf der Watch
+• Ab watchOS 11 können Live Activities in den Smart Stapel gespiegelt werden
+
+Datenfreigabe
+• Glukosewerte und erfasste Insulindosen nach Apple Health exportieren
+• Bei direkter Bluetooth-Verbindung mit Libre 3 oder Libre 3 Plus Glukosewerte und Insulindosen auf deinen Nightscout-Server exportieren
+
+WEITERE INFORMATIONEN
+
+Dokumentation, Funktionsdetails und den Open-Source-Code findest du unter:
+https://flwatch.app/
+
+HAFTUNGSAUSSCHLUSS
+
+Nicht für Therapieentscheidungen.
+
+Die von dieser App und ihren Erweiterungen bereitgestellten Informationen dürfen nicht für Therapie- oder Insulindosierungsentscheidungen verwendet werden. Verlasse dich bei medizinischen Entscheidungen immer auf dein Glukosemesssystem und wende dich an medizinisches Fachpersonal.
+
+MARKENHINWEIS
+
+Alle Produktnamen, Marken und eingetragenen Marken sind Eigentum ihrer jeweiligen Inhaber. Ihre Nennung dient ausschließlich der Identifikation und bedeutet keine Verbindung mit oder Empfehlung durch die Markeninhaber.
+
+Diese App ist weder mit Abbott Diabetes Care Inc. noch mit Dexcom Inc. verbunden und wird von diesen Unternehmen nicht empfohlen.
