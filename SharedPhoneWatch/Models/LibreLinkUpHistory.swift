@@ -247,10 +247,9 @@ final class LibreLinkUpHistoryStore {
             // safe while retained Libre 3 values/directions remain immutable;
             // any future historical calibration or trend remapping must make
             // this a Nightscout-specific change check. The full lifecycle sweep
-            // remains the recovery path. Only the added Nightscout work is O(1)
-            // for steady-state minute pushes.
+            // remains the recovery path.
             if shouldExportGlucose {
-                changedHistoricalCandidates.append(contentsOf: changedNightscoutCandidates(
+                changedHistoricalCandidates.append(contentsOf: Self.changedNightscoutCandidates(
                     previous: self.fullLibreLinkUpGlucose.filter {
                         !previousMinuteLifeCounts.contains($0.glucose.id)
                     },
@@ -259,20 +258,14 @@ final class LibreLinkUpHistoryStore {
                     }
                 ))
             }
-            // `normalizedLatest` can fall back to a historical point. Only
-            // membership in the minute overlay proves raw-minute provenance.
-            var changedMinuteCandidates: [LibreLinkUpGlucose] = []
-            if let normalizedLatest,
-               nextMinuteLifeCounts.contains(normalizedLatest.glucose.id) {
-                let previousLatestSignature = self.latestLibreLinkUpGlucose.flatMap {
-                    nightscoutChangeSignature(for: $0)
-                }
-                if let nextLatestSignature = nightscoutChangeSignature(for: normalizedLatest),
-                   nextLatestSignature != previousLatestSignature {
-                    changedMinuteCandidates.append(normalizedLatest)
-                }
-            }
-            nightscoutMinuteCandidates = changedMinuteCandidates
+            // Diff the complete bounded minute overlay so a clinical backfill
+            // burst reaches Nightscout immediately instead of waiting for the
+            // next retained-data sweep. The same signature comparison also keeps
+            // steady-state pushes and overlay trimming idempotent.
+            nightscoutMinuteCandidates = Self.changedNightscoutCandidates(
+                previous: self.libreLinkUpMinuteGlucose,
+                next: libreLinkUpMinuteGlucose
+            )
             nightscoutHistoricalCandidates = changedHistoricalCandidates
         } else {
             nightscoutMinuteCandidates = []
@@ -298,7 +291,7 @@ final class LibreLinkUpHistoryStore {
         return true
     }
 
-    private func changedNightscoutCandidates(
+    nonisolated static func changedNightscoutCandidates(
         previous: [LibreLinkUpGlucose],
         next: [LibreLinkUpGlucose]
     ) -> [LibreLinkUpGlucose] {
@@ -324,15 +317,6 @@ final class LibreLinkUpHistoryStore {
         return nextReadings.compactMap { identity, value in
             previousSignatures[identity] == value.signature ? nil : value.reading
         }
-    }
-
-    private func nightscoutChangeSignature(
-        for reading: LibreLinkUpGlucose
-    ) -> NightscoutEntryChangeSignature? {
-        guard CGMReadingSource.directBLENightscoutSources.contains(reading.glucose.source) else {
-            return nil
-        }
-        return NightscoutEntryChangeSignature(reading: reading)
     }
 
     /// Records that a reload succeeded without changing any reading.

@@ -152,6 +152,57 @@ enum Libre3GlucoseMapper {
         )
     }
 
+    // MARK: - Clinical minute backfill
+
+    /// Clinical records carry one current-minute value and one redundant
+    /// historical value. Only the current value belongs at the record's own
+    /// lifeCount; the realtime frame remains authoritative for historical timing.
+    static func makeGlucose(
+        fromClinical record: ClinicalReadingRecord,
+        sensorStartDate: Date,
+        settings: SensorSettings,
+        calibrationOffsetMgDL: Int = 0
+    ) -> LibreLinkUpGlucose? {
+        makeGlucose(
+            fromClinicalLifeCount: record.lifeCount,
+            currentGlucoseMgDL: record.currentGlucoseMgDL,
+            sensorStartDate: sensorStartDate,
+            settings: settings,
+            calibrationOffsetMgDL: calibrationOffsetMgDL
+        )
+    }
+
+    /// Scalar core kept separate from LibreCRKit construction so the app target's
+    /// mapping semantics remain unit-testable without linking the package into the
+    /// test target independently.
+    static func makeGlucose(
+        fromClinicalLifeCount lifeCount: UInt16,
+        currentGlucoseMgDL: UInt16?,
+        sensorStartDate: Date,
+        settings: SensorSettings,
+        calibrationOffsetMgDL: Int = 0
+    ) -> LibreLinkUpGlucose? {
+        guard let mgDL = currentGlucoseMgDL else { return nil }
+        let rawValueMgDL = Int(mgDL)
+        let value = calibratedValue(rawValueMgDL: rawValueMgDL, offsetMgDL: calibrationOffsetMgDL)
+        let date = sensorStartDate.addingTimeInterval(Double(lifeCount) * 60)
+        var glucose = Glucose(
+            rawValueMgDL,
+            temperature: 0,
+            trendRate: 0,
+            trendArrow: .notDetermined,
+            id: Int(lifeCount),
+            date: date,
+            source: CGMReadingSource.libre3BLE
+        )
+        glucose.value = value
+        return LibreLinkUpGlucose(
+            glucose: glucose,
+            color: color(forMgDL: value, settings: settings),
+            trendArrow: .notDetermined
+        )
+    }
+
     // MARK: - Embedded historical sample
     //
     // Every realtime reading also carries the sensor's most recent 5-minute

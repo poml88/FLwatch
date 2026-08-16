@@ -492,6 +492,75 @@ struct Libre3BackfillReadiness: Equatable {
     }
 }
 
+/// Per-record acceptance rules for minute-resolution clinical backfill. The
+/// ordering is intentional: warm-up is the fundamental rejection reason even
+/// when a record would also fail a later boundary check.
+struct Libre3ClinicalBackfillPolicy {
+    struct Boundary: Equatable {
+        let lifeCount: UInt16
+        let date: Date
+    }
+
+    enum Disposition: Equatable {
+        case accept
+        case rejectWarmup
+        case rejectNotOlder
+        case rejectSkew
+    }
+
+    static func disposition(
+        recordLifeCount: UInt16,
+        mappedDate: Date,
+        boundary: Boundary,
+        warmupMinutes: Int
+    ) -> Disposition {
+        guard Int(recordLifeCount) >= warmupMinutes else { return .rejectWarmup }
+        guard recordLifeCount < boundary.lifeCount else { return .rejectNotOlder }
+        guard mappedDate < boundary.date else { return .rejectSkew }
+        return .accept
+    }
+
+    /// Clinical and realtime values share lifeCount IDs. Preserve whichever
+    /// value arrived first so reconnect backfill cannot replace an accepted live
+    /// point or retroactively apply a changed calibration offset.
+    static func insertFirst(
+        _ reading: LibreLinkUpGlucose,
+        into buffer: inout [Int: LibreLinkUpGlucose]
+    ) -> Bool {
+        guard buffer[reading.glucose.id] == nil else { return false }
+        buffer[reading.glucose.id] = reading
+        return true
+    }
+}
+
+private struct Libre3ClinicalBackfillBurst {
+    var received = 0
+    var added = 0
+    var minimumLifeCount: UInt16?
+    var maximumLifeCount: UInt16?
+    var noAnchorDropped = 0
+    var noBoundaryDropped = 0
+    var warmupDropped = 0
+    var notOlderDropped = 0
+    var skewDropped = 0
+    var nonDisplayableDropped = 0
+    var duplicateDropped = 0
+    var minimumSkewSeconds: Int?
+    var maximumSkewSeconds: Int?
+
+    mutating func recordReceived(lifeCount: UInt16) {
+        received += 1
+        minimumLifeCount = min(minimumLifeCount ?? lifeCount, lifeCount)
+        maximumLifeCount = max(maximumLifeCount ?? lifeCount, lifeCount)
+    }
+
+    mutating func recordSkew(deltaSeconds: Int) {
+        skewDropped += 1
+        minimumSkewSeconds = min(minimumSkewSeconds ?? deltaSeconds, deltaSeconds)
+        maximumSkewSeconds = max(maximumSkewSeconds ?? deltaSeconds, deltaSeconds)
+    }
+}
+
 struct Libre3NoStreamCycleTracker: Equatable {
     static let warningCycle = 3
     private(set) var cycles = 0
@@ -946,6 +1015,16 @@ final class Libre3DirectManager: ObservableObject {
     /// the live buffer max instead would resume from a sample harvested seconds
     /// ago and fetch almost nothing.
     private var backfillResumeLifeCount: UInt16?
+    /// Persisted minute-series resume point captured before this session adds a
+    /// fresh realtime value.
+    private var minuteResumeLifeCount: UInt16?
+    /// Newest advancing realtime value accepted in this session. Clinical
+    /// records must be older by both lifeCount and mapped wall-clock date.
+    private var lastAcceptedRealtime: Libre3ClinicalBackfillPolicy.Boundary?
+    /// Clinical bursts are folded into memory immediately, while the expensive
+    /// store snapshot and watch send are trailing-debounced into one operation.
+    private var clinicalPushTask: Task<Void, Never>?
+    private var clinicalBackfillBurst = Libre3ClinicalBackfillBurst()
     private var readingStatusEpisodeID = 0
     private var lastSensorAttention: Libre3SensorAttention = .none
     /// Prevents reconnects for the same sensor anchor from replacing the warm-up reminder.
@@ -1064,6 +1143,9 @@ final class Libre3DirectManager: ObservableObject {
         // can synchronously enqueue a disconnect callback, and that callback must
         // not resurrect a provider the user just left.
         shouldMaintainConnection = false
+        clinicalPushTask?.cancel()
+        clinicalPushTask = nil
+        clinicalBackfillBurst = Libre3ClinicalBackfillBurst()
         clearReconnectBackoff()
         cancelDisconnectHandoffRecovery()
         disconnectHandoffPolicy.reset()
@@ -1090,6 +1172,7 @@ final class Libre3DirectManager: ObservableObject {
         decoder = nil
         dataPlaneState = nil
         didRequestBackfill = false
+        lastAcceptedRealtime = nil
         backfillFailuresThisSession = 0
         patchControlSequence.reset()
         peripheralBindingTracker.reset()
@@ -1232,6 +1315,7 @@ final class Libre3DirectManager: ObservableObject {
         historicalByLifeCount.removeAll()
         minuteByLifeCount.removeAll()
         backfillResumeLifeCount = nil
+        minuteResumeLifeCount = nil
         sensorStartDate = nil
         currentGlucoseMgDL = nil
         warmupRemainingMinutes = nil
@@ -1575,6 +1659,7 @@ final class Libre3DirectManager: ObservableObject {
         decoder = nil
         dataPlaneState = nil
         didRequestBackfill = false
+        lastAcceptedRealtime = nil
         backfillFailuresThisSession = 0
         assembler.reset()
         currentGlucoseMgDL = nil
@@ -1761,6 +1846,7 @@ final class Libre3DirectManager: ObservableObject {
         decoder = nil
         dataPlaneState = nil
         didRequestBackfill = false
+        lastAcceptedRealtime = nil
         backfillFailuresThisSession = 0
         assembler.reset()
 
@@ -1907,6 +1993,7 @@ final class Libre3DirectManager: ObservableObject {
         // their embedded (~16-min-old) historical samples — otherwise the backfill
         // would resume from one of those and fetch only the last page.
         backfillResumeLifeCount = historicalByLifeCount.keys.max().map { UInt16(clamping: $0) }
+        minuteResumeLifeCount = minuteByLifeCount.keys.max().map { UInt16(clamping: $0) }
 
         // All seven CCCDs must be ready before the session is exposed as streaming.
         lastAttemptStage = "rearm"
@@ -1922,6 +2009,7 @@ final class Libre3DirectManager: ObservableObject {
 
         // Backfill still waits for a usable realtime lifeCount after re-arm.
         didRequestBackfill = false
+        lastAcceptedRealtime = nil
         backfillFailuresThisSession = 0
 
         lastAttemptStage = "streaming"
@@ -1959,6 +2047,7 @@ final class Libre3DirectManager: ObservableObject {
             bgTask = .invalid
         }
 
+        defer { flushPendingClinicalPush() }
         try await consumeNotifications(session: session)
         finishConnectedAttempt(traceStreamEnd: true)
     }
@@ -2120,12 +2209,21 @@ final class Libre3DirectManager: ObservableObject {
               currentLifeCount > 0,
               let capturedSession = session, let crypto = decoder?.crypto else { return }
         didRequestBackfill = true
+        let boundedCurrentLifeCount = UInt16(clamping: currentLifeCount)
         // Resume from the history we held at connect time (the persisted seed),
         // NOT the live buffer — which already contains this session's freshly
         // harvested embedded samples. Fetch only the gap, capped at 6 h 10 m.
         let from = Libre3BackfillImporter.backfillStartLifeCount(
             lastHistoricalLifeCount: backfillResumeLifeCount,
-            currentLifeCount: UInt16(clamping: currentLifeCount)
+            currentLifeCount: boundedCurrentLifeCount
+        )
+        let shouldRequestClinical = Libre3BackfillImporter.shouldRequestClinicalBackfill(
+            currentLifeCount: boundedCurrentLifeCount,
+            warmupMinutes: SharedData.libre3WarmupMinutes
+        )
+        let clinicalFrom = Libre3BackfillImporter.clinicalBackfillStartLifeCount(
+            lastMinuteLifeCount: minuteResumeLifeCount,
+            currentLifeCount: boundedCurrentLifeCount
         )
         // Every retry gets a fresh AES-CCM nonce within this Phase-6 session.
         let sequence = patchControlSequence.next()
@@ -2146,6 +2244,37 @@ final class Libre3DirectManager: ObservableObject {
                 if DebugMessageSingleton.shared.libreLinkUpResponseError
                     .hasPrefix("Libre3 BLE backfill") {
                     DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
+                }
+
+                guard shouldRequestClinical else {
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "clinical-backfill-skipped lifeCount=\(boundedCurrentLifeCount) warmup=\(SharedData.libre3WarmupMinutes)"
+                    )
+                    return
+                }
+
+                // Serialize the two patch-control writes by waiting for the
+                // historical ATT response before advancing the shared nonce and
+                // issuing the independent best-effort clinical request.
+                let clinicalSequence = self.patchControlSequence.next()
+                do {
+                    try await Libre3BackfillImporter.requestClinicalBackfill(
+                        session: capturedSession,
+                        crypto: crypto,
+                        fromLifeCount: clinicalFrom,
+                        sequence: clinicalSequence
+                    )
+                    guard self.session === capturedSession,
+                          self.connectionState == .streaming else { return }
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "clinical-backfill-requested from=\(clinicalFrom)"
+                    )
+                } catch {
+                    let errorName = Self.compactErrorName(for: error)
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "clinical-backfill-failed error=\(errorName)"
+                    )
+                    Logger.libre3.error("Libre3 BLE clinical backfill request failed: \(String(describing: error), privacy: .public)")
                 }
             } catch {
                 Logger.libre3.error("Libre3 BLE historical backfill request failed: \(String(describing: error), privacy: .public)")
@@ -2622,7 +2751,9 @@ final class Libre3DirectManager: ObservableObject {
                 ingest(reading, assessment: assessment, receivedAt: receivedAt)
             case .historicalReadingPage(let page):
                 ingestHistorical(page)
-            case .patchStatus, .clinicalReadingRecord, .raw:
+            case .clinicalReadingRecord(let clinical):
+                ingestClinical(clinical)
+            case .patchStatus, .raw:
                 break
             }
         } catch {
@@ -2778,7 +2909,6 @@ final class Libre3DirectManager: ObservableObject {
             reScanSuggested = false
             SensorAlertNotificationManager.shared.retractReconnectFailing()
         }
-        requestBackfillWhenReady()
         // Only an accepted usable realtime reading proves the connection is
         // healthy; authorization/re-arm/streaming transitions never reset this.
         noStreamCycleTracker.recordUsableGlucose()
@@ -2791,6 +2921,15 @@ final class Libre3DirectManager: ObservableObject {
             minuteByLifeCount[mapped.glucose.id] = mapped
             storedReading = mapped
         }
+        if lastAcceptedRealtime.map({ reading.lifeCount > $0.lifeCount }) ?? true {
+            lastAcceptedRealtime = Libre3ClinicalBackfillPolicy.Boundary(
+                lifeCount: reading.lifeCount,
+                date: storedReading.glucose.date
+            )
+        }
+        // Backfill readiness depends on `sessionProducedGlucose`, and clinical
+        // acceptance depends on the stored realtime boundary established above.
+        requestBackfillWhenReady()
         currentGlucoseMgDL = storedReading.glucose.value
         clearReadingStatus()
         persistLastAccepted(reading, at: acceptedAt)
@@ -2989,20 +3128,123 @@ final class Libre3DirectManager: ObservableObject {
         let settings = SensorSettingsStore.shared.sensorSettings
         let calibrationOffset = SharedData.effectiveLibre3CalibrationOffsetMgDL
         var added = 0
+        var displayable = 0
         for sample in page.samples {
-            if let mapped = Libre3GlucoseMapper.makeGlucose(
+            guard let mapped = Libre3GlucoseMapper.makeGlucose(
                 fromHistorical: sample,
                 sensorStartDate: anchor,
                 settings: settings,
                 calibrationOffsetMgDL: calibrationOffset
-            ), historicalByLifeCount[mapped.glucose.id] == nil {
+            ) else { continue }
+            displayable += 1
+            if historicalByLifeCount[mapped.glucose.id] == nil {
                 historicalByLifeCount[mapped.glucose.id] = mapped
                 added += 1
             }
         }
-        Logger.libre3.info("Libre3 BLE backfill page lc \(page.startLifeCount, privacy: .public)..\(page.endLifeCount, privacy: .public): \(page.values.count, privacy: .public) samples, \(added, privacy: .public) displayable")
+        Logger.libre3.info("Libre3 BLE backfill page lc \(page.startLifeCount, privacy: .public)..\(page.endLifeCount, privacy: .public): \(page.values.count, privacy: .public) samples, \(displayable, privacy: .public) displayable, \(added, privacy: .public) added")
         guard added > 0 else { return }
         pushHistory()
+    }
+
+    /// Fold one minute-resolution clinical record into the realtime series.
+    /// These are historical data: they update the graph buffer only and must not
+    /// trigger alerts, Live Activity work, signal-loss state, or realtime health.
+    private func ingestClinical(_ record: ClinicalReadingRecord) {
+        clinicalBackfillBurst.recordReceived(lifeCount: record.lifeCount)
+        defer {
+            if let activeSession = session {
+                scheduleClinicalPush(for: activeSession)
+            }
+        }
+
+        guard let anchor = sensorStartDate else {
+            clinicalBackfillBurst.noAnchorDropped += 1
+            return
+        }
+        guard let boundary = lastAcceptedRealtime else {
+            clinicalBackfillBurst.noBoundaryDropped += 1
+            return
+        }
+        let mappedDate = anchor.addingTimeInterval(Double(record.lifeCount) * 60)
+        switch Libre3ClinicalBackfillPolicy.disposition(
+            recordLifeCount: record.lifeCount,
+            mappedDate: mappedDate,
+            boundary: boundary,
+            warmupMinutes: SharedData.libre3WarmupMinutes
+        ) {
+        case .accept:
+            break
+        case .rejectWarmup:
+            clinicalBackfillBurst.warmupDropped += 1
+            return
+        case .rejectNotOlder:
+            clinicalBackfillBurst.notOlderDropped += 1
+            return
+        case .rejectSkew:
+            clinicalBackfillBurst.recordSkew(
+                deltaSeconds: Int(mappedDate.timeIntervalSince(boundary.date).rounded())
+            )
+            return
+        }
+
+        let settings = SensorSettingsStore.shared.sensorSettings
+        let calibrationOffset = SharedData.effectiveLibre3CalibrationOffsetMgDL
+        guard let mapped = Libre3GlucoseMapper.makeGlucose(
+            fromClinical: record,
+            sensorStartDate: anchor,
+            settings: settings,
+            calibrationOffsetMgDL: calibrationOffset
+        ) else {
+            clinicalBackfillBurst.nonDisplayableDropped += 1
+            return
+        }
+        if Libre3ClinicalBackfillPolicy.insertFirst(mapped, into: &minuteByLifeCount) {
+            clinicalBackfillBurst.added += 1
+        } else {
+            clinicalBackfillBurst.duplicateDropped += 1
+        }
+    }
+
+    /// Restart the trailing debounce for a clinical burst. The session identity
+    /// guard prevents an old delayed task from flushing a replacement stream.
+    private func scheduleClinicalPush(for originatingSession: SensorSession) {
+        clinicalPushTask?.cancel()
+        clinicalPushTask = Task { [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: 600_000_000)
+            } catch {
+                return
+            }
+            guard let self, self.session === originatingSession else { return }
+            self.flushPendingClinicalPush()
+        }
+    }
+
+    /// Persist one completed clinical burst and emit one support-safe summary.
+    /// Called synchronously when the notification stream ends so accepted data is
+    /// not stranded behind a cancelled debounce.
+    private func flushPendingClinicalPush() {
+        clinicalPushTask?.cancel()
+        clinicalPushTask = nil
+        let burst = clinicalBackfillBurst
+        clinicalBackfillBurst = Libre3ClinicalBackfillBurst()
+        guard burst.received > 0 else { return }
+
+        let lifeCounts = "\(burst.minimumLifeCount ?? 0)..\(burst.maximumLifeCount ?? 0)"
+        let skewDelta: String
+        if let minimum = burst.minimumSkewSeconds,
+           let maximum = burst.maximumSkewSeconds {
+            skewDelta = "\(minimum)..\(maximum)"
+        } else {
+            skewDelta = "none"
+        }
+        Libre3DiagnosticsLog.traceReconnect(
+            "clinical-backfill-burst received=\(burst.received) added=\(burst.added) lifeCounts=\(lifeCounts) noAnchor=\(burst.noAnchorDropped) noBoundary=\(burst.noBoundaryDropped) warmupDropped=\(burst.warmupDropped) notOlderDropped=\(burst.notOlderDropped) skewDropped=\(burst.skewDropped) skewDeltaSeconds=\(skewDelta) nonDisplayable=\(burst.nonDisplayableDropped) duplicates=\(burst.duplicateDropped)"
+        )
+        if burst.added > 0 {
+            pushHistory()
+        }
     }
 
     /// Apply the decoded lifecycle to the published warm-up / expiry state.

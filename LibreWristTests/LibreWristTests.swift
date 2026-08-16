@@ -111,6 +111,95 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
+    private func directBLENightscoutReading(
+        lifeCount: Int,
+        date: Date,
+        value: Int,
+        trendArrow: TrendArrow = .notDetermined
+    ) -> LibreLinkUpGlucose {
+        LibreLinkUpGlucose(
+            glucose: Glucose(
+                value,
+                trendArrow: trendArrow,
+                id: lifeCount,
+                date: date,
+                source: CGMReadingSource.libre3BLE
+            ),
+            color: .green,
+            trendArrow: trendArrow
+        )
+    }
+
+    func testNightscoutMinuteDiffReturnsCompleteBackfillBurst() {
+        let anchor = Date(timeIntervalSince1970: 1_786_313_000)
+        let reading: (Int) -> LibreLinkUpGlucose = { lifeCount in
+            self.directBLENightscoutReading(
+                lifeCount: lifeCount,
+                date: anchor.addingTimeInterval(Double(lifeCount * 60)),
+                value: 100 + lifeCount % 20
+            )
+        }
+        let previous = [reading(100), reading(116)]
+        let next = (100...116).map(reading)
+
+        let changed = LibreLinkUpHistory.changedNightscoutCandidates(
+            previous: previous,
+            next: next
+        )
+
+        XCTAssertEqual(Set(changed.map { $0.glucose.id }), Set(101...115))
+    }
+
+    func testNightscoutMinuteDiffIgnoresUnchangedAndRemovalOnlyTransitions() {
+        let anchor = Date(timeIntervalSince1970: 1_786_313_000)
+        let previous = (100...102).map { lifeCount in
+            directBLENightscoutReading(
+                lifeCount: lifeCount,
+                date: anchor.addingTimeInterval(Double(lifeCount * 60)),
+                value: 120
+            )
+        }
+
+        XCTAssertTrue(
+            LibreLinkUpHistory.changedNightscoutCandidates(
+                previous: previous,
+                next: previous
+            ).isEmpty
+        )
+        XCTAssertTrue(
+            LibreLinkUpHistory.changedNightscoutCandidates(
+                previous: previous,
+                next: Array(previous.dropFirst())
+            ).isEmpty
+        )
+    }
+
+    func testNightscoutMinuteAndHistoricalRevisionShareStableIdentifier() {
+        let date = Date(timeIntervalSince1970: 1_786_313_475)
+        let historical = directBLENightscoutReading(
+            lifeCount: 13_310,
+            date: date,
+            value: 105
+        )
+        let minute = directBLENightscoutReading(
+            lifeCount: 13_310,
+            date: date,
+            value: 90
+        )
+        let historicalUpload = NightscoutEntryUpload(reading: historical)
+        let minuteUpload = NightscoutEntryUpload(reading: minute)
+
+        XCTAssertEqual(historicalUpload.identifier, minuteUpload.identifier)
+        XCTAssertNotEqual(historicalUpload.fingerprint, minuteUpload.fingerprint)
+        XCTAssertEqual(
+            LibreLinkUpHistory.changedNightscoutCandidates(
+                previous: [historical],
+                next: [minute]
+            ),
+            [minute]
+        )
+    }
+
     func testNightscoutMinuteCoverageMergesAdjacentRanges() {
         var coverage = NightscoutMinuteCoverage([100...105, 107...110])
 
@@ -746,6 +835,257 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(Libre3GlucoseMapper.color(forMgDL: 70, settings: settings), .green)
         XCTAssertEqual(Libre3GlucoseMapper.color(forMgDL: 250, settings: settings), .green)
         XCTAssertEqual(Libre3GlucoseMapper.color(forMgDL: 251, settings: settings), .orange)
+    }
+
+    // MARK: - Libre 3 backfill bounds
+
+    func testHistoricalBackfillStartLifeCountBoundsAndAligns() {
+        XCTAssertEqual(
+            Libre3BackfillImporter.backfillStartLifeCount(
+                lastHistoricalLifeCount: nil,
+                currentLifeCount: 1_000
+            ),
+            630
+        )
+        XCTAssertEqual(
+            Libre3BackfillImporter.backfillStartLifeCount(
+                lastHistoricalLifeCount: 915,
+                currentLifeCount: 1_000
+            ),
+            915
+        )
+        XCTAssertEqual(
+            Libre3BackfillImporter.backfillStartLifeCount(
+                lastHistoricalLifeCount: 917,
+                currentLifeCount: 1_000
+            ),
+            915
+        )
+        XCTAssertEqual(
+            Libre3BackfillImporter.backfillStartLifeCount(
+                lastHistoricalLifeCount: nil,
+                currentLifeCount: 10
+            ),
+            5
+        )
+    }
+
+    func testClinicalBackfillStartLifeCountBoundsWithoutUnderflow() {
+        XCTAssertEqual(
+            Libre3BackfillImporter.clinicalBackfillStartLifeCount(
+                lastMinuteLifeCount: nil,
+                currentLifeCount: 100
+            ),
+            80
+        )
+        XCTAssertEqual(
+            Libre3BackfillImporter.clinicalBackfillStartLifeCount(
+                lastMinuteLifeCount: 95,
+                currentLifeCount: 100
+            ),
+            95
+        )
+        XCTAssertEqual(
+            Libre3BackfillImporter.clinicalBackfillStartLifeCount(
+                lastMinuteLifeCount: nil,
+                currentLifeCount: 20
+            ),
+            1
+        )
+        XCTAssertEqual(
+            Libre3BackfillImporter.clinicalBackfillStartLifeCount(
+                lastMinuteLifeCount: nil,
+                currentLifeCount: 5
+            ),
+            1
+        )
+    }
+
+    func testClinicalBackfillRequestThresholdIncludesSafetyMinute() {
+        XCTAssertFalse(
+            Libre3BackfillImporter.shouldRequestClinicalBackfill(
+                currentLifeCount: 80,
+                warmupMinutes: 60
+            )
+        )
+        XCTAssertTrue(
+            Libre3BackfillImporter.shouldRequestClinicalBackfill(
+                currentLifeCount: 81,
+                warmupMinutes: 60
+            )
+        )
+        XCTAssertTrue(
+            Libre3BackfillImporter.shouldRequestClinicalBackfill(
+                currentLifeCount: 1_000,
+                warmupMinutes: 60
+            )
+        )
+    }
+
+    // MARK: - Libre 3 clinical minute backfill
+
+    func testClinicalBackfillPolicyRejectsWarmupPerRecord() {
+        let boundaryDate = Date(timeIntervalSince1970: 10_000)
+        let boundary = Libre3ClinicalBackfillPolicy.Boundary(
+            lifeCount: 100,
+            date: boundaryDate
+        )
+
+        XCTAssertEqual(
+            Libre3ClinicalBackfillPolicy.disposition(
+                recordLifeCount: 59,
+                mappedDate: boundaryDate.addingTimeInterval(-60),
+                boundary: boundary,
+                warmupMinutes: 60
+            ),
+            .rejectWarmup
+        )
+
+        // Even if the sensor emits clinical data when the request threshold has
+        // not been reached, each record still enforces warm-up independently.
+        XCTAssertFalse(
+            Libre3BackfillImporter.shouldRequestClinicalBackfill(
+                currentLifeCount: 80,
+                warmupMinutes: 60
+            )
+        )
+        let belowThresholdBoundary = Libre3ClinicalBackfillPolicy.Boundary(
+            lifeCount: 79,
+            date: boundaryDate
+        )
+        XCTAssertEqual(
+            Libre3ClinicalBackfillPolicy.disposition(
+                recordLifeCount: 59,
+                mappedDate: boundaryDate.addingTimeInterval(-60),
+                boundary: belowThresholdBoundary,
+                warmupMinutes: 60
+            ),
+            .rejectWarmup
+        )
+
+        // Warm-up remains the fundamental reason even if the same record would
+        // also fail the newer-than-boundary check.
+        let olderBoundary = Libre3ClinicalBackfillPolicy.Boundary(
+            lifeCount: 50,
+            date: boundaryDate
+        )
+        XCTAssertEqual(
+            Libre3ClinicalBackfillPolicy.disposition(
+                recordLifeCount: 59,
+                mappedDate: boundaryDate,
+                boundary: olderBoundary,
+                warmupMinutes: 60
+            ),
+            .rejectWarmup
+        )
+    }
+
+    func testClinicalBackfillPolicyEnforcesRealtimeBoundaryAndDate() {
+        let boundaryDate = Date(timeIntervalSince1970: 10_000)
+        let boundary = Libre3ClinicalBackfillPolicy.Boundary(
+            lifeCount: 100,
+            date: boundaryDate
+        )
+
+        XCTAssertEqual(
+            Libre3ClinicalBackfillPolicy.disposition(
+                recordLifeCount: 99,
+                mappedDate: boundaryDate.addingTimeInterval(-60),
+                boundary: boundary,
+                warmupMinutes: 60
+            ),
+            .accept
+        )
+        for lifeCount in [UInt16(100), UInt16(101)] {
+            XCTAssertEqual(
+                Libre3ClinicalBackfillPolicy.disposition(
+                    recordLifeCount: lifeCount,
+                    mappedDate: boundaryDate.addingTimeInterval(-60),
+                    boundary: boundary,
+                    warmupMinutes: 60
+                ),
+                .rejectNotOlder
+            )
+        }
+        for mappedDate in [boundaryDate, boundaryDate.addingTimeInterval(1)] {
+            XCTAssertEqual(
+                Libre3ClinicalBackfillPolicy.disposition(
+                    recordLifeCount: 99,
+                    mappedDate: mappedDate,
+                    boundary: boundary,
+                    warmupMinutes: 60
+                ),
+                .rejectSkew
+            )
+        }
+    }
+
+    func testClinicalGlucoseMapperRejectsUnavailableAndMapsValidValue() throws {
+        let settings = SensorSettings(
+            uom: 1,
+            targetLow: 80,
+            targetHigh: 180,
+            alarmLow: 70,
+            alarmHigh: 250
+        )
+        let anchor = Date(timeIntervalSince1970: 1_000)
+
+        XCTAssertNil(
+            Libre3GlucoseMapper.makeGlucose(
+                fromClinicalLifeCount: 42,
+                currentGlucoseMgDL: nil,
+                sensorStartDate: anchor,
+                settings: settings
+            )
+        )
+
+        let mapped = try XCTUnwrap(
+            Libre3GlucoseMapper.makeGlucose(
+                fromClinicalLifeCount: 42,
+                currentGlucoseMgDL: 120,
+                sensorStartDate: anchor,
+                settings: settings,
+                calibrationOffsetMgDL: 5
+            )
+        )
+        XCTAssertEqual(mapped.glucose.value, 125)
+        XCTAssertEqual(mapped.glucose.id, 42)
+        XCTAssertEqual(mapped.glucose.date, anchor.addingTimeInterval(Double(42 * 60)))
+        XCTAssertEqual(mapped.glucose.trendArrow, .notDetermined)
+        XCTAssertEqual(mapped.glucose.trendRate, 0)
+        XCTAssertEqual(mapped.trendArrow, .notDetermined)
+    }
+
+    func testClinicalBackfillDuplicatePreservesFirstValue() throws {
+        let settings = SensorSettings(
+            uom: 1,
+            targetLow: 80,
+            targetHigh: 180,
+            alarmLow: 70,
+            alarmHigh: 250
+        )
+        let anchor = Date(timeIntervalSince1970: 1_000)
+        let first = try XCTUnwrap(
+            Libre3GlucoseMapper.makeGlucose(
+                fromClinicalLifeCount: 42,
+                currentGlucoseMgDL: 100,
+                sensorStartDate: anchor,
+                settings: settings
+            )
+        )
+        let duplicate = try XCTUnwrap(
+            Libre3GlucoseMapper.makeGlucose(
+                fromClinicalLifeCount: 42,
+                currentGlucoseMgDL: 140,
+                sensorStartDate: anchor,
+                settings: settings
+            )
+        )
+        var buffer: [Int: LibreLinkUpGlucose] = [:]
+
+        XCTAssertTrue(Libre3ClinicalBackfillPolicy.insertFirst(first, into: &buffer))
+        XCTAssertFalse(Libre3ClinicalBackfillPolicy.insertFirst(duplicate, into: &buffer))
+        XCTAssertEqual(buffer[42]?.glucose.value, 100)
     }
 
     // MARK: - Libre 3 frozen-value run tracking

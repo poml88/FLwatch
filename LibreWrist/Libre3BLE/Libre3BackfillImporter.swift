@@ -28,6 +28,11 @@ enum Libre3BackfillImporter {
     /// this — it's all the graph shows.
     static let displayWindowMinutes: UInt16 = 6 * 60 + 10
 
+    /// Minute-resolution clinical history requested after a reconnect. Keep the
+    /// request deliberately short: it only bridges the gap between the lagging
+    /// 5-minute series and the current realtime value.
+    static let clinicalWindowMinutes: UInt16 = 20
+
     /// Lower bound for the backfill request, in `lifeCount` minutes.
     ///
     /// **The patch returns entries strictly NEWER than `from`** (per the libre3BT
@@ -55,6 +60,27 @@ enum Libre3BackfillImporter {
         return UInt16(max(5, aligned))
     }
 
+    /// Lower bound for minute-resolution clinical backfill. Unlike historical
+    /// samples, clinical records are not aligned to the 5-minute commit grid.
+    /// Compute in `Int` so young sensors cannot underflow UInt16 subtraction.
+    static func clinicalBackfillStartLifeCount(
+        lastMinuteLifeCount: UInt16?,
+        currentLifeCount: UInt16
+    ) -> UInt16 {
+        let windowStart = Int(currentLifeCount) - Int(clinicalWindowMinutes)
+        let raw = max(Int(lastMinuteLifeCount ?? 0), windowStart)
+        return UInt16(clamping: max(1, raw))
+    }
+
+    /// Leave one extra minute beyond warm-up plus the requested window because
+    /// the clinical command's lower-bound inclusivity has not been confirmed.
+    static func shouldRequestClinicalBackfill(
+        currentLifeCount: UInt16,
+        warmupMinutes: Int
+    ) -> Bool {
+        Int(currentLifeCount) >= warmupMinutes + Int(clinicalWindowMinutes) + 1
+    }
+
     /// Request the bounded historical backfill: arm the `historicData` notify
     /// (transiently, so the baseline handshake/refresh is untouched), then write
     /// the request. Decoded pages arrive on the session's `notifications()` stream
@@ -76,6 +102,28 @@ enum Libre3BackfillImporter {
         Logger.libre3.info("Libre3 BLE requesting historical backfill seq=\(sequence, privacy: .public) from lifeCount=\(fromLifeCount, privacy: .public) (\(command.label, privacy: .public))")
         try await session.writeRaw(frame.raw, to: LibreSensorGATT.Char.patchControl, timeout: 10)
         Logger.libre3.info("Libre3 BLE historical backfill command accepted")
+    }
+
+    /// Request one-minute clinical records using the same encrypted patch-control
+    /// path as historical backfill. The clinical CCCD is already part of the
+    /// seven-channel re-arm; this transient enable is therefore normally a logged
+    /// no-op and keeps the request self-contained.
+    static func requestClinicalBackfill(
+        session: SensorSession,
+        crypto: DataPlaneCrypto,
+        fromLifeCount: UInt16,
+        sequence: UInt16
+    ) async throws {
+        try await session.setNotify(true, for: LibreSensorGATT.Char.clinicalData, timeout: 8)
+        let command = PatchControlCommand.clinicalBackfillGreaterEqual(lifeCount: fromLifeCount)
+        let frame = try crypto.encrypt(
+            plaintext: command.plaintext,
+            sequence: sequence,
+            kind: .patchControlWrite
+        )
+        Logger.libre3.info("Libre3 BLE requesting clinical backfill seq=\(sequence, privacy: .public) from lifeCount=\(fromLifeCount, privacy: .public) (\(command.label, privacy: .public))")
+        try await session.writeRaw(frame.raw, to: LibreSensorGATT.Char.patchControl, timeout: 10)
+        Logger.libre3.info("Libre3 BLE clinical backfill command accepted")
     }
 }
 #endif
