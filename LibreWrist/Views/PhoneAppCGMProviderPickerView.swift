@@ -19,60 +19,66 @@ struct PhoneAppCGMProviderPickerView: View {
     let onPicked: (CGMProviderKind) -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            Image("FLwatchLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 88, height: 88)
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .padding(.top, 40)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 0) {
+                    Image("FLwatchLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 88, height: 88)
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .padding(.top, 40)
 
-            Text("FLwatch")
-                .padding(.top, 16)
-                .font(.system(.largeTitle))
-                .foregroundColor(.green)
+                    Text("FLwatch")
+                        .padding(.top, 16)
+                        .font(.system(.largeTitle))
+                        .foregroundColor(.green)
 
-            Text("Pick your CGM")
-                .font(.title2)
-                .padding(.top, 24)
+                    Text("Pick your CGM")
+                        .font(.title2)
+                        .padding(.top, 24)
 
-            Text("You can change this later in Settings.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .padding(.top, 4)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
+                    Text("You can change this later in Settings.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 4)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
 
-            Spacer()
+                    Spacer()
 
-            VStack(spacing: 16) {
-                providerCard(
-                    title: "FreeStyle Libre",
-                    subtitle: "Connects via your LibreLinkUp follower account. Detailed setup instructions and a video guide are on the app's website.",
-                    systemImage: "drop.circle"
-                ) {
-                    pick(.libreLinkUp)
+                    VStack(spacing: 16) {
+                        providerCard(
+                            title: "FreeStyle Libre",
+                            subtitle: "Connects via your LibreLinkUp follower account. Detailed setup instructions and a video guide are on the app's website.",
+                            systemImage: "drop.circle"
+                        ) {
+                            pick(.libreLinkUp)
+                        }
+
+                        providerCard(
+                            title: "Dexcom",
+                            subtitle: "Connects via Dexcom Share. In the Dexcom app, turn on Share and invite at least one follower. Then sign in here with the sharer's (patient's) account — not a follower's.",
+                            systemImage: "waveform.path.ecg"
+                        ) {
+                            pick(.dexcomShare)
+                        }
+
+                        providerCard(
+                            title: "FreeStyle Libre 3 (Bluetooth)",
+                            subtitle: "Connects directly to a Libre 3 / Libre 3 Plus sensor over Bluetooth — no follower account or cloud needed. You pair by holding your phone to the sensor.",
+                            systemImage: "sensor.tag.radiowaves.forward"
+                        ) {
+                            pick(.libre3BLE)
+                        }
+                    }
+                    .padding(.horizontal, 24)
+
+                    Spacer()
                 }
-
-                providerCard(
-                    title: "Dexcom",
-                    subtitle: "Connects via Dexcom Share. In the Dexcom app, turn on Share and invite at least one follower. Then sign in here with the sharer's (patient's) account — not a follower's.",
-                    systemImage: "waveform.path.ecg"
-                ) {
-                    pick(.dexcomShare)
-                }
-
-                providerCard(
-                    title: "FreeStyle Libre 3 (Bluetooth)",
-                    subtitle: "Connects directly to a Libre 3 / Libre 3 Plus sensor over Bluetooth — no follower account or cloud needed. You pair by holding your phone to the sensor.",
-                    systemImage: "sensor.tag.radiowaves.forward"
-                ) {
-                    pick(.libre3BLE)
-                }
+                // Retain the original balanced spacing when all content fits.
+                .frame(minHeight: geometry.size.height)
             }
-            .padding(.horizontal, 24)
-
-            Spacer()
         }
     }
 
@@ -96,6 +102,7 @@ struct PhoneAppCGMProviderPickerView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer()
             }

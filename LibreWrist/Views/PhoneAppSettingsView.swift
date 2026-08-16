@@ -325,6 +325,10 @@ struct PhoneAppSettingsView: View {
                         "Enable Nightscout upload",
                         comment: "Toggle that enables automatic uploads to the user's Nightscout server."
                     )
+                    Text(
+                        "Exports 1-minute glucose readings and fills gaps with 5-minute history values.",
+                        comment: "Short explanation of which glucose readings the Nightscout export sends."
+                    )
                 }
                 .disabled(isTestingNightscoutConnection)
 
@@ -483,6 +487,10 @@ struct PhoneAppSettingsView: View {
                         "Export glucose values to Apple Health",
                         comment: "Settings switch enabling writing of CGM glucose readings to Apple Health"
                     ),
+                    subtitle: LocalizedStringResource(
+                        "Exports 5-minute glucose history values.",
+                        comment: "Short explanation of which glucose readings the Apple Health export sends."
+                    ),
                     kind: .glucose,
                     isEnabled: $appleHealthGlucoseExportEnabled,
                     state: $appleHealthGlucoseState
@@ -512,6 +520,112 @@ struct PhoneAppSettingsView: View {
             Text(
                 "Data Sharing",
                 comment: "Navigation title for settings that send glucose and insulin data to other services."
+            )
+        )
+    }
+
+    private var liveActivitySettingsView: some View {
+        Form {
+            Section {
+                Toggle(isOn: $useLiveActivities) {
+                    Text("Enable Live Activities")
+                }
+                .onChange(of: useLiveActivities) { _, newValue in
+                    Task {
+                        if newValue {
+                            await LiveActivityManager.shared.refreshFromCurrentHistory(useLiveActivities: true)
+                        } else {
+                            await LiveActivityManager.shared.endAllActivities()
+                        }
+                    }
+                }
+            }
+
+            Section {
+                switch cgmProviderKind {
+                case .libreLinkUp:
+                    Text(
+                        "With Bluetooth heartbeat enabled, the Live Activity is refreshed when the sensor provides a new reading—about every minute.",
+                        comment: "Live Activity update cadence for the LibreLinkUp provider when Bluetooth heartbeat is enabled."
+                    )
+                case .dexcomShare:
+                    Text(
+                        "With Bluetooth heartbeat enabled, the Live Activity is refreshed when the sensor provides a new reading—about every 5 minutes.",
+                        comment: "Live Activity update cadence for the Dexcom Share provider when Bluetooth heartbeat is enabled."
+                    )
+                case .libre3BLE:
+                    Text(
+                        "The sensor sends a new reading to FLwatch every minute, so the Live Activity is refreshed every minute.",
+                        comment: "Live Activity update cadence when FLwatch connects directly to a Libre 3 sensor over Bluetooth."
+                    )
+                }
+
+                Text(
+                    "iOS background execution may also refresh the Live Activity. With Background App Refresh enabled for FLwatch in iOS Settings, testing on the developer’s iPhone usually showed background refreshes about every 8 minutes. iOS controls the timing, so they are not guaranteed and may pause for longer periods; this has been observed during Sleep Focus.",
+                    comment: "Explanation of the additional, approximate, and non-guaranteed Live Activity updates provided by iOS background execution for any CGM provider."
+                )
+            } header: {
+                Text(
+                    "Update frequency",
+                    comment: "Section title for information about how often the Live Activity is refreshed."
+                )
+            } footer: {
+                Text(
+                    "More frequent Live Activity updates increase battery use.",
+                    comment: "Battery warning shown below the provider-specific Live Activity update explanation."
+                )
+            }
+
+            Section {
+                Text(
+                    "To show FLwatch in the Apple Watch Smart Stack, open Settings on Apple Watch, then choose Smart Stack › Live Activities and enable mirroring from iPhone. Requires watchOS 11 or later.",
+                    comment: "Instructions for enabling mirroring of the FLwatch Live Activity from iPhone to the Apple Watch Smart Stack."
+                )
+            } header: {
+                Text(verbatim: "Apple Watch")
+            }
+
+            Section {
+                Text(
+                    "On supported versions of CarPlay, the Live Activity appears automatically.",
+                    comment: "Explanation that CarPlay displays the FLwatch Live Activity automatically when supported."
+                )
+            } header: {
+                Text(verbatim: "CarPlay")
+            }
+
+            Section {
+                Link(destination: URL(string: UIApplication.openSettingsURLString)!) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(
+                            "Open FLwatch settings",
+                            comment: "Link that opens FLwatch's page in the iOS Settings app."
+                        )
+                        Group {
+                            if ActivityAuthorizationInfo().areActivitiesEnabled {
+                                Text(
+                                    "Live Activities are enabled in iOS Settings.",
+                                    comment: "Status below the iOS Settings link when the system allows Live Activities."
+                                )
+                            } else {
+                                Text(
+                                    "Live Activities are disabled in iOS Settings.",
+                                    comment: "Status below the iOS Settings link when the system does not allow Live Activities."
+                                )
+                            }
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                }
+            } header: {
+                Text(verbatim: "iOS")
+            }
+        }
+        .navigationTitle(
+            Text(
+                "Live Activities",
+                comment: "Navigation title for settings and information about Live Activities."
             )
         )
     }
@@ -735,63 +849,6 @@ struct PhoneAppSettingsView: View {
                 }
             }
 
-            Section {
-                Toggle("Keep phone screen always on", isOn: $isScreenAlwaysOn)
-                    .onChange(of: isScreenAlwaysOn) {
-                        UIApplication.shared.isIdleTimerDisabled.toggle()
-                    }
-
-                Toggle(isOn: $useLiveActivities) {
-                    Text("Enable Live Activities")
-                    let systemLiveActivityEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
-                    ? "System Live Activities: enabled"
-                    : "System Live Activities: disabled in iOS settings"
-                    Text("Updates of this live activity are not guaranteed. On my phone about every 8 minutes.\nTo enable or disable mirroring of the live activity to the Smart Stack of the Watch use the \"Watch\" app on the phone.\nLive Activity needs to be enabled in the app settings as well. Current status: \(systemLiveActivityEnabled)")
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.trailing, 8)
-                    Link("Tap to open app settings.", destination: URL(string: UIApplication.openSettingsURLString)!)
-                }
-                    .onChange(of: useLiveActivities) { _, newValue in
-                        Task {
-                            if newValue {
-                                await LiveActivityManager.shared.refreshFromCurrentHistory(useLiveActivities: true)
-                            } else {
-                                await LiveActivityManager.shared.endAllActivities()
-                            }
-                        }
-                    }
-            } header: {
-                Text("Settings")
-            }
-
-            Section {
-                NavigationLink {
-                    dataSharingSettingsView
-                } label: {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(
-                            "Data Sharing",
-                            comment: "Settings row that opens controls for sending data to Apple Health and Nightscout."
-                        )
-                        Group {
-                            if developerModeEnabled && cgmProviderKind == .libre3BLE {
-                                Text(
-                                    "Apple Health and Nightscout",
-                                    comment: "Subtitle listing the services configured in Data Sharing settings when Nightscout is available."
-                                )
-                            } else {
-                                Text(
-                                    "Apple Health",
-                                    comment: "Subtitle listing Apple Health as the available service in Data Sharing settings."
-                                )
-                            }
-                        }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    }
-                }
-            }
-
             // The Bluetooth heartbeat — and the glucose alerts that ride on it
             // (now in the Alerts tab) — applies only to the cloud providers:
             // there FLwatch relies on the vendor app for primary alarms, and the
@@ -799,98 +856,139 @@ struct PhoneAppSettingsView: View {
             // no vendor app to alarm and nothing to poll, so the whole section is
             // hidden. BLE gets its own purpose-built alarms for the push model.
             if cgmProviderKind != .libre3BLE {
-            Section {
-                Toggle(
-                    "Enable Bluetooth heartbeat",
-                    isOn: Binding(
-                        get: { bluetoothHeartbeatManager.isEnabled },
-                        set: {
-                            bluetoothHeartbeatManager.setEnabled($0)
-                            guard !$0 else { return }
-                            if lowGlucoseNotificationsEnabled {
-                                lowGlucoseNotificationsEnabled = false
-                                disableGlucoseAlerts(.low)
+                Section {
+                    Toggle(
+                        "Enable Bluetooth heartbeat",
+                        isOn: Binding(
+                            get: { bluetoothHeartbeatManager.isEnabled },
+                            set: {
+                                bluetoothHeartbeatManager.setEnabled($0)
+                                guard !$0 else { return }
+                                if lowGlucoseNotificationsEnabled {
+                                    lowGlucoseNotificationsEnabled = false
+                                    disableGlucoseAlerts(.low)
+                                }
+                                if highGlucoseNotificationsEnabled {
+                                    highGlucoseNotificationsEnabled = false
+                                    disableGlucoseAlerts(.high)
+                                }
                             }
-                            if highGlucoseNotificationsEnabled {
-                                highGlucoseNotificationsEnabled = false
-                                disableGlucoseAlerts(.high)
-                            }
-                        }
+                        )
                     )
-                )
 
-                Text("To discover your sensor transmitter, first fully close the LibreLink or Libre 3 app. After the transmitter connects in FLwatch, you can open the app again.")
-                    .font(.subheadline)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .foregroundStyle(.secondary)
+                    Text("To discover your sensor transmitter, first fully close the LibreLink or Libre 3 app. After the transmitter connects in FLwatch, you can open the app again.")
+                        .font(.subheadline)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(.secondary)
 
-                HStack {
-                    Button(bluetoothHeartbeatActionTitle) {
-                        if bluetoothHeartbeatManager.isScanning {
-                            bluetoothHeartbeatManager.stopScanning()
-                        } else {
-                            bluetoothHeartbeatManager.startScanning()
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(!bluetoothHeartbeatManager.isEnabled)
-
-                    if !bluetoothHeartbeatManager.selectedDeviceName.isEmpty {
-                        Button("Clear device") {
-                            bluetoothHeartbeatManager.clearSelection()
+                    HStack {
+                        Button(bluetoothHeartbeatActionTitle) {
+                            if bluetoothHeartbeatManager.isScanning {
+                                bluetoothHeartbeatManager.stopScanning()
+                            } else {
+                                bluetoothHeartbeatManager.startScanning()
+                            }
                         }
                         .buttonStyle(.bordered)
                         .disabled(!bluetoothHeartbeatManager.isEnabled)
+
+                        if !bluetoothHeartbeatManager.selectedDeviceName.isEmpty {
+                            Button("Clear device") {
+                                bluetoothHeartbeatManager.clearSelection()
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(!bluetoothHeartbeatManager.isEnabled)
+                        }
                     }
-                }
 
-                Text("Status: \(bluetoothHeartbeatStatusText)")
+                    Text("Status: \(bluetoothHeartbeatStatusText)")
 
-                if !bluetoothHeartbeatManager.selectedDeviceName.isEmpty {
-                    Text("Selected device: \(bluetoothHeartbeatManager.selectedDeviceName)")
-                }
+                    if !bluetoothHeartbeatManager.selectedDeviceName.isEmpty {
+                        Text("Selected device: \(bluetoothHeartbeatManager.selectedDeviceName)")
+                    }
 
-                if !bluetoothHeartbeatManager.selectedPeripheralUUID.isEmpty {
-                    Text("Peripheral UUID: \(bluetoothHeartbeatManager.selectedPeripheralUUID)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                    if !bluetoothHeartbeatManager.selectedPeripheralUUID.isEmpty {
+                        Text("Peripheral UUID: \(bluetoothHeartbeatManager.selectedPeripheralUUID)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
 
-                if let lastHeartbeatDate = bluetoothHeartbeatManager.lastHeartbeatDate {
-                    Text("Last heartbeat: \(lastHeartbeatDate.formatted(date: .abbreviated, time: .standard))")
-                }
+                    if let lastHeartbeatDate = bluetoothHeartbeatManager.lastHeartbeatDate {
+                        Text("Last heartbeat: \(lastHeartbeatDate.formatted(date: .abbreviated, time: .standard))")
+                    }
 
-                if bluetoothHeartbeatManager.discoveredDevices.isEmpty {
-                    Text("No matching nearby devices found yet.")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(bluetoothHeartbeatManager.discoveredDevices) { device in
-                        Button {
-                            bluetoothHeartbeatManager.selectDevice(device)
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(device.name)
-                                    Text("RSSI \(device.rssi) • \(device.lastSeen.formatted(date: .omitted, time: .standard))")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                if device.id.uuidString == bluetoothHeartbeatManager.selectedPeripheralUUID {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.tint)
+                    if bluetoothHeartbeatManager.discoveredDevices.isEmpty {
+                        Text("No matching nearby devices found yet.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(bluetoothHeartbeatManager.discoveredDevices) { device in
+                            Button {
+                                bluetoothHeartbeatManager.selectDevice(device)
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(device.name)
+                                        Text("RSSI \(device.rssi) • \(device.lastSeen.formatted(date: .omitted, time: .standard))")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    if device.id.uuidString == bluetoothHeartbeatManager.selectedPeripheralUUID {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundStyle(.tint)
+                                    }
                                 }
                             }
+                            .disabled(!bluetoothHeartbeatManager.isEnabled)
                         }
-                        .disabled(!bluetoothHeartbeatManager.isEnabled)
+                    }
+                } header: {
+                    Text("Bluetooth heartbeat")
+                } footer: {
+                    Text("FLwatch scans for devices nearby, reconnects to the selected device, and uses that Bluetooth activity to refresh glucose data, widgets, Live Activities, and background updates. Only nearby discoverable Bluetooth devices can appear here. This mode has very little impact on the battery.")
+                }
+            }
+
+            Section {
+                Toggle(isOn: $isScreenAlwaysOn) {
+                    Text("Keep phone screen always on")
+                    Text(
+                        "Turns off when FLwatch is restarted.",
+                        comment: "Subtitle clarifying that the keep-screen-on setting is temporary and resets when the app restarts."
+                    )
+                }
+                    .onChange(of: isScreenAlwaysOn) {
+                        UIApplication.shared.isIdleTimerDisabled.toggle()
+                    }
+
+                NavigationLink {
+                    liveActivitySettingsView
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(
+                            "Live Activities",
+                            comment: "Settings row that opens Live Activity configuration and information."
+                        )
+                        Group {
+                            if useLiveActivities {
+                                Text(
+                                    "Enabled",
+                                    comment: "Subtitle indicating that FLwatch Live Activities are enabled."
+                                )
+                            } else {
+                                Text(
+                                    "Disabled",
+                                    comment: "Subtitle indicating that FLwatch Live Activities are disabled."
+                                )
+                            }
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     }
                 }
             } header: {
-                Text("Bluetooth heartbeat")
-            } footer: {
-                Text("FLwatch scans for devices nearby, reconnects to the selected device, and uses that Bluetooth activity to refresh glucose data, widgets, Live Activities, and background updates. Only nearby discoverable Bluetooth devices can appear here. This mode has very little impact on the battery.")
+                Text("Settings")
             }
-            } // end `if cgmProviderKind != .libre3BLE` — heartbeat section hidden in BLE mode
 
             Section {
                 Toggle(isOn: $tapComplicationReloads) {
@@ -990,6 +1088,34 @@ struct PhoneAppSettingsView: View {
                 Text("Watch Settings")
             } footer: {
                 Text("Use this if the watch app was reinstalled or its settings appear out of sync.")
+            }
+
+            Section {
+                NavigationLink {
+                    dataSharingSettingsView
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(
+                            "Data Sharing",
+                            comment: "Settings row that opens controls for sending data to Apple Health and Nightscout."
+                        )
+                        Group {
+                            if cgmProviderKind == .libre3BLE {
+                                Text(
+                                    "Apple Health and Nightscout",
+                                    comment: "Subtitle listing the services configured in Data Sharing settings when Nightscout is available."
+                                )
+                            } else {
+                                Text(
+                                    "Apple Health",
+                                    comment: "Subtitle listing Apple Health as the available service in Data Sharing settings."
+                                )
+                            }
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                }
             }
 
             Section {
@@ -1321,6 +1447,7 @@ struct PhoneAppSettingsView: View {
     @ViewBuilder
     private func appleHealthExportToggle(
         title: LocalizedStringResource,
+        subtitle: LocalizedStringResource? = nil,
         kind: AppleHealthDataKind,
         isEnabled: Binding<Bool>,
         state: Binding<AppleHealthAuthorizationState>
@@ -1351,6 +1478,9 @@ struct PhoneAppSettingsView: View {
             )
         ) {
             Text(title)
+            if let subtitle {
+                Text(subtitle)
+            }
         }
         .disabled(state.wrappedValue == .unavailable)
 
