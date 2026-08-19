@@ -201,7 +201,11 @@ final class Libre3PairingCoordinator: ObservableObject {
                 state = restingState()
                 return
             }
-            Logger.libre3.error("Pairing (\(mode.rawValue, privacy: .public)) failed: \(String(describing: error), privacy: .public)")
+            // Log the receiver ID we sent alongside the failure: a `0xB1` rejection
+            // is a receiver-ID mismatch, so this is the first thing to check in a
+            // user report. It's a hash of the account ID, not the ID itself, so
+            // it's safe to log in the clear.
+            Logger.libre3.error("Pairing (\(mode.rawValue, privacy: .public)) failed with receiverID \(receiverID.displayString, privacy: .public): \(String(describing: error), privacy: .public)")
             state = .failed(message: Self.friendlyMessage(for: error, mode: mode))
         }
     }
@@ -317,9 +321,8 @@ final class Libre3PairingCoordinator: ObservableObject {
 
     /// Decodes the sensor's `01 <code>` error response (after stripping `0xA5`
     /// padding) into an actionable message. Codes per DiaBLE's Libre 3 NFC
-    /// notes: `0xB0`/`0xB2` expired, `0xB1` "activated by the reader" (the
-    /// sensor refuses the `0xA8` switch-receiver — `0xA0`/Parallel is accepted
-    /// instead), `0xC1`/`0xC2` malformed request.
+    /// notes: `0xB0`/`0xB2` expired, `0xB1` receiver-ID mismatch (on both `0xA8`
+    /// and `0xA0`), `0xC1`/`0xC2` malformed request.
     private static func activationCommandRejected(raw: Data, commandCode: NFCActivationCommandCode?) -> String {
         let stripped = Data(raw.drop(while: { $0 == 0xA5 }))
         guard stripped.count >= 2, stripped.first == 0x01 else {
@@ -328,11 +331,20 @@ final class Libre3PairingCoordinator: ObservableObject {
         let code = stripped[stripped.index(after: stripped.startIndex)]
         switch code {
         case 0xB1:
-            // 0xB1 = "activated by the reader, not an app." Observed on BOTH
-            // 0xA8 (takeover) and 0xA0 (parallel) while the sensor was in its
-            // ~60-min warm-up; a working takeover (sample app, 0xA8) was on a
-            // post-warm-up sensor — so this is most likely warm-up-transient.
-            return String(localized: "The sensor refused pairing (0xB1). It's most likely still in its ~60-minute warm-up. Wait until warm-up finishes, then try again.")
+            // 0xB1 = the receiver ID in our command body doesn't match the one
+            // the sensor stored at activation. Rejected the same way on 0xA8
+            // (takeover) and 0xA0 (parallel), and unrelated to warm-up — an
+            // account-matched takeover works mid-warm-up (PLAN §0.1–0.2).
+            // Juggluco reports the same code as "wrong account ID"; DiaBLE saw
+            // it on reader-activated sensors. Some activators never derive the
+            // receiver ID from a LibreView account (the FreeStyle Libre 3
+            // reader, and the newer US "Libre by Abbott" app covering Libre 2 +
+            // Libre 3), so those sensors can't be paired at all — only fresh
+            // activation with FLwatch works for them.
+            return String(
+                localized: "The sensor refused pairing (0xB1): it was activated under a different account. Take over and Parallel only work with the LibreView Account ID that activated this sensor.\n\nSensors started with a FreeStyle Libre 3 reader, or with the newer US “Libre by Abbott” app, can't be paired at all — their receiver ID isn't derived from a LibreView account. Either activate a new sensor directly in FLwatch, or use the “FreeStyle Libre 3 – US” app.",
+                comment: "Pairing failure. The sensor stores a 'receiver ID' (a hash of the LibreView account ID) when it is activated and rejects any pairing attempt that presents a different one. Shown after a failed Take over or Parallel NFC scan."
+            )
         case 0xB0, 0xB2:
             return String(localized: "This sensor has expired.")
         case 0xC1, 0xC2:
