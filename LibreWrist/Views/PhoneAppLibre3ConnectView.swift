@@ -36,10 +36,10 @@ struct PhoneAppLibre3ConnectView: View {
     @AppStorage(DefaultsKey.libre3LibreViewEmail.rawValue, store: UserDefaults.group)
     private var libreViewEmail: String = ""
 
-    /// Temporary diagnostic (branch `getLbAReceiverID`): which derivation the
-    /// next pairing scan uses. Developer-only; see `Libre3ReceiverIDDerivation`.
-    @AppStorage(DefaultsKey.libre3ReceiverIDDerivation.rawValue, store: UserDefaults.group)
-    private var receiverIDDerivation: Libre3ReceiverIDDerivation = .classic
+    /// Which app started the sensor, deciding how the Account ID folds into the
+    /// receiver ID. Seeded once by `seedActivatingAppIfUnset()`.
+    @AppStorage(DefaultsKey.libre3ActivatingApp.rawValue, store: UserDefaults.group)
+    private var activatingApp: Libre3ActivatingApp = .freeStyleLibre3
 
     /// Password is a keychain secret, loaded on appear and never persisted in
     /// the app group.
@@ -47,11 +47,26 @@ struct PhoneAppLibre3ConnectView: View {
     @State private var isFetchingAccountID = false
     @State private var accountIDFetchError: String?
 
-    /// Takeover / parallel join need a patient ID that matches the activating
-    /// account, or the sensor returns 0xB1. Block the scan until it's provided.
-    private var patientIdMissingForMode: Bool {
-        selectedMode.requiresAlreadyActiveSensor
-            && libreViewPatientId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    /// Why the scan button is blocked, or nil when it's ready.
+    ///
+    /// A vendor app always needs its Account ID — including for Fresh, where the
+    /// ID is what FLwatch writes to the sensor. Without it we'd fall back to a
+    /// generated receiver ID and irreversibly activate a sensor the chosen app
+    /// could never take over, having just promised the opposite.
+    private var scanBlockedReason: String? {
+        guard activatingApp.usesLibreViewAccount else {
+            // FLwatch only always has an identity to present — the permanent
+            // installation receiver ID — so every mode is reachable, including
+            // re-pairing a sensor FLwatch activated earlier.
+            return nil
+        }
+        guard libreViewPatientId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+        return String(
+            localized: "Enter your LibreView Account ID above first — the selected app's receiver ID is derived from it.",
+            comment: "Shown under a disabled scan button when the LibreView Account ID field is empty but the chosen app needs it. The sensor's receiver ID is computed from that account ID."
+        )
     }
 
     var body: some View {
@@ -77,6 +92,11 @@ struct PhoneAppLibre3ConnectView: View {
                 libreViewPassword = stored ?? ""
             }
             reloadDiagnosticsLog()
+        }
+        .task {
+            // Storefront lookup is async and only runs until the user has an
+            // activating app on record, so this is a one-off on first visit.
+            await Libre3StateStore.seedActivatingAppIfUnset()
         }
         .onReceive(NotificationCenter.default.publisher(for: .libre3DiagnosticsDidChange)) { _ in
             reloadDiagnosticsLog()
@@ -133,11 +153,40 @@ struct PhoneAppLibre3ConnectView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
+            // Defines the shorthand the rest of the screen uses, so those texts
+            // can stay app-neutral without naming one app and misleading users
+            // of the other. Kept as its own string so the paragraph above keeps
+            // its existing translations.
+            Text(
+                "“Libre 3 app” here means whichever Abbott app you use: FreeStyle Libre 3, or Libre by Abbott in the US.",
+                comment: "Defines a shorthand the rest of this screen uses, so the other texts can say 'the Libre 3 app' without naming one of Abbott's two apps and misleading users of the other. Keep both product names untranslated."
+            )
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
         } header: {
             Text("Libre 3 BLE notes")
         }
-        
-        
+
+        // Mode first: it decides whether the app choice means "which app started
+        // this sensor" or "which app should still be able to use it afterwards".
+        pairingModeSection
+
+        activatingAppSection
+
+        // Only the vendor-app choices derive the receiver ID from an account;
+        // FLwatch-only fresh activation generates its own, so these rows would
+        // just be noise.
+        if activatingApp.usesLibreViewAccount {
+            libreViewAccountSection
+        }
+
+        scanAndCheckSections
+    }
+
+    @ViewBuilder
+    private var libreViewAccountSection: some View {
         Section {
             TextField("LibreView email", text: $libreViewEmail)
                 .textContentType(.username)
@@ -186,11 +235,14 @@ struct PhoneAppLibre3ConnectView: View {
         } header: {
             Text("LibreView account")
         } footer: {
-            Text("Sign in with the LibreView (FreeStyle Libre 3 app) account that activated this sensor and tap Get Account ID to fill it in automatically. Its hash becomes the receiver ID — takeover and parallel join only work when it matches the activating account, otherwise the sensor rejects pairing (error 0xB1).")
+            Text(
+                "Sign in with the LibreView account used by the app above and tap Get Account ID to fill it in. The receiver ID is derived from it, so it has to be the account that sensor belongs to.",
+                comment: "Footer of the LibreView credentials section. “Get Account ID” is the button directly above — keep the two wordings consistent."
+            )
         }
+    }
 
-        receiverIDDerivationSection
-
+    private var pairingModeSection: some View {
         Section {
             Picker("Pairing mode", selection: $selectedMode) {
                 Text("Parallel").tag(Libre3Mode.parallelJoin)
@@ -216,7 +268,10 @@ struct PhoneAppLibre3ConnectView: View {
         } header: {
             Text("Pairing mode")
         }
+    }
 
+    @ViewBuilder
+    private var scanAndCheckSections: some View {
         Section {
             Button {
                 if selectedMode.startsIrreversibleWearClock {
@@ -230,13 +285,17 @@ struct PhoneAppLibre3ConnectView: View {
                     Text(coordinator.state == .scanning ? "Scanning…" : "Hold sensor to phone to pair")
                 }
             }
-            .disabled(coordinator.state == .scanning || patientIdMissingForMode)
+            .disabled(coordinator.state == .scanning || scanBlockedReason != nil)
 
-            if patientIdMissingForMode {
-                Label("Enter your LibreView Patient UUID above first — takeover and parallel join need it.", systemImage: "info.circle")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+            if let scanBlockedReason {
+                Label {
+                    Text(scanBlockedReason)
+                } icon: {
+                    Image(systemName: "info.circle")
+                }
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             }
 
             if case .failed(let message) = coordinator.state {
@@ -277,6 +336,21 @@ struct PhoneAppLibre3ConnectView: View {
                 // Raw minutes shown too, to see if it's constant (rated) or
                 // counts down (remaining).
                 LabeledContent("Sensor life", value: "\(sensorLifeText(info.wearDurationMinutes)) (\(info.wearDurationMinutes) min)")
+                // What the next pairing scan would send, given the app and
+                // Account ID above — diagnostic, so it belongs here rather than
+                // beside the picker.
+                if let derivedReceiverID {
+                    LabeledContent {
+                        Text(verbatim: derivedReceiverID)
+                            .font(.system(.caption, design: .monospaced))
+                            .textSelection(.enabled)
+                    } label: {
+                        Text(
+                            "Receiver ID",
+                            comment: "Diagnostic row: the identifier FLwatch would send to the sensor when pairing. Shown as a hexadecimal number."
+                        )
+                    }
+                }
             }
         } header: {
             Text("Check sensor")
@@ -285,64 +359,69 @@ struct PhoneAppLibre3ConnectView: View {
         }
     }
 
-    // MARK: - Receiver ID derivation (temporary diagnostic)
+    // MARK: - Sensor activation (which app, and so which receiver ID)
 
-    /// Probe for the "Libre by Abbott" 0xB1 problem: pick which derivation the
-    /// Account ID goes through, and see the resulting receiver ID before
-    /// scanning. The scan button and pairing modes are unaffected — only the
-    /// number in the NFC command body changes.
-    ///
-    /// Deliberately not gated behind developer mode: this ships only in a
-    /// test build, and the tester shouldn't need the developer code to reach it.
-    ///
-    /// Temporary (branch `getLbAReceiverID`); strings are deliberately verbatim
-    /// so they never reach the localization catalog. Remove with
-    /// `Libre3ReceiverIDDerivation`.
-    private var receiverIDDerivationSection: some View {
+    /// The app whose receiver ID the sensor carries. The question runs in two
+    /// directions depending on the mode: for takeover / parallel join the sensor
+    /// already holds one and we must match it, while fresh activation writes it
+    /// and so decides which app could ever take the sensor over afterwards.
+    /// Nothing in the patch info reveals it, so the user has to say.
+    private var activatingAppSection: some View {
         Section {
-            Picker(selection: $receiverIDDerivation) {
-                ForEach(Libre3ReceiverIDDerivation.allCases) { derivation in
-                    Text(verbatim: derivation.displayName).tag(derivation)
+            Picker(selection: $activatingApp) {
+                ForEach(Libre3ActivatingApp.allCases) { app in
+                    Text(app.displayName).tag(app)
                 }
             } label: {
-                Text(verbatim: "Derivation")
+                if selectedMode.startsIrreversibleWearClock {
+                    Text(
+                        "Keep usable with",
+                        comment: "Label of the app picker when activating a new sensor: which app should still be able to use the sensor FLwatch is about to start."
+                    )
+                } else {
+                    Text(
+                        "Started with",
+                        comment: "Label of the app picker when pairing an already-running sensor: which app the sensor was originally started in."
+                    )
+                }
             }
             .disabled(coordinator.state == .scanning || isFetchingAccountID)
-
-            LabeledContent {
-                if let derived = derivedReceiverID {
-                    VStack(alignment: .trailing, spacing: 1) {
-                        Text(verbatim: "\(derived.value)")
-                        Text(verbatim: derived.display)
-                            .foregroundStyle(.secondary)
-                        if let note = derived.note {
-                            Text(verbatim: note)
-                                .foregroundStyle(.orange)
-                        }
-                    }
-                    .font(.system(.caption, design: .monospaced))
-                    .multilineTextAlignment(.trailing)
-                    .textSelection(.enabled)
-                } else {
-                    Text(verbatim: "—")
-                        .foregroundStyle(.secondary)
-                }
-            } label: {
-                Text(verbatim: "Receiver ID")
-            }
         } header: {
-            Text(verbatim: "TEST ONLY — receiver ID derivation")
+            if selectedMode.startsIrreversibleWearClock {
+                Text(
+                    "Companion app",
+                    comment: "Section heading when activating a new sensor: choosing which app, if any, should be able to use it alongside FLwatch."
+                )
+            } else {
+                Text(
+                    "Sensor activation",
+                    comment: "Section heading when pairing an already-running sensor: identifying the app that activated it."
+                )
+            }
         } footer: {
-            Text(verbatim: "Leave this on Classic unless you were asked to change it. Classic is the derivation that works with the FreeStyle Libre 3 app. 1–6 reproduce one reverse-engineered from “Libre by Abbott”, across the readings its source leaves open; they are listed most-likely first, so work down the list. A rejected scan answers 0xB1 and leaves the sensor untouched, so trying them costs nothing but a tap.")
+            Text(activatingAppFooter)
         }
     }
 
-    /// Receiver ID the next scan will send for the Account ID as entered, or nil
-    /// when the field is empty (fresh activation then uses a generated ID).
-    private var derivedReceiverID: (value: UInt32, display: String, note: String?)? {
+    private var activatingAppFooter: String {
+        if selectedMode.startsIrreversibleWearClock {
+            return String(
+                localized: "FLwatch stores this app's receiver ID on the sensor, so only that app can take it over later — never both. Choose FLwatch only if no Libre 3 app should ever use this sensor; FLwatch can still re-pair such a sensor itself.",
+                comment: "Explains the app picker when activating a new sensor. The receiver ID written at activation decides which app can ever claim the sensor, and it cannot be changed afterwards."
+            )
+        }
+        return String(
+            localized: "Pick the app this sensor was started in. Both apps derive the receiver ID from your LibreView account but compute it differently, so the wrong one is rejected (error 0xB1). Libre by Abbott is the newer US app; elsewhere it is FreeStyle Libre 3.",
+            comment: "Explains the app picker when pairing an already-running sensor. 0xB1 is the sensor's own error code for a receiver-ID mismatch; keep it as-is. Keep the product names untranslated."
+        )
+    }
+
+    /// Receiver ID the next scan will send, or nil when there's no account to
+    /// derive it from (FLwatch-only fresh activation uses a generated one).
+    private var derivedReceiverID: String? {
         Libre3StateStore.receiverIDPreview(
             forAccountID: libreViewPatientId,
-            derivation: receiverIDDerivation
+            activatingApp: activatingApp
         )
     }
 
@@ -364,6 +443,14 @@ struct PhoneAppLibre3ConnectView: View {
             }
             if let mode = SharedData.libre3Mode {
                 LabeledContent("Paired via", value: modeShortName(mode))
+            }
+            LabeledContent {
+                Text(SharedData.libre3ActivatingApp.displayName)
+            } label: {
+                Text(
+                    "Activated with",
+                    comment: "Row in the paired-sensor summary naming the app this sensor was activated with, which decided its receiver ID."
+                )
             }
             if let sensorEndDate {
                 LabeledContent(
@@ -796,14 +883,23 @@ struct PhoneAppLibre3ConnectView: View {
 
     // MARK: - Copy
 
-    private func modeDescription(_ mode: Libre3Mode) -> LocalizedStringKey {
+    private func modeDescription(_ mode: Libre3Mode) -> String {
         switch mode {
         case .takeover:
-            return "Make FLwatch the sensor’s receiver. This invalidates the Libre 3 app’s current connection credentials. While using FLwatch, force-close the Libre 3 app and turn off Bluetooth access for it in iOS Settings.\n\nTo return to Libre 3, force-close FLwatch, re-enable Bluetooth access for Libre 3, and select “Start New Sensor.” The app may warn that this will end your current sensor. Scan the same sensor you are already wearing—the sensor will not be stopped. Libre 3 should recognize it as your current sensor and reconnect. You may also need to sign in to LibreView again before uploads resume."
+            return String(
+                localized: "Make FLwatch the sensor’s receiver. This invalidates the Libre 3 app’s current connection credentials. While using FLwatch, force-close the Libre 3 app and turn off Bluetooth access for it in iOS Settings.\n\nTo return to Libre 3, force-close FLwatch, re-enable Bluetooth access for Libre 3, and select “Start New Sensor.” The app may warn that this will end your current sensor. Scan the same sensor you are already wearing—the sensor will not be stopped. Libre 3 should recognize it as your current sensor and reconnect. You may also need to sign in to LibreView again before uploads resume.",
+                comment: "Explains the Take over pairing mode, which claims the sensor for FLwatch and cuts off the Libre 3 app until the user hands it back. “Start New Sensor” is a button in the Libre 3 app — use that app's own wording for it in this language."
+            )
         case .parallelJoin:
-            return "Connect FLwatch without replacing the sensor’s existing Libre 3 credentials. To return to the Libre 3 app, force-close FLwatch, enable Bluetooth access for Libre 3 in iOS Settings, and open the Libre 3 app. It will reconnect without another NFC scan and resume uploading data to LibreView."
+            return String(
+                localized: "Connect FLwatch without replacing the sensor’s existing Libre 3 credentials. To return to the Libre 3 app, force-close FLwatch, enable Bluetooth access for Libre 3 in iOS Settings, and open the Libre 3 app. It will reconnect without another NFC scan and resume uploading data to LibreView.",
+                comment: "Explains the Parallel pairing mode, which lets FLwatch and the Libre 3 app take turns on the same sensor without either losing access."
+            )
         case .activateFresh:
-            return "Activate a brand-new, unused sensor directly with FLwatch. This immediately starts the sensor’s wear period and cannot be undone. The LibreView Account ID is optional. If you provide the same Account ID used by the Libre 3 app, Libre 3 should be able to take over the sensor later after an NFC scan, but this has not yet been fully tested. If you leave it empty, FLwatch uses its own receiver ID and transferring the sensor to Libre 3 later may not be possible."
+            return String(
+                localized: "Activate a brand-new, unused sensor directly with FLwatch. This immediately starts the sensor’s wear period and cannot be undone. Pick the companion app below before you scan — it can’t be changed afterwards.",
+                comment: "Explains the Fresh pairing mode, which starts an unused sensor's wear period. “Companion app” refers to the picker directly below — keep the two wordings consistent."
+            )
         }
     }
 

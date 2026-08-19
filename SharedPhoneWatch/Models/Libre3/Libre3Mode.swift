@@ -4,8 +4,8 @@
 //
 //  The three Libre 3 direct-BLE pairing modes. Persisted (so the UI can show
 //  how the current sensor was paired) and used by `Libre3PairingCoordinator` to
-//  choose the LibreCRKit `Libre3NFCScanMode`. Also holds the temporary
-//  `Libre3ReceiverIDDerivation` probe (see its own doc comment).
+//  choose the LibreCRKit `Libre3NFCScanMode`. Also holds `Libre3ActivatingApp`,
+//  which decides how the LibreView Account ID folds into the receiver ID.
 //
 //  Kept in shared code (no LibreCRKit / CoreNFC import) because it round-trips
 //  through `SharedData`, which compiles into the watch + widget targets that
@@ -43,119 +43,88 @@ enum Libre3Mode: String, Codable, CaseIterable, Identifiable {
     var requiresAlreadyActiveSensor: Bool { self != .activateFresh }
 }
 
-/// Which derivation turns the LibreView Account ID into the receiver ID sent in
-/// the NFC command body.
+/// The app a sensor was activated with, which decides the receiver ID FLwatch
+/// must present over NFC.
 ///
-/// **Temporary diagnostic (branch `getLbAReceiverID`).** Sensors started with the
-/// US "Libre by Abbott" app reject takeover and parallel join with `0xB1` — a
-/// receiver-ID mismatch — even when the Account ID is correct, so that app
-/// appears to derive the ID differently. The `newApp…` cases reproduce a
-/// derivation reverse-engineered from it. Once one of them is confirmed (or all
-/// are ruled out), collapse this back to `.classic` and delete the rest.
+/// A sensor stores a receiver ID when it is activated and rejects any later
+/// `0xA8`/`0xA0` carrying a different one with error `0xB1`. Abbott's apps derive
+/// that ID from the same LibreView Account ID but fold it differently, so the
+/// user has to tell us which app started the sensor — nothing in the patch info
+/// reveals it.
 ///
-/// Lives here rather than in its own file only to avoid a manual Xcode
-/// target-membership step for something we intend to remove.
-enum Libre3ReceiverIDDerivation: String, Codable, CaseIterable, Identifiable {
-    /// FNV-style multiply-xor chain over the lowercased Account ID — what the
-    /// classic FreeStyle Libre 3 app uses. Validated on hardware, and shared with
-    /// Juggluco (`javasettings.cpp`) and DiaBLE. The default, and the only case
-    /// that pairs successfully today.
-    case classic
+/// For **fresh activation** the choice works the other way round: FLwatch writes
+/// the ID, and only the matching app could ever take the sensor over afterwards.
+/// It is strictly one or the other.
+enum Libre3ActivatingApp: String, Codable, CaseIterable, Identifiable {
+    /// The classic FreeStyle Libre 3 app (worldwide, and "FreeStyle Libre 3 – US").
+    /// Receiver ID = FNV-style multiply-xor over the lowercased Account ID, the
+    /// same derivation Juggluco and DiaBLE use.
+    case freeStyleLibre3
 
-    // The reverse-engineered sum, across the readings its transcription leaves
-    // open. Ordered by how likely each is to be what the app actually does —
-    // the picker shows them numbered in this order so a tester can work down
-    // the list.
+    /// Abbott's newer US app, "Libre by Abbott". Same LibreView Account ID, folded
+    /// differently: the sum of its big-endian 4-byte words, wrapped to 32 bits.
+    /// Reverse-engineered from that app and confirmed on hardware 2026-08-19 (a
+    /// US Libre 3 Plus, fw 1.4.2.30, paired in Parallel and streaming).
+    case libreByAbbott
 
-    /// Sum over the lowercase dashed Account ID's bytes. The most literal
-    /// reading of the transcribed Python.
-    case textLowerBigEndian
-    case textLowerLittleEndian
-
-    /// Sum over the UUID's raw 16 bytes rather than its text. Four 4-byte words
-    /// exactly, which is the shape a "sum of 32-bit words" fold is usually
-    /// written for — the `.encode()` in the transcription may be the
-    /// transcriber's reading rather than the original's.
-    case uuidBytesBigEndian
-    case uuidBytesLittleEndian
-
-    /// Sum over the UPPERCASE dashed form. Swift's `UUID.uuidString` is
-    /// uppercase, so an app that round-trips the ID through `UUID` hashes this.
-    case textUpperBigEndian
-    case textUpperLittleEndian
+    /// No vendor app — FLwatch activates the sensor itself and presents its own
+    /// permanent installation receiver ID. Chosen for fresh activation, and
+    /// required again to re-pair such a sensor afterwards: that ID is the only
+    /// one it will accept, and no vendor app can adopt it.
+    case flwatchOnly
 
     var id: String { rawValue }
 
-    /// Short label for the diagnostic picker, numbered so instructions can just
-    /// say "try 1 through 6". Not localized — this UI is temporary.
     var displayName: String {
         switch self {
-        case .classic: return "Classic (FNV)"
-        case .textLowerBigEndian: return "1 · text lower · BE"
-        case .textLowerLittleEndian: return "2 · text lower · LE"
-        case .uuidBytesBigEndian: return "3 · UUID bytes · BE"
-        case .uuidBytesLittleEndian: return "4 · UUID bytes · LE"
-        case .textUpperBigEndian: return "5 · text UPPER · BE"
-        case .textUpperLittleEndian: return "6 · text UPPER · LE"
+        case .freeStyleLibre3:
+            return String(
+                localized: "FreeStyle Libre 3",
+                comment: "Picker option naming the app that started the sensor: Abbott's classic FreeStyle Libre 3 app. Keep the product name untranslated."
+            )
+        case .libreByAbbott:
+            return String(
+                localized: "Libre by Abbott",
+                comment: "Picker option naming the app that started the sensor: Abbott's newer US app, called 'Libre by Abbott' in the App Store. Keep the product name untranslated."
+            )
+        case .flwatchOnly:
+            return String(
+                localized: "FLwatch only",
+                comment: "Picker option for a sensor no vendor app is involved with — FLwatch activates it itself. FLwatch is the app name, keep untranslated."
+            )
         }
     }
 
-    /// True for the variants that hash the UUID's raw bytes, which need the
-    /// Account ID to parse as a UUID.
-    var needsUUID: Bool {
-        self == .uuidBytesBigEndian || self == .uuidBytesLittleEndian
-    }
+    /// True when the receiver ID is derived from the user's LibreView Account ID,
+    /// so the account rows are needed and takeover / parallel join are possible.
+    var usesLibreViewAccount: Bool { self != .flwatchOnly }
 
-    /// The reverse-engineered receiver ID for `accountID`, or `nil` for
-    /// `.classic` — that one stays routed through LibreCRKit's own FNV so the
-    /// working path is byte-identical to what shipped. Also `nil` for the
-    /// UUID-byte variants when `accountID` doesn't parse as a UUID, which the
-    /// caller likewise resolves to `.classic`.
+    /// Receiver ID for `accountID` under this app's fold, or `nil` when the value
+    /// doesn't come from one: `.freeStyleLibre3` is routed through LibreCRKit's
+    /// own FNV so the long-validated path stays byte-identical, and `.flwatchOnly`
+    /// has no account at all.
     ///
-    /// Faithful to the Python the derivation was transcribed as:
+    /// The `.libreByAbbott` fold was transcribed from that app as:
     ///
     ///     sum(int.from_bytes(b[i:i+4], "big", signed=True)
     ///         for i in range(0, len(b), 4))
     ///
-    /// with two clarifications. The sum is wrapped to 32 bits (the field on the
-    /// wire is 4 bytes; the Python accumulates unbounded, which the original
-    /// `int` arithmetic would not have). And `signed` is irrelevant once wrapped:
-    /// signed and unsigned readings of the same word differ by exactly 2³². A
-    /// trailing partial word — impossible for the 36-character UUIDs we expect,
-    /// but defined here anyway — is read the same way Python's `int.from_bytes`
-    /// would read a short slice.
-    func newAppValue(forAccountID accountID: String) -> UInt32? {
-        let littleEndian: Bool
-        let bytes: [UInt8]
-        switch self {
-        case .classic:
-            return nil
-        case .textLowerBigEndian, .textLowerLittleEndian:
-            littleEndian = self == .textLowerLittleEndian
-            bytes = Array(accountID.lowercased().utf8)
-        case .textUpperBigEndian, .textUpperLittleEndian:
-            littleEndian = self == .textUpperLittleEndian
-            bytes = Array(accountID.uppercased().utf8)
-        case .uuidBytesBigEndian, .uuidBytesLittleEndian:
-            guard let uuid = UUID(uuidString: accountID) else { return nil }
-            littleEndian = self == .uuidBytesLittleEndian
-            // `uuid.uuid` is a contiguous 16-byte tuple in canonical order.
-            bytes = withUnsafeBytes(of: uuid.uuid) { Array($0) }
-        }
-
+    /// with two clarifications. The sum is wrapped to 32 bits — the field on the
+    /// wire is 4 bytes, which the Python's unbounded accumulation doesn't reflect
+    /// but the original `int` arithmetic would have. And `signed` makes no
+    /// difference once wrapped: signed and unsigned readings of the same word
+    /// differ by exactly 2³². A trailing partial word — impossible for the
+    /// 36-character UUIDs LibreView returns, but defined here anyway — is read the
+    /// way Python's `int.from_bytes` reads a short slice.
+    func receiverIDValue(forAccountID accountID: String) -> UInt32? {
+        guard self == .libreByAbbott else { return nil }
+        let bytes = Array(accountID.lowercased().utf8)
         var sum: UInt32 = 0
         for start in stride(from: 0, to: bytes.count, by: 4) {
-            let word = bytes[start..<min(start + 4, bytes.count)]
             var value: UInt32 = 0
-            if littleEndian {
-                for (offset, byte) in word.enumerated() {
-                    value |= UInt32(byte) << (8 * offset)
-                }
-            } else {
-                // A short slice ends up left-padded, matching `int.from_bytes`.
-                for byte in word {
-                    value = (value << 8) | UInt32(byte)
-                }
+            // A short slice ends up left-padded, matching `int.from_bytes`.
+            for byte in bytes[start..<min(start + 4, bytes.count)] {
+                value = (value << 8) | UInt32(byte)
             }
             sum = sum &+ value
         }

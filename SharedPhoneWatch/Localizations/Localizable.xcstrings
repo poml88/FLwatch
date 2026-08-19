@@ -120,6 +120,65 @@
         }
       }
     },
+    "“Libre 3 app” here means whichever Abbott app you use: FreeStyle Libre 3, or Libre by Abbott in the US." : {
+      "comment" : "Defines a shorthand the rest of this screen uses, so the other texts can say 'the Libre 3 app' without naming one of Abbott's two apps and misleading users of the other. Keep both product names untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Libre 3-App“ bezeichnet hier die von dir verwendete Abbott-App: FreeStyle Libre 3 oder, in den USA, Libre by Abbott."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aquí, «app Libre 3» se refiere a la app de Abbott que uses: FreeStyle Libre 3 o, en EE. UU., Libre by Abbott."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ici, « app Libre 3 » désigne l’app Abbott que vous utilisez : FreeStyle Libre 3 ou, aux États-Unis, Libre by Abbott."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qui, “app Libre 3” indica l’app Abbott che utilizzi: FreeStyle Libre 3 oppure, negli Stati Uniti, Libre by Abbott."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ここで「Libre 3アプリ」とは、使用しているAbbottのアプリ（FreeStyle Libre 3、または米国ではLibre by Abbott）を指します。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Met ‘Libre 3-app’ wordt hier de Abbott-app bedoeld die je gebruikt: FreeStyle Libre 3 of, in de VS, Libre by Abbott."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Określenie „aplikacja Libre 3” oznacza tutaj używaną aplikację firmy Abbott: FreeStyle Libre 3 albo, w USA, Libre by Abbott."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Под «приложением Libre 3» здесь понимается используемое приложение Abbott: FreeStyle Libre 3 или Libre by Abbott в США."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此处的“Libre 3 App”是指你使用的 Abbott App：FreeStyle Libre 3，或美国地区的 Libre by Abbott。"
+          }
+        }
+      }
+    },
     "[...]" : {
 
     },
@@ -1860,8 +1919,68 @@
         }
       }
     },
+    "Activate a brand-new, unused sensor directly with FLwatch. This immediately starts the sensor’s wear period and cannot be undone. Pick the companion app below before you scan — it can’t be changed afterwards." : {
+      "comment" : "Explains the Fresh pairing mode, which starts an unused sensor's wear period. “Companion app” refers to the picker directly below — keep the two wordings consistent.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiviere einen fabrikneuen, unbenutzten Sensor direkt mit FLwatch. Dadurch beginnt sofort die Tragedauer des Sensors; dies kann nicht rückgängig gemacht werden. Wähle vor dem Scannen unten die Begleit-App aus – sie kann danach nicht mehr geändert werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa un sensor nuevo sin usar directamente con FLwatch. Esto inicia de inmediato el periodo de uso del sensor y no se puede deshacer. Elige la app complementaria de abajo antes de escanear; después no podrás cambiarla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activez un capteur neuf et inutilisé directement avec FLwatch. Sa période de port démarre immédiatement et cette action est irréversible. Choisissez l’app associée ci-dessous avant l’analyse ; vous ne pourrez plus la modifier ensuite."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attiva un sensore nuovo e mai usato direttamente con FLwatch. Il periodo di utilizzo del sensore inizia immediatamente e non può essere annullato. Prima della scansione scegli qui sotto l’app associata: non potrà più essere cambiata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新品未使用のセンサーをFLwatchで直接有効化します。センサーの使用期間がただちに始まり、元に戻すことはできません。スキャンする前に、下で連携アプリを選択してください。あとから変更することはできません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activeer een gloednieuwe, ongebruikte sensor rechtstreeks met FLwatch. De gebruiksduur van de sensor begint onmiddellijk en dit kan niet ongedaan worden gemaakt. Kies vóór het scannen hieronder de bijbehorende app; dit kan achteraf niet meer worden gewijzigd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktywuj fabrycznie nowy, nieużywany sensor bezpośrednio w FLwatch. Spowoduje to natychmiastowe rozpoczęcie okresu użytkowania sensora i nie można tego cofnąć. Przed skanowaniem wybierz poniżej aplikację towarzyszącą — później nie będzie można jej zmienić."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активируйте новый, ещё не использованный сенсор непосредственно в FLwatch. Срок его работы начнётся сразу, и отменить это действие невозможно. Перед сканированием выберите ниже приложение-компаньон — изменить его впоследствии нельзя."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直接使用 FLwatch 激活一个全新且未使用的传感器。这会立即开始传感器的使用期，且无法撤销。扫描前请在下方选择配套 App；之后无法更改。"
+          }
+        }
+      }
+    },
     "Activate a brand-new, unused sensor directly with FLwatch. This immediately starts the sensor’s wear period and cannot be undone. The LibreView Account ID is optional. If you provide the same Account ID used by the Libre 3 app, Libre 3 should be able to take over the sensor later after an NFC scan, but this has not yet been fully tested. If you leave it empty, FLwatch uses its own receiver ID and transferring the sensor to Libre 3 later may not be possible." : {
       "comment" : "A description of the Activate Fresh mode.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "de" : {
@@ -1976,6 +2095,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "要激活新传感器吗？"
+          }
+        }
+      }
+    },
+    "Activated with" : {
+      "comment" : "Row in the paired-sensor summary naming the app this sensor was activated with, which decided its receiver ID.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiviert mit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activado con"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activé avec"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attivato con"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有効化に使用"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geactiveerd met"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktywowano za pomocą"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активирован с помощью"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "激活应用"
           }
         }
       }
@@ -5285,6 +5463,65 @@
     "Code" : {
 
     },
+    "Companion app" : {
+      "comment" : "Section heading when activating a new sensor: choosing which app, if any, should be able to use it alongside FLwatch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begleit-App"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App complementaria"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App associée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App associata"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連携アプリ"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bijbehorende app"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplikacja towarzysząca"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приложение-компаньон"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配套 App"
+          }
+        }
+      }
+    },
     "Compare only when glucose is reasonably stable; the helper below can guide you. Avoid comparisons while glucose may still be affected by a meal, insulin, exercise, or treatment of a low. Because this correction is a fixed offset, use several steady comparisons near the range that matters to you—for the lower range, about 80–120 mg/dL (4.4–6.7 mmol/L), rather than at a high glucose level." : {
       "localizations" : {
         "de" : {
@@ -5518,8 +5755,7 @@
       }
     },
     "Connect FLwatch without replacing the sensor’s existing Libre 3 credentials. To return to the Libre 3 app, force-close FLwatch, enable Bluetooth access for Libre 3 in iOS Settings, and open the Libre 3 app. It will reconnect without another NFC scan and resume uploading data to LibreView." : {
-      "comment" : "A description of the parallel join mode.",
-      "isCommentAutoGenerated" : true,
+      "comment" : "Explains the Parallel pairing mode, which lets FLwatch and the Libre 3 app take turns on the same sensor without either losing access.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -9880,8 +10116,68 @@
     "Enter the developer code." : {
 
     },
+    "Enter your LibreView Account ID above first — the selected app's receiver ID is derived from it." : {
+      "comment" : "Shown under a disabled scan button when the LibreView Account ID field is empty but the chosen app needs it. The sensor's receiver ID is computed from that account ID.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib oben zuerst deine LibreView-Konto-ID ein – die Receiver-ID der ausgewählten App wird daraus abgeleitet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce primero arriba tu ID de cuenta de LibreView; de ella se deriva el ID del receptor de la app seleccionada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez d’abord ci-dessus l’identifiant de votre compte LibreView : l’identifiant du récepteur de l’app sélectionnée en est dérivé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserisci prima qui sopra l’ID del tuo account LibreView: da questo viene ricavato l’ID ricevitore dell’app selezionata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まず上にLibreViewアカウントIDを入力してください。選択したアプリのレシーバーIDは、このIDから算出されます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer hierboven eerst je LibreView-account-ID in; de ontvanger-ID van de geselecteerde app wordt hiervan afgeleid."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najpierw wprowadź powyżej identyfikator konta LibreView — na jego podstawie wyliczany jest identyfikator odbiornika wybranej aplikacji."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сначала введите выше идентификатор учётной записи LibreView — из него вычисляется идентификатор приёмника выбранного приложения."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先在上方输入你的 LibreView 账户 ID；所选 App 的接收器 ID 由此计算得出。"
+          }
+        }
+      }
+    },
     "Enter your LibreView Patient UUID above first — takeover and parallel join need it." : {
       "comment" : "A warning message that appears when the user tries to start scanning for a sensor but hasn't entered their LibreView Patient UUID.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "de" : {
@@ -10652,6 +10948,65 @@
         }
       }
     },
+    "FLwatch couldn't store the identity it needs to pair with this sensor. Restart your iPhone and try again — pairing was stopped rather than risk starting a sensor FLwatch could never reconnect to." : {
+      "comment" : "Pairing failure shown when the app's own receiver ID could not be saved to the keychain. Pairing is deliberately abandoned before the NFC scan, because a sensor activated with an identity the app cannot remember is unusable afterwards.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch konnte die zum Koppeln mit diesem Sensor benötigte Identität nicht speichern. Starte dein iPhone neu und versuche es erneut – die Kopplung wurde abgebrochen, damit kein Sensor gestartet wird, zu dem FLwatch nie wieder eine Verbindung herstellen könnte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch no ha podido guardar la identidad necesaria para enlazarse con este sensor. Reinicia el iPhone e inténtalo de nuevo. Se ha detenido el enlace para evitar iniciar un sensor al que FLwatch nunca podría volver a conectarse."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch n’a pas pu enregistrer l’identité nécessaire pour se jumeler avec ce capteur. Redémarrez votre iPhone et réessayez. Le jumelage a été interrompu afin d’éviter de démarrer un capteur auquel FLwatch ne pourrait plus jamais se reconnecter."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch non ha potuto salvare l’identità necessaria per abbinarsi a questo sensore. Riavvia l’iPhone e riprova. L’abbinamento è stato interrotto per evitare di avviare un sensore a cui FLwatch non potrebbe più riconnettersi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchは、このセンサーとのペアリングに必要な識別情報を保存できませんでした。iPhoneを再起動してもう一度お試しください。FLwatchが二度と再接続できないセンサーを開始してしまわないよう、ペアリングは中止されました。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch kon de identiteit die nodig is om met deze sensor te koppelen niet bewaren. Start je iPhone opnieuw op en probeer het opnieuw. Het koppelen is gestopt om te voorkomen dat een sensor wordt gestart waarmee FLwatch nooit meer verbinding kan maken."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch nie mógł zapisać tożsamości potrzebnej do sparowania z tym sensorem. Uruchom iPhone’a ponownie i spróbuj jeszcze raz. Parowanie zostało przerwane, aby nie uruchomić sensora, z którym FLwatch nie mógłby już nigdy połączyć się ponownie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch не удалось сохранить идентификатор, необходимый для сопряжения с этим сенсором. Перезагрузите iPhone и повторите попытку. Сопряжение остановлено, чтобы не запустить сенсор, к которому FLwatch больше никогда не сможет подключиться."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch 无法存储与此传感器配对所需的身份信息。请重新启动 iPhone 后再试。配对已停止，以免启动一个 FLwatch 永远无法重新连接的传感器。"
+          }
+        }
+      }
+    },
     "FLwatch currently supports the LibreLinkUp 4.x API. Abbott has released API 5.0.0, which is not yet supported." : {
       "localizations" : {
         "de" : {
@@ -10768,6 +11123,65 @@
         }
       }
     },
+    "FLwatch only" : {
+      "comment" : "Picker option for a sensor no vendor app is involved with — FLwatch activates it itself. FLwatch is the app name, keep untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur FLwatch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo FLwatch"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch uniquement"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo FLwatch"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchのみ"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen FLwatch"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tylko FLwatch"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Только FLwatch"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅 FLwatch"
+          }
+        }
+      }
+    },
     "FLwatch scans for devices nearby, reconnects to the selected device, and uses that Bluetooth activity to refresh glucose data, widgets, Live Activities, and background updates. Only nearby discoverable Bluetooth devices can appear here. This mode has very little impact on the battery." : {
       "localizations" : {
         "de" : {
@@ -10822,6 +11236,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "FLwatch 会扫描附近设备，重新连接到所选设备，并利用该蓝牙活动来刷新血糖数据、小组件、实时活动和后台更新。这里只会显示附近可被发现的蓝牙设备。此模式对电池的影响非常小。"
+          }
+        }
+      }
+    },
+    "FLwatch stores this app's receiver ID on the sensor, so only that app can take it over later — never both. Choose FLwatch only if no Libre 3 app should ever use this sensor; FLwatch can still re-pair such a sensor itself." : {
+      "comment" : "Explains the app picker when activating a new sensor. The receiver ID written at activation decides which app can ever claim the sensor, and it cannot be changed afterwards.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch speichert die Receiver-ID dieser App auf dem Sensor, sodass später nur diese App ihn übernehmen kann – niemals beide. Wähle „Nur FLwatch“, wenn keine Libre 3-App diesen Sensor jemals verwenden soll; FLwatch kann einen solchen Sensor trotzdem erneut koppeln."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch guarda en el sensor el ID del receptor de esta app, por lo que solo esta app podrá tomar el control más adelante, nunca ambas. Elige «Solo FLwatch» si ninguna app Libre 3 debe usar este sensor; FLwatch podrá volver a enlazarlo de todos modos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch enregistre l’identifiant du récepteur de cette app sur le capteur. Seule cette app pourra donc le reprendre par la suite, jamais les deux. Choisissez « FLwatch uniquement » si aucune app Libre 3 ne doit utiliser ce capteur ; FLwatch pourra tout de même le jumeler à nouveau."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch memorizza sul sensore l’ID ricevitore di questa app, quindi in seguito solo questa app potrà acquisirlo, mai entrambe. Scegli “Solo FLwatch” se nessuna app Libre 3 dovrà mai usare questo sensore; FLwatch potrà comunque abbinarlo di nuovo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchは、このアプリのレシーバーIDをセンサーに保存します。そのため、あとで引き継げるのはこのアプリだけで、両方のアプリではありません。どのLibre 3アプリにもこのセンサーを使わせない場合は「FLwatchのみ」を選択してください。その場合でもFLwatchはセンサーを再ペアリングできます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch bewaart de ontvanger-ID van deze app op de sensor, zodat alleen deze app de sensor later kan overnemen, nooit beide. Kies ‘Alleen FLwatch’ als geen enkele Libre 3-app deze sensor ooit mag gebruiken; FLwatch kan zo’n sensor nog steeds opnieuw koppelen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch zapisuje w sensorze identyfikator odbiornika tej aplikacji, dlatego później będzie mogła przejąć go tylko ta aplikacja — nigdy obie. Wybierz „Tylko FLwatch”, jeśli żadna aplikacja Libre 3 nie powinna nigdy używać tego sensora; FLwatch nadal będzie mógł sparować go ponownie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch сохраняет в сенсоре идентификатор приёмника этого приложения, поэтому впоследствии перехватить сенсор сможет только оно, но не оба приложения. Выберите «Только FLwatch», если сенсор никогда не должен использоваться приложением Libre 3; FLwatch всё равно сможет повторно выполнить сопряжение."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch 会将此 App 的接收器 ID 存储到传感器中，因此以后只有这个 App 能接管传感器，两个 App 不能同时具备此能力。如果你不希望任何 Libre 3 App 使用此传感器，请选择“仅 FLwatch”；FLwatch 仍可重新与该传感器配对。"
           }
         }
       }
@@ -11069,6 +11542,65 @@
     },
     "FreeStyle Libre (LibreLinkUp)" : {
 
+    },
+    "FreeStyle Libre 3" : {
+      "comment" : "Picker option naming the app that started the sensor: Abbott's classic FreeStyle Libre 3 app. Keep the product name untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FreeStyle Libre 3"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FreeStyle Libre 3"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FreeStyle Libre 3"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FreeStyle Libre 3"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FreeStyle Libre 3"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FreeStyle Libre 3"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FreeStyle Libre 3"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FreeStyle Libre 3"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FreeStyle Libre 3"
+          }
+        }
+      }
     },
     "FreeStyle Libre 3 (Bluetooth)" : {
       "comment" : "A title for a CGM provider that connects directly to a Libre 3 / Libre 3 Plus sensor over Bluetooth.",
@@ -14026,6 +14558,65 @@
         }
       }
     },
+    "Keep usable with" : {
+      "comment" : "Label of the app picker when activating a new sensor: which app should still be able to use the sensor FLwatch is about to start.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weiter verwendbar mit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener compatible con"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintenir compatible avec"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni utilizzabile con"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引き続き使用可能"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bruikbaar houden met"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowaj możliwość użycia z"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить возможность использования с"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保持可用于"
+          }
+        }
+      }
+    },
     "Keep your phone near the sensor." : {
       "comment" : "Hint to the user to keep their phone near the sensor.",
       "isCommentAutoGenerated" : true,
@@ -14377,6 +14968,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Libre 3传感器设置"
+          }
+        }
+      }
+    },
+    "Libre by Abbott" : {
+      "comment" : "Picker option naming the app that started the sensor: Abbott's newer US app, called 'Libre by Abbott' in the App Store. Keep the product name untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott"
           }
         }
       }
@@ -15136,8 +15786,7 @@
       }
     },
     "Make FLwatch the sensor’s receiver. This invalidates the Libre 3 app’s current connection credentials. While using FLwatch, force-close the Libre 3 app and turn off Bluetooth access for it in iOS Settings.\n\nTo return to Libre 3, force-close FLwatch, re-enable Bluetooth access for Libre 3, and select “Start New Sensor.” The app may warn that this will end your current sensor. Scan the same sensor you are already wearing—the sensor will not be stopped. Libre 3 should recognize it as your current sensor and reconnect. You may also need to sign in to LibreView again before uploads resume." : {
-      "comment" : "A description of the parallel join mode.",
-      "isCommentAutoGenerated" : true,
+      "comment" : "Explains the Take over pairing mode, which claims the sensor for FLwatch and cuts off the Libre 3 app until the user hands it back. “Start New Sensor” is a button in the Libre 3 app — use that app's own wording for it in this language.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -19064,6 +19713,65 @@
         }
       }
     },
+    "Pick the app this sensor was started in. Both apps derive the receiver ID from your LibreView account but compute it differently, so the wrong one is rejected (error 0xB1). Libre by Abbott is the newer US app; elsewhere it is FreeStyle Libre 3." : {
+      "comment" : "Explains the app picker when pairing an already-running sensor. 0xB1 is the sensor's own error code for a receiver-ID mismatch; keep it as-is. Keep the product names untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle die App aus, mit der dieser Sensor gestartet wurde. Beide Apps leiten die Receiver-ID aus deinem LibreView-Konto ab, berechnen sie aber unterschiedlich. Daher wird die falsche App abgelehnt (Fehler 0xB1). Libre by Abbott ist die neuere US-App; andernorts ist es FreeStyle Libre 3."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige la app con la que se inició este sensor. Ambas apps derivan el ID del receptor de tu cuenta de LibreView, pero lo calculan de forma distinta, por lo que se rechazará la opción incorrecta (error 0xB1). Libre by Abbott es la app más reciente de EE. UU.; en otros lugares se usa FreeStyle Libre 3."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez l’app avec laquelle ce capteur a été démarré. Les deux apps dérivent l’identifiant du récepteur de votre compte LibreView, mais le calculent différemment ; la mauvaise app est donc refusée (erreur 0xB1). Libre by Abbott est la nouvelle app américaine ; ailleurs, il s’agit de FreeStyle Libre 3."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli l’app con cui è stato avviato questo sensore. Entrambe le app ricavano l’ID ricevitore dal tuo account LibreView, ma lo calcolano in modo diverso, quindi quella errata viene rifiutata (errore 0xB1). Libre by Abbott è la nuova app statunitense; altrove si usa FreeStyle Libre 3."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このセンサーを開始したアプリを選択してください。どちらのアプリもLibreViewアカウントからレシーバーIDを算出しますが、計算方法が異なるため、間違ったアプリを選ぶと拒否されます（エラー0xB1）。Libre by Abbottは米国向けの新しいアプリで、それ以外の地域ではFreeStyle Libre 3です。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies de app waarmee deze sensor is gestart. Beide apps leiden de ontvanger-ID af van je LibreView-account, maar berekenen deze anders. De verkeerde app wordt daarom geweigerd (fout 0xB1). Libre by Abbott is de nieuwere Amerikaanse app; elders is dit FreeStyle Libre 3."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz aplikację, w której uruchomiono ten sensor. Obie aplikacje wyliczają identyfikator odbiornika na podstawie konta LibreView, ale robią to inaczej, dlatego niewłaściwa aplikacja zostanie odrzucona (błąd 0xB1). Libre by Abbott to nowsza aplikacja amerykańska; w innych regionach jest to FreeStyle Libre 3."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите приложение, в котором был запущен этот сенсор. Оба приложения вычисляют идентификатор приёмника из учётной записи LibreView, но делают это по-разному, поэтому неверный вариант будет отклонён (ошибка 0xB1). Libre by Abbott — новое приложение для США; в других регионах используется FreeStyle Libre 3."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择启动此传感器时所用的 App。两个 App 都根据你的 LibreView 账户计算接收器 ID，但算法不同，因此选择错误的 App 会被拒绝（错误 0xB1）。Libre by Abbott 是较新的美国版 App；其他地区使用 FreeStyle Libre 3。"
+          }
+        }
+      }
+    },
     "Pick your CGM" : {
       "comment" : "A label displayed above a list of CGM providers.",
       "isCommentAutoGenerated" : true,
@@ -19806,6 +20514,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已准备好搜索"
+          }
+        }
+      }
+    },
+    "Receiver ID" : {
+      "comment" : "Diagnostic row: the identifier FLwatch would send to the sensor when pairing. Shown as a hexadecimal number.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receiver-ID"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID del receptor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identifiant du récepteur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID ricevitore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レシーバーID"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontvanger-ID"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identyfikator odbiornika"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Идентификатор приёмника"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接收器 ID"
           }
         }
       }
@@ -22097,6 +22864,65 @@
         }
       }
     },
+    "Sensor activation" : {
+      "comment" : "Section heading when pairing an already-running sensor: identifying the app that activated it.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensoraktivierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activación del sensor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activation du capteur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attivazione del sensore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーの有効化"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensoractivering"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktywacja sensora"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активация сенсора"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器激活"
+          }
+        }
+      }
+    },
     "Sensor calibration" : {
       "comment" : "A title for a screen that calibrates a Libre 3 sensor.",
       "isCommentAutoGenerated" : true,
@@ -23636,6 +24462,7 @@
       }
     },
     "Sign in with the LibreView (FreeStyle Libre 3 app) account that activated this sensor and tap Get Account ID to fill it in automatically. Its hash becomes the receiver ID — takeover and parallel join only work when it matches the activating account, otherwise the sensor rejects pairing (error 0xB1)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -23689,6 +24516,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "请使用激活此传感器的LibreView（FreeStyle Libre 3 App）账户登录，然后轻点“获取账户ID”以自动填写。该账户的哈希值会成为接收器ID；只有当它与激活传感器的账户匹配时，接管和并行连接才能生效，否则传感器会拒绝配对（错误0xB1）。"
+          }
+        }
+      }
+    },
+    "Sign in with the LibreView account used by the app above and tap Get Account ID to fill it in. The receiver ID is derived from it, so it has to be the account that sensor belongs to." : {
+      "comment" : "Footer of the LibreView credentials section. “Get Account ID” is the button directly above — keep the two wordings consistent.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melde dich mit dem LibreView-Konto an, das von der oben ausgewählten App verwendet wird, und tippe auf „Konto-ID abrufen“, um die ID einzutragen. Die Receiver-ID wird daraus abgeleitet; deshalb muss es das Konto sein, zu dem der Sensor gehört."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión con la cuenta de LibreView que usa la app seleccionada arriba y toca «Obtener ID de cuenta» para rellenarla. El ID del receptor se deriva de ella, por lo que debe ser la cuenta a la que pertenece el sensor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connectez-vous avec le compte LibreView utilisé par l’app sélectionnée ci-dessus, puis touchez « Obtenir l’identifiant du compte » pour le renseigner. L’identifiant du récepteur en est dérivé ; il doit donc s’agir du compte auquel appartient le capteur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accedi con l’account LibreView usato dall’app selezionata sopra e tocca “Ottieni ID account” per inserirlo. L’ID ricevitore viene ricavato da questo valore, quindi deve essere l’account a cui appartiene il sensore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上で選択したアプリで使用しているLibreViewアカウントにサインインし、「アカウントIDを取得」をタップして入力してください。レシーバーIDはこのアカウントIDから算出されるため、センサーが登録されているアカウントである必要があります。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meld je aan met het LibreView-account dat door de hierboven gekozen app wordt gebruikt en tik op ‘Account-ID ophalen’ om dit in te vullen. De ontvanger-ID wordt hiervan afgeleid, dus dit moet het account zijn waartoe de sensor behoort."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaloguj się na konto LibreView używane przez wybraną powyżej aplikację i stuknij „Pobierz identyfikator konta”, aby go uzupełnić. Na jego podstawie wyliczany jest identyfikator odbiornika, dlatego musi to być konto, do którego należy sensor."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войдите в учётную запись LibreView, используемую выбранным выше приложением, и нажмите «Получить идентификатор учётной записи», чтобы заполнить это поле. Из него вычисляется идентификатор приёмника, поэтому это должна быть учётная запись, к которой привязан сенсор."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用上方所选 App 使用的 LibreView 账户登录，然后轻点“获取账户ID”自动填入。接收器 ID 由此计算得出，因此必须使用此传感器所属的账户。"
           }
         }
       }
@@ -24317,6 +25203,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "开始"
+          }
+        }
+      }
+    },
+    "Started with" : {
+      "comment" : "Label of the app picker when pairing an already-running sensor: which app the sensor was originally started in.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestartet mit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciado con"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarré avec"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avviato con"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開始に使用したアプリ"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestart met"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uruchomiono za pomocą"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запущен через"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动应用"
           }
         }
       }
@@ -25905,8 +26850,64 @@
         }
       }
     },
-    "The sensor refused pairing (0xB1): it was activated under a different account. Take over and Parallel only work with the LibreView Account ID that activated this sensor.\n\nSensors started with a FreeStyle Libre 3 reader, or with the newer US “Libre by Abbott” app, can't be paired at all — their receiver ID isn't derived from a LibreView account. Either activate a new sensor directly in FLwatch, or use the “FreeStyle Libre 3 – US” app." : {
-      "comment" : "Pairing failure. The sensor stores a 'receiver ID' (a hash of the LibreView account ID) when it is activated and rejects any pairing attempt that presents a different one. Shown after a failed Take over or Parallel NFC scan."
+    "The sensor refused pairing (0xB1): the receiver ID didn't match the one stored when the sensor was activated.\n\nCheck that “Started with” names the app this sensor was really started in — the two apps compute different receiver IDs from the same account — and that the Account ID belongs to that account.\n\nSensors started with a FreeStyle Libre 3 reader can't be paired at all." : {
+      "comment" : "Pairing failure. The sensor stores a 'receiver ID' derived from the LibreView account when it is activated, and rejects any pairing attempt presenting a different one. The quoted phrase is the label of the app picker on the same screen — keep it identical to that label. Shown after a failed Take over or Parallel NFC scan.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Sensor hat die Kopplung verweigert (0xB1): Die Receiver-ID stimmte nicht mit der bei der Aktivierung des Sensors gespeicherten ID überein.\n\nPrüfe, ob unter „Gestartet mit“ tatsächlich die App ausgewählt ist, in der dieser Sensor gestartet wurde – die beiden Apps berechnen aus demselben Konto unterschiedliche Receiver-IDs – und ob die Konto-ID zu diesem Konto gehört.\n\nSensoren, die mit einem FreeStyle Libre 3-Lesegerät gestartet wurden, können überhaupt nicht gekoppelt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El sensor ha rechazado el enlace (0xB1): el ID del receptor no coincide con el almacenado cuando se activó el sensor.\n\nComprueba que «Iniciado con» indique la app en la que realmente se inició este sensor —las dos apps calculan IDs de receptor distintos a partir de la misma cuenta— y que el ID de cuenta pertenezca a esa cuenta.\n\nLos sensores iniciados con un lector FreeStyle Libre 3 no se pueden enlazar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le capteur a refusé le jumelage (0xB1) : l’identifiant du récepteur ne correspond pas à celui enregistré lors de l’activation du capteur.\n\nVérifiez que « Démarré avec » indique l’app dans laquelle ce capteur a réellement été démarré — les deux apps calculent des identifiants de récepteur différents à partir du même compte — et que l’identifiant du compte appartient bien à ce compte.\n\nLes capteurs démarrés avec un lecteur FreeStyle Libre 3 ne peuvent pas être jumelés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il sensore ha rifiutato l’abbinamento (0xB1): l’ID ricevitore non corrisponde a quello memorizzato all’attivazione del sensore.\n\nVerifica che “Avviato con” indichi l’app in cui il sensore è stato effettivamente avviato — le due app calcolano ID ricevitore diversi dallo stesso account — e che l’ID account appartenga a quell’account.\n\nI sensori avviati con un lettore FreeStyle Libre 3 non possono essere abbinati."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーがペアリングを拒否しました（0xB1）。レシーバーIDが、センサーの有効化時に保存されたIDと一致しません。\n\n「開始に使用したアプリ」に、このセンサーを実際に開始したアプリが選択されていることを確認してください。2つのアプリは同じアカウントから異なるレシーバーIDを計算します。また、アカウントIDがそのアカウントのものであることも確認してください。\n\nFreeStyle Libre 3リーダーで開始されたセンサーはペアリングできません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De sensor heeft het koppelen geweigerd (0xB1): de ontvanger-ID kwam niet overeen met de ID die bij het activeren van de sensor is opgeslagen.\n\nControleer of bij ‘Gestart met’ de app staat waarin deze sensor daadwerkelijk is gestart — de twee apps berekenen verschillende ontvanger-ID’s uit hetzelfde account — en of de account-ID bij dat account hoort.\n\nSensoren die met een FreeStyle Libre 3-lezer zijn gestart, kunnen niet worden gekoppeld."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor odrzucił parowanie (0xB1): identyfikator odbiornika nie odpowiada identyfikatorowi zapisanemu podczas aktywacji sensora.\n\nSprawdź, czy w polu „Uruchomiono za pomocą” wskazano aplikację, w której rzeczywiście uruchomiono ten sensor — obie aplikacje wyliczają różne identyfikatory odbiornika z tego samego konta — oraz czy identyfikator konta należy do tego konta.\n\nSensorów uruchomionych czytnikiem FreeStyle Libre 3 nie można sparować."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сенсор отклонил сопряжение (0xB1): идентификатор приёмника не совпал с идентификатором, сохранённым при активации сенсора.\n\nУбедитесь, что в поле «Запущен через» указано приложение, в котором этот сенсор действительно был запущен: два приложения вычисляют разные идентификаторы приёмника из одной и той же учётной записи. Также проверьте, что идентификатор учётной записи относится именно к ней.\n\nСенсоры, запущенные с помощью считывателя FreeStyle Libre 3, невозможно сопрячь."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器拒绝配对（0xB1）：接收器 ID 与激活传感器时存储的 ID 不一致。\n\n请检查“启动应用”是否为实际启动此传感器的 App——两个 App 会从同一账户计算出不同的接收器 ID——并确认账户 ID 属于该账户。\n\n使用 FreeStyle Libre 3 读卡器启动的传感器完全无法配对。"
+          }
+        }
+      }
     },
     "The sensor refused pairing (0xB1). It's most likely still in its ~60-minute warm-up. Wait until warm-up finishes, then try again." : {
       "comment" : "Text displayed when the sensor rejected pairing (error code 0xB1).",
