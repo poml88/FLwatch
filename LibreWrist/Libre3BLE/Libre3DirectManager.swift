@@ -2934,6 +2934,8 @@ final class Libre3DirectManager: ObservableObject {
         clearReadingStatus()
         persistLastAccepted(reading, at: acceptedAt)
         pushHistory()
+        // Before the Live Activity refresh below, which reads the published state.
+        refreshIOBForNewReading()
         refreshLiveActivityForNewReading()
         evaluateLowGlucoseForNewReading()
         armSignalLossForAdvancingReading(reading)
@@ -3109,6 +3111,10 @@ final class Libre3DirectManager: ObservableObject {
     /// local (`Activity.update`), not budget-limited like push updates, so the
     /// per-minute cadence is fine; we deliberately do NOT `reloadAllTimelines()`
     /// here (that WOULD burn the widget budget — see `BluetoothHeartbeatManager`).
+    ///
+    /// `refreshIOB: false` because `refreshIOBForNewReading()` has already run
+    /// synchronously on this data tick — the same division of labour the cloud
+    /// sites use, where `requestReloadIfNeeded()` does the recompute.
     private func refreshLiveActivityForNewReading() {
         Task {
             await LiveActivityManager.shared.refreshFromCurrentHistory(
@@ -3116,6 +3122,31 @@ final class Libre3DirectManager: ObservableObject {
                 refreshIOB: false
             )
         }
+    }
+
+    /// Recompute the IOB/activity curves on the data tick, mirroring the cloud
+    /// path where `requestReloadIfNeeded()` does it as its first step.
+    ///
+    /// `.libre3BLE` is push-based and never reloads, and the heartbeat that would
+    /// otherwise recompute stands down entirely in this mode
+    /// (`BluetoothHeartbeatManager.isHeartbeatApplicableForActiveProvider`), so this is the only
+    /// per-minute path left while backgrounded. Without it the published curves
+    /// freeze at whatever the last foreground pass produced, and their stale,
+    /// absolutely-dated points keep being drawn as a tail on the left of the graph
+    /// long after the dose aged past the 6 h 10 m cut-off — while the IOB figure
+    /// stops counting down.
+    ///
+    /// Deliberately separate from the Live Activity refresh rather than folded
+    /// into it: the IOB state is app-wide (CarPlay and the foreground graphs read
+    /// it too), so keeping it current must not hinge on the Live Activity being
+    /// switched on. Synchronous, so the refresh above reads the fresh state.
+    ///
+    /// Cheap enough for the per-minute cadence: the curve calculation returns
+    /// immediately when no dose falls inside the window, and `publish()` suppresses
+    /// the `@Observable` writes when nothing moved, so a quiet minute costs one
+    /// filter pass and no redraws.
+    private func refreshIOBForNewReading() {
+        CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
     }
 
     /// Fold an on-demand backfill page (5-min-spaced samples) into the historical
