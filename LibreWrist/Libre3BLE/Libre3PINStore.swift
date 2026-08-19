@@ -37,6 +37,7 @@ enum Libre3PINStore {
     private static let pinAccount = "libre3.ble.pin"
     // Keep the legacy account name so existing paired sensors retain their key.
     private static let reconnectKeyAccount = "libre3.ble.kenc"
+    private static let installationReceiverIDAccount = "libre3.receiverID.installation"
 
     private static var service: String {
         Bundle.main.bundleIdentifier ?? "de.poeml.philipp.LibreWrist"
@@ -57,6 +58,26 @@ enum Libre3PINStore {
     static func readReconnectKey() throws -> Data? { try read(account: reconnectKeyAccount) }
     static func saveReconnectKey(_ key: Data) throws { try save(key, account: reconnectKeyAccount) }
     static func deleteReconnectKey() throws { try delete(account: reconnectKeyAccount) }
+
+    // MARK: - Installation receiver ID
+
+    /// The receiver ID identifying this FLwatch installation, used for sensors
+    /// FLwatch activates itself. Held as little-endian hex text, so the caller
+    /// can round-trip it through LibreCRKit's own parser.
+    ///
+    /// Not a secret — it lives here for the keychain's other property, surviving
+    /// reinstall. Everything else this file holds can be re-established by
+    /// pairing again; this cannot. Losing it strands every sensor FLwatch
+    /// activated, because nothing else can reproduce the ID they hold, and no
+    /// vendor app can adopt them either. Deliberately never deleted, including on
+    /// disconnect.
+    static func readInstallationReceiverID() throws -> Data? {
+        try read(account: installationReceiverIDAccount)
+    }
+
+    static func saveInstallationReceiverID(_ id: Data) throws {
+        try save(id, account: installationReceiverIDAccount)
+    }
 
     // MARK: - Internals
 

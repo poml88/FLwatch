@@ -231,6 +231,9 @@ enum DefaultsKey: String {
     case libre3ReceiverIDHex = "libre3ReceiverIDHexKey"
     case libre3FirmwareVersion = "libre3FirmwareVersionKey"
     case libre3Mode = "libre3ModeKey"
+    // Which app activated the sensor, deciding how the Account ID folds into the
+    // receiver ID sent over NFC. Empty until seeded or chosen.
+    case libre3ActivatingApp = "libre3ActivatingAppKey"
     case libre3LibreViewPatientId = "libre3LibreViewPatientIdKey"
     // LibreView (FreeStyle LibreLink) account lookup, used to fetch the
     // AccountId for takeover. The password is a secret kept in the keychain
@@ -948,6 +951,25 @@ enum SharedData {
             if let newValue { store.setString(newValue.rawValue, forKey: .libre3Mode) }
             else { store.removeObject(forKey: DefaultsKey.libre3Mode.rawValue) }
         }
+    }
+
+    /// Which app activated the paired sensor, deciding the receiver-ID fold.
+    /// Anything unrecognised — including never having been set — reads as
+    /// `.freeStyleLibre3`, the derivation that shipped before this setting
+    /// existed, so no existing pairing changes behaviour.
+    static var libre3ActivatingApp: Libre3ActivatingApp {
+        get {
+            let raw = store.getString(.libre3ActivatingApp, defaultValue: "")
+            return Libre3ActivatingApp(rawValue: raw) ?? .freeStyleLibre3
+        }
+        set { store.setString(newValue.rawValue, forKey: .libre3ActivatingApp) }
+    }
+
+    /// False until the user picks an app or `seedActivatingAppIfUnset()` fills one
+    /// in — the two are indistinguishable through `libre3ActivatingApp` itself,
+    /// which always resolves to a usable case.
+    static var libre3ActivatingAppIsSet: Bool {
+        !store.getString(.libre3ActivatingApp, defaultValue: "").isEmpty
     }
 
     /// True once a Libre 3 sensor has been paired over BLE (has a serial +

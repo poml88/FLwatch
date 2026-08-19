@@ -126,7 +126,22 @@ final class Libre3PairingCoordinator: ObservableObject {
         }
 
         state = .scanning
-        let receiverID = Libre3StateStore.receiverID()
+
+        // Resolved before the NFC session opens: for a FLwatch-activated sensor
+        // this mints and stores the installation identity, and activating one
+        // under an ID that never reached the keychain would strand it for good.
+        let receiverID: Libre3ReceiverID
+        do {
+            receiverID = try Libre3StateStore.receiverID()
+        } catch {
+            Logger.libre3.error("Pairing (\(mode.rawValue, privacy: .public)) aborted, no usable receiver ID: \(String(describing: error), privacy: .public)")
+            state = .failed(message: String(
+                localized: "FLwatch couldn't store the identity it needs to pair with this sensor. Restart your iPhone and try again — pairing was stopped rather than risk starting a sensor FLwatch could never reconnect to.",
+                comment: "Pairing failure shown when the app's own receiver ID could not be saved to the keychain. Pairing is deliberately abandoned before the NFC scan, because a sensor activated with an identity the app cannot remember is unusable afterwards."
+            ))
+            return
+        }
+
         let scanMode = Self.scanMode(for: mode, receiverID: receiverID.value)
 
         let reader = Libre3NFCActivationReader()
@@ -335,15 +350,17 @@ final class Libre3PairingCoordinator: ObservableObject {
             // the sensor stored at activation. Rejected the same way on 0xA8
             // (takeover) and 0xA0 (parallel), and unrelated to warm-up — an
             // account-matched takeover works mid-warm-up (PLAN §0.1–0.2).
-            // Juggluco reports the same code as "wrong account ID"; DiaBLE saw
-            // it on reader-activated sensors. Some activators never derive the
-            // receiver ID from a LibreView account (the FreeStyle Libre 3
-            // reader, and the newer US "Libre by Abbott" app covering Libre 2 +
-            // Libre 3), so those sensors can't be paired at all — only fresh
-            // activation with FLwatch works for them.
+            // Juggluco reports the same code as "wrong account ID".
+            //
+            // Two things produce it: the wrong LibreView account, or the right
+            // account folded the wrong way — FreeStyle Libre 3 and Libre by
+            // Abbott derive different receiver IDs from the same account ID, so
+            // the picker has to match the app that started the sensor. A Libre 3
+            // *reader* stores an ID no account reproduces, so those sensors are
+            // genuinely out of reach (DiaBLE saw 0xB1 on them too).
             return String(
-                localized: "The sensor refused pairing (0xB1): it was activated under a different account. Take over and Parallel only work with the LibreView Account ID that activated this sensor.\n\nSensors started with a FreeStyle Libre 3 reader, or with the newer US “Libre by Abbott” app, can't be paired at all — their receiver ID isn't derived from a LibreView account. Either activate a new sensor directly in FLwatch, or use the “FreeStyle Libre 3 – US” app.",
-                comment: "Pairing failure. The sensor stores a 'receiver ID' (a hash of the LibreView account ID) when it is activated and rejects any pairing attempt that presents a different one. Shown after a failed Take over or Parallel NFC scan."
+                localized: "The sensor refused pairing (0xB1): the receiver ID didn't match the one stored when the sensor was activated.\n\nCheck that “Started with” names the app this sensor was really started in — the two apps compute different receiver IDs from the same account — and that the Account ID belongs to that account.\n\nSensors started with a FreeStyle Libre 3 reader can't be paired at all.",
+                comment: "Pairing failure. The sensor stores a 'receiver ID' derived from the LibreView account when it is activated, and rejects any pairing attempt presenting a different one. The quoted phrase is the label of the app picker on the same screen — keep it identical to that label. Shown after a failed Take over or Parallel NFC scan."
             )
         case 0xB0, 0xB2:
             return String(localized: "This sensor has expired.")

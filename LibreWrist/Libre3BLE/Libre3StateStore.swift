@@ -12,39 +12,214 @@
 #if os(iOS)
 import Foundation
 import LibreCRKit
+import OSLog
+import StoreKit
+
+enum Libre3StateStoreError: Error {
+    /// The installation receiver ID couldn't be written to the keychain, or the
+    /// write didn't survive a read-back. Pairing must not continue: a sensor
+    /// activated under an identity we can't reproduce is unreachable forever.
+    case installationReceiverIDNotPersisted
+}
 
 enum Libre3StateStore {
 
     /// Receiver ID sent in the NFC command.
     ///
-    /// For **takeover / parallel join** of a sensor the Libre 3 app activated,
-    /// the sensor only accepts the receiver ID that matches the activating
-    /// LibreView account: `FNV-32a(lowercased patient UUID)`. A mismatched
-    /// (e.g. random) ID is rejected with NFC error `0xB1`. So when a LibreView
-    /// patient ID is set we derive from it deterministically.
+    /// For **takeover / parallel join** of a sensor a vendor app activated, the
+    /// sensor only accepts the receiver ID that app stored, which is a fold of
+    /// the LibreView Account ID — which fold depends on which app
+    /// (`Libre3ActivatingApp`). A mismatched (e.g. random, or the other app's)
+    /// ID is rejected with NFC error `0xB1`.
     ///
-    /// For **fresh activation** (no patient ID), FLwatch becomes the receiver
+    /// For **fresh activation** with no vendor app, FLwatch becomes the receiver
     /// itself, so an accountless ID is fine — generate once and reuse.
-    ///
-    /// `Libre3ReceiverID(accountlessUniqueID:)` is the same FNV-32a the Libre 3
-    /// app / DiaBLE use, so feeding it the patient UUID yields the identical ID.
-    static func receiverID() -> Libre3ReceiverID {
+    static func receiverID() throws -> Libre3ReceiverID {
         let patientID = SharedData.libre3LibreViewPatientId
             .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-        if !patientID.isEmpty {
-            let derived = Libre3ReceiverID(accountlessUniqueID: patientID)
-            SharedData.libre3ReceiverIDHex = derived.littleEndianHex
-            return derived
+        let activatingApp = SharedData.libre3ActivatingApp
+        if activatingApp.usesLibreViewAccount, !patientID.isEmpty {
+            // Deliberately does not touch `libre3ReceiverIDHex`: that records what
+            // the paired sensor actually holds, and only `save()` may write it.
+            // Deriving used to write it too, which let one sensor's identity
+            // overwrite another's.
+            return receiverID(forAccountID: patientID, activatingApp: activatingApp)
         }
+        return try installationReceiverID()
+    }
 
-        let hex = SharedData.libre3ReceiverIDHex
-        if !hex.isEmpty, let existing = try? Libre3ReceiverID(littleEndianHex: hex) {
+    /// This installation's own receiver ID, used for sensors FLwatch activates
+    /// itself. Generated once and then permanent: a sensor FLwatch started can
+    /// only ever be re-opened by presenting the same ID, and no vendor app can
+    /// adopt it. Kept in the keychain so a reinstall doesn't strand those sensors.
+    /// Stored as little-endian hex text rather than raw bytes, so the package's
+    /// own `littleEndianHex` round-trip does the byte order both ways.
+    ///
+    /// Throws rather than returning an unpersisted ID: activating a sensor with
+    /// an identity that didn't reach the keychain would strand it permanently,
+    /// with no way to reconstruct what it was told. A newly generated ID is
+    /// therefore read back and compared before it is handed out, since a write
+    /// that silently fails to stick is as damaging as one that errors.
+    static func installationReceiverID() throws -> Libre3ReceiverID {
+        if let existing = storedInstallationReceiverID() {
             return existing
         }
         let generated = Libre3ReceiverID(accountlessUniqueID: UUID().uuidString)
-        SharedData.libre3ReceiverIDHex = generated.littleEndianHex
+        try Libre3PINStore.saveInstallationReceiverID(Data(generated.littleEndianHex.utf8))
+        guard storedInstallationReceiverID() == generated else {
+            throw Libre3StateStoreError.installationReceiverIDNotPersisted
+        }
         return generated
+    }
+
+    private static func storedInstallationReceiverID() -> Libre3ReceiverID? {
+        guard let stored = (try? Libre3PINStore.readInstallationReceiverID()) ?? nil,
+              let hex = String(data: stored, encoding: .utf8) else { return nil }
+        return try? Libre3ReceiverID(littleEndianHex: hex)
+    }
+
+    /// Account ID → receiver ID under `activatingApp`. The single place this
+    /// mapping happens, so what the UI shows is exactly what the next scan puts
+    /// on the wire.
+    ///
+    /// `.freeStyleLibre3` keeps calling LibreCRKit's FNV on the lowercased ID,
+    /// byte-identical to what shipped before the setting existed.
+    static func receiverID(
+        forAccountID accountID: String,
+        activatingApp: Libre3ActivatingApp
+    ) -> Libre3ReceiverID {
+        if let value = activatingApp.receiverIDValue(forAccountID: accountID) {
+            return Libre3ReceiverID(value)
+        }
+        return Libre3ReceiverID(accountlessUniqueID: accountID.lowercased())
+    }
+
+    /// Formatted preview of the above, so the view layer needn't import
+    /// LibreCRKit. Nil when there's no account to derive from.
+    static func receiverIDPreview(
+        forAccountID accountID: String,
+        activatingApp: Libre3ActivatingApp
+    ) -> String? {
+        guard activatingApp.usesLibreViewAccount else {
+            // FLwatch only presents its installation identity, whatever the
+            // account rows happen to hold. A keychain failure shows nothing here;
+            // the scan itself reports it properly.
+            return (try? installationReceiverID())?.displayString
+        }
+        let trimmed = accountID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return receiverID(forAccountID: trimmed, activatingApp: activatingApp).displayString
+    }
+
+    /// Which app's fold produced the paired sensor's receiver ID, if it can be
+    /// told.
+    ///
+    /// Both folds are computed over the stored Account ID and compared against
+    /// what's on record. That is exact where it answers, and it's what carries
+    /// the build-201 testers across: their pick lived under a different defaults
+    /// key this branch removes, but the receiver ID it produced is still stored.
+    ///
+    /// A paired sensor whose stored ID neither fold reproduces was activated by
+    /// FLwatch, since that path presents the installation ID rather than deriving
+    /// one. Nil only when there's nothing paired to reason about.
+    static func inferActivatingAppFromStoredReceiverID() -> Libre3ActivatingApp? {
+        let storedHex = SharedData.libre3ReceiverIDHex
+        guard !storedHex.isEmpty, SharedData.libre3SensorIsPaired else { return nil }
+        return accountFoldMatching(hex: storedHex) ?? .flwatchOnly
+    }
+
+    /// Which vendor app's fold over the stored Account ID produces `hex`, if
+    /// either does. Nil means no account is stored, or the ID came from
+    /// somewhere other than a fold — in practice, FLwatch generated it.
+    ///
+    /// Deliberately says nothing about whether a sensor is currently paired:
+    /// callers that care apply that themselves, and the legacy rescue must work
+    /// precisely when nothing is paired.
+    private static func accountFoldMatching(hex: String) -> Libre3ActivatingApp? {
+        let accountID = SharedData.libre3LibreViewPatientId
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !accountID.isEmpty else { return nil }
+        return [Libre3ActivatingApp.freeStyleLibre3, .libreByAbbott].first {
+            receiverID(forAccountID: accountID, activatingApp: $0).littleEndianHex == hex
+        }
+    }
+
+    /// Rescue an FLwatch-activated sensor that predates the keychain identity.
+    ///
+    /// Before the split, a generated receiver ID was cached in
+    /// `libre3ReceiverIDHex` — the same slot account-derived IDs used, so the next
+    /// vendor pairing would overwrite it and strand the sensor. If that hex still
+    /// holds an ID no account fold reproduces, it is that sensor's identity, so
+    /// adopt it as this installation's before anything can overwrite it.
+    ///
+    /// Runs whether or not a sensor is currently paired: the old `clear()` kept
+    /// the hex on disconnect, so a sensor FLwatch activated and then disconnected
+    /// is exactly the case that needs rescuing, and it has no serial on record.
+    ///
+    /// Only ever fills an empty keychain entry: once set, the installation ID is
+    /// permanent. Best-effort — a failure here strands nothing that wasn't
+    /// already stranded, so it logs and moves on.
+    static func adoptLegacyInstallationReceiverIDIfNeeded() {
+        let storedHex = SharedData.libre3ReceiverIDHex
+        guard storedInstallationReceiverID() == nil,
+              !storedHex.isEmpty,
+              accountFoldMatching(hex: storedHex) == nil,
+              let legacy = try? Libre3ReceiverID(littleEndianHex: storedHex)
+        else { return }
+
+        do {
+            try Libre3PINStore.saveInstallationReceiverID(Data(legacy.littleEndianHex.utf8))
+            Logger.libre3.info("Adopted the previously cached receiver ID as this installation's identity")
+        } catch {
+            Logger.libre3.error("Couldn't adopt the cached receiver ID as this installation's identity: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    /// Pick the initial `libre3ActivatingApp` when the user has never chosen one.
+    ///
+    /// Preference order: what the stored receiver ID proves, then — for a sensor
+    /// paired before this setting existed — the FreeStyle Libre 3 fold that was
+    /// the only one available then, and only otherwise the storefront guess.
+    ///
+    /// Both apps are live on the US store, so that guess is a hint, not a fact; a
+    /// wrong one costs a rejected scan (`0xB1`) and a change in the picker. What
+    /// it must never do is flip somebody whose setup already works, which is what
+    /// the two earlier branches protect.
+    ///
+    /// `@MainActor` so the defaults write — which `@AppStorage` observes — lands
+    /// on the main actor rather than wherever the storefront lookup resumes.
+    @MainActor
+    static func seedActivatingAppIfUnset() async {
+        // Runs before the guard below: the rescue is about the keychain identity,
+        // not the picker, and must happen even for a user who has already chosen.
+        adoptLegacyInstallationReceiverIDIfNeeded()
+
+        guard !SharedData.libre3ActivatingAppIsSet else { return }
+
+        if let inferred = inferActivatingAppFromStoredReceiverID() {
+            SharedData.libre3ActivatingApp = inferred
+            Logger.libre3.info("Seeded activating app to \(inferred.rawValue, privacy: .public) (matches the stored receiver ID)")
+            return
+        }
+
+        if !SharedData.libre3Serial.isEmpty {
+            SharedData.libre3ActivatingApp = .freeStyleLibre3
+            Logger.libre3.info("Seeded activating app to freeStyleLibre3 (already paired before this setting existed)")
+            return
+        }
+
+        // Storefront country, not device locale: "Libre by Abbott" is only
+        // distributed on the US store, so this reflects what the user can
+        // actually have installed. Nil (no App Store account) falls through.
+        let countryCode = await Storefront.current?.countryCode
+
+        // The picker stays live across that await, so the user may have chosen in
+        // the meantime. Their choice wins over a guess.
+        guard !SharedData.libre3ActivatingAppIsSet else { return }
+
+        let seeded: Libre3ActivatingApp = countryCode == "USA" ? .libreByAbbott : .freeStyleLibre3
+        SharedData.libre3ActivatingApp = seeded
+        Logger.libre3.info("Seeded activating app to \(seeded.rawValue, privacy: .public) (storefront \(countryCode ?? "unknown", privacy: .public))")
     }
 
     /// Persist a successful NFC pair: PIN → keychain, the rest → app group.
@@ -96,12 +271,17 @@ enum Libre3StateStore {
         )
     }
 
-    /// Forget the paired sensor (disconnect). Deliberately keeps the generated
-    /// receiver ID so a re-pair reuses the same identity.
+    /// Forget the paired sensor (disconnect).
+    ///
+    /// `libre3ReceiverIDHex` goes with it: it records what *that* sensor holds, so
+    /// keeping it would leave a stale ID for the next pairing to trip over. The
+    /// identity a re-pair needs is the installation ID in the keychain, which
+    /// this deliberately does not touch.
     static func clear() {
         try? Libre3PINStore.delete()
         try? Libre3PINStore.deleteReconnectKey()
         SharedData.libre3Serial = ""
+        SharedData.libre3ReceiverIDHex = ""
         SharedData.libre3BleAddress = ""
         SharedData.libre3FirmwareVersion = ""
         SharedData.libre3Mode = nil
