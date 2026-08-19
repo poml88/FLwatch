@@ -36,6 +36,11 @@ struct PhoneAppLibre3ConnectView: View {
     @AppStorage(DefaultsKey.libre3LibreViewEmail.rawValue, store: UserDefaults.group)
     private var libreViewEmail: String = ""
 
+    /// Temporary diagnostic (branch `getLbAReceiverID`): which derivation the
+    /// next pairing scan uses. Developer-only; see `Libre3ReceiverIDDerivation`.
+    @AppStorage(DefaultsKey.libre3ReceiverIDDerivation.rawValue, store: UserDefaults.group)
+    private var receiverIDDerivation: Libre3ReceiverIDDerivation = .classic
+
     /// Password is a keychain secret, loaded on appear and never persisted in
     /// the app group.
     @State private var libreViewPassword: String = ""
@@ -184,6 +189,8 @@ struct PhoneAppLibre3ConnectView: View {
             Text("Sign in with the LibreView (FreeStyle Libre 3 app) account that activated this sensor and tap Get Account ID to fill it in automatically. Its hash becomes the receiver ID — takeover and parallel join only work when it matches the activating account, otherwise the sensor rejects pairing (error 0xB1).")
         }
 
+        receiverIDDerivationSection
+
         Section {
             Picker("Pairing mode", selection: $selectedMode) {
                 Text("Parallel").tag(Libre3Mode.parallelJoin)
@@ -276,6 +283,67 @@ struct PhoneAppLibre3ConnectView: View {
         } footer: {
             Text("Reads the sensor's details over NFC without pairing or changing anything — safe to use while the Libre 3 app is running.")
         }
+    }
+
+    // MARK: - Receiver ID derivation (temporary diagnostic)
+
+    /// Probe for the "Libre by Abbott" 0xB1 problem: pick which derivation the
+    /// Account ID goes through, and see the resulting receiver ID before
+    /// scanning. The scan button and pairing modes are unaffected — only the
+    /// number in the NFC command body changes.
+    ///
+    /// Deliberately not gated behind developer mode: this ships only in a
+    /// test build, and the tester shouldn't need the developer code to reach it.
+    ///
+    /// Temporary (branch `getLbAReceiverID`); strings are deliberately verbatim
+    /// so they never reach the localization catalog. Remove with
+    /// `Libre3ReceiverIDDerivation`.
+    private var receiverIDDerivationSection: some View {
+        Section {
+            Picker(selection: $receiverIDDerivation) {
+                ForEach(Libre3ReceiverIDDerivation.allCases) { derivation in
+                    Text(verbatim: derivation.displayName).tag(derivation)
+                }
+            } label: {
+                Text(verbatim: "Derivation")
+            }
+            .disabled(coordinator.state == .scanning || isFetchingAccountID)
+
+            LabeledContent {
+                if let derived = derivedReceiverID {
+                    VStack(alignment: .trailing, spacing: 1) {
+                        Text(verbatim: "\(derived.value)")
+                        Text(verbatim: derived.display)
+                            .foregroundStyle(.secondary)
+                        if let note = derived.note {
+                            Text(verbatim: note)
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                    .font(.system(.caption, design: .monospaced))
+                    .multilineTextAlignment(.trailing)
+                    .textSelection(.enabled)
+                } else {
+                    Text(verbatim: "—")
+                        .foregroundStyle(.secondary)
+                }
+            } label: {
+                Text(verbatim: "Receiver ID")
+            }
+        } header: {
+            Text(verbatim: "TEST ONLY — receiver ID derivation")
+        } footer: {
+            Text(verbatim: "Leave this on Classic unless you were asked to change it. Classic is the derivation that works with the FreeStyle Libre 3 app. 1–6 reproduce one reverse-engineered from “Libre by Abbott”, across the readings its source leaves open; they are listed most-likely first, so work down the list. A rejected scan answers 0xB1 and leaves the sensor untouched, so trying them costs nothing but a tap.")
+        }
+    }
+
+    /// Receiver ID the next scan will send for the Account ID as entered, or nil
+    /// when the field is empty (fresh activation then uses a generated ID).
+    private var derivedReceiverID: (value: UInt32, display: String, note: String?)? {
+        Libre3StateStore.receiverIDPreview(
+            forAccountID: libreViewPatientId,
+            derivation: receiverIDDerivation
+        )
     }
 
     // MARK: - Paired

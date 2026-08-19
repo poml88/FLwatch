@@ -8354,15 +8354,60 @@
     "Disabled" : {
       "comment" : "Subtitle indicating that FLwatch Live Activities are disabled.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Deaktiviert" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desactivadas" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Désactivées" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Disabilitate" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "無効" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Uitgeschakeld" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Wyłączone" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отключены" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已停用" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deaktiviert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivadas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactivées"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disabilitate"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無効"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitgeschakeld"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyłączone"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отключены"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已停用"
+          }
+        }
       }
     },
     "Disconnect sensor" : {
@@ -9306,15 +9351,60 @@
     "Enabled" : {
       "comment" : "Subtitle indicating that FLwatch Live Activities are enabled.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktiviert" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Activadas" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Activées" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Abilitate" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "有効" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Ingeschakeld" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Włączone" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Включены" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已启用" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiviert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activadas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activées"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abilitate"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有効"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingeschakeld"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Włączone"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включены"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已启用"
+          }
+        }
       }
     },
     "Ended" : {
@@ -13666,15 +13756,60 @@
     "iOS background execution may also refresh the Live Activity. With Background App Refresh enabled for FLwatch in iOS Settings, testing on the developer’s iPhone usually showed background refreshes about every 8 minutes. iOS controls the timing, so they are not guaranteed and may pause for longer periods; this has been observed during Sleep Focus." : {
       "comment" : "Explanation of the additional, approximate, and non-guaranteed Live Activity updates provided by iOS background execution for any CGM provider.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die iOS-Hintergrundausführung kann die Live-Aktivität ebenfalls aktualisieren. Wenn „Hintergrundaktualisierung“ für FLwatch in den iOS-Einstellungen aktiviert ist, wurden bei Tests auf dem iPhone des Entwicklers üblicherweise Hintergrundaktualisierungen etwa alle 8 Minuten ausgeführt. iOS bestimmt den Zeitpunkt; daher sind diese Aktualisierungen nicht garantiert und können für längere Zeit aussetzen. Dies wurde während des Schlaffokus beobachtet." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "La ejecución en segundo plano de iOS también puede actualizar la actividad en directo. Con Actualización en segundo plano activada para FLwatch en Ajustes de iOS, las pruebas en el iPhone del desarrollador mostraron normalmente actualizaciones aproximadamente cada 8 minutos. iOS controla los tiempos, por lo que no están garantizadas y pueden detenerse durante periodos más largos; esto se ha observado durante el modo de concentración Sueño." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L’exécution en arrière-plan d’iOS peut également actualiser l’activité en direct. Lorsque l’option Actualisation en arrière-plan est activée pour FLwatch dans les réglages iOS, les tests sur l’iPhone du développeur ont généralement montré des actualisations en arrière-plan environ toutes les 8 minutes. iOS contrôle leur fréquence : elles ne sont donc pas garanties et peuvent s’interrompre pendant de longues périodes, comme cela a été observé avec le mode de concentration Sommeil." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "L’esecuzione in background di iOS può aggiornare anche l’attività in tempo reale. Con Aggiornamento app in background abilitato per FLwatch nelle Impostazioni di iOS, i test sull’iPhone dello sviluppatore hanno mostrato aggiornamenti in background solitamente ogni 8 minuti circa. iOS ne controlla la tempistica, quindi gli aggiornamenti non sono garantiti e possono interrompersi per periodi più lunghi; questo è stato osservato durante la modalità Full immersion Sonno." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "iOSのバックグラウンド実行によってライブアクティビティが更新されることもあります。iOSの「設定」でFLwatchの「Appのバックグラウンド更新」を有効にした状態では、開発者のiPhoneでのテストで通常約8分ごとのバックグラウンド更新が確認されました。タイミングはiOSによって制御されるため、更新は保証されず、長時間停止する場合があります。これは睡眠集中モード中に確認されています。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Uitvoering op de achtergrond door iOS kan de Live Activity ook bijwerken. Met Ververs op achtergrond voor FLwatch ingeschakeld in de iOS-instellingen, vonden updates tijdens tests op de iPhone van de ontwikkelaar doorgaans ongeveer elke 8 minuten plaats. iOS bepaalt het tijdstip, dus updates zijn niet gegarandeerd en kunnen langere tijd worden onderbroken; dit is waargenomen tijdens de slaapfocus." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "System iOS może również odświeżać Live Activity podczas działania aplikacji w tle. Gdy w ustawieniach iOS włączono dla FLwatch opcję Odświeżanie w tle, testy na iPhonie dewelopera zwykle wykazywały odświeżanie mniej więcej co 8 minut. Czas odświeżania zależy od iOS, dlatego nie jest ono gwarantowane i może zostać wstrzymane na dłużej; zaobserwowano to podczas trybu skupienia Sen." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Фоновое выполнение iOS также может обновлять Live Activity. Когда для FLwatch включено «Обновление контента» в настройках iOS, при тестировании на iPhone разработчика фоновые обновления обычно происходили примерно каждые 8 минут. Время определяет iOS, поэтому обновления не гарантируются и могут надолго приостанавливаться; такое наблюдалось во время фокусирования «Сон»." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "iOS后台执行也可能刷新实时活动。在iOS“设置”中为FLwatch启用“后台App刷新”后，开发者在其iPhone上的测试通常显示大约每8分钟进行一次后台刷新。刷新时机由iOS控制，因此无法保证，并且可能会暂停较长时间；在“睡眠”专注模式期间曾观察到这种情况。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die iOS-Hintergrundausführung kann die Live-Aktivität ebenfalls aktualisieren. Wenn „Hintergrundaktualisierung“ für FLwatch in den iOS-Einstellungen aktiviert ist, wurden bei Tests auf dem iPhone des Entwicklers üblicherweise Hintergrundaktualisierungen etwa alle 8 Minuten ausgeführt. iOS bestimmt den Zeitpunkt; daher sind diese Aktualisierungen nicht garantiert und können für längere Zeit aussetzen. Dies wurde während des Schlaffokus beobachtet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ejecución en segundo plano de iOS también puede actualizar la actividad en directo. Con Actualización en segundo plano activada para FLwatch en Ajustes de iOS, las pruebas en el iPhone del desarrollador mostraron normalmente actualizaciones aproximadamente cada 8 minutos. iOS controla los tiempos, por lo que no están garantizadas y pueden detenerse durante periodos más largos; esto se ha observado durante el modo de concentración Sueño."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’exécution en arrière-plan d’iOS peut également actualiser l’activité en direct. Lorsque l’option Actualisation en arrière-plan est activée pour FLwatch dans les réglages iOS, les tests sur l’iPhone du développeur ont généralement montré des actualisations en arrière-plan environ toutes les 8 minutes. iOS contrôle leur fréquence : elles ne sont donc pas garanties et peuvent s’interrompre pendant de longues périodes, comme cela a été observé avec le mode de concentration Sommeil."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’esecuzione in background di iOS può aggiornare anche l’attività in tempo reale. Con Aggiornamento app in background abilitato per FLwatch nelle Impostazioni di iOS, i test sull’iPhone dello sviluppatore hanno mostrato aggiornamenti in background solitamente ogni 8 minuti circa. iOS ne controlla la tempistica, quindi gli aggiornamenti non sono garantiti e possono interrompersi per periodi più lunghi; questo è stato osservato durante la modalità Full immersion Sonno."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOSのバックグラウンド実行によってライブアクティビティが更新されることもあります。iOSの「設定」でFLwatchの「Appのバックグラウンド更新」を有効にした状態では、開発者のiPhoneでのテストで通常約8分ごとのバックグラウンド更新が確認されました。タイミングはiOSによって制御されるため、更新は保証されず、長時間停止する場合があります。これは睡眠集中モード中に確認されています。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitvoering op de achtergrond door iOS kan de Live Activity ook bijwerken. Met Ververs op achtergrond voor FLwatch ingeschakeld in de iOS-instellingen, vonden updates tijdens tests op de iPhone van de ontwikkelaar doorgaans ongeveer elke 8 minuten plaats. iOS bepaalt het tijdstip, dus updates zijn niet gegarandeerd en kunnen langere tijd worden onderbroken; dit is waargenomen tijdens de slaapfocus."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System iOS może również odświeżać Live Activity podczas działania aplikacji w tle. Gdy w ustawieniach iOS włączono dla FLwatch opcję Odświeżanie w tle, testy na iPhonie dewelopera zwykle wykazywały odświeżanie mniej więcej co 8 minut. Czas odświeżania zależy od iOS, dlatego nie jest ono gwarantowane i może zostać wstrzymane na dłużej; zaobserwowano to podczas trybu skupienia Sen."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фоновое выполнение iOS также может обновлять Live Activity. Когда для FLwatch включено «Обновление контента» в настройках iOS, при тестировании на iPhone разработчика фоновые обновления обычно происходили примерно каждые 8 минут. Время определяет iOS, поэтому обновления не гарантируются и могут надолго приостанавливаться; такое наблюдалось во время фокусирования «Сон»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS后台执行也可能刷新实时活动。在iOS“设置”中为FLwatch启用“后台App刷新”后，开发者在其iPhone上的测试通常显示大约每8分钟进行一次后台刷新。刷新时机由iOS控制，因此无法保证，并且可能会暂停较长时间；在“睡眠”专注模式期间曾观察到这种情况。"
+          }
+        }
       }
     },
     "Irreversible: starts the sensor’s wear period." : {
@@ -14541,43 +14676,178 @@
     "Live Activities" : {
       "comment" : "Navigation title for settings and information about Live Activities.\nSettings row that opens Live Activity configuration and information.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Live-Aktivitäten" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actividades en directo" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Activités en direct" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Attività in tempo reale" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ライブアクティビティ" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Live Activities" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Live Activities" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Live Activities" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "实时活动" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live-Aktivitäten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actividades en directo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activités en direct"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attività in tempo reale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブアクティビティ"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Activities"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Activities"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Activities"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实时活动"
+          }
+        }
       }
     },
     "Live Activities are disabled in iOS Settings." : {
       "comment" : "Status below the iOS Settings link when the system does not allow Live Activities.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Live-Aktivitäten sind in den iOS-Einstellungen deaktiviert." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las actividades en directo están desactivadas en Ajustes de iOS." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les activités en direct sont désactivées dans les réglages iOS." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Le attività in tempo reale sono disabilitate nelle Impostazioni di iOS." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "iOSの「設定」でライブアクティビティが無効になっています。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Live Activities zijn uitgeschakeld in de iOS-instellingen." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Funkcja Live Activities jest wyłączona w ustawieniach iOS." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Live Activities отключены в настройках iOS." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已在iOS“设置”中停用实时活动。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live-Aktivitäten sind in den iOS-Einstellungen deaktiviert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las actividades en directo están desactivadas en Ajustes de iOS."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les activités en direct sont désactivées dans les réglages iOS."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le attività in tempo reale sono disabilitate nelle Impostazioni di iOS."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOSの「設定」でライブアクティビティが無効になっています。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Activities zijn uitgeschakeld in de iOS-instellingen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funkcja Live Activities jest wyłączona w ustawieniach iOS."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Activities отключены в настройках iOS."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已在iOS“设置”中停用实时活动。"
+          }
+        }
       }
     },
     "Live Activities are enabled in iOS Settings." : {
       "comment" : "Status below the iOS Settings link when the system allows Live Activities.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Live-Aktivitäten sind in den iOS-Einstellungen aktiviert." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las actividades en directo están activadas en Ajustes de iOS." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les activités en direct sont activées dans les réglages iOS." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Le attività in tempo reale sono abilitate nelle Impostazioni di iOS." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "iOSの「設定」でライブアクティビティが有効になっています。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Live Activities zijn ingeschakeld in de iOS-instellingen." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Funkcja Live Activities jest włączona w ustawieniach iOS." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Live Activities включены в настройках iOS." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已在iOS“设置”中启用实时活动。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live-Aktivitäten sind in den iOS-Einstellungen aktiviert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las actividades en directo están activadas en Ajustes de iOS."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les activités en direct sont activées dans les réglages iOS."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le attività in tempo reale sono abilitate nelle Impostazioni di iOS."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOSの「設定」でライブアクティビティが有効になっています。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Activities zijn ingeschakeld in de iOS-instellingen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funkcja Live Activities jest włączona w ustawieniach iOS."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Activities включены в настройках iOS."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已在iOS“设置”中启用实时活动。"
+          }
+        }
       }
     },
     "Live packet capture" : {
@@ -15098,15 +15368,60 @@
     "More frequent Live Activity updates increase battery use." : {
       "comment" : "Battery warning shown below the provider-specific Live Activity update explanation.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Häufigere Aktualisierungen der Live-Aktivität erhöhen den Batterieverbrauch." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las actualizaciones más frecuentes de la actividad en directo aumentan el consumo de batería." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Des actualisations plus fréquentes de l’activité en direct augmentent la consommation de la batterie." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiornamenti più frequenti dell’attività in tempo reale aumentano il consumo della batteria." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ライブアクティビティの更新頻度が高いほど、バッテリー消費が増えます。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vaker bijwerken van de Live Activity verhoogt het batterijverbruik." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Częstsze odświeżanie Live Activity zwiększa zużycie baterii." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Более частое обновление Live Activity увеличивает расход заряда аккумулятора." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更频繁地刷新实时活动会增加电池用量。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Häufigere Aktualisierungen der Live-Aktivität erhöhen den Batterieverbrauch."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las actualizaciones más frecuentes de la actividad en directo aumentan el consumo de batería."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Des actualisations plus fréquentes de l’activité en direct augmentent la consommation de la batterie."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamenti più frequenti dell’attività in tempo reale aumentano il consumo della batteria."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブアクティビティの更新頻度が高いほど、バッテリー消費が増えます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaker bijwerken van de Live Activity verhoogt het batterijverbruik."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Częstsze odświeżanie Live Activity zwiększa zużycie baterii."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Более частое обновление Live Activity увеличивает расход заряда аккумулятора."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更频繁地刷新实时活动会增加电池用量。"
+          }
+        }
       }
     },
     "NFC scanning isn't available on this iPhone." : {
@@ -17122,15 +17437,60 @@
     "On supported versions of CarPlay, the Live Activity appears automatically." : {
       "comment" : "Explanation that CarPlay displays the FLwatch Live Activity automatically when supported.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "In unterstützten CarPlay-Versionen wird die Live-Aktivität automatisch angezeigt." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "En las versiones compatibles de CarPlay, la actividad en directo aparece automáticamente." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sur les versions compatibles de CarPlay, l’activité en direct s’affiche automatiquement." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nelle versioni supportate di CarPlay, l’attività in tempo reale viene visualizzata automaticamente." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "対応しているバージョンのCarPlayでは、ライブアクティビティが自動的に表示されます。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "In ondersteunde versies van CarPlay verschijnt de Live Activity automatisch." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "W obsługiwanych wersjach CarPlay Live Activity pojawia się automatycznie." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "В поддерживаемых версиях CarPlay Live Activity отображается автоматически." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在受支持的CarPlay版本中，实时活动会自动显示。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In unterstützten CarPlay-Versionen wird die Live-Aktivität automatisch angezeigt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En las versiones compatibles de CarPlay, la actividad en directo aparece automáticamente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur les versions compatibles de CarPlay, l’activité en direct s’affiche automatiquement."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nelle versioni supportate di CarPlay, l’attività in tempo reale viene visualizzata automaticamente."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "対応しているバージョンのCarPlayでは、ライブアクティビティが自動的に表示されます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In ondersteunde versies van CarPlay verschijnt de Live Activity automatisch."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "W obsługiwanych wersjach CarPlay Live Activity pojawia się automatycznie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В поддерживаемых версиях CarPlay Live Activity отображается автоматически."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在受支持的CarPlay版本中，实时活动会自动显示。"
+          }
+        }
       }
     },
     "Open\nFLwatch" : {
@@ -17254,15 +17614,60 @@
     "Open FLwatch settings" : {
       "comment" : "Link that opens FLwatch's page in the iOS Settings app.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "FLwatch-Einstellungen öffnen" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abrir los ajustes de FLwatch" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir les réglages de FLwatch" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Apri le impostazioni di FLwatch" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "FLwatchの設定を開く" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "FLwatch-instellingen openen" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Otwórz ustawienia FLwatch" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открыть настройки FLwatch" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开FLwatch设置" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch-Einstellungen öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir los ajustes de FLwatch"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir les réglages de FLwatch"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri le impostazioni di FLwatch"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchの設定を開く"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch-instellingen openen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwórz ustawienia FLwatch"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть настройки FLwatch"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开FLwatch设置"
+          }
+        }
       }
     },
     "Open FLwatch to resume receiving glucose readings and alarms." : {
@@ -25500,8 +25905,12 @@
         }
       }
     },
+    "The sensor refused pairing (0xB1): it was activated under a different account. Take over and Parallel only work with the LibreView Account ID that activated this sensor.\n\nSensors started with a FreeStyle Libre 3 reader, or with the newer US “Libre by Abbott” app, can't be paired at all — their receiver ID isn't derived from a LibreView account. Either activate a new sensor directly in FLwatch, or use the “FreeStyle Libre 3 – US” app." : {
+      "comment" : "Pairing failure. The sensor stores a 'receiver ID' (a hash of the LibreView account ID) when it is activated and rejects any pairing attempt that presents a different one. Shown after a failed Take over or Parallel NFC scan."
+    },
     "The sensor refused pairing (0xB1). It's most likely still in its ~60-minute warm-up. Wait until warm-up finishes, then try again." : {
       "comment" : "Text displayed when the sensor rejected pairing (error code 0xB1).",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "de" : {
@@ -25741,15 +26150,60 @@
     "The sensor sends a new reading to FLwatch every minute, so the Live Activity is refreshed every minute." : {
       "comment" : "Live Activity update cadence when FLwatch connects directly to a Libre 3 sensor over Bluetooth.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Sensor sendet FLwatch jede Minute einen neuen Messwert, daher wird die Live-Aktivität jede Minute aktualisiert." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "El sensor envía una nueva lectura a FLwatch cada minuto, por lo que la actividad en directo se actualiza cada minuto." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le capteur envoie une nouvelle mesure à FLwatch chaque minute. L’activité en direct est donc actualisée chaque minute." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il sensore invia una nuova lettura a FLwatch ogni minuto, quindi l’attività in tempo reale viene aggiornata ogni minuto." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "センサーは1分ごとに新しい測定値をFLwatchへ送信するため、ライブアクティビティも1分ごとに更新されます。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De sensor stuurt elke minuut een nieuwe meting naar FLwatch, zodat de Live Activity elke minuut wordt bijgewerkt." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Sensor co minutę wysyła nowy odczyt do FLwatch, dlatego Live Activity jest odświeżana co minutę." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сенсор каждую минуту отправляет новое показание в FLwatch, поэтому Live Activity обновляется каждую минуту." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "传感器每分钟向FLwatch发送一个新读数，因此实时活动也会每分钟刷新。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Sensor sendet FLwatch jede Minute einen neuen Messwert, daher wird die Live-Aktivität jede Minute aktualisiert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El sensor envía una nueva lectura a FLwatch cada minuto, por lo que la actividad en directo se actualiza cada minuto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le capteur envoie une nouvelle mesure à FLwatch chaque minute. L’activité en direct est donc actualisée chaque minute."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il sensore invia una nuova lettura a FLwatch ogni minuto, quindi l’attività in tempo reale viene aggiornata ogni minuto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーは1分ごとに新しい測定値をFLwatchへ送信するため、ライブアクティビティも1分ごとに更新されます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De sensor stuurt elke minuut een nieuwe meting naar FLwatch, zodat de Live Activity elke minuut wordt bijgewerkt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor co minutę wysyła nowy odczyt do FLwatch, dlatego Live Activity jest odświeżana co minutę."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сенсор каждую минуту отправляет новое показание в FLwatch, поэтому Live Activity обновляется каждую минуту."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器每分钟向FLwatch发送一个新读数，因此实时活动也会每分钟刷新。"
+          }
+        }
       }
     },
     "The server URL and token will be removed from this iPhone. Data already in Nightscout will not be deleted." : {
@@ -26771,15 +27225,60 @@
     "To show FLwatch in the Apple Watch Smart Stack, open Settings on Apple Watch, then choose Smart Stack › Live Activities and enable mirroring from iPhone. Requires watchOS 11 or later." : {
       "comment" : "Instructions for enabling mirroring of the FLwatch Live Activity from iPhone to the Apple Watch Smart Stack.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Um FLwatch im Smart-Stapel der Apple Watch anzuzeigen, öffne „Einstellungen“ auf der Apple Watch, wähle „Smart-Stapel“ › „Live-Aktivitäten“ und aktiviere die Spiegelung vom iPhone. Erfordert watchOS 11 oder neuer." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Para mostrar FLwatch en la Pila Inteligente del Apple Watch, abre Ajustes en el Apple Watch, selecciona Pila Inteligente › Actividades en directo y activa la duplicación desde el iPhone. Requiere watchOS 11 o posterior." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pour afficher FLwatch dans la Smart Stack de l’Apple Watch, ouvrez Réglages sur l’Apple Watch, puis choisissez Smart Stack › Activités en direct et activez la recopie depuis l’iPhone. Nécessite watchOS 11 ou version ultérieure." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Per mostrare FLwatch nello Smart Stack di Apple Watch, apri Impostazioni su Apple Watch, quindi scegli Smart Stack › Attività in tempo reale e abilita la duplicazione da iPhone. Richiede watchOS 11 o versioni successive." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Apple WatchのスマートスタックにFLwatchを表示するには、Apple Watchで「設定」を開き、「スマートスタック」›「ライブアクティビティ」の順に選択して、iPhoneからのミラーリングを有効にします。watchOS 11以降が必要です。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Om FLwatch in de slimme stapel van de Apple Watch weer te geven, open je Instellingen op de Apple Watch, kies je Slimme stapel › Live Activities en schakel je spiegeling vanaf de iPhone in. Vereist watchOS 11 of nieuwer." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Aby wyświetlać FLwatch w Smart Stack na Apple Watch, otwórz Ustawienia na Apple Watch, wybierz Smart Stack › Live Activities i włącz odzwierciedlanie z iPhone’a. Wymaga watchOS 11 lub nowszego." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Чтобы показывать FLwatch в Smart Stack на Apple Watch, откройте «Настройки» на Apple Watch, выберите «Smart Stack» › «Live Activities» и включите зеркалирование с iPhone. Требуется watchOS 11 или новее." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "要在Apple Watch智能叠放中显示FLwatch，请在Apple Watch上打开“设置”，然后选择“智能叠放”›“实时活动”，并启用从iPhone镜像。需要watchOS 11或更高版本。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um FLwatch im Smart-Stapel der Apple Watch anzuzeigen, öffne „Einstellungen“ auf der Apple Watch, wähle „Smart-Stapel“ › „Live-Aktivitäten“ und aktiviere die Spiegelung vom iPhone. Erfordert watchOS 11 oder neuer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para mostrar FLwatch en la Pila Inteligente del Apple Watch, abre Ajustes en el Apple Watch, selecciona Pila Inteligente › Actividades en directo y activa la duplicación desde el iPhone. Requiere watchOS 11 o posterior."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour afficher FLwatch dans la Smart Stack de l’Apple Watch, ouvrez Réglages sur l’Apple Watch, puis choisissez Smart Stack › Activités en direct et activez la recopie depuis l’iPhone. Nécessite watchOS 11 ou version ultérieure."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per mostrare FLwatch nello Smart Stack di Apple Watch, apri Impostazioni su Apple Watch, quindi scegli Smart Stack › Attività in tempo reale e abilita la duplicazione da iPhone. Richiede watchOS 11 o versioni successive."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple WatchのスマートスタックにFLwatchを表示するには、Apple Watchで「設定」を開き、「スマートスタック」›「ライブアクティビティ」の順に選択して、iPhoneからのミラーリングを有効にします。watchOS 11以降が必要です。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Om FLwatch in de slimme stapel van de Apple Watch weer te geven, open je Instellingen op de Apple Watch, kies je Slimme stapel › Live Activities en schakel je spiegeling vanaf de iPhone in. Vereist watchOS 11 of nieuwer."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aby wyświetlać FLwatch w Smart Stack na Apple Watch, otwórz Ustawienia na Apple Watch, wybierz Smart Stack › Live Activities i włącz odzwierciedlanie z iPhone’a. Wymaga watchOS 11 lub nowszego."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы показывать FLwatch в Smart Stack на Apple Watch, откройте «Настройки» на Apple Watch, выберите «Smart Stack» › «Live Activities» и включите зеркалирование с iPhone. Требуется watchOS 11 или новее."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要在Apple Watch智能叠放中显示FLwatch，请在Apple Watch上打开“设置”，然后选择“智能叠放”›“实时活动”，并启用从iPhone镜像。需要watchOS 11或更高版本。"
+          }
+        }
       }
     },
     "Too many failed Dexcom login attempts. Wait a few minutes and try again." : {
@@ -27267,15 +27766,60 @@
     "Update frequency" : {
       "comment" : "Section title for information about how often the Live Activity is refreshed.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisierungshäufigkeit" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Frecuencia de actualización" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Fréquence d’actualisation" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Frequenza di aggiornamento" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新頻度" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Updatefrequentie" } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Częstotliwość aktualizacji" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Частота обновления" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新频率" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualisierungshäufigkeit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frecuencia de actualización"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fréquence d’actualisation"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frequenza di aggiornamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新頻度"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updatefrequentie"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Częstotliwość aktualizacji"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Частота обновления"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新频率"
+          }
+        }
       }
     },
     "Update note" : {
@@ -28838,29 +29382,119 @@
     "With Bluetooth heartbeat enabled, the Live Activity is refreshed when the sensor provides a new reading—about every 5 minutes." : {
       "comment" : "Live Activity update cadence for the Dexcom Share provider when Bluetooth heartbeat is enabled.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bei aktiviertem Bluetooth-Heartbeat wird die Live-Aktivität aktualisiert, wenn der Sensor einen neuen Messwert liefert – etwa alle 5 Minuten." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Con el pulso Bluetooth activado, la actividad en directo se actualiza cuando el sensor proporciona una nueva lectura, aproximadamente cada 5 minutos." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lorsque le heartbeat Bluetooth est activé, l’activité en direct est actualisée quand le capteur fournit une nouvelle mesure, soit environ toutes les 5 minutes." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Con l’heartbeat Bluetooth abilitato, l’attività in tempo reale viene aggiornata quando il sensore fornisce una nuova lettura, circa ogni 5 minuti." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Bluetoothハートビートが有効な場合、センサーから新しい測定値が届くたびにライブアクティビティが更新されます（約5分ごと）。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Als de Bluetooth-heartbeat is ingeschakeld, wordt de Live Activity bijgewerkt wanneer de sensor een nieuwe meting levert: ongeveer elke 5 minuten." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Gdy funkcja Bluetooth heartbeat jest włączona, Live Activity jest odświeżana po otrzymaniu nowego odczytu z sensora — mniej więcej co 5 minut." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Когда Bluetooth heartbeat включён, Live Activity обновляется при получении нового показания от сенсора — примерно раз в 5 минут." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启用蓝牙心跳后，每当传感器提供新读数时，实时活动就会刷新，大约每5分钟一次。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei aktiviertem Bluetooth-Heartbeat wird die Live-Aktivität aktualisiert, wenn der Sensor einen neuen Messwert liefert – etwa alle 5 Minuten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con el pulso Bluetooth activado, la actividad en directo se actualiza cuando el sensor proporciona una nueva lectura, aproximadamente cada 5 minutos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lorsque le heartbeat Bluetooth est activé, l’activité en direct est actualisée quand le capteur fournit une nouvelle mesure, soit environ toutes les 5 minutes."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con l’heartbeat Bluetooth abilitato, l’attività in tempo reale viene aggiornata quando il sensore fornisce una nuova lettura, circa ogni 5 minuti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetoothハートビートが有効な場合、センサーから新しい測定値が届くたびにライブアクティビティが更新されます（約5分ごと）。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als de Bluetooth-heartbeat is ingeschakeld, wordt de Live Activity bijgewerkt wanneer de sensor een nieuwe meting levert: ongeveer elke 5 minuten."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gdy funkcja Bluetooth heartbeat jest włączona, Live Activity jest odświeżana po otrzymaniu nowego odczytu z sensora — mniej więcej co 5 minut."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Когда Bluetooth heartbeat включён, Live Activity обновляется при получении нового показания от сенсора — примерно раз в 5 минут."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用蓝牙心跳后，每当传感器提供新读数时，实时活动就会刷新，大约每5分钟一次。"
+          }
+        }
       }
     },
     "With Bluetooth heartbeat enabled, the Live Activity is refreshed when the sensor provides a new reading—about every minute." : {
       "comment" : "Live Activity update cadence for the LibreLinkUp provider when Bluetooth heartbeat is enabled.",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bei aktiviertem Bluetooth-Heartbeat wird die Live-Aktivität aktualisiert, wenn der Sensor einen neuen Messwert liefert – etwa jede Minute." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Con el pulso Bluetooth activado, la actividad en directo se actualiza cuando el sensor proporciona una nueva lectura, aproximadamente cada minuto." } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lorsque le heartbeat Bluetooth est activé, l’activité en direct est actualisée quand le capteur fournit une nouvelle mesure, soit environ toutes les minutes." } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Con l’heartbeat Bluetooth abilitato, l’attività in tempo reale viene aggiornata quando il sensore fornisce una nuova lettura, circa ogni minuto." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Bluetoothハートビートが有効な場合、センサーから新しい測定値が届くたびにライブアクティビティが更新されます（約1分ごと）。" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Als de Bluetooth-heartbeat is ingeschakeld, wordt de Live Activity bijgewerkt wanneer de sensor een nieuwe meting levert: ongeveer elke minuut." } },
-        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Gdy funkcja Bluetooth heartbeat jest włączona, Live Activity jest odświeżana po otrzymaniu nowego odczytu z sensora — mniej więcej co minutę." } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Когда Bluetooth heartbeat включён, Live Activity обновляется при получении нового показания от сенсора — примерно раз в минуту." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "启用蓝牙心跳后，每当传感器提供新读数时，实时活动就会刷新，大约每分钟一次。" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei aktiviertem Bluetooth-Heartbeat wird die Live-Aktivität aktualisiert, wenn der Sensor einen neuen Messwert liefert – etwa jede Minute."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con el pulso Bluetooth activado, la actividad en directo se actualiza cuando el sensor proporciona una nueva lectura, aproximadamente cada minuto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lorsque le heartbeat Bluetooth est activé, l’activité en direct est actualisée quand le capteur fournit une nouvelle mesure, soit environ toutes les minutes."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con l’heartbeat Bluetooth abilitato, l’attività in tempo reale viene aggiornata quando il sensore fornisce una nuova lettura, circa ogni minuto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetoothハートビートが有効な場合、センサーから新しい測定値が届くたびにライブアクティビティが更新されます（約1分ごと）。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als de Bluetooth-heartbeat is ingeschakeld, wordt de Live Activity bijgewerkt wanneer de sensor een nieuwe meting levert: ongeveer elke minuut."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gdy funkcja Bluetooth heartbeat jest włączona, Live Activity jest odświeżana po otrzymaniu nowego odczytu z sensora — mniej więcej co minutę."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Когда Bluetooth heartbeat включён, Live Activity обновляется при получении нового показания от сенсора — примерно раз в минуту."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用蓝牙心跳后，每当传感器提供新读数时，实时活动就会刷新，大约每分钟一次。"
+          }
+        }
       }
     },
     "Wrong password for the Dexcom account." : {

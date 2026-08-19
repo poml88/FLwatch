@@ -231,6 +231,9 @@ enum DefaultsKey: String {
     case libre3ReceiverIDHex = "libre3ReceiverIDHexKey"
     case libre3FirmwareVersion = "libre3FirmwareVersionKey"
     case libre3Mode = "libre3ModeKey"
+    // Temporary diagnostic (branch `getLbAReceiverID`): which Account ID →
+    // receiver ID derivation the next NFC pairing scan uses.
+    case libre3ReceiverIDDerivation = "libre3ReceiverIDDerivationKey"
     case libre3LibreViewPatientId = "libre3LibreViewPatientIdKey"
     // LibreView (FreeStyle LibreLink) account lookup, used to fetch the
     // AccountId for takeover. The password is a secret kept in the keychain
@@ -948,6 +951,17 @@ enum SharedData {
             if let newValue { store.setString(newValue.rawValue, forKey: .libre3Mode) }
             else { store.removeObject(forKey: DefaultsKey.libre3Mode.rawValue) }
         }
+    }
+
+    /// Temporary diagnostic (branch `getLbAReceiverID`): which derivation turns
+    /// the Account ID into the receiver ID. Anything unrecognised — including the
+    /// unset default — falls back to `.classic`, the validated path.
+    static var libre3ReceiverIDDerivation: Libre3ReceiverIDDerivation {
+        get {
+            let raw = store.getString(.libre3ReceiverIDDerivation, defaultValue: "")
+            return Libre3ReceiverIDDerivation(rawValue: raw) ?? .classic
+        }
+        set { store.setString(newValue.rawValue, forKey: .libre3ReceiverIDDerivation) }
     }
 
     /// True once a Libre 3 sensor has been paired over BLE (has a serial +

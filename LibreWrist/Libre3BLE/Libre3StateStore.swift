@@ -31,9 +31,11 @@ enum Libre3StateStore {
     static func receiverID() -> Libre3ReceiverID {
         let patientID = SharedData.libre3LibreViewPatientId
             .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
         if !patientID.isEmpty {
-            let derived = Libre3ReceiverID(accountlessUniqueID: patientID)
+            let derived = receiverID(
+                forAccountID: patientID,
+                derivation: SharedData.libre3ReceiverIDDerivation
+            )
             SharedData.libre3ReceiverIDHex = derived.littleEndianHex
             return derived
         }
@@ -45,6 +47,45 @@ enum Libre3StateStore {
         let generated = Libre3ReceiverID(accountlessUniqueID: UUID().uuidString)
         SharedData.libre3ReceiverIDHex = generated.littleEndianHex
         return generated
+    }
+
+    /// Account ID → receiver ID under `derivation`. The single place this mapping
+    /// happens, so the value the diagnostic UI displays is exactly the one the
+    /// next scan puts on the wire.
+    ///
+    /// Temporary (branch `getLbAReceiverID`) — see `Libre3ReceiverIDDerivation`.
+    /// `.classic` keeps calling LibreCRKit's FNV on the lowercased ID, unchanged
+    /// from what shipped; the reverse-engineered variants take the ID as entered,
+    /// since that derivation has no lowercasing and case changes the result.
+    static func receiverID(
+        forAccountID accountID: String,
+        derivation: Libre3ReceiverIDDerivation
+    ) -> Libre3ReceiverID {
+        if let value = derivation.newAppValue(forAccountID: accountID) {
+            return Libre3ReceiverID(value)
+        }
+        return Libre3ReceiverID(accountlessUniqueID: accountID.lowercased())
+    }
+
+    /// Formatted preview of the above for the diagnostic UI, so the view layer
+    /// needn't import LibreCRKit. Nil when `accountID` is blank — fresh
+    /// activation then falls back to a generated ID.
+    ///
+    /// Temporary (branch `getLbAReceiverID`).
+    static func receiverIDPreview(
+        forAccountID accountID: String,
+        derivation: Libre3ReceiverIDDerivation
+    ) -> (value: UInt32, display: String, note: String?)? {
+        let trimmed = accountID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let id = receiverID(forAccountID: trimmed, derivation: derivation)
+        // The UUID-byte variants silently resolve to Classic on an Account ID
+        // that isn't a UUID; say so rather than showing a number the label
+        // doesn't match.
+        let note = derivation.needsUUID && UUID(uuidString: trimmed) == nil
+            ? "not a UUID — using Classic"
+            : nil
+        return (id.value, id.displayString, note)
     }
 
     /// Persist a successful NFC pair: PIN → keychain, the rest → app group.
