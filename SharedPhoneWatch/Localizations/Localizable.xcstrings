@@ -11007,6 +11007,65 @@
         }
       }
     },
+    "FLwatch couldn't work out this sensor's receiver ID. Check that the app the sensor was started in is selected and that your LibreView Account ID is filled in, then try again." : {
+      "comment" : "Pairing failure shown when no receiver ID could be derived for the selected app — normally because the LibreView Account ID is missing. The receiver ID is computed from that account, and the sensor rejects any other value.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch konnte die Receiver-ID dieses Sensors nicht ermitteln. Prüfe, ob die App ausgewählt ist, mit der der Sensor gestartet wurde, und ob deine LibreView-Konto-ID eingetragen ist. Versuche es dann erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch no ha podido determinar el ID del receptor de este sensor. Comprueba que esté seleccionada la app con la que se inició el sensor y que hayas introducido tu ID de cuenta de LibreView; después, inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch n’a pas pu déterminer l’identifiant du récepteur de ce capteur. Vérifiez que l’app avec laquelle le capteur a été démarré est sélectionnée et que l’identifiant de votre compte LibreView est renseigné, puis réessayez."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch non è riuscito a determinare l’ID ricevitore di questo sensore. Verifica di aver selezionato l’app con cui è stato avviato il sensore e di aver inserito l’ID del tuo account LibreView, quindi riprova."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchはこのセンサーのレシーバーIDを算出できませんでした。センサーを開始したアプリが選択されていることと、LibreViewアカウントIDが入力されていることを確認して、もう一度お試しください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch kon de ontvanger-ID van deze sensor niet bepalen. Controleer of de app is geselecteerd waarmee de sensor is gestart en of je LibreView-account-ID is ingevuld. Probeer het daarna opnieuw."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch nie mógł ustalić identyfikatora odbiornika tego sensora. Sprawdź, czy wybrano aplikację, w której uruchomiono sensor, oraz czy wprowadzono identyfikator konta LibreView, a następnie spróbuj ponownie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch не удалось определить идентификатор приёмника этого сенсора. Убедитесь, что выбрано приложение, в котором был запущен сенсор, и введён идентификатор учётной записи LibreView, затем повторите попытку."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch 无法确定此传感器的接收器 ID。请检查是否已选择启动此传感器时所用的 App，并且已填写 LibreView 账户 ID，然后重试。"
+          }
+        }
+      }
+    },
     "FLwatch currently supports the LibreLinkUp 4.x API. Abbott has released API 5.0.0, which is not yet supported." : {
       "localizations" : {
         "de" : {

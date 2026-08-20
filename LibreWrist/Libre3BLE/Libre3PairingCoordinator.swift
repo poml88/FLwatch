@@ -133,6 +133,17 @@ final class Libre3PairingCoordinator: ObservableObject {
         let receiverID: Libre3ReceiverID
         do {
             receiverID = try Libre3StateStore.receiverID()
+        } catch Libre3StateStoreError.invalidReceiverIDConfiguration {
+            // Unreachable through the intended UI — `scanBlockedReason` disables
+            // the scan button while a vendor app has no Account ID — so this is a
+            // backstop. It still gets its own message: the keychain wording below
+            // would send the user to restart their iPhone, which cannot help.
+            Logger.libre3.error("Pairing (\(mode.rawValue, privacy: .public)) aborted, no receiver ID for the selected app")
+            state = .failed(message: String(
+                localized: "FLwatch couldn't work out this sensor's receiver ID. Check that the app the sensor was started in is selected and that your LibreView Account ID is filled in, then try again.",
+                comment: "Pairing failure shown when no receiver ID could be derived for the selected app — normally because the LibreView Account ID is missing. The receiver ID is computed from that account, and the sensor rejects any other value."
+            ))
+            return
         } catch {
             Logger.libre3.error("Pairing (\(mode.rawValue, privacy: .public)) aborted, no usable receiver ID: \(String(describing: error), privacy: .public)")
             state = .failed(message: String(

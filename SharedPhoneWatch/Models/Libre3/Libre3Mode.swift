@@ -5,12 +5,13 @@
 //  The three Libre 3 direct-BLE pairing modes. Persisted (so the UI can show
 //  how the current sensor was paired) and used by `Libre3PairingCoordinator` to
 //  choose the LibreCRKit `Libre3NFCScanMode`. Also holds `Libre3ActivatingApp`,
-//  which decides how the LibreView Account ID folds into the receiver ID.
+//  which selects the fold LibreCRKit applies to the LibreView Account ID.
 //
 //  Kept in shared code (no LibreCRKit / CoreNFC import) because it round-trips
 //  through `SharedData`, which compiles into the watch + widget targets that
-//  don't link LibreCRKit. The mode → `Libre3NFCScanMode` mapping lives phone-
-//  side in the coordinator, where the LibreCRKit types are available.
+//  don't link LibreCRKit. For the same reason both mappings onto LibreCRKit
+//  types live phone-side: mode → `Libre3NFCScanMode` in the coordinator,
+//  activating app → `Libre3ReceiverID.Derivation` in `Libre3StateStore`.
 //
 
 import Foundation
@@ -97,37 +98,18 @@ enum Libre3ActivatingApp: String, Codable, CaseIterable, Identifiable {
 
     /// True when the receiver ID is derived from the user's LibreView Account ID,
     /// so the account rows are needed and takeover / parallel join are possible.
-    var usesLibreViewAccount: Bool { self != .flwatchOnly }
-
-    /// Receiver ID for `accountID` under this app's fold, or `nil` when the value
-    /// doesn't come from one: `.freeStyleLibre3` is routed through LibreCRKit's
-    /// own FNV so the long-validated path stays byte-identical, and `.flwatchOnly`
-    /// has no account at all.
     ///
-    /// The `.libreByAbbott` fold was transcribed from that app as:
-    ///
-    ///     sum(int.from_bytes(b[i:i+4], "big", signed=True)
-    ///         for i in range(0, len(b), 4))
-    ///
-    /// with two clarifications. The sum is wrapped to 32 bits — the field on the
-    /// wire is 4 bytes, which the Python's unbounded accumulation doesn't reflect
-    /// but the original `int` arithmetic would have. And `signed` makes no
-    /// difference once wrapped: signed and unsigned readings of the same word
-    /// differ by exactly 2³². A trailing partial word — impossible for the
-    /// 36-character UUIDs LibreView returns, but defined here anyway — is read the
-    /// way Python's `int.from_bytes` reads a short slice.
-    func receiverIDValue(forAccountID accountID: String) -> UInt32? {
-        guard self == .libreByAbbott else { return nil }
-        let bytes = Array(accountID.lowercased().utf8)
-        var sum: UInt32 = 0
-        for start in stride(from: 0, to: bytes.count, by: 4) {
-            var value: UInt32 = 0
-            // A short slice ends up left-padded, matching `int.from_bytes`.
-            for byte in bytes[start..<min(start + 4, bytes.count)] {
-                value = (value << 8) | UInt32(byte)
-            }
-            sum = sum &+ value
+    /// Answers the same question as the phone-side `derivation` mapping in
+    /// `Libre3StateStore`, which can't live here because it names a LibreCRKit
+    /// type this file's other targets don't link. Exhaustive on purpose, so a new
+    /// case forces both switches to be revisited; that the two agree is asserted
+    /// by `LibreWristTests.testActivatingAppAccountUseMatchesDerivation`.
+    var usesLibreViewAccount: Bool {
+        switch self {
+        case .freeStyleLibre3, .libreByAbbott:
+            return true
+        case .flwatchOnly:
+            return false
         }
-        return sum
     }
 }

@@ -968,8 +968,16 @@ enum SharedData {
     /// False until the user picks an app or `seedActivatingAppIfUnset()` fills one
     /// in — the two are indistinguishable through `libre3ActivatingApp` itself,
     /// which always resolves to a usable case.
+    ///
+    /// Validates the raw value rather than merely checking it is non-empty. A
+    /// value this build doesn't recognise — a downgrade from a later build that
+    /// added a case — would otherwise read as "the user chose", pinning them to
+    /// the `.freeStyleLibre3` the getter falls back to and skipping seeding
+    /// entirely. Reporting it as unset sends it back through
+    /// `seedActivatingAppIfUnset()`, which recovers the real app from the stored
+    /// receiver ID.
     static var libre3ActivatingAppIsSet: Bool {
-        !store.getString(.libre3ActivatingApp, defaultValue: "").isEmpty
+        Libre3ActivatingApp(rawValue: store.getString(.libre3ActivatingApp, defaultValue: "")) != nil
     }
 
     /// True once a Libre 3 sensor has been paired over BLE (has a serial +

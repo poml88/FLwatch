@@ -20,6 +20,36 @@ enum Libre3StateStoreError: Error {
     /// write didn't survive a read-back. Pairing must not continue: a sensor
     /// activated under an identity we can't reproduce is unreachable forever.
     case installationReceiverIDNotPersisted
+
+    /// A vendor app is selected, but no receiver ID could be derived for it:
+    /// either no Account ID is stored, or `usesLibreViewAccount` and `derivation`
+    /// disagree. Both are prevented upstream — by `scanBlockedReason` in the
+    /// connect view and by an invariant test respectively — so this exists to
+    /// stop the fall-through rather than to be reached. Pairing under FLwatch's
+    /// own installation identity when the user named a vendor app would write an
+    /// ID that app can never reproduce, stranding the sensor for its whole wear.
+    case invalidReceiverIDConfiguration
+}
+
+/// The LibreCRKit fold this app applies to a LibreView Account ID, or nil when it
+/// derives nothing from an account — `.flwatchOnly` presents the installation
+/// identity instead.
+///
+/// Lives here rather than on the type itself: `Libre3ActivatingApp` is shared
+/// code, compiled into the watch and widget targets, which don't link LibreCRKit
+/// and so can't name `Libre3ReceiverID.Derivation`. Exhaustive on purpose, and
+/// must mirror `usesLibreViewAccount` — see the note there.
+extension Libre3ActivatingApp {
+    var derivation: Libre3ReceiverID.Derivation? {
+        switch self {
+        case .freeStyleLibre3:
+            return .freeStyleLibre3
+        case .libreByAbbott:
+            return .libreByAbbott
+        case .flwatchOnly:
+            return nil
+        }
+    }
 }
 
 enum Libre3StateStore {
@@ -38,12 +68,23 @@ enum Libre3StateStore {
         let patientID = SharedData.libre3LibreViewPatientId
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let activatingApp = SharedData.libre3ActivatingApp
-        if activatingApp.usesLibreViewAccount, !patientID.isEmpty {
+        if activatingApp.usesLibreViewAccount {
             // Deliberately does not touch `libre3ReceiverIDHex`: that records what
             // the paired sensor actually holds, and only `save()` may write it.
             // Deriving used to write it too, which let one sensor's identity
             // overwrite another's.
-            return receiverID(forAccountID: patientID, activatingApp: activatingApp)
+            //
+            // Throws instead of falling through to the installation identity: a
+            // vendor app was named, and pairing under FLwatch's own ID would
+            // silently produce one that app could never reproduce. The empty
+            // account is already blocked by `scanBlockedReason` in the connect
+            // view, which says so in plain words — this is the backstop behind it.
+            guard !patientID.isEmpty,
+                  let derived = receiverID(forAccountID: patientID, activatingApp: activatingApp)
+            else {
+                throw Libre3StateStoreError.invalidReceiverIDConfiguration
+            }
+            return derived
         }
         return try installationReceiverID()
     }
@@ -78,20 +119,18 @@ enum Libre3StateStore {
         return try? Libre3ReceiverID(littleEndianHex: hex)
     }
 
-    /// Account ID → receiver ID under `activatingApp`. The single place this
-    /// mapping happens, so what the UI shows is exactly what the next scan puts
-    /// on the wire.
+    /// Account ID → receiver ID under `activatingApp`, or nil when that app
+    /// derives none from an account. The single place this mapping happens, so
+    /// what the UI shows is exactly what the next scan puts on the wire.
     ///
-    /// `.freeStyleLibre3` keeps calling LibreCRKit's FNV on the lowercased ID,
-    /// byte-identical to what shipped before the setting existed.
+    /// The folds themselves are LibreCRKit's, lowercasing included, so
+    /// `.freeStyleLibre3` stays byte-identical to the FNV over the lowercased
+    /// Account ID that shipped before this setting existed.
     static func receiverID(
         forAccountID accountID: String,
         activatingApp: Libre3ActivatingApp
-    ) -> Libre3ReceiverID {
-        if let value = activatingApp.receiverIDValue(forAccountID: accountID) {
-            return Libre3ReceiverID(value)
-        }
-        return Libre3ReceiverID(accountlessUniqueID: accountID.lowercased())
+    ) -> Libre3ReceiverID? {
+        activatingApp.derivation.map { Libre3ReceiverID(accountID: accountID, derivation: $0) }
     }
 
     /// Formatted preview of the above, so the view layer needn't import
@@ -108,7 +147,7 @@ enum Libre3StateStore {
         }
         let trimmed = accountID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
-        return receiverID(forAccountID: trimmed, activatingApp: activatingApp).displayString
+        return receiverID(forAccountID: trimmed, activatingApp: activatingApp)?.displayString
     }
 
     /// Which app's fold produced the paired sensor's receiver ID, if it can be
@@ -140,7 +179,7 @@ enum Libre3StateStore {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !accountID.isEmpty else { return nil }
         return [Libre3ActivatingApp.freeStyleLibre3, .libreByAbbott].first {
-            receiverID(forAccountID: accountID, activatingApp: $0).littleEndianHex == hex
+            receiverID(forAccountID: accountID, activatingApp: $0)?.littleEndianHex == hex
         }
     }
 

@@ -6,6 +6,9 @@
 //
 
 import XCTest
+// Needed only to name `Libre3ReceiverID.Derivation` in the activating-app
+// mapping assertions; `@testable import FLwatch` does not re-export it.
+import LibreCRKit
 @testable import FLwatch
 
 final class LibreWristTests: XCTestCase {
@@ -1693,6 +1696,72 @@ final class LibreWristTests: XCTestCase {
         )
 
         XCTAssertEqual(Int(parsedDate.timeIntervalSince1970), 1_774_209_943)
+    }
+
+    // MARK: - Libre 3 activating app
+
+    /// `Libre3ActivatingApp.usesLibreViewAccount` and its phone-side `derivation`
+    /// answer the same question — does this app fold a LibreView Account ID into a
+    /// receiver ID — but can't be one property: the enum is shared code compiled
+    /// into the watch and widget targets, which don't link LibreCRKit and so can't
+    /// name `Libre3ReceiverID.Derivation`.
+    ///
+    /// A case added to one switch but not the other makes
+    /// `Libre3StateStore.receiverID()` throw `invalidReceiverIDConfiguration` for
+    /// a perfectly valid app, blocking pairing. Comments drift; this doesn't.
+    func testActivatingAppAccountUseMatchesDerivation() throws {
+        // Exact, not just present: a mapping that swapped the two vendor apps
+        // would satisfy the consistency loop below while sending each sensor the
+        // other app's receiver ID.
+        XCTAssertEqual(Libre3ActivatingApp.freeStyleLibre3.derivation, .freeStyleLibre3)
+        XCTAssertEqual(Libre3ActivatingApp.libreByAbbott.derivation, .libreByAbbott)
+        XCTAssertNil(Libre3ActivatingApp.flwatchOnly.derivation)
+
+        for app in Libre3ActivatingApp.allCases {
+            XCTAssertEqual(
+                app.usesLibreViewAccount,
+                app.derivation != nil,
+                "\(app.rawValue): usesLibreViewAccount and derivation disagree"
+            )
+        }
+    }
+
+    /// Known-answer vectors for both folds, so moving the arithmetic into
+    /// LibreCRKit can't quietly change what goes on the wire.
+    ///
+    /// The expected values were computed from the implementation that shipped in
+    /// build 202 (commit 8fdc80a), before either fold moved to the package — the
+    /// identity assertions above can't catch this, since they stay true even if
+    /// the package's arithmetic changes underneath them. A sensor only ever
+    /// accepts the ID it was activated with, so a drift here strands every
+    /// already-paired sensor until its wear ends.
+    ///
+    /// Goes through `receiverIDPreview` deliberately: it is what the connect
+    /// screen displays, so this pins the readout and the wire value together.
+    func testReceiverIDFoldsMatchTheShippedValues() throws {
+        // Throwaway UUID in LibreView's format (lowercase, dashed, 36 chars).
+        let accountID = "3f2b7c10-9a4d-4e21-8b56-0c1d2e3f4a5b"
+
+        XCTAssertEqual(
+            Libre3StateStore.receiverIDPreview(forAccountID: accountID, activatingApp: .freeStyleLibre3),
+            "0xb063dfc1 / c1df63b0"
+        )
+        XCTAssertEqual(
+            Libre3StateStore.receiverIDPreview(forAccountID: accountID, activatingApp: .libreByAbbott),
+            "0x27bff6bc / bcf6bf27"
+        )
+
+        // Both folds lowercase first, so an Account ID pasted in upper case still
+        // reaches the sensor as the same value. LibreView issues them lowercase;
+        // this guards the normalization, not a case we expect to see.
+        XCTAssertEqual(
+            Libre3StateStore.receiverIDPreview(forAccountID: accountID.uppercased(), activatingApp: .freeStyleLibre3),
+            "0xb063dfc1 / c1df63b0"
+        )
+        XCTAssertEqual(
+            Libre3StateStore.receiverIDPreview(forAccountID: accountID.uppercased(), activatingApp: .libreByAbbott),
+            "0x27bff6bc / bcf6bf27"
+        )
     }
 
 }
