@@ -50,7 +50,6 @@ struct PhoneAppHomeView: View {
     
     
 //    @State private var selectedlibreLinkHistoryPoint: LibreLinkUpGlucose?
-    @State private var minutesSinceLastReading: Int = 999
 //    @State private var libreLinkUpResponse: String = "[...]"
 //    @State private var libreLinkUpHistory = LibreLinkUpHistory.mock
 //    @State private var libreLinkUpLogbookHistory: [LibreLinkUpGlucose] = []
@@ -78,6 +77,16 @@ struct PhoneAppHomeView: View {
     /// point after resume and must not be the only thing keeping the chart current.
     @State private var chartWindowEnd: Date = .chartWindowEnd()
 
+    /// Single clock sample behind the staleness overlay and its minute count, so
+    /// the condition and the text it shows can never disagree. Sampled *after*
+    /// each reload finishes (see `reloadAndUpdateMinutes`) and never at render
+    /// time: returning to the foreground reloads immediately, and a render-time
+    /// `Date()` would flash the "no data received" overlay for the moment between
+    /// the view re-rendering and the reload raising `isReloading`. `.distantPast`
+    /// until the first reload completes so a cold start cannot flash it either.
+    /// Same arrangement as the watch home view.
+    @State private var currentTime: Date = .distantPast
+
 //    @State var lastReadingDate: Date = Date(timeIntervalSinceNow: -999 * 60)
 //    @State var currentGlucose: Int = 0
 //    @State var trendArrow = "---"
@@ -86,6 +95,15 @@ struct PhoneAppHomeView: View {
     private let safeRange: ClosedRange<Int> = 70...180
     private let allowedHours = 0...24
     private let minimumDaysOfUse = 10
+
+    private var minutesSinceLastReading: Int {
+        max(Int(currentTime.timeIntervalSince(libreLinkUpHistory.lastReadingDate) / 60), 0)
+    }
+
+    private var isReadingStale: Bool {
+        currentTime.timeIntervalSince(libreLinkUpHistory.lastReadingDate) >= lluService.activeProvider.staleReadingAfter
+    }
+
     private var defaultOverlayConnectionMessage: String {
         lluService.activeProvider.noDataReceivedHint
     }
@@ -330,7 +348,7 @@ struct PhoneAppHomeView: View {
                     .cornerRadius(10)
                 ProgressView().tint(.white)
             }
-        } else if Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) >= lluService.activeProvider.staleReadingAfter {
+        } else if isReadingStale {
             ZStack {
                 Color(white: 0, opacity: 0.5)
                     .cornerRadius(10)
@@ -636,7 +654,13 @@ struct PhoneAppHomeView: View {
                 )
             }
             isShowingReloadFailed = shouldShowReloadFailedAlert
-            minutesSinceLastReading = Int(Date().timeIntervalSince(LibreLinkUpHistory.shared.lastReadingDate) / 60)
+            // One clock sample per reload, taken *after* it finishes rather than
+            // before. The progress overlay hides the staleness overlay for the
+            // duration of the request, so completion is the moment the staleness
+            // check becomes visible again and it has to reflect the time now — a
+            // reading that crossed the threshold mid-request would otherwise stay
+            // unflagged until the next timer delivery.
+            currentTime = Date()
         }
     }
     
