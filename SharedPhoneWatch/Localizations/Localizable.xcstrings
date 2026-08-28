@@ -31089,7 +31089,67 @@
         }
       }
     },
+    "Your phone hasn't received readings for 20 minutes. Bring your phone closer to the sensor or check the sensor." : {
+      "comment" : "Notification explaining that the phone has lost contact with the glucose sensor and should be moved closer to it.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Smartphone hat seit 20 Minuten keine Messwerte empfangen. Bringe dein Smartphone näher an den Sensor oder überprüfe den Sensor."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu teléfono no ha recibido lecturas durante 20 minutos. Acerca el teléfono al sensor o comprueba el sensor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre téléphone n’a reçu aucune mesure depuis 20 minutes. Rapprochez votre téléphone du capteur ou vérifiez le capteur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il telefono non riceve letture da 20 minuti. Avvicina il telefono al sensore o controlla il sensore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スマートフォンが20分間測定値を受信していません。スマートフォンをセンサーに近づけるか、センサーを確認してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je telefoon heeft al 20 minuten geen metingen ontvangen. Breng je telefoon dichter bij de sensor of controleer de sensor."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefon nie odebrał odczytów od 20 minut. Zbliż telefon do sensora lub sprawdź sensor."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Телефон не получал показания в течение 20 минут. Поднесите телефон ближе к датчику или проверьте датчик."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您的手机已有20分钟未收到读数。请将手机靠近传感器，或检查传感器。"
+          }
+        }
+      }
+    },
     "Your phone hasn't received readings for 20 minutes. Move closer to your sensor or check it." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

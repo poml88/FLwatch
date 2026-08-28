@@ -167,7 +167,10 @@ final class SensorAlertNotificationManager {
         let settings = await notificationCenter.notificationSettings()
         let content = UNMutableNotificationContent()
         content.title = String(localized: "No glucose data")
-        content.body = String(localized: "Your phone hasn't received readings for 20 minutes. Move closer to your sensor or check it.")
+        content.body = String(
+            localized: "Your phone hasn't received readings for 20 minutes. Bring your phone closer to the sensor or check the sensor.",
+            comment: "Notification explaining that the phone has lost contact with the glucose sensor and should be moved closer to it."
+        )
         content.userInfo = [
             Self.signalLossOriginalDeadlineKey: deadline.timeIntervalSince1970
         ]
