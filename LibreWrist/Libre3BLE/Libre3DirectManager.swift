@@ -561,6 +561,51 @@ private struct Libre3ClinicalBackfillBurst {
     }
 }
 
+/// One-shot diagnostic snapshot of a session's two backfill requests, emitted
+/// once shortly after they are issued (or at stream end, whichever comes first).
+///
+/// It exists because an *empty* reply currently logs nothing at all: the burst
+/// summary is only written when at least one record arrived, so "the sensor
+/// ignored the request" and "the request was never sent" both read as an absent
+/// line. Pairing each `from` with the lifeCount it was derived from, the session
+/// resume seeds, and what actually came back makes the four candidate causes
+/// distinguishable from the trace alone.
+private struct Libre3BackfillOutcome {
+    enum ClinicalRequest {
+        case requested(from: UInt16)
+        case skipped
+        case failed
+    }
+
+    let currentLifeCount: UInt16
+    let historicalFrom: UInt16
+    let historicalResume: UInt16?
+    let minuteResume: UInt16?
+    var clinical: ClinicalRequest
+    /// Session totals sampled when the request went out. The delta against the
+    /// totals at flush time is what this request actually delivered — a burst
+    /// that already flushed its own summary must still count as "data came
+    /// back", which the per-burst counters cannot express.
+    let historicalPagesAtRequest: Int
+    let clinicalRecordsAtRequest: Int
+
+    func traceLine(historicalPages: Int, clinicalRecords: Int) -> String {
+        let clinicalDescription: String
+        switch clinical {
+        case .requested(let from):
+            clinicalDescription = "clin from=\(from) recs=\(clinicalRecords - clinicalRecordsAtRequest)"
+        case .skipped:
+            clinicalDescription = "clin skipped"
+        case .failed:
+            clinicalDescription = "clin failed"
+        }
+        let resume = "\(historicalResume.map(String.init) ?? "none")/\(minuteResume.map(String.init) ?? "none")"
+        return "backfill-outcome lc=\(currentLifeCount) "
+            + "hist from=\(historicalFrom) pages=\(historicalPages - historicalPagesAtRequest) "
+            + "\(clinicalDescription) resume=\(resume)"
+    }
+}
+
 struct Libre3NoStreamCycleTracker: Equatable {
     static let warningCycle = 3
     private(set) var cycles = 0
@@ -979,6 +1024,9 @@ final class Libre3DirectManager: ObservableObject {
     private static let signalLossThreshold: TimeInterval = 20 * 60
     private static let glucoseGapNotableThreshold: TimeInterval = 10 * 60
     private static let maxBackfillFailuresPerSession = 3
+    /// Both backfill bursts land within seconds of the request, so 20 s is a
+    /// generous deadline for calling a reply "empty" in the outcome diagnostic.
+    private static let backfillOutcomeDelayNanoseconds: UInt64 = 20_000_000_000
     private static let disconnectHandoffRetryNanoseconds: UInt64 = 15_000_000_000
     /// Streaming waits until every data-plane and backfill response CCCD is ready.
     private static let postAuthRearmPlan = Libre3PostAuthRearmPlan.standard
@@ -1025,6 +1073,14 @@ final class Libre3DirectManager: ObservableObject {
     /// store snapshot and watch send are trailing-debounced into one operation.
     private var clinicalPushTask: Task<Void, Never>?
     private var clinicalBackfillBurst = Libre3ClinicalBackfillBurst()
+    /// Session totals for the two backfill response channels, counted on receipt
+    /// (before any acceptance rule) so they answer only "did the sensor reply".
+    /// Kept apart from the per-burst counters, which reset on every flush.
+    private var historicalPagesThisSession = 0
+    private var clinicalRecordsThisSession = 0
+    /// Pending one-shot backfill diagnostic; nil once emitted.
+    private var backfillOutcome: Libre3BackfillOutcome?
+    private var backfillOutcomeTask: Task<Void, Never>?
     private var readingStatusEpisodeID = 0
     private var lastSensorAttention: Libre3SensorAttention = .none
     /// Prevents reconnects for the same sensor anchor from replacing the warm-up reminder.
@@ -1146,6 +1202,9 @@ final class Libre3DirectManager: ObservableObject {
         clinicalPushTask?.cancel()
         clinicalPushTask = nil
         clinicalBackfillBurst = Libre3ClinicalBackfillBurst()
+        // A stop before the deadline is itself the outcome: report what had
+        // arrived rather than dropping the line.
+        flushBackfillOutcome()
         clearReconnectBackoff()
         cancelDisconnectHandoffRecovery()
         disconnectHandoffPolicy.reset()
@@ -2011,6 +2070,11 @@ final class Libre3DirectManager: ObservableObject {
         didRequestBackfill = false
         lastAcceptedRealtime = nil
         backfillFailuresThisSession = 0
+        // Flush before zeroing: a pending outcome from the previous session is
+        // still reported against the counters it was sampled from.
+        flushBackfillOutcome()
+        historicalPagesThisSession = 0
+        clinicalRecordsThisSession = 0
 
         lastAttemptStage = "streaming"
         connectionState = .streaming
@@ -2047,7 +2111,10 @@ final class Libre3DirectManager: ObservableObject {
             bgTask = .invalid
         }
 
-        defer { flushPendingClinicalPush() }
+        defer {
+            flushPendingClinicalPush()
+            flushBackfillOutcome()
+        }
         try await consumeNotifications(session: session)
         finishConnectedAttempt(traceStreamEnd: true)
     }
@@ -2246,10 +2313,23 @@ final class Libre3DirectManager: ObservableObject {
                     DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
                 }
 
+                // Armed only once the historical write is on the wire: a failed
+                // write is already covered by `backfill-failed`.
+                self.backfillOutcome = Libre3BackfillOutcome(
+                    currentLifeCount: boundedCurrentLifeCount,
+                    historicalFrom: from,
+                    historicalResume: self.backfillResumeLifeCount,
+                    minuteResume: self.minuteResumeLifeCount,
+                    clinical: .skipped,
+                    historicalPagesAtRequest: self.historicalPagesThisSession,
+                    clinicalRecordsAtRequest: self.clinicalRecordsThisSession
+                )
+
                 guard shouldRequestClinical else {
                     Libre3DiagnosticsLog.traceReconnect(
                         "clinical-backfill-skipped lifeCount=\(boundedCurrentLifeCount) warmup=\(SharedData.libre3WarmupMinutes)"
                     )
+                    self.scheduleBackfillOutcomeFlush(for: capturedSession)
                     return
                 }
 
@@ -2264,18 +2344,24 @@ final class Libre3DirectManager: ObservableObject {
                         fromLifeCount: clinicalFrom,
                         sequence: clinicalSequence
                     )
-                    guard self.session === capturedSession,
-                          self.connectionState == .streaming else { return }
-                    Libre3DiagnosticsLog.traceReconnect(
-                        "clinical-backfill-requested from=\(clinicalFrom)"
-                    )
+                    // A superseded session may no longer trace, but the outcome
+                    // flush below is scheduled either way and guards on identity.
+                    if self.session === capturedSession,
+                       self.connectionState == .streaming {
+                        self.backfillOutcome?.clinical = .requested(from: clinicalFrom)
+                        Libre3DiagnosticsLog.traceReconnect(
+                            "clinical-backfill-requested from=\(clinicalFrom)"
+                        )
+                    }
                 } catch {
                     let errorName = Self.compactErrorName(for: error)
+                    self.backfillOutcome?.clinical = .failed
                     Libre3DiagnosticsLog.traceReconnect(
                         "clinical-backfill-failed error=\(errorName)"
                     )
                     Logger.libre3.error("Libre3 BLE clinical backfill request failed: \(String(describing: error), privacy: .public)")
                 }
+                self.scheduleBackfillOutcomeFlush(for: capturedSession)
             } catch {
                 Logger.libre3.error("Libre3 BLE historical backfill request failed: \(String(describing: error), privacy: .public)")
                 guard let self,
@@ -3152,6 +3238,9 @@ final class Libre3DirectManager: ObservableObject {
     /// Fold an on-demand backfill page (5-min-spaced samples) into the historical
     /// series to seed the graph window. Displayable samples only.
     private func ingestHistorical(_ page: HistoricalReadingPage) {
+        // Counted before the anchor guard: this only answers "did the sensor
+        // reply to the request", not "was the page usable".
+        historicalPagesThisSession += 1
         guard let anchor = sensorStartDate else {
             Logger.libre3.info("Libre3 BLE backfill page dropped (no anchor yet): lc \(page.startLifeCount, privacy: .public)..\(page.endLifeCount, privacy: .public)")
             return
@@ -3183,6 +3272,7 @@ final class Libre3DirectManager: ObservableObject {
     /// trigger alerts, Live Activity work, signal-loss state, or realtime health.
     private func ingestClinical(_ record: ClinicalReadingRecord) {
         clinicalBackfillBurst.recordReceived(lifeCount: record.lifeCount)
+        clinicalRecordsThisSession += 1
         defer {
             if let activeSession = session {
                 scheduleClinicalPush(for: activeSession)
@@ -3276,6 +3366,38 @@ final class Libre3DirectManager: ObservableObject {
         if burst.added > 0 {
             pushHistory()
         }
+    }
+
+    /// Arm the deadline after which this session's backfill requests are judged.
+    /// The session identity guard keeps a superseded request from reporting on a
+    /// replacement stream, exactly as the clinical push debounce does.
+    private func scheduleBackfillOutcomeFlush(for originatingSession: SensorSession) {
+        backfillOutcomeTask?.cancel()
+        backfillOutcomeTask = Task { [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: Self.backfillOutcomeDelayNanoseconds)
+            } catch {
+                return
+            }
+            guard let self, self.session === originatingSession else { return }
+            self.flushBackfillOutcome()
+        }
+    }
+
+    /// Emit the one-shot backfill outcome. Idempotent, because the deadline and
+    /// the stream-end/stop paths race and only the first may log: clearing the
+    /// snapshot is what makes the second call a no-op.
+    private func flushBackfillOutcome() {
+        backfillOutcomeTask?.cancel()
+        backfillOutcomeTask = nil
+        guard let outcome = backfillOutcome else { return }
+        backfillOutcome = nil
+        Libre3DiagnosticsLog.traceReconnect(
+            outcome.traceLine(
+                historicalPages: historicalPagesThisSession,
+                clinicalRecords: clinicalRecordsThisSession
+            )
+        )
     }
 
     /// Apply the decoded lifecycle to the published warm-up / expiry state.
