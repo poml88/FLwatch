@@ -150,7 +150,14 @@ struct PhoneAppHomeView: View {
     private let timer = Timer.publish(every: Self.foregroundReloadInterval, tolerance: 1, on: .main, in: .common).autoconnect()
     @State private var acknowledgedReadingWarningEpisodeID = 0
     @State private var showReadingWarning = false
-    
+    /// Snapshot of the warning taken when the alert is armed. The alert must not
+    /// read `homeWarning` live: an episode ends the moment a good reading lands
+    /// (and a takeover scan's `forgetSensor()` clears it outright), which would
+    /// blank an alert already on screen down to a bare OK button. Never reset to
+    /// nil — only overwritten by the next arming — so the title can't empty out
+    /// mid-dismissal either.
+    @State private var presentedReadingWarning: HomeSensorWarning?
+
     var body: some View {
         lifecycleContent
             .overlay {
@@ -253,12 +260,18 @@ struct PhoneAppHomeView: View {
         reviewPromptAlertContent
         // The icon follows current sensor state, but this alert is episode-gated
         // so transient Layer B warnings acknowledge only once per episode.
-        .alert(homeWarning?.title ?? "", isPresented: $showReadingWarning) {
+        // Content comes from the snapshot taken at arming time, not from live
+        // state — see `presentedReadingWarning`.
+        .alert(
+            presentedReadingWarning?.title ?? "",
+            isPresented: $showReadingWarning,
+            presenting: presentedReadingWarning
+        ) { warning in
             Button("OK", role: .cancel) {
-                acknowledgedReadingWarningEpisodeID = homeWarning?.episodeID ?? acknowledgedReadingWarningEpisodeID
+                acknowledgedReadingWarningEpisodeID = warning.episodeID ?? acknowledgedReadingWarningEpisodeID
             }
-        } message: {
-            Text(homeWarning?.message ?? "")
+        } message: { warning in
+            Text(warning.message)
         }
     }
 
@@ -295,6 +308,12 @@ struct PhoneAppHomeView: View {
             evaluateReadingWarningAlert()
         }
         .onChange(of: showsProviderPicker) {
+            evaluateReadingWarningAlert()
+        }
+        // Returning to the home tab is one of the moments a still-live episode
+        // may present. `onAppear` covers it today, but the alert's arming rule
+        // now depends on the selected tab, so observe it explicitly.
+        .onChange(of: selectedTab) {
             evaluateReadingWarningAlert()
         }
         .onChange(of: libre3.currentReadingStatus) { evaluateReadingWarningAlert() }
@@ -626,14 +645,23 @@ struct PhoneAppHomeView: View {
         DispatchQueue.main.async { showsProviderPicker = true }
     }
 
+    /// Arms the Layer B warning alert, but only while the home tab is actually on
+    /// screen. Layer B episodes are transient and self-resolving, so one raised
+    /// while the user is elsewhere (another tab, app backgrounded, mid-takeover
+    /// scan) must not be latched for later: by the time they return it has
+    /// usually cleared, and announcing a problem that no longer exists — with a
+    /// message promising it "will resume on its own" — only confuses. Every
+    /// caller re-runs this on return, so a still-live episode is presented then.
     private func evaluateReadingWarningAlert() {
-        guard let episodeID = homeWarning?.episodeID else { return }
+        guard scenePhase == .active, selectedTab == "Home" else { return }
+        guard let warning = homeWarning, let episodeID = warning.episodeID else { return }
         guard episodeID > acknowledgedReadingWarningEpisodeID else { return }
         guard !isShowingWelcomeMessage,
               !isShowingDisclaimer,
               !isShowingNotification,
               !showsProviderPicker else { return }
         guard !Self.shouldShowFirstLaunchPicker() else { return }
+        presentedReadingWarning = warning
         showReadingWarning = true
     }
 
@@ -675,6 +703,11 @@ struct GlucoseValueView: View {
     var warning: HomeSensorWarning?
     var calibratedRawMgDL: Int?
     @State private var showWarningDetail = false
+    /// Snapshot taken on tap, for the same reason the home view snapshots its
+    /// alert: `warning` goes nil as soon as the episode ends, and this alert is
+    /// attached to the enclosing stack rather than to the triangle, so a live
+    /// read would leave an empty box with an OK button on screen.
+    @State private var tappedWarning: HomeSensorWarning?
 
     var body: some View {
         HStack {
@@ -698,6 +731,7 @@ struct GlucoseValueView: View {
                             .font(.system(size: 40))
                             .foregroundStyle(warning.color)
                             .onTapGesture {
+                                tappedWarning = warning
                                 showWarningDetail = true
                             }
                     }
@@ -743,10 +777,14 @@ struct GlucoseValueView: View {
                     PhoneAppInsulinDeliveryView()
                 })
             }
-            .alert(warning?.title ?? "", isPresented: $showWarningDetail) {
+            .alert(
+                tappedWarning?.title ?? "",
+                isPresented: $showWarningDetail,
+                presenting: tappedWarning
+            ) { _ in
                 Button("OK", role: .cancel) { }
-            } message: {
-                Text(warning?.message ?? "")
+            } message: { tapped in
+                Text(tapped.message)
             }
             .padding()
 //            .border(.red)
