@@ -179,8 +179,28 @@ final class Libre3PairingCoordinator: ObservableObject {
             try Libre3StateStore.save(state: sensorState, mode: mode, patchInfo: result.patchInfo)
             if !SharedData.libre3CalibrationSensorSerial.isEmpty,
                SharedData.libre3CalibrationSensorSerial != result.patchInfo.serialNumber {
+                // A stored serial on its own doesn't mean a calibration was in
+                // effect: it is also written when comparisons are logged, when an
+                // offset of zero is applied and when all comparisons are deleted.
+                // Reset regardless, but only tell the user when something was
+                // actually discarded — and only about the part that existed.
+                let hadOffset = SharedData.libre3CalibrationOffsetMgDL != 0
+                let hadLog = !(UserDefaults.group.getArray(
+                    [Libre3CalibrationLogEntry].self,
+                    forKey: .libre3CalibrationLog
+                ) ?? []).isEmpty
                 SharedData.resetLibre3CalibrationForNewSensor()
-                calibrationResetNotice = String(localized: "The previous sensor's FLwatch calibration and calibration log were cleared. The new sensor will use its factory calibration.")
+                if hadOffset {
+                    calibrationResetNotice = String(
+                        localized: "The previous sensor's FLwatch calibration and calibration log were cleared. The new sensor will use its factory calibration.",
+                        comment: "Shown after pairing a different sensor when the previous sensor had a calibration offset in effect. Both the offset and the logged blood glucose comparisons are discarded, because they only apply to the sensor they were measured on."
+                    )
+                } else if hadLog {
+                    calibrationResetNotice = String(
+                        localized: "The previous sensor's blood glucose comparisons were cleared. No calibration was in effect, so the new sensor's readings are unaffected.",
+                        comment: "Shown after pairing a different sensor when the previous sensor had logged blood glucose comparisons but no calibration offset. Only the logged comparisons are discarded."
+                    )
+                }
             }
             // Stamp the sensor model immediately so Settings/UI reflect it before
             // the first reading (the manager re-stamps on connect too).

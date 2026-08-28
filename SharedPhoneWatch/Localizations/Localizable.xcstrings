@@ -1323,204 +1323,6 @@
         }
       }
     },
-    "About %lld minutes remaining." : {
-      "comment" : "Warm-up countdown shown on the phone Home screen.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Noch etwa %lld Minute."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Noch etwa %lld Minuten."
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "About %lld minute remaining."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "About %lld minutes remaining."
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Queda aproximadamente %lld minuto."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Quedan aproximadamente %lld minutos."
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Environ %lld minute restante."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Environ %lld minutes restantes."
-                }
-              }
-            }
-          }
-        },
-        "it" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Resta circa %lld minuto."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Restano circa %lld minuti."
-                }
-              }
-            }
-          }
-        },
-        "ja" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "残り約%lld分です。"
-                }
-              }
-            }
-          }
-        },
-        "nl" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Nog ongeveer %lld minuut."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Nog ongeveer %lld minuten."
-                }
-              }
-            }
-          }
-        },
-        "pl" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Pozostały około %lld minuty."
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Pozostało około %lld minut."
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Pozostała około %lld minuta."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Pozostało około %lld minuty."
-                }
-              }
-            }
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Осталось примерно %lld минуты."
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Осталось примерно %lld минут."
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Осталась примерно %lld минута."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Осталось примерно %lld минуты."
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "大约还需%lld分钟。"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "About %lld minutes remaining.\n\nFLwatch will notify you when your sensor is ready." : {
       "comment" : "A message that appears on the screen when the Libre 3+ is warming up.",
       "isCommentAutoGenerated" : true,
@@ -1974,67 +1776,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "直接使用 FLwatch 激活一个全新且未使用的传感器。这会立即开始传感器的使用期，且无法撤销。扫描前请在下方选择配套 App；之后无法更改。"
-          }
-        }
-      }
-    },
-    "Activate a brand-new, unused sensor directly with FLwatch. This immediately starts the sensor’s wear period and cannot be undone. The LibreView Account ID is optional. If you provide the same Account ID used by the Libre 3 app, Libre 3 should be able to take over the sensor later after an NFC scan, but this has not yet been fully tested. If you leave it empty, FLwatch uses its own receiver ID and transferring the sensor to Libre 3 later may not be possible." : {
-      "comment" : "A description of the Activate Fresh mode.",
-      "extractionState" : "stale",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktiviere einen fabrikneuen, unbenutzten Sensor direkt mit FLwatch. Dadurch beginnt sofort die Tragedauer des Sensors; dies kann nicht rückgängig gemacht werden. Die LibreView-Konto-ID ist optional. Wenn du dieselbe Konto-ID wie in der Libre 3-App angibst, sollte Libre 3 den Sensor später nach einem NFC-Scan übernehmen können. Dies wurde jedoch noch nicht vollständig getestet. Wenn du das Feld leer lässt, verwendet FLwatch eine eigene Empfänger-ID und eine spätere Übertragung des Sensors an Libre 3 ist möglicherweise nicht möglich."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activa un sensor nuevo y sin usar directamente con FLwatch. Esto inicia de inmediato el periodo de uso del sensor y no se puede deshacer. El ID de cuenta de LibreView es opcional. Si proporcionas el mismo ID de cuenta utilizado por la app Libre 3, Libre 3 debería poder asumir el control del sensor más adelante tras un escaneo NFC, aunque esto todavía no se ha probado por completo. Si lo dejas vacío, FLwatch usa su propio ID de receptor y quizá no sea posible transferir el sensor a Libre 3 más adelante."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activez directement avec FLwatch un capteur neuf qui n’a jamais été utilisé. Cela démarre immédiatement sa période de port et ne peut pas être annulé. L’identifiant du compte LibreView est facultatif. Si vous fournissez le même identifiant que celui utilisé par l’app Libre 3, Libre 3 devrait pouvoir reprendre le capteur ultérieurement après une analyse NFC, mais cela n’a pas encore été entièrement testé. Si vous laissez le champ vide, FLwatch utilise son propre identifiant de récepteur et le transfert ultérieur du capteur vers Libre 3 pourrait être impossible."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Attiva un sensore nuovo e mai utilizzato direttamente con FLwatch. Il periodo di utilizzo del sensore inizia immediatamente e l’operazione non può essere annullata. L’ID account LibreView è facoltativo. Se fornisci lo stesso ID account usato dall’app Libre 3, Libre 3 dovrebbe poter acquisire il sensore in seguito dopo una scansione NFC, ma questa procedura non è stata ancora testata completamente. Se lasci il campo vuoto, FLwatch usa il proprio ID ricevitore e potrebbe non essere possibile trasferire in seguito il sensore a Libre 3."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未使用の新品センサーをFLwatchで直接有効化します。センサーの装着期間がすぐに開始され、元に戻すことはできません。LibreViewアカウントIDは任意です。Libre 3アプリで使用しているものと同じアカウントIDを入力すると、後でNFCスキャンを行った際にLibre 3がセンサーを引き継げる見込みですが、まだ十分に検証されていません。空欄にするとFLwatch独自の受信機IDが使用され、後でセンサーをLibre 3へ移行できない可能性があります。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activeer een gloednieuwe, ongebruikte sensor rechtstreeks met FLwatch. De draagperiode van de sensor begint onmiddellijk en dit kan niet ongedaan worden gemaakt. De LibreView-account-ID is optioneel. Als je dezelfde account-ID invult die de Libre 3-app gebruikt, zou Libre 3 de sensor later na een NFC-scan moeten kunnen overnemen. Dit is echter nog niet volledig getest. Als je het veld leeg laat, gebruikt FLwatch een eigen ontvanger-ID en kan de sensor later mogelijk niet naar Libre 3 worden overgezet."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktywuj fabrycznie nowy, nieużywany sensor bezpośrednio za pomocą FLwatch. Spowoduje to natychmiastowe rozpoczęcie okresu użytkowania sensora i nie można tego cofnąć. Identyfikator konta LibreView jest opcjonalny. Jeśli podasz ten sam identyfikator konta, którego używa aplikacja Libre 3, aplikacja Libre 3 powinna móc później przejąć sensor po skanowaniu NFC, ale nie zostało to jeszcze w pełni przetestowane. Jeśli pozostawisz to pole puste, FLwatch użyje własnego identyfikatora odbiornika i późniejsze przeniesienie sensora do Libre 3 może być niemożliwe."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Активируйте совершенно новый, неиспользованный датчик непосредственно в FLwatch. Срок ношения датчика начнётся сразу, и это действие нельзя будет отменить. Идентификатор учётной записи LibreView указывать необязательно. Если указать тот же идентификатор, который используется в приложении Libre 3, приложение Libre 3 должно впоследствии получить возможность принять датчик после сканирования NFC, однако это ещё не было полностью протестировано. Если оставить поле пустым, FLwatch использует собственный идентификатор приёмника, и последующая передача датчика в Libre 3 может оказаться невозможной."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "直接使用FLwatch激活一个全新且未使用的传感器。这会立即开始传感器的佩戴周期，且无法撤销。LibreView账户ID为可选项。如果提供与Libre 3 App所用相同的账户ID，Libre 3之后应能在进行NFC扫描后接管该传感器，但此流程尚未经过全面测试。如果留空，FLwatch会使用自己的接收器ID，之后可能无法将传感器转移到Libre 3。"
           }
         }
       }
@@ -3739,65 +3480,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "蓝牙心跳"
-          }
-        }
-      }
-    },
-    "Bluetooth Heartbeat and Notifications" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bluetooth-Heartbeat und Mitteilungen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Latido de Bluetooth y notificaciones"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Heartbeat Bluetooth et notifications"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Heartbeat Bluetooth e notifiche"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bluetoothハートビートと通知"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bluetooth-heartbeat en meldingen"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Heartbeat Bluetooth i powiadomienia"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bluetooth heartbeat и уведомления"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "蓝牙心跳与通知"
           }
         }
       }
@@ -9290,66 +8972,6 @@
         }
       }
     },
-    "Each of these asks for its own Apple Health permission, only when you turn it on — you can export just glucose, just insulin, or both. Samples are tagged with HealthKit sync identifiers to avoid duplicates." : {
-      "comment" : "Footer of the Apple Health settings section explaining that the two export switches are authorized independently",
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jede dieser Optionen fordert ihre eigene Apple-Health-Berechtigung an, und zwar erst beim Aktivieren – Sie können nur Glukose, nur Insulin oder beides exportieren. Proben werden mit HealthKit-Synchronisierungskennungen versehen, um Duplikate zu vermeiden."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cada una de estas opciones solicita su propio permiso de Apple Health, y solo cuando la activa: puede exportar solo la glucosa, solo la insulina o ambas. Las muestras se etiquetan con identificadores de sincronización de HealthKit para evitar duplicados."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chacune de ces options demande sa propre autorisation Apple Health, et uniquement lorsque vous l’activez : vous pouvez exporter seulement le glucose, seulement l’insuline, ou les deux. Les échantillons reçoivent des identifiants de synchronisation HealthKit afin d’éviter les doublons."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ciascuna di queste opzioni richiede la propria autorizzazione Apple Health, e solo quando la attiva: può esportare solo il glucosio, solo l’insulina o entrambi. I campioni vengono contrassegnati con identificatori di sincronizzazione HealthKit per evitare duplicati."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "これらはそれぞれ個別に Apple Health の許可を求め、オンにしたときにのみ要求されます。血糖値のみ、インスリンのみ、または両方を書き出せます。重複を避けるため、サンプルには HealthKit の同期識別子が付与されます。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elk van deze opties vraagt zijn eigen Apple Health-toestemming, en pas wanneer je hem inschakelt — je kunt alleen glucose, alleen insuline of beide exporteren. Monsters krijgen HealthKit-synchronisatie-id's om duplicaten te voorkomen."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Każda z tych opcji wymaga własnego uprawnienia Apple Health, wymaganego dopiero po jej włączeniu — możesz eksportować tylko glukozę, tylko insulinę albo oba rodzaje danych. Próbki są oznaczane identyfikatorami synchronizacji HealthKit, aby uniknąć duplikatów."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Каждый из этих переключателей запрашивает собственное разрешение Apple Health, и только при включении: можно экспортировать только глюкозу, только инсулин или и то, и другое. Образцы помечаются идентификаторами синхронизации HealthKit, чтобы избежать дубликатов."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "这两个选项各自请求独立的 Apple Health 权限，且只在你启用时才请求：你可以只导出血糖、只导出胰岛素，或两者都导出。样本会添加 HealthKit 同步标识符以避免重复。"
-          }
-        }
-      }
-    },
     "Enable Bluetooth heartbeat" : {
       "localizations" : {
         "de" : {
@@ -10175,67 +9797,6 @@
         }
       }
     },
-    "Enter your LibreView Patient UUID above first — takeover and parallel join need it." : {
-      "comment" : "A warning message that appears when the user tries to start scanning for a sensor but hasn't entered their LibreView Patient UUID.",
-      "extractionState" : "stale",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gib oben zuerst deine LibreView-Patienten-UUID ein – Übernahme und parallele Verbindung benötigen sie."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Introduce primero arriba tu UUID de paciente de LibreView; la toma de control y la conexión paralela lo necesitan."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saisissez d’abord ci-dessus votre UUID patient LibreView : la reprise et la connexion parallèle en ont besoin."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inserisci prima qui sopra l’UUID paziente LibreView: è necessario per l’acquisizione e la connessione parallela."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "先に上の欄へLibreView患者UUIDを入力してください。引き継ぎと並列接続に必要です。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vul hierboven eerst je LibreView-patiënt-UUID in; overnemen en parallel verbinden hebben deze nodig."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Najpierw wpisz powyżej identyfikator UUID pacjenta LibreView — jest wymagany do przejęcia i połączenia równoległego."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сначала введите выше UUID пациента LibreView — он нужен для перехвата и параллельного подключения."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请先在上方输入LibreView患者UUID，接管和并行连接需要此信息。"
-          }
-        }
-      }
-    },
     "Error message: %@" : {
       "localizations" : {
         "de" : {
@@ -10290,65 +9851,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "错误信息：%@"
-          }
-        }
-      }
-    },
-    "Export glucose and insulin data to Apple Health" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Glukose- und Insulindaten in Apple Health exportieren"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exportar los datos de glucosa e insulina a Apple Health"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exporter les données de glucose et d’insuline vers Apple Health"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esporta i dati di glucosio e insulina in Apple Health"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "血糖値とインスリンのデータをApple Healthに書き出す"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exporteer glucose- en insulinegegevens naar Apple Health"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eksportuj dane glukozy i insuliny do Apple Health"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Экспортировать данные о глюкозе и инсулине в Apple Health"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将血糖和胰岛素数据导出到 Apple Health"
           }
         }
       }
@@ -11414,65 +10916,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "FLwatch 已关闭"
-          }
-        }
-      }
-    },
-    "FLwatch will notify you when your sensor is ready." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "FLwatch benachrichtigt dich, wenn dein Sensor bereit ist."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "FLwatch te avisará cuando el sensor esté listo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "FLwatch vous avertira lorsque votre capteur sera prêt."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "FLwatch ti avviserà quando il sensore sarà pronto."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "センサーの準備ができたら、FLwatchから通知します。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "FLwatch laat je weten wanneer je sensor klaar is."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "FLwatch powiadomi Cię, gdy sensor będzie gotowy."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "FLwatch уведомит вас, когда датчик будет готов."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "传感器准备就绪后，FLwatch 会通知你。"
           }
         }
       }
@@ -19539,65 +18982,6 @@
         }
       }
     },
-    "Permission is requested only when you turn this on. FLwatch exports insulin injections and glucose values, and tags samples with HealthKit sync identifiers to avoid duplicates." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Berechtigung wird nur angefordert, wenn Sie dies aktivieren. FLwatch exportiert Insulininjektionen und Glukosewerte und versieht Proben mit HealthKit-Synchronisierungskennungen, um Duplikate zu vermeiden."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El permiso solo se solicita cuando active esta opción. FLwatch exporta inyecciones de insulina y valores de glucosa, y etiqueta las muestras con identificadores de sincronización de HealthKit para evitar duplicados."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L’autorisation n’est demandée que lorsque vous activez cette option. FLwatch exporte les injections d’insuline et les valeurs de glucose, et associe aux échantillons des identifiants de synchronisation HealthKit afin d’éviter les doublons."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L’autorizzazione viene richiesta solo quando attiva questa opzione. FLwatch esporta le iniezioni di insulina e i valori del glucosio e contrassegna i campioni con identificatori di sincronizzazione HealthKit per evitare duplicati."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "この設定をオンにしたときにのみ許可が求められます。FLwatch はインスリン注射と血糖値を Apple Health に書き出し、重複を避けるためにサンプルへ HealthKit の同期識別子を付与します。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toestemming wordt pas gevraagd wanneer je dit inschakelt. FLwatch exporteert insuline-injecties en glucosewaarden en voorziet monsters van HealthKit-synchronisatie-id's om duplicaten te voorkomen."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uprawnienie jest wymagane dopiero po włączeniu tej opcji. FLwatch eksportuje wstrzyknięcia insuliny i wartości glukozy oraz oznacza próbki identyfikatorami synchronizacji HealthKit, aby uniknąć duplikatów."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Разрешение запрашивается только при включении этой функции. FLwatch экспортирует инъекции инсулина и значения глюкозы, а также помечает образцы идентификаторами синхронизации HealthKit, чтобы избежать дубликатов."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "只有在你启用此选项时才会请求权限。FLwatch 会导出胰岛素注射和血糖值，并为样本添加 HealthKit 同步标识符以避免重复。"
-          }
-        }
-      }
-    },
     "Phone: show insulin activity graph" : {
       "localizations" : {
         "de" : {
@@ -19887,47 +19271,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "选择您的 CGM"
-          }
-        }
-      }
-    },
-    "Please reboot phone and watch once if widgets do not work!" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bitte einmal Telefon und Uhr neu starten, falls die Widgets nicht funktionieren!"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¡Reinicie el teléfono y compruébelo una vez si los widgets no funcionan!"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se i widget non funzionano, riavvia il telefono e guarda una volta!"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start telefoon en horloge één keer opnieuw op als widgets niet werken!"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jeśli widżety nie działają, uruchom ponownie telefon i zegarek."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Если виджеты не работают, один раз перезагрузите телефон и часы!"
           }
         }
       }
@@ -24520,65 +23863,6 @@
         }
       }
     },
-    "Sign in with the LibreView (FreeStyle Libre 3 app) account that activated this sensor and tap Get Account ID to fill it in automatically. Its hash becomes the receiver ID — takeover and parallel join only work when it matches the activating account, otherwise the sensor rejects pairing (error 0xB1)." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Melde dich mit dem LibreView-Konto (FreeStyle Libre 3-App) an, mit dem dieser Sensor aktiviert wurde, und tippe auf „Konto-ID abrufen“, um sie automatisch einzutragen. Der Hashwert des Kontos wird zur Empfänger-ID – Übernahme und parallele Verbindung funktionieren nur, wenn er mit dem aktivierenden Konto übereinstimmt. Andernfalls lehnt der Sensor die Kopplung ab (Fehler 0xB1)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inicia sesión con la cuenta de LibreView (app FreeStyle Libre 3) que activó este sensor y toca Obtener ID de cuenta para rellenarlo automáticamente. El hash de la cuenta se convierte en el ID del receptor; la toma de control y la conexión paralela solo funcionan si coincide con la cuenta que realizó la activación. De lo contrario, el sensor rechaza el enlace (error 0xB1)."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connectez-vous avec le compte LibreView (app FreeStyle Libre 3) qui a activé ce capteur, puis touchez Obtenir l’identifiant du compte pour le renseigner automatiquement. Le hachage du compte devient l’identifiant du récepteur : la reprise et la connexion parallèle ne fonctionnent que s’il correspond au compte ayant effectué l’activation. Sinon, le capteur refuse l’association (erreur 0xB1)."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Accedi con l’account LibreView (app FreeStyle Libre 3) che ha attivato questo sensore e tocca Ottieni ID account per inserirlo automaticamente. L’hash dell’account diventa l’ID ricevitore: l’acquisizione e la connessione parallela funzionano solo se corrisponde all’account che ha eseguito l’attivazione. In caso contrario, il sensore rifiuta l’abbinamento (errore 0xB1)."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "このセンサーを有効化したLibreView（FreeStyle Libre 3アプリ）のアカウントでサインインし、「アカウントIDを取得」をタップして自動入力してください。アカウントのハッシュが受信機IDになります。引き継ぎと並列接続は、有効化に使用したアカウントと一致する場合にのみ機能します。一致しない場合、センサーはペアリングを拒否します（エラー0xB1）。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Log in met het LibreView-account (FreeStyle Libre 3-app) waarmee deze sensor is geactiveerd en tik op Account-ID ophalen om deze automatisch in te vullen. De hash van het account wordt de ontvanger-ID; overnemen en parallel verbinden werken alleen als deze overeenkomt met het account dat de sensor heeft geactiveerd. Anders weigert de sensor het koppelen (fout 0xB1)."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zaloguj się na konto LibreView (aplikacji FreeStyle Libre 3), za pomocą którego aktywowano ten sensor, i stuknij Pobierz identyfikator konta, aby wypełnić go automatycznie. Skrót konta staje się identyfikatorem odbiornika — przejęcie i połączenie równoległe działają tylko wtedy, gdy jest zgodny z kontem użytym do aktywacji. W przeciwnym razie sensor odrzuca parowanie (błąd 0xB1)."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Войдите в учётную запись LibreView (приложения FreeStyle Libre 3), с помощью которой был активирован этот датчик, и нажмите «Получить идентификатор учётной записи», чтобы заполнить его автоматически. Хеш учётной записи становится идентификатором приёмника — перехват и параллельное подключение работают, только если он соответствует учётной записи, использованной для активации. В противном случае датчик отклоняет сопряжение (ошибка 0xB1)."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请使用激活此传感器的LibreView（FreeStyle Libre 3 App）账户登录，然后轻点“获取账户ID”以自动填写。该账户的哈希值会成为接收器ID；只有当它与激活传感器的账户匹配时，接管和并行连接才能生效，否则传感器会拒绝配对（错误0xB1）。"
-          }
-        }
-      }
-    },
     "Sign in with the LibreView account used by the app above and tap Get Account ID to fill it in. The receiver ID is derived from it, so it has to be the account that sensor belongs to." : {
       "comment" : "Footer of the LibreView credentials section. “Get Account ID” is the button directly above — keep the two wordings consistent.",
       "localizations" : {
@@ -26029,65 +25313,6 @@
         }
       }
     },
-    "Tap to open app settings." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tippen Sie, um die App-Einstellungen zu öffnen."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque para abrir los ajustes de la app."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez pour ouvrir les réglages de l’app."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tocchi per aprire le impostazioni dell’app."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "タップしてAppの設定を開く。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tik om de app-instellingen te openen."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stuknij, aby otworzyć ustawienia aplikacji."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нажмите, чтобы открыть настройки приложения."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "轻点以打开应用设置。"
-          }
-        }
-      }
-    },
     "Tap to refresh now" : {
       "localizations" : {
         "de" : {
@@ -26672,7 +25897,67 @@
         }
       }
     },
+    "The previous sensor's blood glucose comparisons were cleared. No calibration was in effect, so the new sensor's readings are unaffected." : {
+      "comment" : "Shown after pairing a different sensor when the previous sensor had logged blood glucose comparisons but no calibration offset. Only the logged comparisons are discarded.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Blutzuckervergleiche des vorherigen Sensors wurden gelöscht. Es war keine Kalibrierung aktiv, daher bleiben die Messwerte des neuen Sensors unbeeinflusst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se borraron las comparaciones de glucosa en sangre del sensor anterior. No había ninguna calibración activa, por lo que las lecturas del nuevo sensor no se ven afectadas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les comparaisons de glycémie du capteur précédent ont été effacées. Aucun étalonnage n’était appliqué, les relevés du nouveau capteur ne sont donc pas affectés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I confronti della glicemia del sensore precedente sono stati cancellati. Non era attiva alcuna calibrazione, quindi le letture del nuovo sensore non sono interessate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前のセンサーの血糖値の比較は消去されました。校正は適用されていなかったため、新しいセンサーの測定値には影響しません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De bloedglucosevergelijkingen van de vorige sensor zijn gewist. Er was geen kalibratie actief, dus de metingen van de nieuwe sensor worden niet beïnvloed."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Porównania poziomu glukozy we krwi z poprzedniego sensora zostały usunięte. Żadna kalibracja nie była aktywna, więc nie ma to wpływu na odczyty z nowego sensora."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сравнения показаний глюкозы крови предыдущего сенсора удалены. Калибровка не применялась, поэтому показания нового сенсора не изменятся."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已清除上一个传感器的血糖比较。之前未启用校准，因此新传感器的读数不受影响。"
+          }
+        }
+      }
+    },
     "The previous sensor's FLwatch calibration and calibration log were cleared. The new sensor will use its factory calibration." : {
+      "comment" : "Shown after pairing a different sensor when the previous sensor had a calibration offset in effect. Both the offset and the logged blood glucose comparisons are discarded, because they only apply to the sensor they were measured on.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -26964,67 +26249,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "传感器拒绝配对（0xB1）：接收器 ID 与激活传感器时存储的 ID 不一致。\n\n请检查“启动应用”是否为实际启动此传感器的 App——两个 App 会从同一账户计算出不同的接收器 ID——并确认账户 ID 属于该账户。\n\n使用 FreeStyle Libre 3 读卡器启动的传感器完全无法配对。"
-          }
-        }
-      }
-    },
-    "The sensor refused pairing (0xB1). It's most likely still in its ~60-minute warm-up. Wait until warm-up finishes, then try again." : {
-      "comment" : "Text displayed when the sensor rejected pairing (error code 0xB1).",
-      "extractionState" : "stale",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Sensor hat die Kopplung abgelehnt (0xB1). Wahrscheinlich befindet er sich noch in der etwa 60-minütigen Aufwärmphase. Warte, bis diese abgeschlossen ist, und versuche es dann erneut."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El sensor ha rechazado el enlace (0xB1). Lo más probable es que todavía esté en su periodo de calentamiento de unos 60 minutos. Espera a que termine y vuelve a intentarlo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le capteur a refusé l’association (0xB1). Il est probablement encore dans sa phase de démarrage d’environ 60 minutes. Attendez la fin de cette phase, puis réessayez."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Il sensore ha rifiutato l’abbinamento (0xB1). È molto probabile che sia ancora nella fase di riscaldamento di circa 60 minuti. Attendi che termini, quindi riprova."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "センサーがペアリングを拒否しました（0xB1）。約60分のウォームアップ中である可能性が高いため、完了してからもう一度お試しください。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De sensor heeft het koppelen geweigerd (0xB1). Waarschijnlijk bevindt de sensor zich nog in de opwarmperiode van ongeveer 60 minuten. Wacht tot deze is afgelopen en probeer het opnieuw."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sensor odrzucił parowanie (0xB1). Najprawdopodobniej nadal trwa około 60-minutowe rozgrzewanie. Poczekaj na jego zakończenie i spróbuj ponownie."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Датчик отклонил сопряжение (0xB1). Скорее всего, он всё ещё находится на этапе прогрева продолжительностью около 60 минут. Дождитесь завершения прогрева и повторите попытку."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "传感器拒绝配对（0xB1）。它很可能仍处于约60分钟的预热期。请等待预热完成后再试。"
           }
         }
       }
@@ -28912,65 +28136,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Обновить заметку"
-          }
-        }
-      }
-    },
-    "Updates of this live activity are not guaranteed. On my phone about every 8 minutes.\nTo enable or disable mirroring of the live activity to the Smart Stack of the Watch use the \"Watch\" app on the phone.\nLive Activity needs to be enabled in the app settings as well. Current status: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktualisierungen dieser Live-Aktivität sind nicht garantiert. Auf meinem iPhone etwa alle 8 Minuten.\nUm die Spiegelung der Live-Aktivität auf den Smart Stapel der Watch zu aktivieren oder zu deaktivieren, verwenden Sie die App „Watch“ auf dem iPhone.\nDie Live-Aktivität muss außerdem in den App-Einstellungen aktiviert sein. Aktueller Status: %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Las actualizaciones de esta actividad en directo no están garantizadas. En mi iPhone, aproximadamente cada 8 minutos.\nPara activar o desactivar la duplicación de la actividad en directo en la Pila Inteligente del reloj, use la app \"Watch\" del iPhone.\nLa actividad en directo también debe estar activada en los ajustes de la app. Estado actual: %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les mises à jour de cette activité en direct ne sont pas garanties. Sur mon iPhone, elles se produisent environ toutes les 8 minutes.\nPour activer ou désactiver la recopie de l’activité en direct dans la Smart Stack de la Watch, utilisez l’app « Watch » sur l’iPhone.\nL’activité en direct doit également être activée dans les réglages de l’app. État actuel : %@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gli aggiornamenti di questa attività in tempo reale non sono garantiti. Sul mio iPhone, circa ogni 8 minuti.\nPer abilitare o disabilitare il mirroring dell’attività in tempo reale nello Smart Stack dell’orologio, usi l’app \"Watch\" sull’iPhone.\nL’attività in tempo reale deve essere abilitata anche nelle impostazioni dell’app. Stato attuale: %@"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "このライブアクティビティの更新は保証されません。私の iPhone ではおよそ 8 分ごとです。\nライブアクティビティの Watch のスマートスタックへのミラーリングを有効または無効にするには、iPhone の「Watch」アプリを使用してください。\nライブアクティビティはアプリの設定でも有効にする必要があります。現在の状態: %@"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Updates van deze live-activiteit zijn niet gegarandeerd. Op mijn telefoon ongeveer elke 8 minuten.\nOm het spiegelen van de live-activiteit naar de slimme stapel van het horloge in of uit te schakelen, gebruik je de \"Watch\"-app op de telefoon.\nLive Activity moet ook in de app-instellingen zijn ingeschakeld. Huidige status: %@"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktualizacje tej aktywności na żywo nie są gwarantowane. Na moim telefonie pojawiają się mniej więcej co 8 minut.\nAby włączyć lub wyłączyć mirroring aktywności na żywo do Smart Stack na zegarku, użyj aplikacji „Watch” na telefonie.\nLive Activity musi być także włączone w ustawieniach aplikacji. Bieżący status: %@"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Обновления этой Live Activity не гарантируются. На моем телефоне - примерно каждые 8 минут.\nЧтобы включить или отключить зеркалирование Live Activity в Smart Stack часов, используйте приложение \"Watch\" на телефоне.\nLive Activity также должна быть включена в настройках приложения. Текущий статус: %@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此实时活动的更新不作保证。在我的 iPhone 上，大约每 8 分钟更新一次。\n要启用或禁用将实时活动镜像到手表智能叠放，请在 iPhone 上使用“Watch”应用。\n还需要在应用设置中启用实时活动。当前状态：%@"
           }
         }
       }
@@ -31144,65 +30309,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "您的手机已有20分钟未收到读数。请将手机靠近传感器，或检查传感器。"
-          }
-        }
-      }
-    },
-    "Your phone hasn't received readings for 20 minutes. Move closer to your sensor or check it." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dein Smartphone hat seit 20 Minuten keine Messwerte empfangen. Gehe näher an deinen Sensor heran oder überprüfe ihn."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tu teléfono no ha recibido lecturas durante 20 minutos. Acércate al sensor o compruébalo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Votre téléphone n’a reçu aucune mesure depuis 20 minutes. Rapprochez-vous de votre capteur ou vérifiez-le."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Il telefono non riceve letture da 20 minuti. Avvicinati al sensore o controllalo."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "スマートフォンが20分間測定値を受信していません。センサーに近づくか、センサーを確認してください。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je telefoon heeft al 20 minuten geen metingen ontvangen. Ga dichter bij je sensor staan of controleer hem."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Telefon nie odebrał odczytów od 20 minut. Zbliż się do sensora lub go sprawdź."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Телефон не получал показания в течение 20 минут. Подойдите ближе к датчику или проверьте его."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "您的手机已有20分钟未收到读数。请靠近传感器或检查传感器。"
           }
         }
       }
