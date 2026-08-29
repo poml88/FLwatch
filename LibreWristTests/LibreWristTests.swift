@@ -871,6 +871,25 @@ final class LibreWristTests: XCTestCase {
             ),
             5
         )
+        // A replacement sensor is seeded with the previous sensor's history, whose
+        // life counts it cannot reach for a fortnight. Requesting from there would
+        // return an empty burst, so the window bound wins instead.
+        XCTAssertEqual(
+            Libre3BackfillImporter.backfillStartLifeCount(
+                lastHistoricalLifeCount: 20_160,
+                currentLifeCount: 61
+            ),
+            5
+        )
+        // Equality is an ordinary reconnect with no gap yet, and stays eligible
+        // (aligned down to the 5-minute commit grid).
+        XCTAssertEqual(
+            Libre3BackfillImporter.backfillStartLifeCount(
+                lastHistoricalLifeCount: 61,
+                currentLifeCount: 61
+            ),
+            60
+        )
     }
 
     func testClinicalBackfillStartLifeCountBoundsWithoutUnderflow() {
@@ -901,6 +920,22 @@ final class LibreWristTests: XCTestCase {
                 currentLifeCount: 5
             ),
             1
+        )
+        // Same rejection as the historical bound: the previous sensor's minute
+        // resume point falls back to the 20-minute clinical window.
+        XCTAssertEqual(
+            Libre3BackfillImporter.clinicalBackfillStartLifeCount(
+                lastMinuteLifeCount: 20_160,
+                currentLifeCount: 81
+            ),
+            61
+        )
+        XCTAssertEqual(
+            Libre3BackfillImporter.clinicalBackfillStartLifeCount(
+                lastMinuteLifeCount: 81,
+                currentLifeCount: 81
+            ),
+            81
         )
     }
 

@@ -2063,6 +2063,12 @@ final class Libre3DirectManager: ObservableObject {
         // Capture the resume point now, before realtime readings start adding
         // their embedded (~16-min-old) historical samples — otherwise the backfill
         // would resume from one of those and fetch only the last page.
+        //
+        // These maxima are NOT necessarily this sensor's: the seed above keeps the
+        // previous sensor's readings (that history is deliberately retained), and
+        // they carry no sensor identity while a replacement restarts near
+        // lifeCount 0. `Libre3BackfillImporter.eligibleResumeLifeCount` is what
+        // rejects a value the connected sensor cannot have reached.
         backfillResumeLifeCount = historicalByLifeCount.keys.max().map { UInt16(clamping: $0) }
         minuteResumeLifeCount = minuteByLifeCount.keys.max().map { UInt16(clamping: $0) }
 
@@ -2280,7 +2286,9 @@ final class Libre3DirectManager: ObservableObject {
 
     /// Request the one-shot historical backfill once readiness is proven. `from`
     /// resumes at the saved last reading (gap fill; the rest is seeded from the
-    /// persisted store) or 6 h back on a first-ever connect — never 0.
+    /// persisted store) or 6 h back on a first-ever connect — never 0, and never
+    /// a resume point the connected sensor cannot have reached (a new sensor is
+    /// seeded with the previous one's much larger life counts).
     private func requestBackfillIfNeeded(currentLifeCount: Int) {
         guard Self.onDemandBackfillEnabled else { return }
         guard !didRequestBackfill,
@@ -2292,7 +2300,9 @@ final class Libre3DirectManager: ObservableObject {
         let boundedCurrentLifeCount = UInt16(clamping: currentLifeCount)
         // Resume from the history we held at connect time (the persisted seed),
         // NOT the live buffer — which already contains this session's freshly
-        // harvested embedded samples. Fetch only the gap, capped at 6 h 10 m.
+        // harvested embedded samples. Fetch only the gap, capped at 6 h 10 m —
+        // or the full window when that seed turns out to be the previous
+        // sensor's (both bounds drop a resume point above `currentLifeCount`).
         let from = Libre3BackfillImporter.backfillStartLifeCount(
             lastHistoricalLifeCount: backfillResumeLifeCount,
             currentLifeCount: boundedCurrentLifeCount

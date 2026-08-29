@@ -33,6 +33,27 @@ enum Libre3BackfillImporter {
     /// 5-minute series and the current realtime value.
     static let clinicalWindowMinutes: UInt16 = 20
 
+    /// A resume point is eligible only when it does not exceed the connected
+    /// sensor's own life count.
+    ///
+    /// `lifeCount` is minutes since activation and never runs backwards, so a
+    /// larger value cannot belong to this sensor. It belongs to the *previous*
+    /// one: readings carry no sensor identity, the persisted history the buffers
+    /// are seeded from deliberately keeps the old sensor's values, and a
+    /// replacement restarts near 0 — so a 14-day sensor leaves a ~20,160 maximum
+    /// behind for a sensor that is at 61. Requesting from an unreachable `from`
+    /// returns an empty burst, so the ineligible value is discarded and the caller
+    /// falls back to its own window bound.
+    ///
+    /// Equality stays eligible: that is an ordinary reconnect with no gap yet.
+    private static func eligibleResumeLifeCount(
+        _ resume: UInt16?,
+        currentLifeCount: UInt16
+    ) -> Int {
+        guard let resume, resume <= currentLifeCount else { return 0 }
+        return Int(resume)
+    }
+
     /// Lower bound for the backfill request, in `lifeCount` minutes.
     ///
     /// **The patch returns entries strictly NEWER than `from`** (per the libre3BT
@@ -40,35 +61,42 @@ enum Libre3BackfillImporter {
     /// last historical sample we already hold**, but never reach back further than
     /// the 6 h 10 m display window:
     ///
-    ///   `from = max(lastHistoricalLifeCount, currentLifeCount − 6h10m)`
+    ///   `from = max(eligible(lastHistoricalLifeCount), currentLifeCount − 6h10m)`
     ///
     /// So a small gap fetches only the gap; a gap older than the window (or no
-    /// history at all, e.g. a cold start) fetches exactly the window. Aligned down
-    /// to the 5-minute commit grid and floored at 5 — Juggluco's
-    /// `max(lastReceived, 5)`. **Never 0** (the patch ignores a 0/too-small
-    /// request).
+    /// history at all, e.g. a cold start, or a resume point left behind by the
+    /// previous sensor — see `eligibleResumeLifeCount`) fetches exactly the
+    /// window. Aligned down to the 5-minute commit grid and floored at 5 —
+    /// Juggluco's `max(lastReceived, 5)`. **Never 0** (the patch ignores a
+    /// 0/too-small request).
     static func backfillStartLifeCount(
         lastHistoricalLifeCount: UInt16?,
-        currentLifeCount: UInt16?
+        currentLifeCount: UInt16
     ) -> UInt16 {
-        let windowStart: Int = {
-            guard let current = currentLifeCount, Int(current) > Int(displayWindowMinutes) else { return 5 }
-            return Int(current) - Int(displayWindowMinutes)
-        }()
-        let raw = max(windowStart, Int(lastHistoricalLifeCount ?? 0))
+        let windowStart = Int(currentLifeCount) > Int(displayWindowMinutes)
+            ? Int(currentLifeCount) - Int(displayWindowMinutes)
+            : 5
+        let raw = max(
+            windowStart,
+            eligibleResumeLifeCount(lastHistoricalLifeCount, currentLifeCount: currentLifeCount)
+        )
         let aligned = (raw / 5) * 5
         return UInt16(max(5, aligned))
     }
 
     /// Lower bound for minute-resolution clinical backfill. Unlike historical
     /// samples, clinical records are not aligned to the 5-minute commit grid.
-    /// Compute in `Int` so young sensors cannot underflow UInt16 subtraction.
+    /// Compute in `Int` so young sensors cannot underflow UInt16 subtraction, and
+    /// drop a resume point that cannot be this sensor's (`eligibleResumeLifeCount`).
     static func clinicalBackfillStartLifeCount(
         lastMinuteLifeCount: UInt16?,
         currentLifeCount: UInt16
     ) -> UInt16 {
         let windowStart = Int(currentLifeCount) - Int(clinicalWindowMinutes)
-        let raw = max(Int(lastMinuteLifeCount ?? 0), windowStart)
+        let raw = max(
+            eligibleResumeLifeCount(lastMinuteLifeCount, currentLifeCount: currentLifeCount),
+            windowStart
+        )
         return UInt16(clamping: max(1, raw))
     }
 
