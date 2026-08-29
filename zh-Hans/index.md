@@ -14,7 +14,7 @@ hero_title: "FLwatch – 葡萄糖与胰岛素"
 FLwatch及其扩展提供的信息不得用于治疗或胰岛素剂量决策。做出医疗决策时，请始终以您的葡萄糖监测系统为准，并咨询医疗专业人员。
 </div>
 
-FLwatch可在iPhone和Apple Watch上显示Abbott FreeStyle Libre 2、Libre 3和Libre 3+传感器以及Dexcom G6、G7和ONE+传感器的葡萄糖读数。
+FLwatch可在iPhone和Apple Watch上显示Abbott FreeStyle Libre 2、Libre 2+、Libre 3和Libre 3+传感器以及Dexcom G6、G7和ONE+传感器的葡萄糖读数。
 
 它还可以记录胰岛素剂量，并通过专门的图表显示体内活性胰岛素和胰岛素活性，帮助您更好地了解胰岛素与葡萄糖之间的相互作用。
 
@@ -34,7 +34,7 @@ FLwatch最初是一个用于辅助我管理自身糖尿病的个人项目。我�
 
 | 制造商 | 传感器 | 连接方式 |
 | --- | --- | --- |
-| Abbott | FreeStyle Libre 2 | LibreLinkUp |
+| Abbott | FreeStyle Libre 2和FreeStyle Libre 2+ | LibreLinkUp |
 | Abbott | FreeStyle Libre 3和FreeStyle Libre 3+ | 蓝牙直连或LibreLinkUp |
 | Dexcom | G6、G7和ONE+ | Dexcom Share |
 
@@ -110,11 +110,11 @@ FLwatch警报会尽力送达，但不作保证。警报可能延迟或遗漏。�
 
 配对后，请将iPhone保持在传感器附近。葡萄糖读数约每分钟通过蓝牙直接接收一次，无需关注者账户或云连接。蓝牙直连还可启用校准偏移、葡萄糖严重偏低和信号丢失警报、传感器状态通知以及Nightscout导出。
 
-FreeStyle Libre 2传感器不支持这些蓝牙直连功能。
+FreeStyle Libre 2和FreeStyle Libre 2+传感器不支持这些蓝牙直连功能。
 
 ### 设置LibreLinkUp
 
-LibreLinkUp可以提供FreeStyle Libre 2、FreeStyle Libre 3和FreeStyle Libre 3+传感器的葡萄糖读数。要与FLwatch配合使用，请邀请自己成为自己的关注者。
+LibreLinkUp可以提供FreeStyle Libre 2、FreeStyle Libre 2+、FreeStyle Libre 3和FreeStyle Libre 3+传感器的葡萄糖读数。要与FLwatch配合使用，请邀请自己成为自己的关注者。
 
 *LibreView凭据无法使用。请使用LibreLinkUp关注者账户的凭据。*
 

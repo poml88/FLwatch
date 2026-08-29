@@ -14,7 +14,7 @@ hero_title: "FLwatch – Glucosa e insulina"
 La información que proporcionan FLwatch y sus extensiones no debe utilizarse para tomar decisiones sobre el tratamiento o las dosis de insulina. Confíe siempre en su sistema de monitorización de glucosa y consulte a un profesional sanitario para tomar decisiones médicas.
 </div>
 
-FLwatch muestra en su iPhone y Apple Watch las lecturas de glucosa de los sensores Abbott FreeStyle Libre 2, Libre 3 y Libre 3+, así como de los sensores Dexcom G6, G7 y ONE+.
+FLwatch muestra en su iPhone y Apple Watch las lecturas de glucosa de los sensores Abbott FreeStyle Libre 2, Libre 2+, Libre 3 y Libre 3+, así como de los sensores Dexcom G6, G7 y ONE+.
 
 También permite registrar dosis de insulina y muestra gráficas específicas de insulina activa y de actividad de la insulina, que le ayudan a comprender mejor cómo interactúan la insulina y la glucosa.
 
@@ -34,7 +34,7 @@ FLwatch nació como un proyecto personal para ayudarme a gestionar mi propia dia
 
 | Fabricante | Sensores | Conexión |
 | --- | --- | --- |
-| Abbott | FreeStyle Libre 2 | LibreLinkUp |
+| Abbott | FreeStyle Libre 2 y FreeStyle Libre 2+ | LibreLinkUp |
 | Abbott | FreeStyle Libre 3 y FreeStyle Libre 3+ | Bluetooth directo o LibreLinkUp |
 | Dexcom | G6, G7 y ONE+ | Dexcom Share |
 
@@ -110,11 +110,11 @@ El modo `Nuevo` solo debe utilizarse con un sensor completamente nuevo y sin usa
 
 Una vez emparejado, mantenga el iPhone cerca del sensor. Las lecturas de glucosa se reciben directamente por Bluetooth aproximadamente una vez por minuto, sin una cuenta de seguidor ni conexión a la nube. Una conexión directa también permite utilizar el ajuste de calibración, las alertas de glucosa críticamente baja y pérdida de señal, las notificaciones del estado del sensor y la exportación a Nightscout.
 
-Estas funciones de conexión directa no están disponibles para los sensores FreeStyle Libre 2.
+Estas funciones de conexión directa no están disponibles para los sensores FreeStyle Libre 2 ni FreeStyle Libre 2+.
 
 ### Configurar LibreLinkUp
 
-LibreLinkUp puede proporcionar lecturas de glucosa de los sensores FreeStyle Libre 2, FreeStyle Libre 3 y FreeStyle Libre 3+. Para utilizarlo con FLwatch, invítese a sí mismo como su propio seguidor.
+LibreLinkUp puede proporcionar lecturas de glucosa de los sensores FreeStyle Libre 2, FreeStyle Libre 2+, FreeStyle Libre 3 y FreeStyle Libre 3+. Para utilizarlo con FLwatch, invítese a sí mismo como su propio seguidor.
 
 *Las credenciales de LibreView no funcionan. Utilice las credenciales de una cuenta de seguidor de LibreLinkUp.*
 

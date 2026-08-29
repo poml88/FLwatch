@@ -14,7 +14,7 @@ hero_title: "FLwatch – グルコース＆インスリン"
 FLwatchおよびその拡張機能が提供する情報を、治療やインスリン投与量の決定に使用しないでください。医療上の判断を行う際は、必ずご使用のグルコースモニタリングシステムを確認し、医療従事者に相談してください。
 </div>
 
-FLwatchは、Abbott FreeStyle Libre 2、Libre 3、Libre 3+センサー、およびDexcom G6、G7、ONE+センサーのグルコース値をiPhoneとApple Watchに表示します。
+FLwatchは、Abbott FreeStyle Libre 2、Libre 2+、Libre 3、Libre 3+センサー、およびDexcom G6、G7、ONE+センサーのグルコース値をiPhoneとApple Watchに表示します。
 
 インスリン投与量を記録できるほか、体内残存インスリンとインスリン作用を専用のグラフで可視化し、インスリンとグルコース値の関係をより深く理解するのに役立ちます。
 
@@ -34,7 +34,7 @@ FLwatchは、自身の糖尿病管理を支援するための個人的なプロ�
 
 | メーカー | センサー | 接続方法 |
 | --- | --- | --- |
-| Abbott | FreeStyle Libre 2 | LibreLinkUp |
+| Abbott | FreeStyle Libre 2およびFreeStyle Libre 2+ | LibreLinkUp |
 | Abbott | FreeStyle Libre 3およびFreeStyle Libre 3+ | Bluetoothによる直接接続またはLibreLinkUp |
 | Dexcom | G6、G7、ONE+ | Dexcom Share |
 
@@ -110,11 +110,11 @@ watchOSアプリがインストールされている場合、iPhoneアプリに�
 
 ペアリング後は、iPhoneをセンサーの近くに置いてください。フォロワーアカウントやクラウド接続を使わず、Bluetooth経由で約1分ごとにグルコース値を直接受信します。直接接続では、キャリブレーションオフセット、重度の低グルコースアラート、信号消失アラート、センサー状態の通知、Nightscoutへの書き出しも利用できます。
 
-これらの直接接続機能は、FreeStyle Libre 2センサーでは利用できません。
+これらの直接接続機能は、FreeStyle Libre 2センサーおよびFreeStyle Libre 2+センサーでは利用できません。
 
 ### LibreLinkUpの設定
 
-LibreLinkUpでは、FreeStyle Libre 2、FreeStyle Libre 3、FreeStyle Libre 3+センサーのグルコース値を取得できます。FLwatchで使用するには、自分自身をフォロワーとして招待します。
+LibreLinkUpでは、FreeStyle Libre 2、FreeStyle Libre 2+、FreeStyle Libre 3、FreeStyle Libre 3+センサーのグルコース値を取得できます。FLwatchで使用するには、自分自身をフォロワーとして招待します。
 
 *LibreViewの認証情報は使用できません。LibreLinkUpフォロワーアカウントの認証情報を使用してください。*
 
