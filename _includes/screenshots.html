@@ -1,5 +1,9 @@
 ### {{ page.screenshots_string | default: site.screenshots_string }}
 
+{% if page.lang == 'en' %}
+See additional screenshots on the [FLwatch App Store page]({{ site.appstore_url }}).
+{% endif %}
+
 <style>
 /* Responsive two-section gallery (iPhone + Watch) */
 .gallery {
@@ -52,37 +56,37 @@
     <div class="sshot-grid">
       <figure class="sshot">
         <a href="{{ '/assets/img/iphone-01@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/iphone-01.png' | relative_url }}" alt="FLwatch home screen" loading="lazy">
+          <img src="{{ '/assets/img/iphone-01.png' | relative_url }}" alt="FLwatch glucose overview" loading="lazy">
         </a>
-        <figcaption>Home</figcaption>
+        <figcaption>Glucose overview</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/iphone-02@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/iphone-02.png' | relative_url }}" alt="FLwatch glucose chart" loading="lazy">
+          <img src="{{ '/assets/img/iphone-02.png' | relative_url }}" alt="FLwatch glucose graph in Dark Mode" loading="lazy">
         </a>
-        <figcaption>Dark mode</figcaption>
+        <figcaption>Glucose graph in Dark Mode</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/iphone-03@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/iphone-03.png' | relative_url }}" alt="FLwatch data entry" loading="lazy">
+          <img src="{{ '/assets/img/iphone-03.png' | relative_url }}" alt="FLwatch insulin dose entry" loading="lazy">
         </a>
-        <figcaption>Insulin sheet</figcaption>
+        <figcaption>Record insulin</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/iphone-04@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/iphone-04.png' | relative_url }}" alt="FLwatch notifications" loading="lazy">
+          <img src="{{ '/assets/img/iphone-04.png' | relative_url }}" alt="FLwatch Lock Screen widgets" loading="lazy">
         </a>
-        <figcaption>Lock screen widgets</figcaption>
+        <figcaption>Lock Screen widgets</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/iphone-05@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/iphone-05.png' | relative_url }}" alt="FLwatch settings" loading="lazy">
+          <img src="{{ '/assets/img/iphone-05.png' | relative_url }}" alt="FLwatch StandBy view" loading="lazy">
         </a>
-        <figcaption>Stand by mode</figcaption>
+        <figcaption>StandBy widget</figcaption>
       </figure>
     </div>
   </div>
@@ -93,30 +97,30 @@
     <div class="sshot-grid">
       <figure class="sshot">
         <a href="{{ '/assets/img/watch-01@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/watch-01.png' | relative_url }}" alt="Watch complication glance" loading="lazy">
+          <img src="{{ '/assets/img/watch-01.png' | relative_url }}" alt="FLwatch watch face complications" loading="lazy">
         </a>
-        <figcaption>Small complications</figcaption>
+        <figcaption>Watch face complications</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/watch-02@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/watch-02.png' | relative_url }}" alt="Watch main screen" loading="lazy">
+          <img src="{{ '/assets/img/watch-02.png' | relative_url }}" alt="FLwatch complications on a modular watch face" loading="lazy">
         </a>
-        <figcaption>Large complication</figcaption>
+        <figcaption>Modular watch face</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/watch-03@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/watch-03.png' | relative_url }}" alt="Watch glucose trend" loading="lazy">
+          <img src="{{ '/assets/img/watch-03.png' | relative_url }}" alt="FLwatch glucose overview on Apple Watch" loading="lazy">
         </a>
-        <figcaption>Large night screen</figcaption>
+        <figcaption>Glucose overview on Apple Watch</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/watch-04@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/watch-04.png' | relative_url }}" alt="Watch notification alert" loading="lazy">
+          <img src="{{ '/assets/img/watch-04.png' | relative_url }}" alt="Glucose graph on Apple Watch" loading="lazy">
         </a>
-        <figcaption>Home view</figcaption>
+        <figcaption>Glucose graph on Apple Watch</figcaption>
       </figure>
 
       

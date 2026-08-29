@@ -1,140 +1,218 @@
 ---
 layout: landing
-title: "FLwatch - Glucose & Insulin Graphs for iPhone & Apple Watch"
-description: "FLwatch is a free open-source app showing glucose, insulin-on-board and activity graphs with widgets on iPhone and Apple Watch using LibreLinkUp data."
+title: "FLwatch - Glucose & Insulin on iPhone and Apple Watch"
+description: "FLwatch brings FreeStyle Libre and Dexcom glucose readings, insulin tracking, alerts, widgets, and Live Activities to iPhone and Apple Watch."
 lang: en
 permalink: /en/
 image: /assets/images/app-preview-optimized.png
-hero_title: "FLwatch - Glucose Sensor Graph"
+hero_title: "FLwatch - Glucose & Insulin"
 ---
 
-***Warning: FLwatch is a highly experimental project. Use it with caution and extreme care. Do not make medical decisions based on this software. It comes with no warranty and is used at your own risk.***
-
 <div class="notice-note">
-<strong>Important note</strong>
+<strong>Not for treatment decisions.</strong>
 <br>
-FLwatch currently supports the LibreLinkUp 4.x API. Abbott has released API 5.0.0, which is not yet supported.
-<br>
-If Abbott disables API 4.x in the future, glucose data in FLwatch may stop working without notice. IOB-related features will still continue to work.
+The information provided by FLwatch and its extensions must not be used for treatment or insulin-dosing decisions. Always rely on your glucose monitoring system and consult a healthcare professional when making medical decisions.
 </div>
 
-FLwatch is free and open source. It is being developed out of personal needs, but everyone should be able to benefit from it.
+FLwatch displays glucose readings from Abbott FreeStyle Libre 2, Libre 3, and Libre 3+ sensors, as well as Dexcom G6, G7, and ONE+ sensors, on your iPhone and Apple Watch.
+
+It also lets you record insulin doses and visualizes insulin on board and insulin activity with dedicated graphs, helping you better understand how insulin and glucose levels interact.
+
+FLwatch began as a personal project to support my own diabetes management. I made it publicly available, free and open source, in the hope that it can be useful to others too.
 
 ### At a Glance
-- Shows glucose, insulin-on-board, and activity graphs on iPhone and Apple Watch
-- Includes widgets, complications, Live Activities, Watch Smart Stack mirroring, and Apple Health export
-- Supports manual insulin logging and a built-in carb-to-insulin calculator
+
+- Glucose, insulin-on-board, and insulin-activity graphs on iPhone and Apple Watch
+- Direct Bluetooth, LibreLinkUp, and Dexcom Share connection options
+- Configurable glucose and sensor alerts
+- Home Screen, Lock Screen, StandBy, and Apple Watch widgets and complications
+- Live Activities, CarPlay, Siri, and Shortcuts support
+- Apple Health export, plus Nightscout export with a direct FreeStyle Libre 3 or FreeStyle Libre 3+ connection
 - Requires iOS 18 and watchOS 10.5
-- Beta testing: FLwatch is also available on TestFlight: [https://testflight.apple.com/join/HwgkwcGz](https://testflight.apple.com/join/HwgkwcGz)
-- Supports Freestyle Libre 2 and 3 sensors via LibreLinkUp (only API version 4.x) — uses LibreLinkUp follower account credentials, not LibreView credentials
-- Supports Dexcom G6, G7 and ONE+ sensors via Dexcom Share — sign in with the email and password of the Dexcom account the sensor is set up on (the same login as the Dexcom app on the wearer's phone). Share must be turned on in the Dexcom app, which requires inviting at least one follower. Do not sign in with a follower's login — Dexcom only exposes the wearer's own readings to third-party apps.
+
+### Supported Sensors and Connections
+
+| Manufacturer | Sensors | Connection |
+| --- | --- | --- |
+| Abbott | FreeStyle Libre 2 | LibreLinkUp |
+| Abbott | FreeStyle Libre 3 and FreeStyle Libre 3+ | Direct Bluetooth or LibreLinkUp |
+| Dexcom | G6, G7, and ONE+ | Dexcom Share |
+
+### Features {#features}
+
+#### Glucose Monitoring
+
+- Blood glucose graph on iPhone and Apple Watch
+- Interactive chart on iPhone — tap to inspect individual readings
+- Optional calibration offset for directly connected FreeStyle Libre 3 and FreeStyle Libre 3+ sensors
+- Check your current glucose and trend using Siri or Shortcuts
+- Optional always-on display mode for quick viewing
+
+#### Alerts
+
+- Configurable low- and high-glucose alerts on iPhone, Apple Watch, and CarPlay
+- Additional critical-low and signal-loss alerts for directly connected FreeStyle Libre 3 and FreeStyle Libre 3+ sensors
+- Sensor warm-up status, remaining life, expiry, and replacement notifications for directly connected FreeStyle Libre 3 and FreeStyle Libre 3+ sensors
+- Optional Critical Alerts and separate Do Not Disturb times for each alert type
+
+FLwatch alerts are provided on a best-effort basis and are not guaranteed. They may be delayed or missed. Always confirm your glucose reading before taking action.
+
+#### Insulin Tracking
+
+- Record insulin doses on iPhone or with Siri and Shortcuts on iPhone and Apple Watch
+- Basic carbohydrate and insulin calculator using portion size and a configurable insulin-to-carbohydrate ratio
+- Insulin on Board (IOB) calculation and graph
+- Insulin activity graph
+- Support for rapid-acting and fast rapid-acting bolus insulins
+
+#### Widgets, Live Activities, and CarPlay
+
+- Home Screen widgets, with and without graphs
+- Lock Screen and StandBy widgets
+- Live Activities for quick glucose updates
+- Native Apple Watch app with a wide range of widgets and watch face complications
+- Glucose graph directly on Apple Watch
+- Live Activity mirroring to the Smart Stack on watchOS 11 or later
+- CarPlay view showing current glucose and IOB
+- Glucose graphs in CarPlay through widgets and Live Activities
+
+#### Data Sharing
+
+- Export glucose readings and recorded insulin doses to Apple Health
+- With a direct FreeStyle Libre 3 or FreeStyle Libre 3+ Bluetooth connection, export glucose readings and recorded insulin doses to your own Nightscout server
+
+{% include screenshots.html %}
 
 ### Quick Start {#usage}
+
 1. Install FLwatch from the [App Store]({{ site.appstore_url }}). {% include appstore_badge.html %}
-2. Make sure the watchOS app is installed on your Apple Watch, ideally before starting the iOS app.
-3. Create and verify a LibreLinkUp follower connection for yourself.
-4. Enter the LibreLinkUp follower credentials in FLwatch on the Connect tab.
-5. Wait up to a minute for data to appear.
+2. Make sure the watchOS app is installed on your Apple Watch, ideally before starting the iPhone app.
+3. On first launch, FLwatch asks you to choose your CGM: `FreeStyle Libre` through LibreLinkUp, `Dexcom` through Dexcom Share, or `FreeStyle Libre 3 (Bluetooth)` for a direct sensor connection.
+4. After you make a selection, FLwatch automatically opens the matching `Connect` screen. Follow the instructions shown there and the relevant notes below.
+5. Once connected, allow up to one minute for the first glucose data to appear.
 
-If the watchOS app is installed, settings and credentials entered in the iOS app are transferred to the watch app.
+You can change the selected CGM later in `Settings`.
 
-- @TypeOneCallum made a very helpful [setup tutorial video](https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB). Watching it can make setup much easier.
+If the watchOS app is installed, cloud-connection settings and credentials entered in the iPhone app are transferred to the Apple Watch app. You can transfer them again later by pressing the `Connect` button once more.
+
+### Direct FreeStyle Libre 3 and FreeStyle Libre 3+ Connection
+
+On a fresh installation, choose `FreeStyle Libre 3 (Bluetooth)` in the CGM picker. FLwatch then opens the Bluetooth connection screen automatically.
+
+Before pairing:
+
+- For most users with an already activated sensor, `Parallel` is the recommended mode. It keeps the sensor's existing FreeStyle Libre 3 connection credentials valid, making it easier to switch back to the FreeStyle Libre 3 app later.
+- Sign in with the LibreView account used to activate the sensor, then tap `Get Account ID` in FLwatch. Parallel pairing requires the account information to match the activating account. This is different from the LibreLinkUp follower account used for a cloud connection.
+- Only one app should access the sensor at a time. Before using FLwatch, fully close the FreeStyle Libre 3 app and turn off its Bluetooth access in iOS Settings. Switching between apps can take two to three minutes.
+- When FLwatch asks you to scan, hold the top of your iPhone against the sensor and keep it still until NFC pairing finishes.
+
+The `Fresh` mode is only for a brand-new, unused sensor. It starts the sensor's wear period immediately and cannot be undone. Most users should activate the sensor in the FreeStyle Libre 3 app and then pair it with FLwatch using `Parallel` mode.
+
+Once paired, keep your iPhone near the sensor. Glucose readings are received directly over Bluetooth about once a minute, without a follower account or cloud connection. A direct connection also enables calibration offset, critical-low and signal-loss alerts, sensor-status notifications, and Nightscout export.
+
+These direct-connection features are not available for FreeStyle Libre 2 sensors.
 
 ### Set Up LibreLinkUp
-To make FLwatch work, you need to invite yourself to become your own follower.
 
-*LibreView credentials do not work.*
+LibreLinkUp can provide glucose readings from FreeStyle Libre 2, FreeStyle Libre 3, and FreeStyle Libre 3+ sensors. To use it with FLwatch, invite yourself to become your own follower.
 
-1. In the LibreLink or Libre 3 app, go to Share / Connected Apps.
+*LibreView credentials do not work. Use the credentials of a LibreLinkUp follower account.*
+
+<div class="notice-note">
+<strong>LibreLinkUp video setup guide</strong>
+<br>
+@TypeOneCallum has created a very helpful <a href="https://youtu.be/LLTnRuR9p-0?si=7pR8ZvmEVUktW4ZB">step-by-step FLwatch setup video</a>. If you are setting up LibreLinkUp for the first time, this is a good place to start.
+</div>
+
+1. In the FreeStyle LibreLink or FreeStyle Libre 3 app, go to Share / Connected Apps.
 2. Open Connect / Manage LibreLinkUp.
 3. Tap `Add Connection` and enter the email address you want to use for the follower account.
 4. Accept the invitation sent to that email address.
-5. Install the [LibreLinkUp app](https://apps.apple.com/us/app/librelinkup/id1234323923) on your phone and complete the setup for that invited follower account.
+5. Install the [LibreLinkUp app](https://apps.apple.com/us/app/librelinkup/id1234323923) on your iPhone and complete the setup for that invited follower account.
 6. Confirm that you can see your own blood glucose graph in LibreLinkUp.
-7. Open FLwatch and enter the follower account credentials there.
+7. Open FLwatch and enter the follower account credentials on the `Connect` tab.
 
-The email address for the follower account can be the same as the one used for LibreView.
+The email address for the follower account can be the same as the one used for LibreView. If the follower account has more than one connection, choose the person whose readings FLwatch should display after signing in.
 
-There is also a [step-by-step guide from LibreLinkUp](https://www.librelinkup.com/articles/getting-started) that may be useful.
+The LibreLinkUp app can then be closed or uninstalled. You may still need it later to accept updated terms or privacy policies, or to verify that the account and connection still work.
 
-Only one followed patient per follower account is currently supported by FLwatch.
+[LibreLinkUp's step-by-step guide](https://www.librelinkup.com/articles/getting-started) provides further help.
 
-The LibreLinkUp app can then be closed or even uninstalled. You may still need it later to accept updated Terms of Use or Privacy Policies, or to check that the account and connection still work.
+<div class="notice-note">
+<strong>LibreLinkUp API compatibility</strong>
+<br>
+FLwatch currently supports the LibreLinkUp 4.x API. LibreLinkUp API 5.0.0 is not yet supported. If API 4.x is disabled in the future, LibreLinkUp glucose data in FLwatch may stop working without notice. IOB-related features and other connection methods will continue to work.
+</div>
 
-### Connect FLwatch
-- Enter your LibreLinkUp follower credentials in FLwatch on the `Connect` tab.
-- If the watchOS app is installed, the credentials are transferred to the watch app.
-- If needed, you can transfer the credentials again by pressing the `Connect` button once more.
-- Data may take up to one minute to be fetched and displayed.
+### Set Up Dexcom Share
+
+Dexcom G6, Dexcom G7, and Dexcom ONE+ sensors can provide glucose readings through Dexcom Share.
+
+1. Turn on Share in the Dexcom app. Dexcom requires at least one follower invitation before Share can be enabled.
+2. On a fresh installation, choose `Dexcom` in the CGM picker. FLwatch automatically opens the Dexcom Share connection screen.
+3. Sign in with the email address and password of the Dexcom account used by the sensor wearer — the same account used in the Dexcom app on the wearer's phone — and press `Connect`. FLwatch detects the account region automatically.
+
+Do not use a follower's login. Dexcom Share only exposes the wearer's own readings to third-party apps when the wearer's account is used.
+
+If the Apple Watch app was not installed when you connected, install it and press `Connect` again to transfer the credentials. The Dexcom Share connection used by FLwatch is unofficial and may be changed or restricted without notice.
+
+### Bluetooth Heartbeat for Cloud Connections
+
+When using LibreLinkUp or Dexcom Share, FLwatch low- and high-glucose alerts require the Bluetooth Heartbeat. Enable it in `Settings > Bluetooth Heartbeat` and select your nearby sensor transmitter. FLwatch cannot deliver these cloud-connection alerts while the heartbeat is off; continue to use the sensor manufacturer's alerts as your primary alerts.
+
+The direct FreeStyle Libre 3 and FreeStyle Libre 3+ Bluetooth connection does not use this setting.
 
 ### Insulin Features
-To use insulin calculation, tap the `IOB` label on the home screen.
+
+To configure insulin calculation or record a dose, tap the `IOB` label on the home screen.
 
 Currently supported insulin types:
+
 - Rapid-acting insulin, such as Novolog and Novorapid
 - Fast rapid-acting insulin, such as Fiasp and Lyumjev
 
-FLwatch also supports manual insulin logging and includes a built-in carb-to-insulin calculator.
+The built-in calculator uses portion size and a configurable insulin-to-carbohydrate ratio. More insulin types can be added on request.
 
-More insulin types can be added on request.
+### Apple Watch, Siri, and Shortcuts Tips
 
-### Watch and Siri Tips
-- To keep the glucose graph visible on the watch for one hour, open the watch settings or the iPhone `Watch` app, then go to `Settings > General > Return to Clock`, scroll down to FLwatch, and choose `After 1 hour`. This lets FLwatch stay in the foreground longer and receive a reasonable number of updates, for example about once per minute.
-- The easiest way to start the phone or watch app is to place a widget or complication on your Home Screen, Lock Screen, watch face, or similar location and tap it.
-- Live Activities on iPhone can also be mirrored into the watch Smart Stack for quick access.
-- Siri and Shortcuts can be used to read out or display the current blood glucose value.
-- Siri and Shortcuts can also be used for voice recording of insulin doses or for quick insulin dose recording on the watch.
-- To open the app hands-free with Siri, create a shortcut on the phone that simply opens FLwatch. For example, you could name it `glucose graph` or `blood sugar`. Enable the option to show the shortcut on the watch. Then saying that phrase to Siri can open FLwatch directly. The same also works on the phone.
-
-### Features {#features}
-#### Monitoring
-* Blood glucose graph on phone and watch
-* Interactive chart on phone to display individual values on tap
-* Phone screen always-on mode
-
-#### Insulin
-* Supports rapid-acting and fast rapid-acting bolus insulins
-* Insulin on board calculation (IOB)
-* Insulin on board graph
-* Insulin activity graph
-* Manual insulin logging
-* Built-in carb-to-insulin calculator
-
-#### System Integration
-* iOS widgets and lock screen widgets with and without graph(s)
-* Live Activities on iPhone, including Watch Smart Stack and CarPlay mirroring
-* StandBy mode widget
-* watchOS widgets and complications
-* CarPlay support via CarPlay app, widgets and Live Activities
-* Export insulin doses and glucose data to Apple Health
-* Siri and Shortcuts support for glucose display, glucose readout, and quick insulin dose recording
-* Bluetooth heartbeat enables updates nearly every minute and low glucose alarms on iPhone, watch and CarPlay
+- To keep the glucose graph visible on Apple Watch for one hour, open Settings on the watch or the `Watch` app on iPhone. Go to `General > Return to Clock`, choose FLwatch, and select `After 1 hour`.
+- Place a widget or complication on your Home Screen, Lock Screen, or watch face for quick access to FLwatch.
+- Live Activities on iPhone can be mirrored into the Apple Watch Smart Stack on watchOS 11 or later.
+- Siri and Shortcuts can display or read out your current glucose value and record insulin doses.
+- For hands-free access, create a shortcut that opens FLwatch, give it a phrase such as `glucose graph`, and enable `Show on Apple Watch` if desired.
 
 ### Technical Notes
+
 FLwatch uses the exponential insulin model from LoopKit. The model uses three parameters: `actionDuration`, `peakActivityTime`, and `delay`.
 
 - For rapid-acting insulin, the parameters are 360, 75, and 10 minutes.
 - For fast rapid-acting insulin, the parameters are 360, 55, and 10 minutes.
 
-### ToDo
-- Implement workout activity
+### Project Status
+
+FLwatch is an experimental open-source project. Use it with caution. It comes with no warranty and is used at your own risk.
+
+FLwatch is also available for beta testing on [TestFlight](https://testflight.apple.com/join/HwgkwcGz).
 
 ### Support and Feedback {#support}
+
 For support, please open a [GitHub issue](https://github.com/poml88/FLwatch/issues), start a [GitHub discussion](https://github.com/poml88/FLwatch/discussions), or email **flwatch [at] cmdline [dot] net**.
 
 Feedback is very welcome and can be sent through the same channels.
 
 ### Donations
+
 Donations are always very welcome.
 
-- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="paypal logo" height="40"> [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
-- <img src="/assets/img/bmc-logo-50.png" alt="buymeacoffee logo" height="40"> [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
-
-{% include screenshots.html %}
+- <img src="/assets/img/pp_cc_mark_37x23.jpg" alt="PayPal logo" height="40"> [paypal.me/lovemyhusky](https://paypal.me/lovemyhusky)
+- <img src="/assets/img/bmc-logo-50.png" alt="Buy Me a Coffee logo" height="40"> [buymeacoffee.com/poml88](https://buymeacoffee.com/poml88)
 
 ### Credits
+
 Please have a look at these projects as well:
 
 [DiaBLE](https://github.com/gui-dos/DiaBLE), [LoopKit](https://github.com/LoopKit), [GlucoseDirect](https://github.com/creepymonster/GlucoseDirect), [Nightguard](https://github.com/nightscout/nightguard), [Nightscout LibreLink Up Uploader](https://github.com/timoschlueter/nightscout-librelink-up)
 
-All product and company names, trademarks, service marks, registered trademarks, and registered service marks are the property of their respective holders. Their use is for information purposes and does not imply any affiliation with or endorsement by them. Please note: this app has no connection with and is not endorsed by Abbott Diabetes Care Inc. or Dexcom, Inc.
+All product names, trademarks, and registered trademarks are the property of their respective owners. Their use here is for identification purposes only and does not imply affiliation with or endorsement by the trademark holders.
+
+FLwatch is not affiliated with or endorsed by Abbott Diabetes Care Inc. or Dexcom, Inc.

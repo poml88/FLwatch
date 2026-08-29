@@ -23,8 +23,8 @@
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "FLwatch: Glucose Sensor Graph",
-  "description": "FLwatch displays your blood glucose graph and more on iPhone and Apple Watch. Open-source app with insulin on board calculation and widgets.",
+  "name": {{ site.title | jsonify }},
+  "description": {{ page.description | default: site.description | jsonify }},
   "url": "https://flwatch.app/{{ page.lang | default: site.lang }}/",
   "image": "https://flwatch.app/assets/images/app-preview-optimized.png",
   "operatingSystem": "iOS, watchOS",
