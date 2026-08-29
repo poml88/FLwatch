@@ -1,7 +1,10 @@
-### {{ page.screenshots_string | default: site.screenshots_string }}
+{% assign localized_screenshot_strings = site.data.translations[page.lang].screenshots %}
+{% assign screenshot_strings = localized_screenshot_strings | default: site.data.translations.en.screenshots %}
 
-{% if page.lang == 'en' %}
-See additional screenshots on the [FLwatch App Store page]({{ site.appstore_url }}).
+### {{ page.screenshots_string | default: screenshot_strings.heading | default: site.screenshots_string }}
+
+{% if localized_screenshot_strings.more %}
+{{ screenshot_strings.more }} [{{ screenshot_strings.appstore_page }}]({{ site.appstore_url }}).
 {% endif %}
 
 <style>
@@ -52,75 +55,75 @@ See additional screenshots on the [FLwatch App Store page]({{ site.appstore_url 
 
   <!-- Left column: iPhone screenshots (or top on small screens) -->
   <div class="section phone">
-    <h4>iPhone Screenshots</h4>
+    <h4>{{ screenshot_strings.iphone_heading | default: site.data.translations.en.screenshots.iphone_heading }}</h4>
     <div class="sshot-grid">
       <figure class="sshot">
         <a href="{{ '/assets/img/iphone-01@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/iphone-01.png' | relative_url }}" alt="FLwatch glucose overview" loading="lazy">
+          <img src="{{ '/assets/img/iphone-01.png' | relative_url }}" alt="FLwatch – {{ screenshot_strings.glucose_overview | default: site.data.translations.en.screenshots.glucose_overview }}" loading="lazy">
         </a>
-        <figcaption>Glucose overview</figcaption>
+        <figcaption>{{ screenshot_strings.glucose_overview | default: site.data.translations.en.screenshots.glucose_overview }}</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/iphone-02@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/iphone-02.png' | relative_url }}" alt="FLwatch glucose graph in Dark Mode" loading="lazy">
+          <img src="{{ '/assets/img/iphone-02.png' | relative_url }}" alt="FLwatch – {{ screenshot_strings.glucose_dark | default: site.data.translations.en.screenshots.glucose_dark }}" loading="lazy">
         </a>
-        <figcaption>Glucose graph in Dark Mode</figcaption>
+        <figcaption>{{ screenshot_strings.glucose_dark | default: site.data.translations.en.screenshots.glucose_dark }}</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/iphone-03@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/iphone-03.png' | relative_url }}" alt="FLwatch insulin dose entry" loading="lazy">
+          <img src="{{ '/assets/img/iphone-03.png' | relative_url }}" alt="FLwatch – {{ screenshot_strings.record_insulin | default: site.data.translations.en.screenshots.record_insulin }}" loading="lazy">
         </a>
-        <figcaption>Record insulin</figcaption>
+        <figcaption>{{ screenshot_strings.record_insulin | default: site.data.translations.en.screenshots.record_insulin }}</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/iphone-04@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/iphone-04.png' | relative_url }}" alt="FLwatch Lock Screen widgets" loading="lazy">
+          <img src="{{ '/assets/img/iphone-04.png' | relative_url }}" alt="FLwatch – {{ screenshot_strings.lock_screen | default: site.data.translations.en.screenshots.lock_screen }}" loading="lazy">
         </a>
-        <figcaption>Lock Screen widgets</figcaption>
+        <figcaption>{{ screenshot_strings.lock_screen | default: site.data.translations.en.screenshots.lock_screen }}</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/iphone-05@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/iphone-05.png' | relative_url }}" alt="FLwatch StandBy view" loading="lazy">
+          <img src="{{ '/assets/img/iphone-05.png' | relative_url }}" alt="FLwatch – {{ screenshot_strings.standby | default: site.data.translations.en.screenshots.standby }}" loading="lazy">
         </a>
-        <figcaption>StandBy widget</figcaption>
+        <figcaption>{{ screenshot_strings.standby | default: site.data.translations.en.screenshots.standby }}</figcaption>
       </figure>
     </div>
   </div>
 
   <!-- Right column (or below on small screens): Watch screenshots -->
   <div class="section watch">
-    <h4>Watch Screenshots</h4>
+    <h4>{{ screenshot_strings.watch_heading | default: site.data.translations.en.screenshots.watch_heading }}</h4>
     <div class="sshot-grid">
       <figure class="sshot">
         <a href="{{ '/assets/img/watch-01@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/watch-01.png' | relative_url }}" alt="FLwatch watch face complications" loading="lazy">
+          <img src="{{ '/assets/img/watch-01.png' | relative_url }}" alt="FLwatch – {{ screenshot_strings.complications | default: site.data.translations.en.screenshots.complications }}" loading="lazy">
         </a>
-        <figcaption>Watch face complications</figcaption>
+        <figcaption>{{ screenshot_strings.complications | default: site.data.translations.en.screenshots.complications }}</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/watch-02@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/watch-02.png' | relative_url }}" alt="FLwatch complications on a modular watch face" loading="lazy">
+          <img src="{{ '/assets/img/watch-02.png' | relative_url }}" alt="FLwatch – {{ screenshot_strings.modular_face | default: site.data.translations.en.screenshots.modular_face }}" loading="lazy">
         </a>
-        <figcaption>Modular watch face</figcaption>
+        <figcaption>{{ screenshot_strings.modular_face | default: site.data.translations.en.screenshots.modular_face }}</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/watch-03@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/watch-03.png' | relative_url }}" alt="FLwatch glucose overview on Apple Watch" loading="lazy">
+          <img src="{{ '/assets/img/watch-03.png' | relative_url }}" alt="FLwatch – {{ screenshot_strings.watch_overview | default: site.data.translations.en.screenshots.watch_overview }}" loading="lazy">
         </a>
-        <figcaption>Glucose overview on Apple Watch</figcaption>
+        <figcaption>{{ screenshot_strings.watch_overview | default: site.data.translations.en.screenshots.watch_overview }}</figcaption>
       </figure>
 
       <figure class="sshot">
         <a href="{{ '/assets/img/watch-04@2x.png' | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ '/assets/img/watch-04.png' | relative_url }}" alt="Glucose graph on Apple Watch" loading="lazy">
+          <img src="{{ '/assets/img/watch-04.png' | relative_url }}" alt="FLwatch – {{ screenshot_strings.watch_graph | default: site.data.translations.en.screenshots.watch_graph }}" loading="lazy">
         </a>
-        <figcaption>Glucose graph on Apple Watch</figcaption>
+        <figcaption>{{ screenshot_strings.watch_graph | default: site.data.translations.en.screenshots.watch_graph }}</figcaption>
       </figure>
 
       
