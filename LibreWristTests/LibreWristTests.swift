@@ -1620,6 +1620,69 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
+    // MARK: - Libre 3 awaiting first reading
+
+    /// Anchor + 60 min warm-up, matching a Libre 3's NFC-reported cycle.
+    private func awaitingFirstReading(
+        atMinutesAfterAnchor minutes: Double,
+        firstReadingAt: Date? = nil,
+        isExpired: Bool = false,
+        needsReplacement: Bool = false,
+        hasConnectionError: Bool = false,
+        sensorStartDate: Date? = Date(timeIntervalSince1970: 1_800_000_000)
+    ) -> Bool {
+        Libre3AwaitingFirstReadingPolicy.isAwaitingFirstReading(
+            now: Date(timeIntervalSince1970: 1_800_000_000).addingTimeInterval(minutes * 60),
+            sensorStartDate: sensorStartDate,
+            warmupMinutes: 60,
+            firstReadingAt: firstReadingAt,
+            isExpired: isExpired,
+            needsReplacement: needsReplacement,
+            hasConnectionError: hasConnectionError
+        )
+    }
+
+    func testAwaitingFirstReadingSpansWarmupEndUntilTheFirstValue() throws {
+        // During warm-up the countdown owns the UI, so this must stay quiet.
+        XCTAssertFalse(awaitingFirstReading(atMinutesAfterAnchor: 59))
+        // The lifecycle clock ends warm-up exactly here, a minute before the
+        // sensor's first displayable frame.
+        XCTAssertTrue(awaitingFirstReading(atMinutesAfterAnchor: 60))
+        XCTAssertTrue(awaitingFirstReading(atMinutesAfterAnchor: 60.5))
+        XCTAssertTrue(awaitingFirstReading(atMinutesAfterAnchor: 61))
+    }
+
+    func testAwaitingFirstReadingEndsOnceAReadingHasArrived() throws {
+        let anchor = Date(timeIntervalSince1970: 1_800_000_000)
+
+        XCTAssertFalse(
+            awaitingFirstReading(
+                atMinutesAfterAnchor: 61,
+                firstReadingAt: anchor.addingTimeInterval(61 * 60)
+            )
+        )
+    }
+
+    /// A sensor that never delivers must fall through to the normal stale-data
+    /// warning rather than reading as "about to work" forever.
+    func testAwaitingFirstReadingStopsAtTheWindowCutoff() throws {
+        XCTAssertTrue(awaitingFirstReading(atMinutesAfterAnchor: 69.9))
+        XCTAssertFalse(awaitingFirstReading(atMinutesAfterAnchor: 70))
+        XCTAssertFalse(awaitingFirstReading(atMinutesAfterAnchor: 120))
+    }
+
+    /// Bluetooth-off clears the warm-up countdown while leaving the anchor and the
+    /// nil first-reading date intact, so without the connection-error check this
+    /// would claim the sensor is ready over a dead radio. Expiry and replacement
+    /// own their own UI for the same reason.
+    func testAwaitingFirstReadingYieldsToTransportAndLifecycleFaults() throws {
+        XCTAssertFalse(awaitingFirstReading(atMinutesAfterAnchor: 61, hasConnectionError: true))
+        XCTAssertFalse(awaitingFirstReading(atMinutesAfterAnchor: 61, isExpired: true))
+        XCTAssertFalse(awaitingFirstReading(atMinutesAfterAnchor: 61, needsReplacement: true))
+        // No anchor means the sensor's lifecycle is not yet classified.
+        XCTAssertFalse(awaitingFirstReading(atMinutesAfterAnchor: 61, sensorStartDate: nil))
+    }
+
     // MARK: - Libre 3 reconnect escalation
 
     func testTransportFailuresNeverTriggerAuthenticationEscalation() throws {

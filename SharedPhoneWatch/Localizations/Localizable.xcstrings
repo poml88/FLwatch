@@ -22977,6 +22977,65 @@
         }
       }
     },
+    "Sensor ready" : {
+      "comment" : "Home screen overlay title shown once sensor warm-up has finished but the sensor has not sent its first glucose value yet",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor bereit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor listo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capteur prêt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensore pronto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーの準備完了"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor gereed"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor gotowy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Датчик готов"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器已就绪"
+          }
+        }
+      }
+    },
     "Sensor recalibrating" : {
       "localizations" : {
         "de" : {
@@ -28979,6 +29038,65 @@
         }
       }
     },
+    "Waiting for the first reading.\n\nThis usually takes about a minute." : {
+      "comment" : "Home screen overlay body shown once sensor warm-up has finished but the sensor has not sent its first glucose value yet",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf den ersten Messwert.\n\nDies dauert normalerweise etwa eine Minute."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando la primera lectura.\n\nEsto suele tardar aproximadamente un minuto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente de la première mesure.\n\nCela prend généralement environ une minute."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa della prima lettura.\n\nDi solito ci vuole circa un minuto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最初の測定値を待っています。\n\n通常は1分ほどかかります。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachten op de eerste meting.\n\nDit duurt meestal ongeveer een minuut."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oczekiwanie na pierwszy odczyt.\n\nZwykle trwa to około minuty."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ожидание первого показания.\n\nОбычно это занимает около минуты."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待首次读数。\n\n通常需要大约一分钟。"
+          }
+        }
+      }
+    },
     "Waiting to retry after a network or server error." : {
       "comment" : "Nightscout status shown while an upload waits for another retry.",
       "localizations" : {
@@ -29094,6 +29212,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "预热"
+          }
+        }
+      }
+    },
+    "Warm-up complete — waiting for the first reading" : {
+      "comment" : "Libre 3 connection status shown once sensor warm-up has finished but the sensor has not sent its first glucose value yet",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufwärmphase abgeschlossen – Warten auf den ersten Messwert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calentamiento finalizado — esperando la primera lectura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrage terminé — en attente de la première mesure"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riscaldamento completato — in attesa della prima lettura"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウォームアップ完了 — 最初の測定値を待っています"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opwarmen voltooid — wachten op de eerste meting"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rozgrzewanie zakończone — oczekiwanie na pierwszy odczyt"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прогрев завершён — ожидание первого показания"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预热完成 — 正在等待首次读数"
           }
         }
       }

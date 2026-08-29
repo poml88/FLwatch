@@ -27,6 +27,20 @@ struct PhoneAppLibre3ConnectView: View {
     @State private var livePacketRecords: [Libre3LivePacketRecord] = []
     @State private var expandedLivePacketRecordIDs: Set<Int> = []
 
+    /// `isAwaitingFirstReading` ends either on a packet (which republishes the
+    /// manager's state anyway) or on a wall-clock cutoff, which publishes nothing.
+    /// This tick covers the latter so the label can't linger once the sensor has
+    /// gone quiet. One wake-up per minute while the screen is open, matching the
+    /// sensor's own cadence.
+    private static let clockTickInterval: TimeInterval = 60
+    private let clockTick = Timer.publish(
+        every: Self.clockTickInterval,
+        tolerance: 5,
+        on: .main,
+        in: .common
+    ).autoconnect()
+    @State private var now = Date()
+
     /// LibreView patient UUID whose FNV-32a hash is the receiver ID. Persisted
     /// to the app group; read by `Libre3StateStore.receiverID()`.
     @AppStorage(DefaultsKey.libre3LibreViewPatientId.rawValue, store: UserDefaults.group)
@@ -92,6 +106,7 @@ struct PhoneAppLibre3ConnectView: View {
                 libreViewPassword = stored ?? ""
             }
             reloadDiagnosticsLog()
+            now = Date()
         }
         .task {
             // Storefront lookup is async and only runs until the user has an
@@ -101,6 +116,13 @@ struct PhoneAppLibre3ConnectView: View {
         .onReceive(NotificationCenter.default.publisher(for: .libre3DiagnosticsDidChange)) { _ in
             reloadDiagnosticsLog()
         }
+        .onReceive(clockTick) { tick in
+            now = tick
+        }
+        // Warm-up ending is packet-driven and must not wait for the next tick,
+        // otherwise the status line goes blank for up to a minute between the
+        // countdown and the waiting-for-first-reading label.
+        .onChange(of: directManager.warmupRemainingMinutes) { now = Date() }
         .task(id: "\(developerModeEnabled):\(directManager.livePacketCaptureEnabled)") {
             guard developerModeEnabled else { return }
             reloadLivePacketCapture()
@@ -535,6 +557,17 @@ struct PhoneAppLibre3ConnectView: View {
                 Label("Warming up — about \(remaining) min left", systemImage: "hourglass")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+            } else if directManager.isAwaitingFirstReading(at: now) {
+                // Warm-up ended on the sensor's clock, but its first displayable
+                // value arrives with the next minute's frame.
+                Label {
+                    Text("Warm-up complete — waiting for the first reading", comment: "Libre 3 connection status shown once sensor warm-up has finished but the sensor has not sent its first glucose value yet")
+                } icon: {
+                    Image(systemName: "hourglass")
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             } else if directManager.sensorAttention == .checkSensor {
                 Label("Check sensor", systemImage: "exclamationmark.circle")
                     .font(.subheadline)

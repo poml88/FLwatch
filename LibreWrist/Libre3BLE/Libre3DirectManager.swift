@@ -799,6 +799,47 @@ struct Libre3GlucoseSilenceRecoveryPolicy {
     }
 }
 
+/// Warm-up ends on the sensor's lifecycle clock (`lifeCount >= warmupMinutes`),
+/// but the sensor's first *displayable* value only arrives with the next
+/// minute's frame. This policy names that gap so the UI can say "waiting for the
+/// first reading" instead of falling through to a stale-data warning on a sensor
+/// that is simply about to deliver — and so the completion notification, which
+/// fires on the real 60-minute boundary, isn't followed by an apparent fault.
+///
+/// Deliberately does NOT move the warm-up boundary itself: `libre3WarmupMinutes`
+/// is the sensor's own NFC-reported value and also gates clinical backfill
+/// acceptance, so a genuine minute-60 record must still be accepted.
+///
+/// Bounded by `window`, because a sensor that never delivers a first reading is a
+/// real failure mode and must not read as "about to work" indefinitely.
+struct Libre3AwaitingFirstReadingPolicy {
+    /// How long past warm-up the wait stays excusable before the normal
+    /// stale-data warning takes over.
+    static let window: TimeInterval = 10 * 60
+
+    /// A connection error takes precedence: Bluetooth-off clears the warm-up
+    /// countdown while leaving the anchor and the nil first-reading date intact,
+    /// so without that check this would claim the sensor is ready over a dead
+    /// radio.
+    static func isAwaitingFirstReading(
+        now: Date,
+        sensorStartDate: Date?,
+        warmupMinutes: Int,
+        firstReadingAt: Date?,
+        isExpired: Bool,
+        needsReplacement: Bool,
+        hasConnectionError: Bool
+    ) -> Bool {
+        guard let sensorStartDate,
+              firstReadingAt == nil,
+              !isExpired,
+              !needsReplacement,
+              !hasConnectionError else { return false }
+        let warmupEnd = sensorStartDate.addingTimeInterval(TimeInterval(warmupMinutes) * 60)
+        return now >= warmupEnd && now < warmupEnd.addingTimeInterval(window)
+    }
+}
+
 struct Libre3PatchControlSequence: Equatable {
     private(set) var current: UInt16 = 0
 
@@ -1421,6 +1462,31 @@ final class Libre3DirectManager: ObservableObject {
 
     var isInErrorState: Bool { connectionState.isError }
     var statusMessage: String { connectionState.message }
+
+    /// Warm-up is over but this sensor has not produced a usable reading yet —
+    /// see `Libre3AwaitingFirstReadingPolicy`.
+    ///
+    /// Keyed on the persisted `libre3LastGlucoseAt`, which only `forgetSensor()`
+    /// clears, rather than `currentGlucoseMgDL`, which a Bluetooth-off also nils;
+    /// and derived from the wall-clock anchor rather than `warmupRemainingMinutes`,
+    /// for the same reason.
+    ///
+    /// The two transitions users actually see are packet-driven and so invalidate
+    /// observing views on their own: warm-up ending publishes `warmupRemainingMinutes`,
+    /// the first reading publishes `currentGlucoseMgDL`. Only the `window` cutoff
+    /// is clock-only, which is why both views pass their own ticking clock in
+    /// rather than letting this read `Date()` behind their backs.
+    func isAwaitingFirstReading(at now: Date = Date()) -> Bool {
+        Libre3AwaitingFirstReadingPolicy.isAwaitingFirstReading(
+            now: now,
+            sensorStartDate: sensorStartDate,
+            warmupMinutes: SharedData.libre3WarmupMinutes,
+            firstReadingAt: SharedData.libre3LastGlucoseAt,
+            isExpired: sensorIsExpired,
+            needsReplacement: sensorNeedsReplacement,
+            hasConnectionError: connectionState.isError
+        )
+    }
 
     // MARK: - Connect → authorize → stream
 
@@ -3137,7 +3203,15 @@ final class Libre3DirectManager: ObservableObject {
 
         for issue in issues {
             if case .currentGlucoseUnavailable(_) = issue {
-                return .unavailable
+                // Before this sensor's first reading, an undisplayable value is the
+                // expected tail of warm-up rather than a fault that "will resume on
+                // its own" — the awaiting-first-reading overlay already explains it.
+                // LibreCRKit assesses each frame against the real 60-minute
+                // lifecycle, so the minute-60 frame arrives here having lost its
+                // `.sensorWarmup` issue. Narrow to this branch only: the ESA and
+                // data-quality matches above take precedence, so a genuine
+                // post-warm-up fault still surfaces during the same window.
+                return isAwaitingFirstReading() ? nil : .unavailable
             }
         }
 

@@ -317,6 +317,13 @@ struct PhoneAppHomeView: View {
             evaluateReadingWarningAlert()
         }
         .onChange(of: libre3.currentReadingStatus) { evaluateReadingWarningAlert() }
+        // The overlay's clock is `currentTime`, which the 63 s reload timer owns.
+        // Warm-up ending is the one moment that cannot wait for the next tick: the
+        // countdown disappears immediately, and against a stale clock the
+        // awaiting-first-reading branch would not match yet — putting the
+        // stale-data warning on screen for up to a minute, which is the whole
+        // problem this overlay exists to prevent. Resample on that transition.
+        .onChange(of: libre3.warmupRemainingMinutes) { currentTime = Date() }
     }
 
     private var lifecycleContent: some View {
@@ -352,6 +359,34 @@ struct PhoneAppHomeView: View {
                         .font(.headline)
 
                     Text("About \(remaining) minutes remaining.\n\nFLwatch will notify you when your sensor is ready.")
+                        .multilineTextAlignment(.center)
+                        .padding()
+                }
+                .background()
+                .cornerRadius(10)
+                .opacity(0.5)
+                .padding()
+            }
+            .allowsHitTesting(false) // Keep the IOB button tappable below the overlay.
+        } else if SharedData.cgmProviderKind == .libre3BLE,
+                  libre3.isAwaitingFirstReading(at: currentTime) {
+            // Warm-up ends on the sensor's clock a minute before its first
+            // displayable value, so name that wait instead of letting it read as a
+            // stale-data fault right after the "sensor is ready" notification.
+            ZStack {
+                Color(white: 0, opacity: 0.5)
+                    .cornerRadius(10)
+                VStack {
+                    Image(systemName: "hourglass.circle")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 100)
+                        .padding()
+
+                    Text("Sensor ready", comment: "Home screen overlay title shown once sensor warm-up has finished but the sensor has not sent its first glucose value yet")
+                        .font(.headline)
+
+                    Text("Waiting for the first reading.\n\nThis usually takes about a minute.", comment: "Home screen overlay body shown once sensor warm-up has finished but the sensor has not sent its first glucose value yet")
                         .multilineTextAlignment(.center)
                         .padding()
                 }
