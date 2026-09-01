@@ -1517,6 +1517,223 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(tracker.cycles, 0)
     }
 
+    // MARK: - Libre 3 sensor-not-responding hint
+
+    func testSensorSilenceRunOpensWithoutReporting() throws {
+        let now = Date()
+
+        let opened = Libre3SensorNotRespondingPolicy.evaluate(
+            runStartedAt: nil,
+            failureCount: 0,
+            now: now,
+            notificationAlreadySubmitted: false
+        )
+
+        XCTAssertEqual(opened.runStartedAt, now)
+        XCTAssertEqual(opened.failureCount, 1)
+        XCTAssertFalse(opened.shouldReport)
+    }
+
+    func testSensorSilenceDurationAloneDoesNotReport() throws {
+        // The false positive the count gate exists for: one silent attempt, hours
+        // out of range (attempts that never connect leave the clock running), then
+        // one more silent attempt. Old enough, but only two observed failures.
+        let now = Date()
+
+        let evaluation = Libre3SensorNotRespondingPolicy.evaluate(
+            runStartedAt: now.addingTimeInterval(-6 * 3600),
+            failureCount: 1,
+            now: now,
+            notificationAlreadySubmitted: false
+        )
+
+        XCTAssertEqual(evaluation.failureCount, 2)
+        XCTAssertFalse(evaluation.shouldReport)
+    }
+
+    func testSensorSilenceCountAloneDoesNotReport() throws {
+        // The dense run the duration gate exists for: `reconnectBackoff` retries
+        // the first three failures immediately, so the count is reached long
+        // before a marginal link has had a chance to recover.
+        let now = Date()
+
+        let evaluation = Libre3SensorNotRespondingPolicy.evaluate(
+            runStartedAt: now.addingTimeInterval(-60),
+            failureCount: Libre3SensorNotRespondingPolicy.minimumFailures,
+            now: now,
+            notificationAlreadySubmitted: false
+        )
+
+        XCTAssertGreaterThan(
+            evaluation.failureCount,
+            Libre3SensorNotRespondingPolicy.minimumFailures
+        )
+        XCTAssertFalse(evaluation.shouldReport)
+    }
+
+    func testSensorSilenceReportsOnceWhenBothThresholdsMet() throws {
+        let now = Date()
+        let start = now.addingTimeInterval(-Libre3SensorNotRespondingPolicy.minimumRunDuration)
+        let priorFailures = Libre3SensorNotRespondingPolicy.minimumFailures - 1
+
+        let crossing = Libre3SensorNotRespondingPolicy.evaluate(
+            runStartedAt: start,
+            failureCount: priorFailures,
+            now: now,
+            notificationAlreadySubmitted: false
+        )
+        XCTAssertTrue(crossing.shouldReport)
+
+        // Every later failure in the same run keeps the hint, never re-posts it.
+        let repeated = Libre3SensorNotRespondingPolicy.evaluate(
+            runStartedAt: start,
+            failureCount: crossing.failureCount,
+            now: now.addingTimeInterval(600),
+            notificationAlreadySubmitted: true
+        )
+        XCTAssertEqual(repeated.runStartedAt, start)
+        XCTAssertFalse(repeated.shouldReport)
+    }
+
+    func testSensorSilenceRetriesUntilNotificationIsSubmitted() throws {
+        let now = Date()
+        let start = now.addingTimeInterval(-Libre3SensorNotRespondingPolicy.minimumRunDuration)
+
+        // A post lost to suspension, or one `add` threw on, leaves the flag false.
+        // Later failures in the same run must ask again rather than assume the
+        // first attempt landed — otherwise one lost task silences the whole outage.
+        let retry = Libre3SensorNotRespondingPolicy.evaluate(
+            runStartedAt: start,
+            failureCount: Libre3SensorNotRespondingPolicy.minimumFailures + 3,
+            now: now,
+            notificationAlreadySubmitted: false
+        )
+
+        XCTAssertTrue(retry.shouldReport)
+    }
+
+    func testStaleFailureCountWithoutRunStartOpensFreshRun() throws {
+        let now = Date()
+
+        // A count with no run start is not a run, however large it is.
+        let evaluation = Libre3SensorNotRespondingPolicy.evaluate(
+            runStartedAt: nil,
+            failureCount: 99,
+            now: now,
+            notificationAlreadySubmitted: false
+        )
+
+        XCTAssertEqual(evaluation.failureCount, 1)
+        XCTAssertFalse(evaluation.shouldReport)
+    }
+
+    func testOnlyAuthStageNotifyTimeoutsQualify() throws {
+        let notifyTimeout = SensorSessionTransportError.notifyTimeout(
+            characteristic: "08982198-EF89-11E9-81B4-2A2AE2DBCCE4",
+            seconds: 2
+        )
+
+        XCTAssertTrue(
+            Libre3SensorNotRespondingPolicy.qualifies(stage: "auth", error: notifyTimeout)
+        )
+        // The same silence after the handshake is a data-plane problem.
+        XCTAssertFalse(
+            Libre3SensorNotRespondingPolicy.qualifies(stage: "streaming", error: notifyTimeout)
+        )
+        // A link that dropped mid-handshake is not a sensor that stayed silent.
+        XCTAssertFalse(
+            Libre3SensorNotRespondingPolicy.qualifies(
+                stage: "auth",
+                error: SensorSessionTransportError.notifyStreamEnded(have: 0, want: 23)
+            )
+        )
+        XCTAssertFalse(Libre3SensorNotRespondingPolicy.qualifies(stage: "auth", error: nil))
+    }
+
+    func testFutureRunStartRestartsSensorSilenceRun() throws {
+        let now = Date()
+
+        // A persisted start ahead of the clock (time zone / clock correction)
+        // must not defer the hint forever.
+        let evaluation = Libre3SensorNotRespondingPolicy.evaluate(
+            runStartedAt: now.addingTimeInterval(3600),
+            failureCount: Libre3SensorNotRespondingPolicy.minimumFailures,
+            now: now,
+            notificationAlreadySubmitted: false
+        )
+
+        XCTAssertEqual(evaluation.runStartedAt, now)
+        XCTAssertEqual(evaluation.failureCount, 1)
+        XCTAssertFalse(evaluation.shouldReport)
+    }
+
+    // MARK: - Libre 3 skipped-CCCD tracing
+
+    // These cover the parser only. The inputs are hand-copied from
+    // `SensorSession`, so they do NOT protect the cross-module contract: a
+    // reworded log line in LibreCRKit leaves these passing while production
+    // tracing stops. See the note on `Libre3CCCDSkipLog`.
+    func testConnectTimeHandshakeCCCDSkipIsTraced() throws {
+        let uuid = LibreSensorGATT.Char.secCommandResponse.uuidString
+
+        XCTAssertEqual(
+            Libre3CCCDSkipLog.handshakeSkipTraceLine(
+                for: "setNotifyValue: skipping \(uuid) — already notifying"
+            ),
+            "cccd-skip char=command"
+        )
+    }
+
+    func testSetNotifyNoOpOnHandshakeCharacteristicIsTraced() throws {
+        let uuid = LibreSensorGATT.Char.secChallengeData.uuidString
+
+        XCTAssertEqual(
+            Libre3CCCDSkipLog.handshakeSkipTraceLine(
+                for: "setNotify: \(uuid) already on — no CCCD write"
+            ),
+            "cccd-skip char=challenge"
+        )
+    }
+
+    func testDataPlaneCCCDSkipIsNotTraced() throws {
+        // Data-plane characteristics are armed after the handshake and have their
+        // own re-arm handling, so their skips say nothing about a silent auth.
+        let uuid = LibreSensorGATT.Char.glucoseData.uuidString
+
+        XCTAssertNil(
+            Libre3CCCDSkipLog.handshakeSkipTraceLine(
+                for: "setNotifyValue: skipping \(uuid) — already notifying"
+            )
+        )
+    }
+
+    func testSkippedCCCDDisableIsNotTraced() throws {
+        // A skipped disable leaves the characteristic armed — harmless, and not
+        // evidence of anything.
+        let uuid = LibreSensorGATT.Char.secCommandResponse.uuidString
+
+        XCTAssertNil(
+            Libre3CCCDSkipLog.handshakeSkipTraceLine(
+                for: "setNotify: \(uuid) already off — no CCCD write"
+            )
+        )
+    }
+
+    func testUnrelatedBLETimingLinesAreNotTraced() throws {
+        let uuid = LibreSensorGATT.Char.secCommandResponse.uuidString
+
+        XCTAssertNil(
+            Libre3CCCDSkipLog.handshakeSkipTraceLine(
+                for: "setNotify: \(uuid) writing setNotifyValue(true) — awaiting ack (timeout 10s)"
+            )
+        )
+        XCTAssertNil(
+            Libre3CCCDSkipLog.handshakeSkipTraceLine(
+                for: "discoverAndSubscribe: complete in 812ms (all notify subs already on)"
+            )
+        )
+    }
+
     // MARK: - Libre 3 peripheral discovery
 
     func testKnownPeripheralUsesRetrievedPathAfterManyNoStreamAttempts() throws {

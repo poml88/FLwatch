@@ -96,6 +96,23 @@ enum Libre3ActivatingApp: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    /// Name of the app that could be holding the sensor's single session, or
+    /// `nil` when no vendor app can be.
+    ///
+    /// The activating app is the right one to name: a sensor only ever accepts
+    /// the receiver ID it was started with, so no *other* vendor app can contend
+    /// for it. `.flwatchOnly` sensors carry FLwatch's own installation receiver
+    /// ID, which no vendor app can adopt at all — there the advice has to stay
+    /// generic (another FLwatch install, or a cause other than contention).
+    var contendingAppName: String? {
+        switch self {
+        case .freeStyleLibre3, .libreByAbbott:
+            return displayName
+        case .flwatchOnly:
+            return nil
+        }
+    }
+
     /// True when the receiver ID is derived from the user's LibreView Account ID,
     /// so the account rows are needed and takeover / parallel join are possible.
     ///

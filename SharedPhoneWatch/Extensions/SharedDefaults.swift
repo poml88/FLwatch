@@ -259,6 +259,10 @@ enum DefaultsKey: String {
     case libre3EngineStatusMessage = "libre3EngineStatusMessageKey"
     case libre3SensorNeedsReplacement = "libre3SensorNeedsReplacementKey"
     case libre3ConnectionRequiresUserAction = "libre3ConnectionRequiresUserActionKey"
+    case libre3SensorNotResponding = "libre3SensorNotRespondingKey"
+    case libre3SensorNotRespondingNotified = "libre3SensorNotRespondingNotifiedKey"
+    case libre3SensorSilenceRunStartedAt = "libre3SensorSilenceRunStartedAtKey"
+    case libre3SensorSilenceFailureCount = "libre3SensorSilenceFailureCountKey"
     case libre3DiagnosticEvents = "libre3DiagnosticEventsKey"
     case libre3ReconnectTrace = "libre3ReconnectTraceKey"
     case libre3NotableEvents = "libre3NotableEventsKey"
@@ -1094,6 +1098,51 @@ enum SharedData {
     static var libre3ConnectionRequiresUserAction: Bool {
         get { store.getBool(.libre3ConnectionRequiresUserAction) }
         set { store.setBool(newValue, forKey: .libre3ConnectionRequiresUserAction) }
+    }
+
+    /// Persists the "sensor accepts the link but never answers the handshake"
+    /// hint across relaunches, so the banner and its notification survive the
+    /// app being restarted mid-outage.
+    static var libre3SensorNotResponding: Bool {
+        get { store.getBool(.libre3SensorNotResponding) }
+        set { store.setBool(newValue, forKey: .libre3SensorNotResponding) }
+    }
+
+    /// Whether the sensor-not-responding notification actually reached
+    /// Notification Center. Tracked apart from the hint itself because posting is
+    /// an unstructured task that a suspension or termination can lose, and `add`
+    /// can throw: without this, one lost delivery would silence the alert for the
+    /// whole outage while the banner claimed otherwise. Retries until it lands,
+    /// then keeps the alert one-shot.
+    static var libre3SensorNotRespondingNotified: Bool {
+        get { store.getBool(.libre3SensorNotRespondingNotified) }
+        set { store.setBool(newValue, forKey: .libre3SensorNotRespondingNotified) }
+    }
+
+    /// Qualifying failures in the current sensor-silence run. Paired with
+    /// `libre3SensorSilenceRunStartedAt`; both are cleared together, and the run
+    /// only counts as evidence when it satisfies the count *and* the duration.
+    static var libre3SensorSilenceFailureCount: Int {
+        get { store.getInt(.libre3SensorSilenceFailureCount) }
+        set { store.setInt(newValue, forKey: .libre3SensorSilenceFailureCount) }
+    }
+
+    /// Start of the current unbroken run of authorization attempts the sensor
+    /// never answered. Persisted rather than kept in memory because a run that
+    /// outlives the app process is exactly the case worth reporting — an
+    /// in-memory counter restarts from zero on every relaunch and can stay below
+    /// its threshold forever. `nil` whenever no such run is in progress.
+    static var libre3SensorSilenceRunStartedAt: Date? {
+        get {
+            guard store.object(forKey: DefaultsKey.libre3SensorSilenceRunStartedAt.rawValue) != nil else {
+                return nil
+            }
+            return store.getDate(.libre3SensorSilenceRunStartedAt)
+        }
+        set {
+            if let newValue { store.setDate(newValue, forKey: .libre3SensorSilenceRunStartedAt) }
+            else { store.removeObject(forKey: DefaultsKey.libre3SensorSilenceRunStartedAt.rawValue) }
+        }
     }
 
     static var libre3DiagnosticEvents: [String] {

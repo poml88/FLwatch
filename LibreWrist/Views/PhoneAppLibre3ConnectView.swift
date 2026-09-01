@@ -529,7 +529,31 @@ struct PhoneAppLibre3ConnectView: View {
                 }
             }
 
-            if directManager.reScanSuggested {
+            // Takes precedence over the re-scan hint: when the sensor answers
+            // nobody, re-pairing is not the action that helps.
+            if directManager.sensorNotResponding {
+                Label {
+                    // This section only renders once paired, so the "whichever
+                    // Abbott app you use" shorthand defined in `setupSections` is
+                    // not on screen — name the app the sensor was started in.
+                    if let vendorApp = activatingApp.contendingAppName {
+                        Text(
+                            "The sensor isn't answering FLwatch. \(vendorApp) may be using it — a sensor serves one app at a time. Force-close that app and turn off its Bluetooth access in Settings › Privacy & Security › Bluetooth.",
+                            comment: "Connection warning shown when the sensor accepts the Bluetooth link but never answers. The placeholder is the name of the Abbott app the sensor was started in ('FreeStyle Libre 3' or 'Libre by Abbott'); both stay untranslated. The Settings path should match iOS's own wording in the target language."
+                        )
+                    } else {
+                        Text(
+                            "The sensor isn't answering FLwatch. Another app or device may be using it — a sensor serves one at a time.",
+                            comment: "Connection warning for a sensor FLwatch activated itself, which no Abbott app can use, so no app can be named. Shown when the sensor accepts the Bluetooth link but never answers."
+                        )
+                    }
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                }
+                .font(.subheadline)
+                .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
+            } else if directManager.reScanSuggested {
                 Label(
                     "Reconnect is continuing automatically. If it keeps failing, disconnect below and re-pair the sensor.",
                     systemImage: "exclamationmark.triangle.fill"

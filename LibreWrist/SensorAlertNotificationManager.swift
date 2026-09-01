@@ -28,8 +28,12 @@ final class SensorAlertNotificationManager {
     private static let signalLossOriginalDeadlineKey = "signalLossOriginalDeadline"
     private static let applicationTerminatedIdentifier = "libre3-sensor-alert.application-terminated"
     private static let reconnectFailingIdentifier = "libre3-sensor-alert.reconnect-failing"
+    private static let sensorNotRespondingIdentifier = "libre3-sensor-alert.sensor-not-responding"
     private static let warmupCompletionIdentifier = "libre3-sensor-alert.warmup-complete"
     private let notificationCenter = UNUserNotificationCenter.current()
+    /// In-flight authorization request shared by concurrent callers, nil when
+    /// none is running.
+    private var authorizationRequest: Task<Void, Never>?
     private var desiredSignalLossDeadline: Date?
     private var signalLossRevision = 0
     private var signalLossReconciliationTask: Task<Void, Never>?
@@ -67,7 +71,23 @@ final class SensorAlertNotificationManager {
     }
 
     /// App-wide auth; idempotent, and only prompts while authorization is undetermined.
+    ///
+    /// Single-flight: `start()` runs again from the scanner's `.poweredOn`
+    /// callback, so two callers can otherwise both observe `.notDetermined`
+    /// across the settings await and each raise a request. Concurrent callers
+    /// share the in-flight one instead.
     func requestAuthorizationIfNeeded() async {
+        if let authorizationRequest {
+            await authorizationRequest.value
+            return
+        }
+        let request = Task { await performAuthorizationRequest() }
+        authorizationRequest = request
+        await request.value
+        authorizationRequest = nil
+    }
+
+    private func performAuthorizationRequest() async {
         let settings = await notificationCenter.notificationSettings()
         guard settings.authorizationStatus == .notDetermined else { return }
 
@@ -76,6 +96,36 @@ final class SensorAlertNotificationManager {
         } catch {
             Logger.connectivity.error("Sensor alert notification authorization failed: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    /// Adds a fixed-ID request, then removes it again if the state that justified
+    /// it was cleared while `add` was suspended.
+    ///
+    /// `add` is async while every retract here is synchronous, so a recovery
+    /// landing mid-flight removes a request that does not exist yet — and the
+    /// alert then arrives anyway, describing a problem that is already over.
+    /// Re-reading the desired state after the add closes that window. The state
+    /// must be the persisted one the retract path clears, not a local copy.
+    /// - Returns: true when the request was accepted and still wanted, i.e. the
+    ///   alert now stands. False means it was never submitted or was withdrawn,
+    ///   so a caller tracking delivery must be prepared to try again.
+    @discardableResult
+    private func add(
+        _ request: UNNotificationRequest,
+        whileDesired stillDesired: () -> Bool,
+        logLabel: String
+    ) async -> Bool {
+        do {
+            try await notificationCenter.add(request)
+        } catch {
+            Logger.connectivity.error("\(logLabel, privacy: .public) notification scheduling failed: \(error.localizedDescription, privacy: .public)")
+            return false
+        }
+        guard !stillDesired() else { return true }
+        let ids = [request.identifier]
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
+        notificationCenter.removeDeliveredNotifications(withIdentifiers: ids)
+        return false
     }
 
     func postReconnectFailing() async {
@@ -90,15 +140,61 @@ final class SensorAlertNotificationManager {
             content: content,
             trigger: nil
         )
-        do {
-            try await notificationCenter.add(request)
-        } catch {
-            Logger.connectivity.error("Reconnect-failing notification scheduling failed: \(error.localizedDescription, privacy: .public)")
-        }
+        await add(
+            request,
+            whileDesired: { SharedData.libre3ConnectionRequiresUserAction },
+            logLabel: "Reconnect-failing"
+        )
     }
 
     func retractReconnectFailing() {
         let ids = [Self.reconnectFailingIdentifier]
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
+        notificationCenter.removeDeliveredNotifications(withIdentifiers: ids)
+    }
+
+    /// The sensor takes the BLE connection but never answers the authorization
+    /// handshake — see `Libre3SensorNotRespondingPolicy`. Distinct from the
+    /// re-scan alert: re-pairing does not resolve this, so the body names the
+    /// likeliest cause (another app holding the sensor) and its remedy.
+    func postSensorNotResponding() async {
+        let content = UNMutableNotificationContent()
+        content.title = String(
+            localized: "Sensor not responding",
+            comment: "Notification title shown when the Libre 3 sensor accepts the Bluetooth connection but never answers FLwatch"
+        )
+        // Naming the app the sensor was started in beats naming one of Abbott's
+        // two apps and misleading users of the other.
+        if let vendorApp = SharedData.libre3ActivatingApp.contendingAppName {
+            content.body = String(
+                localized: "FLwatch reaches your sensor but it doesn't answer. \(vendorApp) may be using it: a sensor serves one app at a time. Force-close that app and turn off its Bluetooth access in iOS Settings.",
+                comment: "Notification body explaining that the sensor serves only one app at a time, and how to release it. The placeholder is the name of the Abbott app the sensor was started in ('FreeStyle Libre 3' or 'Libre by Abbott'); both stay untranslated."
+            )
+        } else {
+            content.body = String(
+                localized: "FLwatch reaches your sensor but it doesn't answer. Another app or device may be using it — a sensor serves one at a time.",
+                comment: "Notification body for a sensor FLwatch activated itself, which no Abbott app can use, so no app can be named. Shown when the sensor accepts the connection but never answers."
+            )
+        }
+        content.interruptionLevel = .timeSensitive
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: Self.sensorNotRespondingIdentifier,
+            content: content,
+            trigger: nil
+        )
+        // Only a request that actually stands counts as delivered; anything else
+        // leaves the evidence path free to retry on the next failure.
+        SharedData.libre3SensorNotRespondingNotified = await add(
+            request,
+            whileDesired: { SharedData.libre3SensorNotResponding },
+            logLabel: "Sensor-not-responding"
+        )
+    }
+
+    func retractSensorNotResponding() {
+        let ids = [Self.sensorNotRespondingIdentifier]
         notificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
         notificationCenter.removeDeliveredNotifications(withIdentifiers: ids)
     }

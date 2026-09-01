@@ -10743,6 +10743,124 @@
         }
       }
     },
+    "FLwatch reaches your sensor but it doesn't answer. %@ may be using it: a sensor serves one app at a time. Force-close that app and turn off its Bluetooth access in iOS Settings." : {
+      "comment" : "Notification body explaining that the sensor serves only one app at a time, and how to release it. The placeholder is the name of the Abbott app the sensor was started in ('FreeStyle Libre 3' or 'Libre by Abbott'); both stay untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch erreicht deinen Sensor, aber er antwortet nicht. %@ verwendet ihn möglicherweise: Ein Sensor kann jeweils nur von einer App verwendet werden. Beende diese App vollständig und deaktiviere ihren Bluetooth-Zugriff in den iOS-Einstellungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch llega al sensor, pero este no responde. Puede que %@ lo esté usando: un sensor solo puede usarse con una app a la vez. Fuerza el cierre de esa app y desactiva su acceso a Bluetooth en los ajustes de iOS."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch atteint votre capteur, mais celui-ci ne répond pas. Il est possible que %@ l’utilise : un capteur ne peut être utilisé que par une seule app à la fois. Forcez la fermeture de cette app et désactivez son accès au Bluetooth dans les réglages d’iOS."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch raggiunge il sensore, ma questo non risponde. È possibile che %@ lo stia usando: un sensore può essere utilizzato da una sola app alla volta. Forza la chiusura di quell’app e disattivane l’accesso al Bluetooth nelle impostazioni di iOS."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchはセンサーに接続していますが、センサーが応答しません。%@が使用している可能性があります。センサーを使用できるのは一度に1つのアプリだけです。そのアプリを強制終了し、iOSの設定でBluetoothへのアクセスをオフにしてください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch bereikt je sensor, maar deze reageert niet. Mogelijk gebruikt %@ de sensor: een sensor kan maar door één app tegelijk worden gebruikt. Sluit die app geforceerd af en schakel de Bluetooth-toegang uit in de iOS-instellingen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch łączy się z sensorem, ale sensor nie odpowiada. Być może używa go %@: z sensora może korzystać tylko jedna aplikacja naraz. Wymuś zamknięcie tej aplikacji i wyłącz jej dostęp do Bluetooth w ustawieniach iOS."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch устанавливает связь с датчиком, но датчик не отвечает. Возможно, его использует %@: датчик может одновременно работать только с одним приложением. Принудительно закройте это приложение и отключите для него доступ к Bluetooth в настройках iOS."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch可以连接到传感器，但传感器没有响应。%@可能正在使用它：传感器一次只能供一个App使用。请强制退出该App，并在iOS设置中关闭其蓝牙访问权限。"
+          }
+        }
+      }
+    },
+    "FLwatch reaches your sensor but it doesn't answer. Another app or device may be using it — a sensor serves one at a time." : {
+      "comment" : "Notification body for a sensor FLwatch activated itself, which no Abbott app can use, so no app can be named. Shown when the sensor accepts the connection but never answers.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch erreicht deinen Sensor, aber er antwortet nicht. Möglicherweise wird er von einer anderen App oder einem anderen Gerät verwendet — ein Sensor kann jeweils nur von einer App oder einem Gerät verwendet werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch llega al sensor, pero este no responde. Puede que otra app u otro dispositivo lo esté usando: un sensor solo puede usarse con uno a la vez."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch atteint votre capteur, mais celui-ci ne répond pas. Il est possible qu’une autre app ou un autre appareil l’utilise : un capteur ne peut être utilisé que par un seul à la fois."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch raggiunge il sensore, ma questo non risponde. È possibile che lo stia usando un’altra app o un altro dispositivo: un sensore può essere utilizzato da uno solo alla volta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchはセンサーに接続していますが、センサーが応答しません。別のアプリやデバイスが使用している可能性があります。センサーを使用できるのは一度に1つだけです。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch bereikt je sensor, maar deze reageert niet. Mogelijk gebruikt een andere app of een ander apparaat de sensor: een sensor kan maar door één tegelijk worden gebruikt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch łączy się z sensorem, ale sensor nie odpowiada. Być może używa go inna aplikacja lub inne urządzenie — z sensora może korzystać tylko jedno z nich naraz."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch устанавливает связь с датчиком, но датчик не отвечает. Возможно, его использует другое приложение или устройство — датчик может одновременно работать только с одним из них."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch可以连接到传感器，但传感器没有响应。其他App或设备可能正在使用它——传感器一次只能供一方使用。"
+          }
+        }
+      }
+    },
     "FLwatch scans for devices nearby, reconnects to the selected device, and uses that Bluetooth activity to refresh glucose data, widgets, Live Activities, and background updates. Only nearby discoverable Bluetooth devices can appear here. This mode has very little impact on the battery." : {
       "localizations" : {
         "de" : {
@@ -22917,6 +23035,65 @@
         }
       }
     },
+    "Sensor not responding" : {
+      "comment" : "Notification title shown when the Libre 3 sensor accepts the Bluetooth connection but never answers FLwatch",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor antwortet nicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El sensor no responde"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le capteur ne répond pas"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il sensore non risponde"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーが応答しません"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor reageert niet"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor nie odpowiada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Датчик не отвечает"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器未响应"
+          }
+        }
+      }
+    },
     "Sensor readings are flat now, but glucose changed substantially during the past hour. Wait longer before comparing." : {
       "comment" : "A warning that sensor readings are not stable.",
       "isCommentAutoGenerated" : true,
@@ -26249,6 +26426,124 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "传感器未返回配对数据。请将传感器移到手机顶部并重试。"
+          }
+        }
+      }
+    },
+    "The sensor isn't answering FLwatch. %@ may be using it — a sensor serves one app at a time. Force-close that app and turn off its Bluetooth access in Settings › Privacy & Security › Bluetooth." : {
+      "comment" : "Connection warning shown when the sensor accepts the Bluetooth link but never answers. The placeholder is the name of the Abbott app the sensor was started in ('FreeStyle Libre 3' or 'Libre by Abbott'); both stay untranslated. The Settings path should match iOS's own wording in the target language.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Sensor antwortet FLwatch nicht. %@ verwendet ihn möglicherweise — ein Sensor kann jeweils nur von einer App verwendet werden. Beende diese App vollständig und deaktiviere ihren Bluetooth-Zugriff unter Einstellungen › Datenschutz & Sicherheit › Bluetooth."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El sensor no responde a FLwatch. Puede que %@ lo esté usando: un sensor solo puede usarse con una app a la vez. Fuerza el cierre de esa app y desactiva su acceso a Bluetooth en Ajustes › Privacidad y seguridad › Bluetooth."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le capteur ne répond pas à FLwatch. Il est possible que %@ l’utilise : un capteur ne peut être utilisé que par une seule app à la fois. Forcez la fermeture de cette app et désactivez son accès au Bluetooth dans Réglages › Confidentialité et sécurité › Bluetooth."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il sensore non risponde a FLwatch. È possibile che %@ lo stia usando: un sensore può essere utilizzato da una sola app alla volta. Forza la chiusura di quell’app e disattivane l’accesso al Bluetooth in Impostazioni › Privacy e sicurezza › Bluetooth."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーがFLwatchに応答しません。%@が使用している可能性があります。センサーを使用できるのは一度に1つのアプリだけです。そのアプリを強制終了し、設定 › プライバシーとセキュリティ › BluetoothでBluetoothへのアクセスをオフにしてください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De sensor reageert niet op FLwatch. Mogelijk gebruikt %@ de sensor: een sensor kan maar door één app tegelijk worden gebruikt. Sluit die app geforceerd af en schakel de Bluetooth-toegang uit via Instellingen › Privacy en beveiliging › Bluetooth."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor nie odpowiada aplikacji FLwatch. Być może używa go %@ — z sensora może korzystać tylko jedna aplikacja naraz. Wymuś zamknięcie tej aplikacji i wyłącz jej dostęp do Bluetooth w sekcji Ustawienia › Prywatność i ochrona › Bluetooth."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Датчик не отвечает FLwatch. Возможно, его использует %@: датчик может одновременно работать только с одним приложением. Принудительно закройте это приложение и отключите для него доступ к Bluetooth в разделе «Настройки» › «Конфиденциальность и безопасность» › Bluetooth."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器未响应FLwatch。%@可能正在使用它——传感器一次只能供一个App使用。请强制退出该App，并前往“设置”›“隐私与安全性”›“蓝牙”关闭其蓝牙访问权限。"
+          }
+        }
+      }
+    },
+    "The sensor isn't answering FLwatch. Another app or device may be using it — a sensor serves one at a time." : {
+      "comment" : "Connection warning for a sensor FLwatch activated itself, which no Abbott app can use, so no app can be named. Shown when the sensor accepts the Bluetooth link but never answers.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Sensor antwortet FLwatch nicht. Möglicherweise wird er von einer anderen App oder einem anderen Gerät verwendet — ein Sensor kann jeweils nur von einer App oder einem Gerät verwendet werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El sensor no responde a FLwatch. Puede que otra app u otro dispositivo lo esté usando: un sensor solo puede usarse con uno a la vez."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le capteur ne répond pas à FLwatch. Il est possible qu’une autre app ou un autre appareil l’utilise : un capteur ne peut être utilisé que par un seul à la fois."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il sensore non risponde a FLwatch. È possibile che lo stia usando un’altra app o un altro dispositivo: un sensore può essere utilizzato da uno solo alla volta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーがFLwatchに応答しません。別のアプリやデバイスが使用している可能性があります。センサーを使用できるのは一度に1つだけです。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De sensor reageert niet op FLwatch. Mogelijk gebruikt een andere app of een ander apparaat de sensor: een sensor kan maar door één tegelijk worden gebruikt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor nie odpowiada aplikacji FLwatch. Być może używa go inna aplikacja lub inne urządzenie — z sensora może korzystać tylko jedno z nich naraz."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Датчик не отвечает FLwatch. Возможно, его использует другое приложение или устройство — датчик может одновременно работать только с одним из них."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器未响应FLwatch。其他App或设备可能正在使用它——传感器一次只能供一方使用。"
           }
         }
       }

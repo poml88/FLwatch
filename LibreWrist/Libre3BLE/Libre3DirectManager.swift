@@ -625,6 +625,139 @@ struct Libre3NoStreamCycleTracker: Equatable {
     }
 }
 
+/// Decides when to tell the user that the sensor takes the connection but never
+/// answers the authorization handshake.
+///
+/// The failure shape is a `notifyTimeout` at the `auth` stage: CoreBluetooth
+/// connects, we write `StartAuthorization`, and no notify ever arrives. The most
+/// common cause is another app (typically the vendor Libre 3 app) holding an
+/// authorized session with the sensor — a Libre 3 serves one at a time. It is
+/// not the only cause, though: a CCCD iOS retained across a reconnect leaves the
+/// sensor un-armed and looks identical from here. Hence the state is named after
+/// what we observe, and the copy names contention only as the likely reason.
+///
+/// Evidence is an unbroken run that must satisfy *both* a failure count and a
+/// duration, because each gate covers the other's blind spot:
+///
+/// - Duration alone is fooled by a sparse run. Attempts that never reach
+///   `didConnect` leave the clock running, so one transient timeout, hours out
+///   of range, and one more transient timeout would fire the alert on two
+///   failures — exactly the false positive the count prevents.
+/// - Count alone is fooled by a dense run. `reconnectBackoff` retries the first
+///   three failures immediately, so six failures stack up inside a minute, long
+///   before a marginal link has had a chance to recover on its own.
+///
+/// "Consecutive" then falls out for free: a success clears the run, and a
+/// failure that never reached `didConnect` neither starts nor clears it.
+enum Libre3SensorNotRespondingPolicy {
+    /// How long an unbroken run must last before the hint appears. By then the
+    /// user is ten minute-readings down, which is worth interrupting them for.
+    static let minimumRunDuration: TimeInterval = 10 * 60
+    /// How many silent attempts the run must actually contain. Matches the
+    /// authentication ladder's own escalation threshold.
+    static let minimumFailures = 6
+
+    struct Evaluation: Equatable {
+        /// Run start to persist — the existing one, or `now` for a new run.
+        let runStartedAt: Date
+        /// Qualifying failures in the run so far, including this one.
+        let failureCount: Int
+        /// True on every qualifying failure once both thresholds are met, until
+        /// the notification has actually been submitted. Not "first crossing":
+        /// posting can be lost or rejected, so the caller needs to be told to try
+        /// again rather than assuming the first attempt landed.
+        let shouldReport: Bool
+    }
+
+    /// The failure shape this policy reports on: the handshake started and a
+    /// notify it waited on never came.
+    ///
+    /// `notifyTimeout` can only be thrown by `SensorSessionTransport`, which the
+    /// handshake alone uses — the data plane decodes notifications through the
+    /// manager's own assembler. Together with the stage check that makes this
+    /// "the sensor went silent on a handshake characteristic", without pinning
+    /// the match to one UUID: the command-response wait and the challenge wait
+    /// that follows it are the same event as far as the user is concerned.
+    static func qualifies(stage: String, error: Error?) -> Bool {
+        guard stage == "auth",
+              let transportError = error as? SensorSessionTransportError,
+              case .notifyTimeout = transportError else { return false }
+        return true
+    }
+
+    static func evaluate(
+        runStartedAt: Date?,
+        failureCount: Int,
+        now: Date,
+        notificationAlreadySubmitted: Bool
+    ) -> Evaluation {
+        // No run start means no run, whatever a stale count says.
+        let start = runStartedAt ?? now
+        let count = (runStartedAt == nil ? 0 : failureCount) + 1
+        // A persisted start in the future (clock change) would otherwise defer
+        // the hint indefinitely; treat it as the beginning of a fresh run.
+        guard start <= now else {
+            return Evaluation(runStartedAt: now, failureCount: 1, shouldReport: false)
+        }
+        return Evaluation(
+            runStartedAt: start,
+            failureCount: count,
+            shouldReport: !notificationAlreadySubmitted
+                && count >= minimumFailures
+                && now.timeIntervalSince(start) >= minimumRunDuration
+        )
+    }
+}
+
+/// Recognises the LibreCRKit log lines that report a CCCD enable which never
+/// reached the sensor, for the handshake characteristics only.
+///
+/// This reads another module's log text, which is fragile by nature. It is worth
+/// it because the fact is available nowhere else: `SensorSession` takes the
+/// decision internally and reports it only through `BLETiming`. Markers are
+/// matched rather than whole lines so incidental changes (timings, punctuation
+/// around them) don't break it.
+///
+/// **The coupling is unverified by any test.** The unit tests feed these markers
+/// back in as literals, so they only prove the parser does what it is told — if
+/// `SensorSession` rewords its two skip lines, the tests keep passing and this
+/// tracing silently stops. Re-read `SensorSession.discoverAndSubscribe` and
+/// `setNotify` by hand whenever LibreCRKit is updated, until the package exposes
+/// a shared constant or a structured event to bind against.
+enum Libre3CCCDSkipLog {
+    /// The two shapes LibreCRKit logs when no CCCD *enable* reached the sensor:
+    /// the connect-time subscribe skip, and the `setNotify` no-op.
+    ///
+    /// Only the enable direction is evidence. A skipped *disable* ("already off")
+    /// leaves the characteristic armed, which is harmless — matching it would
+    /// blame a healthy connection.
+    private static func reportsSkippedEnable(_ message: String) -> Bool {
+        if message.contains("already notifying") { return true }
+        return message.contains("no CCCD write") && message.contains("already on")
+    }
+
+    /// A reconnect-trace line for a skipped handshake CCCD, or nil for every
+    /// other event. Data-plane skips are deliberately ignored: those
+    /// characteristics are enabled after the handshake and have their own
+    /// re-arm handling, so they say nothing about a silent authorization.
+    static func handshakeSkipTraceLine(for message: String) -> String? {
+        guard reportsSkippedEnable(message) else { return nil }
+        guard let uuid = LibreSensorGATT.Char.handshakeNotifying.first(where: {
+            message.localizedCaseInsensitiveContains($0.uuidString)
+        }) else { return nil }
+        return "cccd-skip char=\(shortName(for: uuid))"
+    }
+
+    /// Keeps the trace readable; a bare 128-bit UUID tells a support reader
+    /// nothing about which handshake step was left un-armed.
+    private static func shortName(for uuid: CBUUID) -> String {
+        if uuid == LibreSensorGATT.Char.secCertData { return "cert" }
+        if uuid == LibreSensorGATT.Char.secChallengeData { return "challenge" }
+        if uuid == LibreSensorGATT.Char.secCommandResponse { return "command" }
+        return uuid.uuidString
+    }
+}
+
 struct Libre3PeripheralBindingTracker: Equatable {
     private(set) var candidateID: UUID?
 
@@ -925,6 +1058,12 @@ final class Libre3DirectManager: ObservableObject {
     @Published private(set) var reScanSuggested = false {
         didSet { SharedData.libre3ConnectionRequiresUserAction = reScanSuggested }
     }
+    /// Persistent hint that the sensor accepts the BLE link but never answers the
+    /// authorization handshake — see `Libre3SensorNotRespondingPolicy`. A
+    /// successful authorization or a usable reading clears it.
+    @Published private(set) var sensorNotResponding = false {
+        didSet { SharedData.libre3SensorNotResponding = sensorNotResponding }
+    }
 
     // MARK: - Engine
 
@@ -1169,6 +1308,7 @@ final class Libre3DirectManager: ObservableObject {
         sensorStartDate = SharedData.libre3SensorStartDate
         sensorNeedsReplacement = SharedData.libre3SensorNeedsReplacement
         reScanSuggested = SharedData.libre3ConnectionRequiresUserAction
+        sensorNotResponding = SharedData.libre3SensorNotResponding
         publishStatusToAppGroup()
     }
 
@@ -1190,6 +1330,7 @@ final class Libre3DirectManager: ObservableObject {
             start()
         } else if shouldMaintainConnection ||
                     reScanSuggested ||
+                    sensorNotResponding ||
                     lifecycleTask != nil ||
                     scannerEventTask != nil ||
                     session != nil ||
@@ -1220,6 +1361,13 @@ final class Libre3DirectManager: ObservableObject {
             return
         }
         shouldMaintainConnection = true
+        // Ask for notification authorization as soon as a paired sensor starts,
+        // not at stream start: the sensor-not-responding alert fires precisely
+        // when streaming never happens. The warm-up path asks too, but only for a
+        // sensor still warming up — a Parallel join of an already-warm sensor
+        // reaches neither that path nor stream start. Idempotent, and only
+        // prompts while authorization is undetermined.
+        Task { await SensorAlertNotificationManager.shared.requestAuthorizationIfNeeded() }
         // Show warm-up/expiry from the persisted anchor right away, so a relaunch
         // mid-warm-up doesn't read as a stale-data outage until the first packet.
         applyFallbackLifecycleIfUnclassified()
@@ -1293,6 +1441,9 @@ final class Libre3DirectManager: ObservableObject {
         reconnectFailureTracker.reset()
         reScanSuggested = false
         SensorAlertNotificationManager.shared.retractReconnectFailing()
+        // `forgetSensor()` and a provider change both route through here, so this
+        // is the single place the sensor-silence evidence has to be dropped.
+        clearSensorNotRespondingEvidence()
         // A stop means the direct sensor is no longer active here, so remove any
         // standing sensor alert that would now be stale.
         Task { await SensorAlertNotificationManager.shared.retract() }
@@ -1492,9 +1643,33 @@ final class Libre3DirectManager: ObservableObject {
 
     private func ensureScanner() {
         guard scanner == nil else { return }
+        installCCCDSkipTracing()
         scanner = SensorScannerNG(
             configuration: .background(restorationIdentifier: Self.restoreIdentifier)
         )
+    }
+
+    /// Record the one LibreCRKit event that separates the two causes of a silent
+    /// handshake: a CCCD enable we never actually wrote.
+    ///
+    /// `SensorSession` skips `setNotifyValue` when CoreBluetooth already reports
+    /// the characteristic as notifying, which iOS can do from a retained CCCD
+    /// across a reconnect. The sensor is then un-armed and answers nothing —
+    /// indistinguishable, from the error alone, from another app holding the
+    /// session. Without this the distinction is unavailable after the fact:
+    /// `BLETiming` discards everything until a sink is installed, and nothing in
+    /// the app installed one.
+    ///
+    /// The sink is called from LibreCRKit's own queues, so the closure is
+    /// `@Sendable` (capturing nothing, parsing through a nonisolated pure
+    /// function) and hops to the main actor for the `@MainActor` diagnostics log.
+    private func installCCCDSkipTracing() {
+        BLETiming.setLogger { @Sendable message in
+            guard let line = Libre3CCCDSkipLog.handshakeSkipTraceLine(for: message) else { return }
+            Task { @MainActor in
+                Libre3DiagnosticsLog.traceReconnect(line)
+            }
+        }
     }
 
     /// Own the one long-lived NG event subscription. Besides replacing the old
@@ -1772,6 +1947,10 @@ final class Libre3DirectManager: ObservableObject {
         // protection is genuinely offline, so the OS-scheduled alert must remain
         // armed while this process may be suspended.
         clearReconnectBackoff()
+        // With the radio gone we stop observing the sensor entirely, so whatever
+        // silence follows is not evidence about the sensor. End the run; a hint
+        // already raised stays until the sensor actually answers again.
+        breakSensorSilenceRun()
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
@@ -1889,6 +2068,9 @@ final class Libre3DirectManager: ObservableObject {
             )
             Logger.libre3.error("Libre3 BLE lifecycle error: \(String(describing: error), privacy: .public)")
         }
+        // Runs before `finishConnectedAttempt` so the no-stream warning it may
+        // emit can report what this attempt actually triggered.
+        updateSensorNotRespondingEvidence(stage: endedStage, error: error)
         finishConnectedAttempt(traceStreamEnd: endedStage == "streaming")
 
         let shouldEscalateAuthentication = !sessionProducedGlucose
@@ -1934,6 +2116,74 @@ final class Libre3DirectManager: ObservableObject {
         }
 
         prepareForNextAttempt()
+    }
+
+    /// Extends or starts the persisted sensor-silence run, and raises the hint
+    /// once the run is old enough to be worth telling the user about.
+    ///
+    /// Deliberately separate from `reconnectFailureTracker.authenticationFailures`:
+    /// that counter drives `Libre3AuthorizationRecoveryPolicy`, and feeding it
+    /// these failures would start attempting full handshakes a Libre 3 Plus may
+    /// reject outright.
+    private func updateSensorNotRespondingEvidence(stage: String, error: Error?) {
+        // An attempt that never connected says nothing either way: the sensor was
+        // not asked, so the run neither starts nor breaks. A session that did
+        // stream is already handled where the reading is accepted.
+        guard attemptReachedDidConnect, !sessionProducedGlucose else { return }
+
+        guard Libre3SensorNotRespondingPolicy.qualifies(stage: stage, error: error) else {
+            // The sensor answered *something* this cycle — a credential
+            // rejection, or a stream that only dropped later — so the silence run
+            // is broken and its clock restarts. A hint already on screen stays:
+            // clearing it here would let a stuck sensor flap between states and
+            // re-notify every ten minutes. Only a real success retracts it.
+            breakSensorSilenceRun()
+            return
+        }
+
+        let now = Date()
+        // Gated on delivery, not on the hint: posting is an unstructured task a
+        // suspension can lose, so a hint raised but never announced must keep
+        // retrying on later failures instead of going quiet for the whole outage.
+        let evaluation = Libre3SensorNotRespondingPolicy.evaluate(
+            runStartedAt: SharedData.libre3SensorSilenceRunStartedAt,
+            failureCount: SharedData.libre3SensorSilenceFailureCount,
+            now: now,
+            notificationAlreadySubmitted: SharedData.libre3SensorNotRespondingNotified
+        )
+        SharedData.libre3SensorSilenceRunStartedAt = evaluation.runStartedAt
+        SharedData.libre3SensorSilenceFailureCount = evaluation.failureCount
+        guard evaluation.shouldReport else { return }
+
+        // The banner and its trace entry belong to the hint being raised, so they
+        // happen once; only the notification is retried.
+        if !sensorNotResponding {
+            sensorNotResponding = true
+            Libre3DiagnosticsLog.recordNotable(
+                "sensor-not-responding failures=\(evaluation.failureCount) silent-for=" +
+                Self.reconnectDelay(from: evaluation.runStartedAt, to: now) +
+                " stage=\(stage)"
+            )
+        }
+        Task { await SensorAlertNotificationManager.shared.postSensorNotResponding() }
+    }
+
+    /// Ends the current run without touching a hint already raised. For events
+    /// that only prove the run is no longer unbroken — the sensor answered
+    /// something, or Bluetooth went away and we stopped being able to observe.
+    private func breakSensorSilenceRun() {
+        SharedData.libre3SensorSilenceRunStartedAt = nil
+        SharedData.libre3SensorSilenceFailureCount = 0
+    }
+
+    /// Drops the evidence run and any hint it raised. Called wherever the sensor
+    /// proves it is answering again, and wherever this sensor stops being ours.
+    private func clearSensorNotRespondingEvidence() {
+        breakSensorSilenceRun()
+        SharedData.libre3SensorNotRespondingNotified = false
+        guard sensorNotResponding else { return }
+        sensorNotResponding = false
+        SensorAlertNotificationManager.shared.retractSensorNotResponding()
     }
 
     private func armReconnectBackoff(_ delay: TimeInterval) {
@@ -2079,6 +2329,9 @@ final class Libre3DirectManager: ObservableObject {
             reScanSuggested = false
             SensorAlertNotificationManager.shared.retractReconnectFailing()
         }
+        // The sensor answered the handshake, which is precisely what the
+        // sensor-silence run says it stopped doing.
+        clearSensorNotRespondingEvidence()
         Libre3DiagnosticsLog.traceReconnect(
             "phase6-complete elapsed=\(Self.elapsedDescription(from: attemptConnectedAt, to: completedAt))"
         )
@@ -3115,6 +3368,7 @@ final class Libre3DirectManager: ObservableObject {
             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
             reScanSuggested = false
             SensorAlertNotificationManager.shared.retractReconnectFailing()
+            clearSensorNotRespondingEvidence()
         }
         // Only an accepted usable realtime reading proves the connection is
         // healthy; authorization/re-arm/streaming transitions never reset this.
@@ -3870,7 +4124,8 @@ final class Libre3DirectManager: ObservableObject {
             producedUsableGlucose: sessionProducedGlucose
         ) {
             Libre3DiagnosticsLog.recordNotable(
-                "no-stream-warning cycles=\(noStreamCycleTracker.cycles) action=none"
+                "no-stream-warning cycles=\(noStreamCycleTracker.cycles) " +
+                "action=\(sensorNotResponding ? "sensor-not-responding-hint" : "none")"
             )
         }
 
@@ -3927,7 +4182,14 @@ final class Libre3DirectManager: ObservableObject {
                 return .other
             }
         }
-        if error is SensorSessionError || error is SensorScannerError {
+        // `SensorSessionTransportError` covers notify/stream timeouts on the
+        // handshake characteristics — a silent link, not rejected credentials.
+        // Like every non-`.credential` category it leaves the authorization
+        // ladder alone; classifying it honestly only makes `class=` in the
+        // reconnect trace readable.
+        if error is SensorSessionError
+            || error is SensorScannerError
+            || error is SensorSessionTransportError {
             return .transport
         }
         return .other
