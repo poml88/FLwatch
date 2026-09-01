@@ -1742,11 +1742,11 @@
 		};
 		7BA0AE512C582F64004226FE /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7BC51F612C7C9CD1009542D2 /* LibreWristConfig.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
@@ -1765,11 +1765,11 @@
 		};
 		7BA0AE522C582F64004226FE /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7BC51F612C7C9CD1009542D2 /* LibreWristConfig.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
@@ -1788,10 +1788,10 @@
 		};
 		7BA0AE542C582F64004226FE /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7BC51F612C7C9CD1009542D2 /* LibreWristConfig.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)UITests";
@@ -1809,10 +1809,10 @@
 		};
 		7BA0AE552C582F64004226FE /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7BC51F612C7C9CD1009542D2 /* LibreWristConfig.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)UITests";
