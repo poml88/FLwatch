@@ -1510,6 +1510,24 @@ final class Libre3DirectManager: ObservableObject {
         scanner.cancelConnection(session.peripheral)
     }
 
+    /// Developer-only probe: discard the host-local CoreBluetooth identity
+    /// without touching cached authorization, then force the next attempt to
+    /// rediscover the sensor by scan.
+    func developerForgetPeripheralAndRediscoverByScan() {
+        Libre3DiagnosticsLog.traceReconnect(
+            "developer-forget-peripheral action=rediscover-by-scan"
+        )
+        SharedData.libre3PeripheralUUID = ""
+
+        guard let scanner,
+              scanner.centralState == .poweredOn,
+              let peripheral = session?.peripheral ?? lifecyclePeripheral else {
+            recoverIfStale()
+            return
+        }
+        scanner.cancelConnection(peripheral)
+    }
+
     /// Seed the sensor-start anchor from a fresh NFC activation, before any BLE
     /// packet has been decoded.
     ///
@@ -2953,6 +2971,9 @@ final class Libre3DirectManager: ObservableObject {
         )
 
         if path == .cached, let reconnectKey {
+            Libre3DiagnosticsLog.traceReconnect(
+                "auth path=cached failures=\(reconnectFailureTracker.authenticationFailures)"
+            )
             Logger.libre3.info(
                 "Libre3 BLE auth path=cached authenticationFailures=\(self.reconnectFailureTracker.authenticationFailures, privacy: .public)"
             )

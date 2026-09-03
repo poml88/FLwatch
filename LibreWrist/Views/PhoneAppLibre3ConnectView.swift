@@ -669,6 +669,13 @@ struct PhoneAppLibre3ConnectView: View {
                 .buttonStyle(.borderless)
             }
 
+            Button {
+                directManager.developerForgetPeripheralAndRediscoverByScan()
+            } label: {
+                Text(verbatim: "Forget Bluetooth peripheral and rediscover by scan")
+            }
+            .buttonStyle(.borderless)
+
             ScrollView(.vertical) {
                 Text(
                     logEntries.isEmpty
