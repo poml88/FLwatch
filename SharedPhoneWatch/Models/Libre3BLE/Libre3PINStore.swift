@@ -18,7 +18,6 @@
 //  so it lives beside the PIN in the keychain rather than the app group.
 //
 
-#if os(iOS)
 import Foundation
 import Security
 
@@ -132,4 +131,3 @@ enum Libre3PINStore {
         return query
     }
 }
-#endif

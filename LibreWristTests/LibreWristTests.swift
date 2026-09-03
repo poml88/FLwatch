@@ -840,6 +840,21 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(Libre3GlucoseMapper.color(forMgDL: 251, settings: settings), .orange)
     }
 
+    // MARK: - Libre 3 host profiles
+
+    @MainActor
+    func testLibre3HostProfilesSeparatePhoneSideEffectsFromWatchWorkout() {
+        let phone = Libre3HostProfile.phone
+        XCTAssertTrue(phone.lowGlucoseAlerts.isEnabled)
+        XCTAssertTrue(phone.liveActivity.isEnabled)
+        XCTAssertTrue(phone.usesBackfill)
+
+        let watch = Libre3HostProfile.watchWorkout
+        XCTAssertFalse(watch.lowGlucoseAlerts.isEnabled)
+        XCTAssertFalse(watch.liveActivity.isEnabled)
+        XCTAssertFalse(watch.usesBackfill)
+    }
+
     // MARK: - Libre 3 backfill bounds
 
     func testHistoricalBackfillStartLifeCountBoundsAndAligns() {

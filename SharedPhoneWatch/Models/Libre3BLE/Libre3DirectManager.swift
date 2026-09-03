@@ -2,7 +2,7 @@
 //  Libre3DirectManager.swift
 //  FLwatch
 //
-//  The long-lived, phone-only BLE engine for the `.libre3BLE` provider. It owns
+//  The shared BLE engine for the `.libre3BLE` provider. It owns
 //  LibreCRKit's `SensorScannerNG` / `SensorSession` / `PairingFlow` / data-plane
 //  decoder and, when it decodes a realtime reading, writes straight into the
 //  shared `LibreLinkUpHistory` store — exactly like `DexcomShareProvider`, but
@@ -18,19 +18,240 @@
 //  cheap per-minute decode runs inline on main; only the one-time auth crypto is
 //  `await`-ed on the `PairingFlow` actor (off-main).
 //
-//  Single BLE owner: when `.libre3BLE` is active, `BluetoothHeartbeatManager` is
-//  disabled (it gates itself off for this provider), so this is the only central
-//  touching the sensor.
+//  Host-specific side effects are concentrated in `Libre3HostProfile`: the phone
+//  keeps its existing alerts/background/export-adjacent work, while the initial
+//  watch-workout profile is deliberately realtime-only and otherwise inert.
 //
 
-#if os(iOS)
 import Foundation
+import Combine
 import CoreBluetooth
 import Security
-import UIKit
 import OSLog
-import UserNotifications
 import LibreCRKit
+
+#if os(iOS)
+import UIKit
+import UserNotifications
+#endif
+
+@MainActor
+final class Libre3BackgroundActivity {
+    private var endAction: (@MainActor () -> Void)?
+
+    init(endAction: @escaping @MainActor () -> Void) {
+        self.endAction = endAction
+    }
+
+    func end() {
+        endAction?()
+        endAction = nil
+    }
+}
+
+@MainActor
+struct Libre3SensorAlertHost {
+    let requestAuthorizationIfNeeded: @MainActor () async -> Void
+    let retractReconnectFailing: @MainActor () -> Void
+    let retractTerminalAlert: @MainActor () async -> Void
+    let cancelWarmupCompletionReminder: @MainActor () -> Void
+    let cancelExpiryReminders: @MainActor () async -> Void
+    let postReconnectFailing: @MainActor () async -> Void
+    let postSensorNotResponding: @MainActor () async -> Void
+    let retractSensorNotResponding: @MainActor () -> Void
+    let updateSensorAttention: @MainActor (Libre3SensorAttention) async -> Void
+    let setSignalLossState: @MainActor (Date?) -> Void
+    let pendingSignalLossDeadline: @MainActor () async -> Date?
+    let deliveredSignalLossDate: @MainActor () async -> Date?
+    let scheduleExpiryReminders: @MainActor (Date, Int) async -> Void
+    let scheduleWarmupCompletionReminder: @MainActor (Date, Int) async -> Void
+}
+
+@MainActor
+struct Libre3BackgroundRuntimeHost {
+    let beginActivity: @MainActor (String) -> Libre3BackgroundActivity?
+}
+
+@MainActor
+struct Libre3PhoneConnectivityHost {
+    let sendSettingsSnapshot: @MainActor () -> Void
+    let sendGlucoseSnapshot: @MainActor () -> Void
+}
+
+@MainActor
+struct Libre3LowGlucoseAlertHost {
+    let isEnabled: Bool
+    let evaluateCurrentReading: @MainActor () async -> Void
+}
+
+@MainActor
+struct Libre3LiveActivityHost {
+    let isEnabled: Bool
+    private let refreshAction: @MainActor (Bool, Bool) async -> Void
+
+    init(
+        isEnabled: Bool,
+        refreshFromCurrentHistory: @escaping @MainActor (Bool, Bool) async -> Void
+    ) {
+        self.isEnabled = isEnabled
+        self.refreshAction = refreshFromCurrentHistory
+    }
+
+    func refreshFromCurrentHistory(
+        useLiveActivities: Bool,
+        refreshIOB: Bool
+    ) async {
+        await refreshAction(useLiveActivities, refreshIOB)
+    }
+}
+
+@MainActor
+struct Libre3HostProfile {
+    let sensorAlerts: Libre3SensorAlertHost
+    let backgroundRuntime: Libre3BackgroundRuntimeHost
+    let phoneConnectivity: Libre3PhoneConnectivityHost
+    let lowGlucoseAlerts: Libre3LowGlucoseAlertHost
+    let liveActivity: Libre3LiveActivityHost
+    /// Whether this host requests and consumes historical/clinical backfill.
+    /// Workout mode is deliberately realtime-only, including unsolicited bursts.
+    let usesBackfill: Bool
+
+    static let watchWorkout = Libre3HostProfile(
+        sensorAlerts: Libre3SensorAlertHost(
+            requestAuthorizationIfNeeded: {},
+            retractReconnectFailing: {},
+            retractTerminalAlert: {},
+            cancelWarmupCompletionReminder: {},
+            cancelExpiryReminders: {},
+            postReconnectFailing: {},
+            postSensorNotResponding: {},
+            retractSensorNotResponding: {},
+            updateSensorAttention: { _ in },
+            setSignalLossState: { _ in },
+            pendingSignalLossDeadline: { nil },
+            deliveredSignalLossDate: { nil },
+            scheduleExpiryReminders: { _, _ in },
+            scheduleWarmupCompletionReminder: { _, _ in }
+        ),
+        backgroundRuntime: Libre3BackgroundRuntimeHost(
+            beginActivity: { _ in nil }
+        ),
+        phoneConnectivity: Libre3PhoneConnectivityHost(
+            sendSettingsSnapshot: {},
+            sendGlucoseSnapshot: {}
+        ),
+        lowGlucoseAlerts: Libre3LowGlucoseAlertHost(
+            isEnabled: false,
+            evaluateCurrentReading: {}
+        ),
+        liveActivity: Libre3LiveActivityHost(
+            isEnabled: false,
+            refreshFromCurrentHistory: { _, _ in }
+        ),
+        usesBackfill: false
+    )
+
+    static var current: Libre3HostProfile {
+        #if os(iOS)
+        .phone
+        #else
+        .watchWorkout
+        #endif
+    }
+}
+
+#if os(iOS)
+extension Libre3HostProfile {
+    static let phone = Libre3HostProfile(
+        sensorAlerts: Libre3SensorAlertHost(
+            requestAuthorizationIfNeeded: {
+                await SensorAlertNotificationManager.shared.requestAuthorizationIfNeeded()
+            },
+            retractReconnectFailing: {
+                SensorAlertNotificationManager.shared.retractReconnectFailing()
+            },
+            retractTerminalAlert: {
+                await SensorAlertNotificationManager.shared.retract()
+            },
+            cancelWarmupCompletionReminder: {
+                SensorAlertNotificationManager.shared.cancelWarmupCompletionReminder()
+            },
+            cancelExpiryReminders: {
+                await SensorAlertNotificationManager.shared.cancelExpiryReminders()
+            },
+            postReconnectFailing: {
+                await SensorAlertNotificationManager.shared.postReconnectFailing()
+            },
+            postSensorNotResponding: {
+                await SensorAlertNotificationManager.shared.postSensorNotResponding()
+            },
+            retractSensorNotResponding: {
+                SensorAlertNotificationManager.shared.retractSensorNotResponding()
+            },
+            updateSensorAttention: { attention in
+                await SensorAlertNotificationManager.shared.update(for: attention)
+            },
+            setSignalLossState: { deadline in
+                SensorAlertNotificationManager.shared.setSignalLossState(deadline: deadline)
+            },
+            pendingSignalLossDeadline: {
+                await SensorAlertNotificationManager.shared.pendingSignalLossDeadline()
+            },
+            deliveredSignalLossDate: {
+                let notifications = await UNUserNotificationCenter.current().deliveredNotifications()
+                return notifications.first(where: {
+                    $0.request.identifier == SensorAlertNotificationManager.signalLossIdentifier
+                })?.date
+            },
+            scheduleExpiryReminders: { sensorStartDate, wearDurationMinutes in
+                await SensorAlertNotificationManager.shared.scheduleExpiryReminders(
+                    sensorStartDate: sensorStartDate,
+                    wearDurationMinutes: wearDurationMinutes
+                )
+            },
+            scheduleWarmupCompletionReminder: { sensorStartDate, warmupDurationMinutes in
+                await SensorAlertNotificationManager.shared.scheduleWarmupCompletionReminder(
+                    sensorStartDate: sensorStartDate,
+                    warmupDurationMinutes: warmupDurationMinutes
+                )
+            }
+        ),
+        backgroundRuntime: Libre3BackgroundRuntimeHost(
+            beginActivity: { name in
+                let identifier = UIApplication.shared.beginBackgroundTask(withName: name)
+                guard identifier != .invalid else { return nil }
+                return Libre3BackgroundActivity {
+                    UIApplication.shared.endBackgroundTask(identifier)
+                }
+            }
+        ),
+        phoneConnectivity: Libre3PhoneConnectivityHost(
+            sendSettingsSnapshot: {
+                WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()
+            },
+            sendGlucoseSnapshot: {
+                WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
+            }
+        ),
+        lowGlucoseAlerts: Libre3LowGlucoseAlertHost(
+            isEnabled: true,
+            evaluateCurrentReading: {
+                await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
+            }
+        ),
+        liveActivity: Libre3LiveActivityHost(
+            isEnabled: true,
+            refreshFromCurrentHistory: { useLiveActivities, refreshIOB in
+                await LiveActivityManager.shared.refreshFromCurrentHistory(
+                    useLiveActivities: useLiveActivities,
+                    refreshIOB: refreshIOB
+                )
+            }
+        ),
+        usesBackfill: true
+    )
+}
+#endif
 
 /// Layer B: transient realtime-reading status for decoded Libre 3 frames that
 /// are temporarily unusable for sensor data-quality reasons. This is separate
@@ -1030,6 +1251,7 @@ struct Libre3PeripheralDiscoveryPolicy {
 final class Libre3DirectManager: ObservableObject {
 
     static let shared = Libre3DirectManager()
+    private let hostProfile = Libre3HostProfile.current
 
     /// CoreBluetooth state-restoration identifier for this manager's central.
     /// Distinct from the heartbeat's (`…bluetoothHeartbeat`) so the two never
@@ -1040,8 +1262,7 @@ final class Libre3DirectManager: ObservableObject {
 
     /// Drives the SwiftUI connect view. Every mutation also mirrors the engine's
     /// status into the app group (`didSet`) so the SHARED `Libre3DirectProvider`
-    /// can read `isInErrorState` / `statusMessage` without naming this phone-only
-    /// type (it compiles into the watch + widget targets too).
+    /// can read `isInErrorState` / `statusMessage` without owning the engine.
     @Published private(set) var connectionState: Libre3DirectConnectionState = .idle {
         didSet { publishStatusToAppGroup() }
     }
@@ -1317,7 +1538,7 @@ final class Libre3DirectManager: ObservableObject {
             }
         }
         // The shared provider's `reload()` posts this to kick the engine, rather
-        // than calling us directly (it can't see this phone-only type).
+        // than calling us directly, keeping the provider and engine decoupled.
         NotificationCenter.default.addObserver(
             forName: .libre3DirectReloadRequested,
             object: nil,
@@ -1396,7 +1617,7 @@ final class Libre3DirectManager: ObservableObject {
         // sensor still warming up — a Parallel join of an already-warm sensor
         // reaches neither that path nor stream start. Idempotent, and only
         // prompts while authorization is undetermined.
-        Task { await SensorAlertNotificationManager.shared.requestAuthorizationIfNeeded() }
+        Task { await hostProfile.sensorAlerts.requestAuthorizationIfNeeded() }
         // Show warm-up/expiry from the persisted anchor right away, so a relaunch
         // mid-warm-up doesn't read as a stale-data outage until the first packet.
         applyFallbackLifecycleIfUnclassified()
@@ -1469,13 +1690,13 @@ final class Libre3DirectManager: ObservableObject {
         clearReadingStatus()
         reconnectFailureTracker.reset()
         reScanSuggested = false
-        SensorAlertNotificationManager.shared.retractReconnectFailing()
+        hostProfile.sensorAlerts.retractReconnectFailing()
         // `forgetSensor()` and a provider change both route through here, so this
         // is the single place the sensor-silence evidence has to be dropped.
         clearSensorNotRespondingEvidence()
         // A stop means the direct sensor is no longer active here, so remove any
         // standing sensor alert that would now be stale.
-        Task { await SensorAlertNotificationManager.shared.retract() }
+        Task { await hostProfile.sensorAlerts.retractTerminalAlert() }
         connectionState = .idle
     }
 
@@ -1777,9 +1998,9 @@ final class Libre3DirectManager: ObservableObject {
         SharedData.libre3LastGlucoseAt = nil
         lastArmedLifeCount = nil
         // Forgetting follows the re-pair advice, so clear every reminder owned by the old sensor.
-        SensorAlertNotificationManager.shared.retractReconnectFailing()
-        SensorAlertNotificationManager.shared.cancelWarmupCompletionReminder()
-        Task { await SensorAlertNotificationManager.shared.cancelExpiryReminders() }
+        hostProfile.sensorAlerts.retractReconnectFailing()
+        hostProfile.sensorAlerts.cancelWarmupCompletionReminder()
+        Task { await hostProfile.sensorAlerts.cancelExpiryReminders() }
         SharedData.libre3SensorStartDate = nil
         SharedData.libre3SensorNeedsReplacement = false
     }
@@ -1828,7 +2049,7 @@ final class Libre3DirectManager: ObservableObject {
     /// handshake: a CCCD enable we never actually wrote.
     ///
     /// `SensorSession` skips `setNotifyValue` when CoreBluetooth already reports
-    /// the characteristic as notifying, which iOS can do from a retained CCCD
+    /// the characteristic as notifying, which restoration can do from a retained CCCD
     /// across a reconnect. The sensor is then un-armed and answers nothing —
     /// indistinguishable, from the error alone, from another app holding the
     /// session. Without this the distinction is unavailable after the fact:
@@ -2278,7 +2499,7 @@ final class Libre3DirectManager: ObservableObject {
                 Libre3DiagnosticsLog.recordNotable(
                     "reconnect-rescan-suggested authenticationFailures=\(authenticationFailures) stage=\(endedStage) class=\(failureCategory.rawValue) lastError=\(errorName)"
                 )
-                Task { await SensorAlertNotificationManager.shared.postReconnectFailing() }
+                Task { await hostProfile.sensorAlerts.postReconnectFailing() }
             }
         }
 
@@ -2344,7 +2565,7 @@ final class Libre3DirectManager: ObservableObject {
                 " stage=\(stage)"
             )
         }
-        Task { await SensorAlertNotificationManager.shared.postSensorNotResponding() }
+        Task { await hostProfile.sensorAlerts.postSensorNotResponding() }
     }
 
     /// Ends the current run without touching a hint already raised. For events
@@ -2362,7 +2583,7 @@ final class Libre3DirectManager: ObservableObject {
         SharedData.libre3SensorNotRespondingNotified = false
         guard sensorNotResponding else { return }
         sensorNotResponding = false
-        SensorAlertNotificationManager.shared.retractSensorNotResponding()
+        hostProfile.sensorAlerts.retractSensorNotResponding()
     }
 
     private func armReconnectBackoff(_ delay: TimeInterval) {
@@ -2478,19 +2699,17 @@ final class Libre3DirectManager: ObservableObject {
 
         connectionState = .connecting
         let session = try await connectAndBuildSession(scanner: scanner, peripheral: peripheral)
-        // Ask iOS to wake us when it next sees this peripheral after a
-        // background range loss. The disconnect callback immediately restores
-        // an indefinite connect intent while its background wake is still live.
+        // On the phone, ask CoreBluetooth to wake us when it next sees this
+        // peripheral after a background range loss. LibreCRKit makes this a
+        // no-op on watchOS, where the workout session supplies runtime instead.
         scanner.registerForConnectionEvents(peripheralIDs: [peripheral.identifier])
 
-        // Protect authorization and the bounded post-auth re-arm, but not the
-        // indefinite connection wait or long-lived notification stream.
-        var bgTask = UIApplication.shared.beginBackgroundTask(withName: "Libre3DirectAuth")
+        // Protect authorization and the bounded post-auth re-arm on the phone,
+        // but not the indefinite connection wait or notification stream. The
+        // watch profile returns no activity because its workout supplies runtime.
+        let backgroundActivity = hostProfile.backgroundRuntime.beginActivity("Libre3DirectAuth")
         defer {
-            if bgTask != .invalid {
-                UIApplication.shared.endBackgroundTask(bgTask)
-                bgTask = .invalid
-            }
+            backgroundActivity?.end()
         }
 
         lastAttemptStage = "auth"
@@ -2506,7 +2725,7 @@ final class Libre3DirectManager: ObservableObject {
         patchControlSequence.reset()
         if reScanSuggested {
             reScanSuggested = false
-            SensorAlertNotificationManager.shared.retractReconnectFailing()
+            hostProfile.sensorAlerts.retractReconnectFailing()
         }
         // The sensor answered the handshake, which is precisely what the
         // sensor-silence run says it stopped doing.
@@ -2606,27 +2825,21 @@ final class Libre3DirectManager: ObservableObject {
         // Request app-wide notification auth before a terminal sensor state occurs.
         // Overall connection health still waits for usable glucose. Credential
         // advice was already cleared by successful Phase 6 above.
-        await SensorAlertNotificationManager.shared.requestAuthorizationIfNeeded()
+        await hostProfile.sensorAlerts.requestAuthorizationIfNeeded()
         if !sensorNeedsReplacement {
-            await SensorAlertNotificationManager.shared.retract()
+            await hostProfile.sensorAlerts.retractTerminalAlert()
         }
         refreshExpiryReminders()
 
-        // Tell the watch the BLE sensor is paired + active (provider kind +
-        // serial), so its provider-account gate opens and it renders the glucose
-        // snapshots we push. Covers pair / reconnect / state restoration.
-        WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()
+        // Phone only: tell the watch the BLE sensor is paired + active. The
+        // watch profile is a no-op because connectivity must never point back at
+        // itself.
+        hostProfile.phoneConnectivity.sendSettingsSnapshot()
 
-        // End the connect/auth/re-arm background task before long-lived streaming
-        // loop. Streaming is sustained by the `bluetooth-central` background mode
-        // (each glucoseData notification wakes the app), NOT by a UIBackgroundTask
-        // — which iOS expires after a few minutes and then flags the app for
-        // termination ("Background task still not ended after expiration handlers
-        // were called"). Holding it across the whole session was the bug.
-        if bgTask != .invalid {
-            UIApplication.shared.endBackgroundTask(bgTask)
-            bgTask = .invalid
-        }
+        // End the phone's connect/auth/re-arm activity before long-lived
+        // streaming. The watch profile has no activity to end; its workout owns
+        // the runtime budget.
+        backgroundActivity?.end()
 
         defer {
             flushPendingClinicalPush()
@@ -2763,8 +2976,6 @@ final class Libre3DirectManager: ObservableObject {
     ///
     /// The seven-channel post-auth refresh makes both response channels ready
     /// before streaming. The request then waits only for a usable lifeCount.
-    private static let onDemandBackfillEnabled = true
-
     private var backfillReadiness: Libre3BackfillReadiness {
         Libre3BackfillReadiness(
             rearmCompleted: rearmCompletedAt != nil,
@@ -2788,7 +2999,10 @@ final class Libre3DirectManager: ObservableObject {
     /// a resume point the connected sensor cannot have reached (a new sensor is
     /// seeded with the previous one's much larger life counts).
     private func requestBackfillIfNeeded(currentLifeCount: Int) {
-        guard Self.onDemandBackfillEnabled else { return }
+        // The phone repairs export history after reconnects. Workout mode on the
+        // watch is realtime-only; it tolerates unsolicited connect bursts but
+        // never asks the sensor to produce either historical series.
+        guard hostProfile.usesBackfill else { return }
         guard !didRequestBackfill,
               backfillFailuresThisSession < Self.maxBackfillFailuresPerSession,
               backfillReadiness.canRequestBackfill,
@@ -3392,9 +3606,13 @@ final class Libre3DirectManager: ObservableObject {
                 )
                 ingest(reading, assessment: assessment, receivedAt: receivedAt)
             case .historicalReadingPage(let page):
-                ingestHistorical(page)
+                if hostProfile.usesBackfill {
+                    ingestHistorical(page)
+                }
             case .clinicalReadingRecord(let clinical):
-                ingestClinical(clinical)
+                if hostProfile.usesBackfill {
+                    ingestClinical(clinical)
+                }
             case .patchStatus, .raw:
                 break
             }
@@ -3549,7 +3767,7 @@ final class Libre3DirectManager: ObservableObject {
             reconnectFailureTracker.recordUsableGlucose()
             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
             reScanSuggested = false
-            SensorAlertNotificationManager.shared.retractReconnectFailing()
+            hostProfile.sensorAlerts.retractReconnectFailing()
             clearSensorNotRespondingEvidence()
         }
         // Only an accepted usable realtime reading proves the connection is
@@ -3701,7 +3919,7 @@ final class Libre3DirectManager: ObservableObject {
 
         // This is the single change-gated notification trigger for sensor-reported
         // attention transitions; terminal states post, recovery/soft states retract.
-        Task { await SensorAlertNotificationManager.shared.update(for: attention) }
+        Task { await hostProfile.sensorAlerts.updateSensorAttention(attention) }
 
         // Terminal and unknown states use `.notice` because it is retained more
         // reliably than `.info` in unified-log archives — better odds, not a guarantee.
@@ -3727,14 +3945,15 @@ final class Libre3DirectManager: ObservableObject {
     /// the moment a fresh *usable* minute reading has been written into the
     /// shared `LibreLinkUpHistory` store by `pushHistory()`.
     ///
-    /// `LowGlucoseNotificationManager` reads the shared history +
+    /// On the phone, `LowGlucoseNotificationManager` reads the shared history +
     /// `activeProvider.staleReadingAfter` (3 min for `.libre3BLE`) and self-gates
     /// each enabled tier with its own 5-minute repeat throttle. Only called on a usable reading
     /// (not warm-up/garbage, not per backfill page), mirroring
     /// `refreshLiveActivityForNewReading`.
     private func evaluateLowGlucoseForNewReading() {
+        guard hostProfile.lowGlucoseAlerts.isEnabled else { return }
         Task {
-            await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
+            await hostProfile.lowGlucoseAlerts.evaluateCurrentReading()
         }
     }
 
@@ -3768,8 +3987,9 @@ final class Libre3DirectManager: ObservableObject {
     /// synchronously on this data tick — the same division of labour the cloud
     /// sites use, where `requestReloadIfNeeded()` does the recompute.
     private func refreshLiveActivityForNewReading() {
+        guard hostProfile.liveActivity.isEnabled else { return }
         Task {
-            await LiveActivityManager.shared.refreshFromCurrentHistory(
+            await hostProfile.liveActivity.refreshFromCurrentHistory(
                 useLiveActivities: SharedData.useLiveActivities,
                 refreshIOB: false
             )
@@ -4069,31 +4289,29 @@ final class Libre3DirectManager: ObservableObject {
         // authoritative and reconciles immediately afterward; in normal use it
         // finishes during launch, before Settings can be changed.
         guard signalLossDeadlineRecovered else { return }
-        SensorAlertNotificationManager.shared.setSignalLossState(
-            deadline: currentSignalLossDeadline
-        )
+        hostProfile.sensorAlerts.setSignalLossState(currentSignalLossDeadline)
     }
 
     private func setSignalLossState(deadline: Date?) {
         currentSignalLossDeadline = deadline
-        SensorAlertNotificationManager.shared.setSignalLossState(deadline: deadline)
+        hostProfile.sensorAlerts.setSignalLossState(deadline)
     }
 
     private func recoverSignalLossDeadlineIfNeeded() {
         guard !signalLossDeadlineRecoveryStarted else { return }
         signalLossDeadlineRecoveryStarted = true
+        let sensorAlerts = hostProfile.sensorAlerts
         Task { [weak self] in
-            let deadline = await SensorAlertNotificationManager.shared.pendingSignalLossDeadline()
-            let deliveredNotifications = await UNUserNotificationCenter.current().deliveredNotifications()
+            let deadline = await sensorAlerts.pendingSignalLossDeadline()
+            let deliveredDate = await sensorAlerts.deliveredSignalLossDate()
             guard let self else { return }
             // Best-effort observation with date-keyed deduplication: a banner the
             // user taps or clears before this query is missed, and a re-fired alert
             // may coalesce. This is not a definitive count of alerts users saw.
-            if let delivered = deliveredNotifications.first(where: {
-                $0.request.identifier == SensorAlertNotificationManager.signalLossIdentifier
-            }), SharedData.libre3LastRecordedSignalLossDeliveryDate != delivered.date {
-                Libre3DiagnosticsLog.recordNotable("signal-loss-delivered", at: delivered.date)
-                SharedData.libre3LastRecordedSignalLossDeliveryDate = delivered.date
+            if let deliveredDate,
+               SharedData.libre3LastRecordedSignalLossDeliveryDate != deliveredDate {
+                Libre3DiagnosticsLog.recordNotable("signal-loss-delivered", at: deliveredDate)
+                SharedData.libre3LastRecordedSignalLossDeliveryDate = deliveredDate
             }
             // Mirror only: adopting an existing request must not reschedule it.
             if let deadline {
@@ -4133,8 +4351,9 @@ final class Libre3DirectManager: ObservableObject {
         // the existing one-shot notification requests untouched.
         guard lastScheduledExpiryAnchor != anchor else { return }
         lastScheduledExpiryAnchor = anchor
-        Task { await SensorAlertNotificationManager.shared.scheduleExpiryReminders(
-            sensorStartDate: anchor, wearDurationMinutes: wear) }
+        Task {
+            await hostProfile.sensorAlerts.scheduleExpiryReminders(anchor, wear)
+        }
     }
 
     private func refreshWarmupCompletionReminder() {
@@ -4152,11 +4371,8 @@ final class Libre3DirectManager: ObservableObject {
             // request comes later). An unauthorized request is dropped, and the
             // anchor guard above blocks a retry, so ask here first. Idempotent, and
             // only prompts while authorization is undetermined.
-            await SensorAlertNotificationManager.shared.requestAuthorizationIfNeeded()
-            await SensorAlertNotificationManager.shared.scheduleWarmupCompletionReminder(
-                sensorStartDate: anchor,
-                warmupDurationMinutes: warmup
-            )
+            await hostProfile.sensorAlerts.requestAuthorizationIfNeeded()
+            await hostProfile.sensorAlerts.scheduleWarmupCompletionReminder(anchor, warmup)
         }
     }
 
@@ -4287,11 +4503,10 @@ final class Libre3DirectManager: ObservableObject {
             lastSuccessfulLibreLinkUpAPICall: Date()
         )
 
-        // Push the updated history to the watch. The watch runs no BLE in v1; it
-        // renders the snapshot we send (PLAN §2). Uses application-context under
-        // the hood, so the rapid calls during a backfill burst coalesce to the
-        // latest.
-        WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
+        // Phone only: push the updated history to the watch. Uses application-
+        // context under the hood, so rapid calls during a backfill burst coalesce.
+        // The watch profile is a no-op; its realtime values are already local.
+        hostProfile.phoneConnectivity.sendGlucoseSnapshot()
     }
 
     /// Bound both buffers by wall clock: keep ~12 h of historical (covers the
@@ -4554,4 +4769,3 @@ enum Libre3DirectError: Error {
     case entropyUnavailable(OSStatus)
     case entropySizeMismatch(expected: Int, actual: Int)
 }
-#endif

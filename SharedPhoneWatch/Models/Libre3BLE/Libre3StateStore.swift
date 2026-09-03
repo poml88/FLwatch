@@ -2,18 +2,18 @@
 //  Libre3StateStore.swift
 //  FLwatch
 //
-//  Bridges the LibreCRKit `Libre3SensorState` (phone-only) and FLwatch's split
+//  Bridges the LibreCRKit `Libre3SensorState` and FLwatch's split
 //  persistence: the secret BLE PIN → keychain (`Libre3PINStore`), the non-secret
-//  metadata → app group (`SharedData`). Lives in the iOS-only `Libre3BLE/`
-//  folder because it references LibreCRKit types, which are linked to the phone
-//  target only (PLAN §9, R8).
+//  metadata → app group (`SharedData`). The phone writes pairing state after NFC;
+//  the watch later installs the same shape from its provisioning package.
 //
 
-#if os(iOS)
 import Foundation
 import LibreCRKit
 import OSLog
+#if os(iOS)
 import StoreKit
+#endif
 
 enum Libre3StateStoreError: Error {
     /// The installation receiver ID couldn't be written to the keychain, or the
@@ -35,10 +35,10 @@ enum Libre3StateStoreError: Error {
 /// derives nothing from an account — `.flwatchOnly` presents the installation
 /// identity instead.
 ///
-/// Lives here rather than on the type itself: `Libre3ActivatingApp` is shared
-/// code, compiled into the watch and widget targets, which don't link LibreCRKit
-/// and so can't name `Libre3ReceiverID.Derivation`. Exhaustive on purpose, and
-/// must mirror `usesLibreViewAccount` — see the note there.
+/// Lives here rather than on the type itself: `Libre3ActivatingApp` also compiles
+/// into widget targets that do not link LibreCRKit and therefore cannot name
+/// `Libre3ReceiverID.Derivation`. Exhaustive on purpose, and must mirror
+/// `usesLibreViewAccount` — see the note there.
 extension Libre3ActivatingApp {
     var derivation: Libre3ReceiverID.Derivation? {
         switch self {
@@ -227,6 +227,7 @@ enum Libre3StateStore {
     ///
     /// `@MainActor` so the defaults write — which `@AppStorage` observes — lands
     /// on the main actor rather than wherever the storefront lookup resumes.
+#if os(iOS)
     @MainActor
     static func seedActivatingAppIfUnset() async {
         // Runs before the guard below: the rescue is about the keychain identity,
@@ -260,6 +261,7 @@ enum Libre3StateStore {
         SharedData.libre3ActivatingApp = seeded
         Logger.libre3.info("Seeded activating app to \(seeded.rawValue, privacy: .public) (storefront \(countryCode ?? "unknown", privacy: .public))")
     }
+#endif
 
     /// Persist a successful NFC pair: PIN → keychain, the rest → app group.
     static func save(
@@ -370,4 +372,3 @@ enum Libre3StateStore {
         _ = SensorSettingsStore.shared.updateSensorType(type)
     }
 }
-#endif

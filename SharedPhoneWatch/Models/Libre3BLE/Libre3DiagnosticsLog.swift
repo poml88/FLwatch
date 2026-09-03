@@ -18,7 +18,6 @@
 //    action, and never folded into a support email.
 //
 
-#if os(iOS)
 import Foundation
 
 /// Compact evidence retained only when the diagnostic stuck detector fires.
@@ -319,4 +318,3 @@ enum Libre3DiagnosticsLog {
         return entries
     }
 }
-#endif

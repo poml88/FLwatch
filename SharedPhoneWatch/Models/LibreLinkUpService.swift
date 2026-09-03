@@ -28,11 +28,10 @@ extension Notification.Name {
     /// it. Same rationale as `dexcomShareSessionDidRefresh` above.
     static let activeCGMProviderDidChange = Notification.Name("ActiveCGMProviderDidChange")
 
-    /// Posted by the shared `Libre3DirectProvider.reload()` to ask the phone-only
-    /// `Libre3DirectManager` to ensure it's connected. Decoupled via
-    /// NotificationCenter (same rationale as `activeCGMProviderDidChange`) so the
-    /// shared provider — compiled into the watch + widget targets, which don't
-    /// link the BLE engine — never names the phone-only manager type.
+    /// Posted by the shared `Libre3DirectProvider.reload()` to ask an already-owned
+    /// `Libre3DirectManager` to ensure it is connected. The provider stays decoupled:
+    /// widgets omit the engine, while the watch links it but only an explicit workout
+    /// may own its lifetime. The provider therefore never names or creates the manager.
     static let libre3DirectReloadRequested = Notification.Name("Libre3DirectReloadRequested")
 
     /// Posted after either retained Libre 3 diagnostics ring changes so an open

@@ -8,10 +8,9 @@
 //  into the same model every downstream surface (home, watch, widgets) already
 //  consumes via `LibreLinkUpHistory`.
 //
-//  iOS-only: references LibreCRKit types, which link to the phone target only.
+//  Shared by the phone and watch BLE engines.
 //
 
-#if os(iOS)
 import Foundation
 import LibreCRKit
 
@@ -248,4 +247,3 @@ enum Libre3GlucoseMapper {
         min(max(rawValueMgDL + offsetMgDL, 39), 501)
     }
 }
-#endif

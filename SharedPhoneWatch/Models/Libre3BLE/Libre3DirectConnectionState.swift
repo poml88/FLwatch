@@ -2,16 +2,11 @@
 //  Libre3DirectConnectionState.swift
 //  FLwatch
 //
-//  Lifecycle of the direct-BLE link owned by `Libre3DirectManager`. Drives the
-//  status shown in `PhoneAppLibre3ConnectView` and the cheap status surfaced
-//  through `Libre3DirectProvider.reload()` (which never does network I/O — the
-//  sensor pushes data, see PLAN §4).
-//
-//  iOS-only: the BLE engine and its UI live on the phone. The shared provider
-//  only reads the derived `statusMessage` / `isError` strings, not this enum.
+//  Lifecycle of the direct-BLE link owned by `Libre3DirectManager`. The phone
+//  exposes it through `Libre3DirectProvider`; Workout Mode will expose the same
+//  engine state directly on the watch.
 //
 
-#if os(iOS)
 import Foundation
 
 enum Libre3DirectConnectionState: Equatable {
@@ -47,4 +42,3 @@ enum Libre3DirectConnectionState: Equatable {
         }
     }
 }
-#endif

@@ -13,10 +13,9 @@
 //  `historicalBackfillGreaterEqual` command (a per-session advancing sequence,
 //  using the `patchControlWrite` packet kind) to `patchControl`.
 //
-//  iOS-only: references LibreCRKit + CoreBluetooth, phone-target only.
+//  Shared by the phone and watch BLE engines.
 //
 
-#if os(iOS)
 import Foundation
 import CoreBluetooth
 import OSLog
@@ -157,4 +156,3 @@ enum Libre3BackfillImporter {
         Logger.libre3.info("Libre3 BLE clinical backfill command accepted")
     }
 }
-#endif

@@ -543,10 +543,10 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
                 dexcomShareSessionId = dxSessionId
             }
         case .libre3BLE:
-            // Direct BLE is phone-only in v1: the watch can't run a BLE session,
-            // it just renders the glucose snapshots the phone pushes. There are
-            // no cloud credentials to forward, so leave `hasValidCredentials`
-            // false and send no secrets. (Watch mode is the future §13 work.)
+            // Direct-BLE provisioning is deliberately separate from this general
+            // settings snapshot. Never place its PIN or reconnect key here; the
+            // workout handoff must send them in its dedicated provisioning package.
+            // There are no cloud credentials for this payload.
             break
         }
 

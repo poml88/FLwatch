@@ -6,18 +6,18 @@
 //  over Bluetooth LE.
 //
 //  Unlike the cloud providers (LibreLinkUp / Dexcom Share) this source is
-//  *push*, not *pull*: the sensor wakes the phone ~once/min with an encrypted
-//  notification that the iOS-only `Libre3DirectManager` decrypts on-device and
+//  *push*, not *pull*: the sensor notifies its active host ~once/min with an
+//  encrypted frame that the shared `Libre3DirectManager` decrypts on-device and
 //  writes straight into the shared `LibreLinkUpHistory` store — the same sink
 //  every other surface already reads. Because of that, `reload()` performs NO
 //  network round-trip. It exists only so the registry/orchestrator contract
 //  (`CGMProvider.reload()`) keeps working; from Phase 3 it will "kick" the
 //  manager (ensure connected/authorized) and surface its status.
 //
-//  This type is compiled into every target that builds the provider registry
-//  (phone, watch, widgets), so it must stay free of any iOS-only BLE / NFC /
-//  LibreCRKit imports. All of that lives behind `#if os(iOS)` in
-//  `LibreWrist/Libre3BLE/` and is reached only from the phone app.
+//  This type is compiled into every target that builds the provider registry.
+//  Widget extensions do not include the BLE engine, and on the watch only an
+//  explicit workout may own it, so the provider must not instantiate or drive
+//  `Libre3DirectManager` directly.
 //
 
 import Foundation
@@ -52,12 +52,11 @@ final class Libre3DirectProvider: CGMProvider {
         // widget/Live-Activity extensions) don't run the engine — the kick is a
         // harmless no-op there (nobody is listening).
         //
-        // This file is SHARED (it compiles into watch + widget targets), so it
-        // must not name the phone-only `Libre3DirectManager` type — that's the
-        // `Cannot find 'Libre3DirectManager' in scope` trap. Instead it talks to
-        // the engine the same decoupled way `BluetoothHeartbeatManager` is
-        // reached from shared code: post a NotificationCenter request, and read
-        // the engine's status back from the app group (which the manager writes).
+        // Keep the provider decoupled from `Libre3DirectManager`: widget targets
+        // do not compile the engine, while the watch workout controls when the
+        // shared engine may exist. The notification reaches an already-created
+        // host owner without making the provider create one; status comes back
+        // through the shared defaults the manager writes.
         NotificationCenter.default.post(name: .libre3DirectReloadRequested, object: nil)
         lastReloadDidFail = SharedData.libre3EngineDidFail
         lastReloadResponseMessage = SharedData.libre3EngineStatusMessage

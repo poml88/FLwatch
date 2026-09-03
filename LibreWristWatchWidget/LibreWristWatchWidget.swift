@@ -58,14 +58,14 @@ struct LibreWristWidgetEntryView : View {
     /// drifted past the provider's stale threshold (LLU 3 min, Dexcom 8 min).
     /// How long the watch may go without a fresh reading before the BLE widget
     /// shows "Open FLwatch" instead of the (now clearly stale) value. Much longer
-    /// than the 3-min provider stale threshold ON PURPOSE: the watch runs no BLE
-    /// in v1 and can't refresh in place while backgrounded (it doesn't process WC
-    /// there; the widget process never does), so at 3 min the prompt would hide
-    /// the last value almost permanently. Up to this point we keep showing the
+    /// than the 3-min provider stale threshold ON PURPOSE: the widget extension
+    /// cannot own a BLE session or refresh in place (and it does not process WC),
+    /// even though the watch app may stream during an explicit workout. At 3 min
+    /// the prompt would therefore hide the last value almost permanently outside
+    /// a workout. Up to this point we keep showing the
     /// value — `normalBody` already marks it stale (strikethrough past 5 min +
     /// a counting "N min ago" timer) — and only escalate to the open-the-app
-    /// prompt once data is genuinely dead. (Entitlement pending — PLAN §13/M7;
-    /// drop this once the watch streams in the background.)
+    /// prompt once data is genuinely dead.
     private static let libre3BLEReauthThreshold: TimeInterval = 10 * 60
 
     private var needsManualReauth: Bool {

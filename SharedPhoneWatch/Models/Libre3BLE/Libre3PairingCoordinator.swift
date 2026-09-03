@@ -11,7 +11,7 @@
 //  Phase 2 stops at "paired" — it captures and stores credentials. The BLE
 //  handshake, decode, and live readings come in Phase 3 (`Libre3DirectManager`).
 //
-//  iOS-only: references LibreCRKit + CoreNFC, both phone-target only.
+//  iOS-only: NFC pairing references CoreNFC and remains phone-target only.
 //
 
 #if os(iOS)

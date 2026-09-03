@@ -252,9 +252,9 @@ enum DefaultsKey: String {
     case libre3WearDurationMinutes = "libre3WearDurationMinutesKey"
     case libre3Generation = "libre3GenerationKey"
     case libre3ProductType = "libre3ProductTypeKey"
-    // BLE engine status, published by the phone-only `Libre3DirectManager` and
-    // read by the shared `Libre3DirectProvider` (which must not name that
-    // phone-only type — it compiles into the watch + widget targets too).
+    // BLE engine status, published by `Libre3DirectManager` on the active host
+    // and read by the shared provider. The provider stays decoupled because
+    // widgets omit the engine and the watch workout owns its lifetime.
     case libre3EngineDidFail = "libre3EngineDidFailKey"
     case libre3EngineStatusMessage = "libre3EngineStatusMessageKey"
     case libre3SensorNeedsReplacement = "libre3SensorNeedsReplacementKey"
@@ -266,8 +266,8 @@ enum DefaultsKey: String {
     case libre3DiagnosticEvents = "libre3DiagnosticEventsKey"
     case libre3ReconnectTrace = "libre3ReconnectTraceKey"
     case libre3NotableEvents = "libre3NotableEventsKey"
-    /// Compact stuck-glucose evidence snapshots. Read/written only by the
-    /// phone-only `Libre3DiagnosticsLog`, which owns the record type — hence a
+    /// Compact stuck-glucose evidence snapshots. Read/written only by
+    /// `Libre3DiagnosticsLog`, which owns the record type — hence a
     /// key here but no `SharedData` accessor. Reuses the former stream-ring key
     /// so the diagnostics layer can discard that obsolete high-volume payload.
     case libre3StuckSnapshots = "libre3StreamRecordsKey"
@@ -1071,9 +1071,9 @@ enum SharedData {
         set { store.setInt(newValue, forKey: .libre3ProductType) }
     }
 
-    /// Whether the BLE engine is currently in an error state. Written by the
-    /// phone-only `Libre3DirectManager`; read by the shared `Libre3DirectProvider`
-    /// so the provider need not reference the phone-only manager type.
+    /// Whether the BLE engine is currently in an error state. Written by
+    /// `Libre3DirectManager` on the active host and read by the shared provider,
+    /// which deliberately does not instantiate or own the engine.
     static var libre3EngineDidFail: Bool {
         get { store.getBool(.libre3EngineDidFail) }
         set { store.setBool(newValue, forKey: .libre3EngineDidFail) }
@@ -1222,10 +1222,10 @@ enum SharedData {
     static var canActiveProviderReload: Bool {
         switch cgmProviderKind {
         case .libre3BLE:
-            // Direct BLE is push-only and phone-only: there is no reload to
-            // kick, and widgets/watch can't run a BLE session anyway — they
-            // only render the snapshot the phone pushes. Always false so no
-            // consumer attempts a doomed reload.
+            // Direct BLE is push-only: widgets cannot run its engine, and the
+            // watch may run it only inside an explicit workout rather than from
+            // provider reload. Always false so registry consumers do not start
+            // a session outside its host-owned lifetime.
             return false
         case .libreLinkUp:
             return !(libreLinkUpUserId.isEmpty || libreLinkUpToken.isEmpty)
