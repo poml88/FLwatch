@@ -843,12 +843,30 @@ final class LibreWristTests: XCTestCase {
     // MARK: - Libre 3 backfill bounds
 
     func testHistoricalBackfillStartLifeCountBoundsAndAligns() {
+        XCTAssertEqual(Libre3BackfillImporter.displayWindowMinutes, 370)
+        XCTAssertEqual(Libre3BackfillImporter.historicalRequestWindowMinutes, 720)
         XCTAssertEqual(
             Libre3BackfillImporter.backfillStartLifeCount(
                 lastHistoricalLifeCount: nil,
                 currentLifeCount: 1_000
             ),
-            630
+            280
+        )
+        // A saved point older than the graph window still resumes the export
+        // backfill when it remains inside the 12-hour request window.
+        XCTAssertEqual(
+            Libre3BackfillImporter.backfillStartLifeCount(
+                lastHistoricalLifeCount: 400,
+                currentLifeCount: 1_000
+            ),
+            400
+        )
+        XCTAssertEqual(
+            Libre3BackfillImporter.backfillStartLifeCount(
+                lastHistoricalLifeCount: 100,
+                currentLifeCount: 1_000
+            ),
+            280
         )
         XCTAssertEqual(
             Libre3BackfillImporter.backfillStartLifeCount(

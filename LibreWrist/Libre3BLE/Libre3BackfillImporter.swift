@@ -24,9 +24,12 @@ import LibreCRKit
 
 enum Libre3BackfillImporter {
 
-    /// The graph display window (6 h 10 m). We never request more history than
-    /// this — it's all the graph shows.
+    /// The graph display window (6 h 10 m).
     static let displayWindowMinutes: UInt16 = 6 * 60 + 10
+
+    /// The longest historical gap the sensor request may recover. The retained
+    /// history can feed export consumers beyond the shorter graph window.
+    static let historicalRequestWindowMinutes: UInt16 = 12 * 60
 
     /// Minute-resolution clinical history requested after a reconnect. Keep the
     /// request deliberately short: it only bridges the gap between the lagging
@@ -59,9 +62,9 @@ enum Libre3BackfillImporter {
     /// **The patch returns entries strictly NEWER than `from`** (per the libre3BT
     /// sample / Juggluco `Libre3GattCallback`). We want to **fill the gap since the
     /// last historical sample we already hold**, but never reach back further than
-    /// the 6 h 10 m display window:
+    /// the 12-hour historical request window:
     ///
-    ///   `from = max(eligible(lastHistoricalLifeCount), currentLifeCount − 6h10m)`
+    ///   `from = max(eligible(lastHistoricalLifeCount), currentLifeCount − 12h)`
     ///
     /// So a small gap fetches only the gap; a gap older than the window (or no
     /// history at all, e.g. a cold start, or a resume point left behind by the
@@ -73,8 +76,8 @@ enum Libre3BackfillImporter {
         lastHistoricalLifeCount: UInt16?,
         currentLifeCount: UInt16
     ) -> UInt16 {
-        let windowStart = Int(currentLifeCount) > Int(displayWindowMinutes)
-            ? Int(currentLifeCount) - Int(displayWindowMinutes)
+        let windowStart = Int(currentLifeCount) > Int(historicalRequestWindowMinutes)
+            ? Int(currentLifeCount) - Int(historicalRequestWindowMinutes)
             : 5
         let raw = max(
             windowStart,

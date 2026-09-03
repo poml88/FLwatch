@@ -228,10 +228,11 @@ final class Libre3PairingCoordinator: ObservableObject {
             }
 
             // Reflect "set up" for the rest of the app and kick off the BLE
-            // engine: the credentials are now stored, so start connecting and
-            // streaming live readings (Phase 3).
+            // engine. An NFC pair deletes/replaces cached reconnect material, so
+            // it also terminates any watch handoff: the watch's provisioned key
+            // is no longer valid and phone ownership must win.
             UserDefaults.group.connected = .connected
-            Libre3DirectManager.shared.start()
+            Libre3DirectManager.shared.resumeAfterHandoff()
 
             Logger.libre3.info("Paired via \(mode.rawValue, privacy: .public): serial=\(result.patchInfo.serialNumber, privacy: .public) fw=\(result.patchInfo.firmwareVersion, privacy: .public) addr=\(activation.bleAddressDisplay, privacy: .private)")
 

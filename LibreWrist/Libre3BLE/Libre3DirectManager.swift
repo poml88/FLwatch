@@ -394,6 +394,20 @@ enum ConnectedAdoptionDecision: Equatable {
     case ignorePendingDisconnect
 }
 
+enum Libre3WorkoutHandoffStandDownResult: Equatable, Sendable {
+    case confirmedDisconnect
+    case timedOut
+
+    var traceValue: String {
+        switch self {
+        case .confirmedDisconnect:
+            "confirmed-disconnect"
+        case .timedOut:
+            "timeout"
+        }
+    }
+}
+
 /// Keeps connected callbacks from reopening a link while its intentional
 /// cancellation is still waiting for CoreBluetooth's disconnect completion.
 struct Libre3DisconnectHandoffPolicy: Equatable {
@@ -1114,6 +1128,10 @@ final class Libre3DirectManager: ObservableObject {
     /// attempt only while this remains true; `stop()` clears it before issuing
     /// any cancellation whose disconnect callback could otherwise reconnect.
     private var shouldMaintainConnection = false
+    /// Temporary in-process ownership gate for Step 1. Part 4 replaces this with
+    /// the persisted, versioned `SharedData.libre3SessionOwner` claim so a cold
+    /// process launch can make the same decision.
+    private var isStoodDownForHandoff = false
     /// Identifies the currently-owned attempt so a cancelled/stale task cannot
     /// clear or clean up a newer attempt after suspension resumes it late.
     private var lifecycleAttemptID: UUID?
@@ -1193,7 +1211,8 @@ final class Libre3DirectManager: ObservableObject {
 
     /// Display window we keep + show: 6 h 10 m, matching the LibreLinkUp graph
     /// filter (`dateSixHoursTenAgo`).
-    private static let displayWindowSeconds: TimeInterval = 6 * 60 * 60 + 10 * 60
+    private static let displayWindowSeconds: TimeInterval =
+        TimeInterval(Libre3BackfillImporter.displayWindowMinutes) * 60
     /// Bound the persisted historical series to ~12 h so the buffer can't grow
     /// without limit while still covering the display window after trimming.
     private static let historicalRetentionSeconds: TimeInterval = 12 * 60 * 60
@@ -1217,6 +1236,9 @@ final class Libre3DirectManager: ObservableObject {
     /// drain is usually the sensor still settling, and clears within seconds.
     private static let clinicalRetryBackoffs: [TimeInterval] = [0, 2, 4]
     private static let disconnectHandoffRetryNanoseconds: UInt64 = 15_000_000_000
+    /// A workout handoff must release ownership promptly even if CoreBluetooth
+    /// omits the terminal disconnect callback.
+    private static let workoutHandoffTimeoutNanoseconds: UInt64 = 5_000_000_000
     /// Streaming waits until every data-plane and backfill response CCCD is ready.
     private static let postAuthRearmPlan = Libre3PostAuthRearmPlan.standard
     /// First two failures retry immediately, then reconnect attempts back off
@@ -1327,6 +1349,9 @@ final class Libre3DirectManager: ObservableObject {
     private func activeProviderChanged() {
         if isActiveProvider {
             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
+            // Switching providers away and back must not override a live watch
+            // handoff. `start()` deliberately honors that ownership gate; only
+            // workout release/reclaim or a new NFC pair resumes the phone.
             start()
         } else if shouldMaintainConnection ||
                     reScanSuggested ||
@@ -1345,12 +1370,16 @@ final class Libre3DirectManager: ObservableObject {
     /// active provider; otherwise stays fully idle (no central created), so
     /// CoreBluetooth state restoration only ever resurrects the right one.
     func startIfNeeded() {
-        guard isActiveProvider else { return }
+        guard isActiveProvider, !isStoodDownForHandoff else { return }
         start()
     }
 
     /// Begin (or continue) connecting to the paired sensor and streaming.
     func start() {
+        guard !isStoodDownForHandoff else {
+            shouldMaintainConnection = false
+            return
+        }
         guard isActiveProvider else {
             shouldMaintainConnection = false
             return
@@ -1450,13 +1479,140 @@ final class Libre3DirectManager: ObservableObject {
         connectionState = .idle
     }
 
+    /// Stop maintaining the phone's Libre 3 link so another host can acquire it.
+    ///
+    /// Unlike `stop()`, this deliberately keeps `scannerEventTask` alive until
+    /// the matching `.didDisconnect` arrives. Sensor-alert state is untouched:
+    /// ownership is moving to the watch, not being removed from the user.
+    func standDownForHandoff() async -> Libre3WorkoutHandoffStandDownResult {
+        isStoodDownForHandoff = true
+        shouldMaintainConnection = false
+        // This is the one phone alert that must be removed during ownership
+        // transfer: leaving its OS deadline armed would produce a false signal-
+        // loss alarm even while the watch is receiving readings normally.
+        setSignalLossState(deadline: nil)
+        clearReconnectBackoff()
+        cancelDisconnectHandoffRecovery()
+        disconnectHandoffPolicy.reset()
+        lifecycleAttemptID = nil
+        lifecycleTask?.cancel()
+        lifecycleTask = nil
+        silenceWatchdogTask?.cancel()
+        silenceWatchdogTask = nil
+        lastGlucoseRecoveryAttemptAt = nil
+
+        let peripheral = session?.peripheral
+            ?? lifecyclePeripheral
+            ?? savedPeripheralID.flatMap {
+                scanner?.retrievePeripherals(withIdentifiers: [$0]).first
+            }
+        guard let scanner,
+              scanner.centralState == .poweredOn,
+              let peripheral else {
+            finishWorkoutHandoffStandDown()
+            Libre3DiagnosticsLog.traceReconnect(
+                "workout-handoff-stand-down result=confirmed-disconnect reason=no-active-peripheral"
+            )
+            return .confirmedDisconnect
+        }
+
+        observeScannerEventsIfNeeded()
+        guard peripheral.state != .disconnected else {
+            finishWorkoutHandoffStandDown()
+            Libre3DiagnosticsLog.traceReconnect(
+                "workout-handoff-stand-down result=confirmed-disconnect reason=already-disconnected"
+            )
+            return .confirmedDisconnect
+        }
+
+        let startedAt = Date()
+        let result = await waitForWorkoutHandoffDisconnect(
+            peripheral: peripheral,
+            scanner: scanner
+        )
+        finishWorkoutHandoffStandDown()
+        Libre3DiagnosticsLog.traceReconnect(
+            "workout-handoff-stand-down result=\(result.traceValue) elapsed=\(Self.elapsedDescription(from: startedAt, to: Date()))"
+        )
+        return result
+    }
+
+    /// Return Libre 3 ownership to the phone after a workout handoff. `start()`
+    /// re-arms the signal-loss deadline through the normal lifecycle policy.
+    func resumeAfterHandoff() {
+        let wasStoodDown = isStoodDownForHandoff
+        isStoodDownForHandoff = false
+        if wasStoodDown {
+            Libre3DiagnosticsLog.traceReconnect("workout-handoff-resume")
+        }
+        start()
+    }
+
+    private func waitForWorkoutHandoffDisconnect(
+        peripheral: CBPeripheral,
+        scanner: SensorScannerNG
+    ) async -> Libre3WorkoutHandoffStandDownResult {
+        let peripheralID = peripheral.identifier
+        // Subscribe before cancelling so the terminal callback cannot beat the
+        // waiter. SensorScannerNG broadcasts, so the long-lived observer remains
+        // active and continues to own session invalidation.
+        let events = scanner.events()
+        let timeoutNanoseconds = Self.workoutHandoffTimeoutNanoseconds
+        scanner.cancelConnection(peripheral)
+
+        return await withTaskGroup(
+            of: Libre3WorkoutHandoffStandDownResult.self
+        ) { group in
+            group.addTask {
+                for await event in events {
+                    if Task.isCancelled { return .timedOut }
+                    if case .didDisconnect(let disconnected, _) = event,
+                       disconnected.identifier == peripheralID {
+                        return .confirmedDisconnect
+                    }
+                }
+                return .timedOut
+            }
+            group.addTask {
+                try? await Task.sleep(nanoseconds: timeoutNanoseconds)
+                return .timedOut
+            }
+            let result = await group.next() ?? .timedOut
+            group.cancelAll()
+            return result
+        }
+    }
+
+    /// Release the remaining engine state only after physical disconnect was
+    /// confirmed or the bounded wait expired.
+    private func finishWorkoutHandoffStandDown() {
+        clinicalPushTask?.cancel()
+        clinicalPushTask = nil
+        clinicalBackfillBurst = Libre3ClinicalBackfillBurst()
+        flushBackfillOutcome()
+        session?.handleDisconnect(error: nil)
+        session = nil
+        lifecyclePeripheral = nil
+        decoder = nil
+        dataPlaneState = nil
+        didRequestBackfill = false
+        lastAcceptedRealtime = nil
+        backfillFailuresThisSession = 0
+        patchControlSequence.reset()
+        peripheralBindingTracker.reset()
+        assembler.reset()
+        clearReadingStatus()
+        reconnectFailureTracker.reset()
+        connectionState = .idle
+    }
+
     /// Reload-hook recovery: called on every foreground (63 s) and BGAppRefresh
     /// (~8–10 min) reload kick. Restarts a dropped lifecycle, and force-reconnects
     /// a session that is nominally streaming but has received no glucose-channel
     /// traffic for `recoveryStaleThreshold`. Initiates only — the reconnect itself
     /// is carried by the event-driven owner + CoreBluetooth.
     func recoverIfStale() {
-        guard isActiveProvider else { return }
+        guard isActiveProvider, !isStoodDownForHandoff else { return }
         // Keeps the anchor-derived warm-up countdown moving while no patch status
         // has arrived yet — e.g. right after a fresh activation, before the BLE
         // session exists — instead of leaving the seeded value frozen.
@@ -1593,6 +1749,7 @@ final class Libre3DirectManager: ObservableObject {
     /// (Credential clearing itself is `Libre3StateStore.clear()`.)
     func forgetSensor() {
         stop()
+        isStoodDownForHandoff = false
         historicalByLifeCount.removeAll()
         minuteByLifeCount.removeAll()
         backfillResumeLifeCount = nil
@@ -1712,7 +1869,9 @@ final class Libre3DirectManager: ObservableObject {
             Libre3DiagnosticsLog.traceReconnect("cb-state value=\(state.rawValue)")
             switch state {
             case .poweredOn:
-                if isActiveProvider, Libre3StateStore.isPaired {
+                if shouldMaintainConnection,
+                   isActiveProvider,
+                   Libre3StateStore.isPaired {
                     Logger.libre3.info("Libre3 BLE: Bluetooth powered on — reconnecting")
                     start()
                 }
@@ -1803,7 +1962,9 @@ final class Libre3DirectManager: ObservableObject {
         case .willRestoreState(let restoration):
             Libre3DiagnosticsLog.traceReconnect("state-restoration peripherals=\(restoration.peripherals.count)")
             Logger.libre3.info("Libre3 BLE state restoration: \(restoration.peripherals.count, privacy: .public) peripheral(s)")
-            if isActiveProvider, Libre3StateStore.isPaired {
+            if shouldMaintainConnection,
+               isActiveProvider,
+               Libre3StateStore.isPaired {
                 start()
             }
         }
@@ -2623,7 +2784,7 @@ final class Libre3DirectManager: ObservableObject {
 
     /// Request the one-shot historical backfill once readiness is proven. `from`
     /// resumes at the saved last reading (gap fill; the rest is seeded from the
-    /// persisted store) or 6 h back on a first-ever connect — never 0, and never
+    /// persisted store) or 12 h back on a first-ever connect — never 0, and never
     /// a resume point the connected sensor cannot have reached (a new sensor is
     /// seeded with the previous one's much larger life counts).
     private func requestBackfillIfNeeded(currentLifeCount: Int) {
@@ -2637,7 +2798,7 @@ final class Libre3DirectManager: ObservableObject {
         let boundedCurrentLifeCount = UInt16(clamping: currentLifeCount)
         // Resume from the history we held at connect time (the persisted seed),
         // NOT the live buffer — which already contains this session's freshly
-        // harvested embedded samples. Fetch only the gap, capped at 6 h 10 m —
+        // harvested embedded samples. Fetch only the gap, capped at 12 h —
         // or the full window when that seed turns out to be the previous
         // sensor's (both bounds drop a resume point above `currentLifeCount`).
         let from = Libre3BackfillImporter.backfillStartLifeCount(
@@ -2700,8 +2861,8 @@ final class Libre3DirectManager: ObservableObject {
                 // request — LibreLoop hit the same `writeFailed` and mitigates it
                 // the same way. This matters most exactly where the failure was
                 // reported: with no resume point the historical request spans the
-                // full display window and takes seconds, rather than the single
-                // page an ordinary reconnect fetches.
+                // full historical request window and takes seconds, rather than
+                // the single page an ordinary reconnect fetches.
                 let drainedAfter = await self.awaitHistoricalDrain(session: capturedSession)
                 guard self.session === capturedSession,
                       self.connectionState == .streaming else { return }
@@ -3584,7 +3745,8 @@ final class Libre3DirectManager: ObservableObject {
         // Only an advancing lifeCount proves a new minute arrived. Duplicate
         // frames must not postpone the deadline; this comparison depends on
         // `forgetSensor()` resetting the old sensor's much larger life count.
-        guard reading.lifeCount > (lastArmedLifeCount ?? 0) else { return }
+        guard !isStoodDownForHandoff,
+              reading.lifeCount > (lastArmedLifeCount ?? 0) else { return }
         lastArmedLifeCount = reading.lifeCount
         setSignalLossState(deadline: Date().addingTimeInterval(Self.signalLossThreshold))
     }
@@ -3859,6 +4021,13 @@ final class Libre3DirectManager: ObservableObject {
     /// signal-loss deadline. This is the single grace-arm policy site; realtime
     /// advancing readings remain the only path that moves an existing deadline.
     private func reconcileSignalLossArming() {
+        // A startup recovery task or a late lifecycle packet can finish after
+        // stand-down began. Reassert cancellation instead of restoring its stale
+        // deadline while the watch owns glucose delivery.
+        guard !isStoodDownForHandoff else {
+            setSignalLossState(deadline: nil)
+            return
+        }
         // Deadline recovery must complete before grace arming. Otherwise a
         // relaunch could replace an earlier, nearer OS deadline with a fresh
         // 20-minute window. Recovery explicitly re-enters this method afterward.
