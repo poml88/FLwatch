@@ -46,6 +46,7 @@ struct PhoneAppHomeView: View {
     @AppStorage(DefaultsKey.hasAgreedToReview.rawValue, store: UserDefaults.group) private var hasAgreedToReview = false
     @AppStorage(DefaultsKey.useLiveActivities.rawValue, store: UserDefaults.group) private var useLiveActivities = true
     @AppStorage(DefaultsKey.cgmProviderKind.rawValue, store: UserDefaults.group) private var cgmProviderKindRaw = CGMProviderKind.libreLinkUp.rawValue
+    @AppStorage(DefaultsKey.libre3SessionOwnerMirror.rawValue, store: UserDefaults.group) private var libre3SessionOwnerRaw = Libre3WorkoutOwnershipDevice.phone.rawValue
     
     
     
@@ -59,6 +60,7 @@ struct PhoneAppHomeView: View {
     @State private var isShowingNotification = false
     @State private var showsProviderPicker = false
     @State private var isShowingInsulinDeliverySheet = false
+    @State private var isShowingTakeSensorBackConfirmation = false
 
     /// Bound to ContentView's tab selection so the first-launch picker can send
     /// the user straight to the Connect tab after choosing a provider.
@@ -134,6 +136,13 @@ struct PhoneAppHomeView: View {
     /// `.primary` would render black on black there.
     private var currentReadingColor: Color {
         libreLinkUpHistory.latestLibreLinkUpGlucose?.color.color ?? .gray
+    }
+
+    private var watchOwnsLibre3Sensor: Bool {
+        guard libre3SessionOwnerRaw == Libre3WorkoutOwnershipDevice.watch.rawValue else {
+            return false
+        }
+        return SharedData.libre3SessionOwner.hasActiveWatchClaim
     }
 
 //    private let startupUpdateNote: StartupUpdateNote? = StartupUpdateNote(
@@ -277,6 +286,28 @@ struct PhoneAppHomeView: View {
 
     private var presentationContent: some View {
         feedbackAlertContent
+        .alert(
+            String(
+                localized: "Take Sensor Back",
+                comment: "Title of the iPhone confirmation shown before reclaiming the Libre 3 sensor from an Apple Watch workout."
+            ),
+            isPresented: $isShowingTakeSensorBackConfirmation
+        ) {
+            Button(role: .cancel) {
+            } label: {
+                Text("Cancel", comment: "Cancels moving the Libre 3 sensor connection from Apple Watch back to iPhone.")
+            }
+            Button(role: .destructive) {
+                WatchConnectivityManager.shared.takeLibre3SensorBack()
+            } label: {
+                Text("Take Sensor Back", comment: "Confirms moving the Libre 3 sensor connection from Apple Watch back to iPhone without ending the workout.")
+            }
+        } message: {
+            Text(
+                "This moves Libre 3 readings back to this iPhone. It does not end the workout. End the workout separately on Apple Watch.",
+                comment: "Explains that reclaiming the Libre 3 sensor on iPhone does not stop the separate HealthKit workout running on Apple Watch."
+            )
+        }
         // First-launch CGM picker. Presented only after the welcome/disclaimer/
         // update-note alerts have all been dismissed (see evaluateProviderPicker).
         .fullScreenCover(isPresented: $showsProviderPicker) {
@@ -341,7 +372,40 @@ struct PhoneAppHomeView: View {
 
     @ViewBuilder
     private var statusOverlay: some View {
-        if SharedData.cgmProviderKind == .libre3BLE,
+        if watchOwnsLibre3Sensor {
+            ZStack {
+                Color(white: 0, opacity: 0.65)
+                    .cornerRadius(10)
+                VStack(spacing: 14) {
+                    Image(systemName: "applewatch")
+                        .font(.system(size: 54))
+
+                    Text(
+                        "Workout running on Apple Watch",
+                        comment: "Phone Home overlay title shown while an Apple Watch workout owns the Libre 3 sensor connection."
+                    )
+                    .font(.headline)
+                    .multilineTextAlignment(.center)
+
+                    Text(
+                        "Sensor connected to Apple Watch.",
+                        comment: "Phone Home overlay body shown while an Apple Watch workout owns the Libre 3 sensor connection."
+                    )
+                    .multilineTextAlignment(.center)
+
+                    Button {
+                        isShowingTakeSensorBackConfirmation = true
+                    } label: {
+                        Text(
+                            "Take Sensor Back",
+                            comment: "Button that starts moving the Libre 3 sensor connection from Apple Watch back to iPhone."
+                        )
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding()
+            }
+        } else if SharedData.cgmProviderKind == .libre3BLE,
            let remaining = libre3.warmupRemainingMinutes,
            !libre3.sensorNeedsReplacement {
             // Warm-up is expected silence, so show it instead of a reload or stale-data warning.
@@ -557,7 +621,8 @@ struct PhoneAppHomeView: View {
     /// takes precedence over orange Layer B reading-quality state.
     /// Only warnings with an episode ID are allowed to auto-present the alert.
     private var homeWarning: HomeSensorWarning? {
-        guard SharedData.cgmProviderKind == .libre3BLE else { return nil }
+        guard SharedData.cgmProviderKind == .libre3BLE,
+              !watchOwnsLibre3Sensor else { return nil }
         if libre3.sensorNeedsReplacement {
             return HomeSensorWarning(
                 color: .red,
@@ -580,6 +645,7 @@ struct PhoneAppHomeView: View {
     }
 
     private var shouldShowReloadFailedAlert: Bool {
+        guard !watchOwnsLibre3Sensor else { return false }
         guard lluService.didLastReloadFail else { return false }
         guard DebugMessageSingleton.shared.libreLinkUpOverlayError.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return false

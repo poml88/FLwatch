@@ -220,6 +220,16 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     }
 
     private func makeSnapshot(now: Date = Date()) -> Snapshot {
+        if SharedData.libre3SessionOwner.suppressesGlucose(on: .phone) {
+            return Snapshot(
+                primaryText: "--",
+                secondaryText: String(
+                    localized: "Sensor connected to Apple Watch.",
+                    comment: "CarPlay status shown instead of stale glucose while an Apple Watch workout owns the Libre 3 sensor."
+                )
+            )
+        }
+
         let history = LibreLinkUpHistory.shared
         let uom = SensorSettingsStore.shared.sensorSettings.uom
         let currentIOB = CurrentIOBSingleton.shared.currentIOB

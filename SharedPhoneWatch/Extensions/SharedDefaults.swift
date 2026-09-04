@@ -30,6 +30,219 @@ enum GlucoseAlertTier: String, Codable, CaseIterable, Sendable {
     case high
 }
 
+enum Libre3WorkoutOwnershipDevice: String, Codable, Sendable {
+    case phone
+    case watch
+}
+
+enum Libre3WorkoutOwnershipEventKind: String, Codable, Sendable {
+    case claim
+    case released
+    case reclaim
+}
+
+enum Libre3WorkoutDisconnectOutcome: String, Codable, Sendable {
+    case confirmedDisconnect
+    case timedOut
+}
+
+/// One ordered ownership transition. The owner is explicit because `released`
+/// is used in both directions: the phone releases the sensor to the watch at
+/// workout start, and the watch releases it to the phone at workout end.
+/// A claim records the watch's local workout lifecycle decision; the phone
+/// cannot independently verify that a remote HealthKit workout is still active.
+struct Libre3WorkoutOwnershipEvent: Codable, Equatable, Sendable {
+    static let currentProtocolVersion = 1
+
+    let protocolVersion: Int
+    let kind: Libre3WorkoutOwnershipEventKind
+    let origin: Libre3WorkoutOwnershipDevice
+    let owner: Libre3WorkoutOwnershipDevice
+    let workoutSessionID: UUID
+    let revision: Int64
+    let provisioningRevision: Int64
+    let disconnectOutcome: Libre3WorkoutDisconnectOutcome?
+    let createdAt: Date
+
+    var isWellFormed: Bool {
+        guard protocolVersion == Self.currentProtocolVersion,
+              revision > 0,
+              revision < .max else { return false }
+        switch (kind, origin, owner) {
+        case (.claim, .watch, .watch),
+             (.released, .phone, .watch),
+             (.released, .watch, .phone),
+             (.reclaim, .phone, .phone):
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+struct Libre3WorkoutTerminalReclaim: Codable, Equatable, Sendable {
+    let workoutSessionID: UUID
+    let revision: Int64
+}
+
+enum Libre3WorkoutOwnershipApplyDecision: Equatable, Sendable {
+    case applied
+    case duplicate
+    case stale
+    case conflict
+    case terminallyReclaimed
+    case malformed
+}
+
+/// Device-local ownership record persisted in the app group. Recent terminal
+/// reclaims survive later workouts so a delayed FIFO claim cannot move an
+/// already-reclaimed session back to the watch. Revision ordering rejects older
+/// events after the bounded terminal-reclaim history rolls over.
+struct Libre3WorkoutOwnershipState: Codable, Equatable, Sendable {
+    static let phoneReclaimFallbackDelay: TimeInterval = 7
+    static let terminalReclaimLimit = 20
+
+    var owner: Libre3WorkoutOwnershipDevice = .phone
+    var workoutSessionID: UUID?
+    var revision: Int64 = 0
+    var currentEvent: Libre3WorkoutOwnershipEvent?
+    var pendingOutboundEvent: Libre3WorkoutOwnershipEvent?
+    var terminalReclaims: [Libre3WorkoutTerminalReclaim] = []
+    var claimRejectionReason: String?
+
+    var hasActiveWatchClaim: Bool {
+        owner == .watch && workoutSessionID != nil
+    }
+
+    func connectionIsPermitted(
+        on device: Libre3WorkoutOwnershipDevice,
+        at date: Date = Date()
+    ) -> Bool {
+        switch device {
+        case .phone:
+            guard !hasActiveWatchClaim else { return false }
+            guard let currentEvent,
+                  currentEvent.kind == .reclaim,
+                  currentEvent.origin == .phone else { return true }
+            return date.timeIntervalSince(currentEvent.createdAt) >= Self.phoneReclaimFallbackDelay
+        case .watch:
+            return hasActiveWatchClaim && claimRejectionReason == nil
+        }
+    }
+
+    func suppressesGlucose(
+        on device: Libre3WorkoutOwnershipDevice,
+        at date: Date = Date()
+    ) -> Bool {
+        !connectionIsPermitted(on: device, at: date)
+    }
+
+    func hasTerminalReclaim(for workoutSessionID: UUID) -> Bool {
+        terminalReclaims.contains { $0.workoutSessionID == workoutSessionID }
+    }
+
+    func nextRevision(at date: Date = Date()) -> Int64 {
+        let wallClockMilliseconds = Int64(date.timeIntervalSince1970 * 1_000)
+        let incremented = revision == .max ? revision : revision + 1
+        return max(incremented, wallClockMilliseconds)
+    }
+
+    func decision(for event: Libre3WorkoutOwnershipEvent) -> Libre3WorkoutOwnershipApplyDecision {
+        guard event.isWellFormed else { return .malformed }
+        if event.kind == .claim, hasTerminalReclaim(for: event.workoutSessionID) {
+            return .terminallyReclaimed
+        }
+        guard event.revision >= revision else { return .stale }
+        if event.revision == revision {
+            return currentEvent == event ? .duplicate : .conflict
+        }
+        return .applied
+    }
+
+    @discardableResult
+    mutating func apply(
+        _ event: Libre3WorkoutOwnershipEvent,
+        isLocal: Bool
+    ) -> Libre3WorkoutOwnershipApplyDecision {
+        let decision = decision(for: event)
+        guard decision == .applied else { return decision }
+
+        if event.kind == .reclaim {
+            appendTerminalReclaim(
+                workoutSessionID: event.workoutSessionID,
+                revision: event.revision
+            )
+        }
+
+        owner = event.owner
+        workoutSessionID = event.workoutSessionID
+        revision = event.revision
+        currentEvent = event
+        claimRejectionReason = nil
+
+        if isLocal {
+            pendingOutboundEvent = event
+        } else if let pendingOutboundEvent,
+                  pendingOutboundEvent.workoutSessionID == event.workoutSessionID,
+                  pendingOutboundEvent.revision < event.revision {
+            // A newer response for the same session proves that the peer saw
+            // the older local transition even if its explicit ack was delayed.
+            self.pendingOutboundEvent = nil
+        }
+        return .applied
+    }
+
+    mutating func acknowledge(revision acknowledgedRevision: Int64) {
+        guard pendingOutboundEvent?.revision == acknowledgedRevision else { return }
+        pendingOutboundEvent = nil
+    }
+
+    mutating func recordTerminalRejection(
+        for workoutSessionID: UUID,
+        revision rejectedRevision: Int64
+    ) {
+        appendTerminalReclaim(
+            workoutSessionID: workoutSessionID,
+            revision: max(revision, rejectedRevision)
+        )
+        guard self.workoutSessionID == workoutSessionID else { return }
+        owner = .phone
+        currentEvent = nil
+        pendingOutboundEvent = nil
+        claimRejectionReason = "terminal-reclaim"
+    }
+
+    mutating func recordClaimRejection(
+        reason: String,
+        workoutSessionID: UUID,
+        revision rejectedRevision: Int64
+    ) {
+        guard pendingOutboundEvent?.kind == .claim,
+              pendingOutboundEvent?.workoutSessionID == workoutSessionID,
+              pendingOutboundEvent?.revision == rejectedRevision else { return }
+        claimRejectionReason = reason
+    }
+
+    mutating func trimTerminalReclaimsToLimit() {
+        guard terminalReclaims.count > Self.terminalReclaimLimit else { return }
+        terminalReclaims.removeFirst(terminalReclaims.count - Self.terminalReclaimLimit)
+    }
+
+    private mutating func appendTerminalReclaim(
+        workoutSessionID: UUID,
+        revision: Int64
+    ) {
+        terminalReclaims.removeAll { $0.workoutSessionID == workoutSessionID }
+        terminalReclaims.append(
+            Libre3WorkoutTerminalReclaim(
+                workoutSessionID: workoutSessionID,
+                revision: revision
+            )
+        )
+        trimTerminalReclaimsToLimit()
+    }
+}
+
 /// A daily, local-time interval during which one alert is suppressed.
 /// The start is inclusive and the end is exclusive. Equal endpoints represent
 /// a zero-length interval so an accidentally matched pair never mutes all day.
@@ -291,6 +504,10 @@ enum DefaultsKey: String {
     case libre3ProvisioningInstalledRevision = "libre3ProvisioningInstalledRevisionKey"
     case libre3ProvisioningInstalledDigest = "libre3ProvisioningInstalledDigestKey"
     case libre3ProvisioningInstalledSensorIdentity = "libre3ProvisioningInstalledSensorIdentityKey"
+    // Persist the whole ordered ownership record atomically. The owner mirror
+    // exists only so SwiftUI can observe ownership changes with `@AppStorage`.
+    case libre3SessionOwner = "libre3SessionOwnerKey"
+    case libre3SessionOwnerMirror = "libre3SessionOwnerMirrorKey"
     // Workout alert defaults are kept separate from the phone-alert settings so
     // a delayed, unrevisioned settings snapshot cannot overwrite a package.
     case libre3WorkoutLowDefaultMgDL = "libre3WorkoutLowDefaultMgDLKey"
@@ -957,6 +1174,31 @@ enum SharedData {
     static var libre3ProvisioningInstalledSensorIdentity: String {
         get { store.getString(.libre3ProvisioningInstalledSensorIdentity) }
         set { store.setString(newValue, forKey: .libre3ProvisioningInstalledSensorIdentity) }
+    }
+
+    static var libre3SessionOwner: Libre3WorkoutOwnershipState {
+        get {
+            guard let data = store.data(forKey: DefaultsKey.libre3SessionOwner.rawValue),
+                  var state = try? JSONDecoder().decode(Libre3WorkoutOwnershipState.self, from: data) else {
+                return Libre3WorkoutOwnershipState()
+            }
+            if state.terminalReclaims.count > Libre3WorkoutOwnershipState.terminalReclaimLimit {
+                state.trimTerminalReclaimsToLimit()
+                if let boundedData = try? JSONEncoder().encode(state) {
+                    store.set(boundedData, forKey: DefaultsKey.libre3SessionOwner.rawValue)
+                }
+            }
+            return state
+        }
+        set {
+            var boundedState = newValue
+            boundedState.trimTerminalReclaimsToLimit()
+            guard let data = try? JSONEncoder().encode(boundedState) else { return }
+            // Write the authoritative record before its observable mirror so a
+            // view invalidated by the mirror always reads a complete new state.
+            store.set(data, forKey: DefaultsKey.libre3SessionOwner.rawValue)
+            store.setString(boundedState.owner.rawValue, forKey: .libre3SessionOwnerMirror)
+        }
     }
 
     static var libre3WorkoutLowDefaultMgDL: Int {

@@ -4197,7 +4197,7 @@
       }
     },
     "Cancel" : {
-      "comment" : "Button that cancels removal of the Nightscout configuration.",
+      "comment" : "Button that cancels removal of the Nightscout configuration.\nCancels moving the Libre 3 sensor connection from Apple Watch back to iPhone.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -22503,6 +22503,9 @@
         }
       }
     },
+    "Sensor connected to Apple Watch." : {
+      "comment" : "CarPlay status shown instead of stale glucose while an Apple Watch workout owns the Libre 3 sensor.\nPhone Home overlay body shown while an Apple Watch workout owns the Libre 3 sensor connection."
+    },
     "Sensor data quality issue" : {
       "localizations" : {
         "de" : {
@@ -25491,6 +25494,9 @@
         }
       }
     },
+    "Take Sensor Back" : {
+      "comment" : "Button that starts moving the Libre 3 sensor connection from Apple Watch back to iPhone.\nConfirms moving the Libre 3 sensor connection from Apple Watch back to iPhone without ending the workout.\nTitle of the iPhone confirmation shown before reclaiming the Libre 3 sensor from an Apple Watch workout."
+    },
     "Tap on circular watch complication: updates glucose value" : {
       "localizations" : {
         "de" : {
@@ -27080,6 +27086,9 @@
           }
         }
       }
+    },
+    "This moves Libre 3 readings back to this iPhone. It does not end the workout. End the workout separately on Apple Watch." : {
+      "comment" : "Explains that reclaiming the Libre 3 sensor on iPhone does not stop the separate HealthKit workout running on Apple Watch."
     },
     "This sensor has expired." : {
       "comment" : "Text displayed when a sensor is expired.",
@@ -30193,6 +30202,9 @@
           }
         }
       }
+    },
+    "Workout running on Apple Watch" : {
+      "comment" : "Phone Home overlay title shown while an Apple Watch workout owns the Libre 3 sensor connection."
     },
     "Wrong password for the Dexcom account." : {
       "comment" : "Error message when the user enters an incorrect password.",

@@ -14,7 +14,8 @@ import UIKit
 final class FLwatchApplicationDelegate: NSObject, UIApplicationDelegate {
     func applicationWillTerminate(_ application: UIApplication) {
         guard SharedData.cgmProviderKind == .libre3BLE,
-              SharedData.libre3SensorIsPaired else { return }
+              SharedData.libre3SensorIsPaired,
+              !SharedData.libre3SessionOwner.suppressesGlucose(on: .phone) else { return }
 
         SensorAlertNotificationManager.shared.postApplicationTerminated()
     }

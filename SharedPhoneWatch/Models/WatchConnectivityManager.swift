@@ -34,6 +34,10 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     private static let libre3ProvisioningAcknowledgementContent = "libre3ProvisioningAcknowledgement"
     private static let libre3ProvisioningAcknowledgementDataKey = "libre3ProvisioningAcknowledgementData"
     private static let requestLibre3ProvisioningContent = "requestLibre3Provisioning"
+    private static let libre3WorkoutOwnershipContent = "libre3WorkoutOwnership"
+    private static let libre3WorkoutOwnershipDataKey = "libre3WorkoutOwnershipData"
+    private static let libre3WorkoutOwnershipAcknowledgementContent = "libre3WorkoutOwnershipAcknowledgement"
+    private static let libre3WorkoutOwnershipAcknowledgementDataKey = "libre3WorkoutOwnershipAcknowledgementData"
     private static let lowGlucoseAlertContent = "lowGlucoseAlert"
     private static let highGlucoseAlertContent = "highGlucoseAlert"
     private static let lowGlucoseAlertDataKey = "lowGlucoseAlertData"
@@ -142,6 +146,15 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         let installedAt: Date
     }
 
+    private struct Libre3WorkoutOwnershipAcknowledgement: Codable, Sendable {
+        let protocolVersion: Int
+        let workoutSessionID: UUID
+        let revision: Int64
+        let accepted: Bool
+        let reason: String
+        let createdAt: Date
+    }
+
     private struct LowGlucoseAlertPayload: Codable {
         let title: String
         let subtitle: String
@@ -248,10 +261,16 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         if activationState == .activated {
             requestSettingsSnapshotFromPhone()
             requestLibre3ProvisioningFromPhone()
+            Task { @MainActor in
+                self.resendPendingLibre3WorkoutOwnershipEvent()
+            }
         }
 #elseif os(iOS)
         if activationState == .activated {
             sendSettingsSnapshotToWatch()
+            Task { @MainActor in
+                self.resendPendingLibre3WorkoutOwnershipEvent()
+            }
         }
 #endif
     }
@@ -273,6 +292,9 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         // for provisioning during its activation, and that request takes the
         // forced path even if this phone still remembers the old watch's ack.
         sendSettingsSnapshotToWatch()
+        Task { @MainActor in
+            self.resendPendingLibre3WorkoutOwnershipEvent()
+        }
     }
 
 #endif
@@ -397,6 +419,42 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             // a replaced/reinstalled watch to suppress this transfer.
             sendLibre3ProvisioningPackageToWatch(force: true)
 #endif
+        }
+
+        if message["content"] as? String == Self.libre3WorkoutOwnershipContent {
+            guard let ownershipData = message[Self.libre3WorkoutOwnershipDataKey] as? Data else {
+                Logger.connectivity.error("Missing Libre 3 workout ownership data in message")
+                return
+            }
+            do {
+                let event = try JSONDecoder().decode(
+                    Libre3WorkoutOwnershipEvent.self,
+                    from: ownershipData
+                )
+                Task { @MainActor in
+                    await self.applyLibre3WorkoutOwnershipEvent(event)
+                }
+            } catch {
+                Logger.connectivity.error("Failed to decode Libre 3 workout ownership event: \(error.localizedDescription)")
+            }
+        }
+
+        if message["content"] as? String == Self.libre3WorkoutOwnershipAcknowledgementContent {
+            guard let acknowledgementData = message[Self.libre3WorkoutOwnershipAcknowledgementDataKey] as? Data else {
+                Logger.connectivity.error("Missing Libre 3 workout ownership acknowledgement data in message")
+                return
+            }
+            do {
+                let acknowledgement = try JSONDecoder().decode(
+                    Libre3WorkoutOwnershipAcknowledgement.self,
+                    from: acknowledgementData
+                )
+                Task { @MainActor in
+                    self.applyLibre3WorkoutOwnershipAcknowledgement(acknowledgement)
+                }
+            } catch {
+                Logger.connectivity.error("Failed to decode Libre 3 workout ownership acknowledgement: \(error.localizedDescription)")
+            }
         }
 
         if message["content"] as? String == Self.libre3ProvisioningContent {
@@ -590,6 +648,497 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             }
         }
     }
+
+    /// Ownership transitions need both low-latency delivery and a durable FIFO
+    /// copy. `sendMessageToPairedDevice` intentionally chooses only one path,
+    /// so this protocol uses its own transport helper.
+    @MainActor
+    private func sendLibre3WorkoutOwnershipMessage(_ message: [String: Any]) {
+        guard WCSession.isSupported() else {
+            Logger.connectivity.error("Device does not support WatchConnectivity")
+            return
+        }
+        guard session.activationState == .activated else {
+            Logger.connectivity.info("Deferred Libre 3 workout ownership message until WCSession activation")
+            return
+        }
+        if session.isReachable {
+            session.sendMessage(message, replyHandler: nil) { error in
+                Logger.connectivity.error("Immediate Libre 3 workout ownership send failed: \(error.localizedDescription)")
+            }
+        }
+        session.transferUserInfo(message)
+    }
+
+    @MainActor
+    private func sendLibre3WorkoutOwnershipEvent(_ event: Libre3WorkoutOwnershipEvent) {
+        do {
+            let data = try JSONEncoder().encode(event)
+            sendLibre3WorkoutOwnershipMessage([
+                "content": Self.libre3WorkoutOwnershipContent,
+                Self.libre3WorkoutOwnershipDataKey: data,
+                "useApplicationContext": false
+            ])
+            Logger.connectivity.info(
+                "Published Libre 3 workout ownership kind=\(event.kind.rawValue, privacy: .public) revision=\(event.revision, privacy: .public) session=\(event.workoutSessionID.uuidString, privacy: .private(mask: .hash))"
+            )
+        } catch {
+            Logger.connectivity.error("Failed to encode Libre 3 workout ownership event: \(error.localizedDescription)")
+        }
+    }
+
+    @MainActor
+    private func sendLibre3WorkoutOwnershipAcknowledgement(
+        for event: Libre3WorkoutOwnershipEvent,
+        accepted: Bool,
+        reason: String
+    ) {
+        let acknowledgement = Libre3WorkoutOwnershipAcknowledgement(
+            protocolVersion: Libre3WorkoutOwnershipEvent.currentProtocolVersion,
+            workoutSessionID: event.workoutSessionID,
+            revision: event.revision,
+            accepted: accepted,
+            reason: reason,
+            createdAt: Date()
+        )
+        do {
+            let data = try JSONEncoder().encode(acknowledgement)
+            sendLibre3WorkoutOwnershipMessage([
+                "content": Self.libre3WorkoutOwnershipAcknowledgementContent,
+                Self.libre3WorkoutOwnershipAcknowledgementDataKey: data,
+                "useApplicationContext": false
+            ])
+        } catch {
+            Logger.connectivity.error("Failed to encode Libre 3 workout ownership acknowledgement: \(error.localizedDescription)")
+        }
+    }
+
+    @MainActor
+    private func makeLibre3WorkoutOwnershipEvent(
+        kind: Libre3WorkoutOwnershipEventKind,
+        origin: Libre3WorkoutOwnershipDevice,
+        owner: Libre3WorkoutOwnershipDevice,
+        workoutSessionID: UUID,
+        provisioningRevision: Int64,
+        disconnectOutcome: Libre3WorkoutDisconnectOutcome? = nil
+    ) -> Libre3WorkoutOwnershipEvent {
+        let state = SharedData.libre3SessionOwner
+        return Libre3WorkoutOwnershipEvent(
+            protocolVersion: Libre3WorkoutOwnershipEvent.currentProtocolVersion,
+            kind: kind,
+            origin: origin,
+            owner: owner,
+            workoutSessionID: workoutSessionID,
+            revision: state.nextRevision(),
+            provisioningRevision: provisioningRevision,
+            disconnectOutcome: disconnectOutcome,
+            createdAt: Date()
+        )
+    }
+
+    @MainActor
+    private func publishLocalLibre3WorkoutOwnershipEvent(_ event: Libre3WorkoutOwnershipEvent) {
+        var state = SharedData.libre3SessionOwner
+        guard state.apply(event, isLocal: true) == .applied else {
+            Logger.connectivity.error("Could not apply locally-created Libre 3 workout ownership event")
+            return
+        }
+        SharedData.libre3SessionOwner = state
+        NotificationCenter.default.post(name: .libreWristDataDidChange, object: nil)
+        sendLibre3WorkoutOwnershipEvent(event)
+    }
+
+    @MainActor
+    private func resendPendingLibre3WorkoutOwnershipEvent() {
+        guard let event = SharedData.libre3SessionOwner.pendingOutboundEvent else { return }
+        sendLibre3WorkoutOwnershipEvent(event)
+    }
+
+    @MainActor
+    private func applyLibre3WorkoutOwnershipAcknowledgement(
+        _ acknowledgement: Libre3WorkoutOwnershipAcknowledgement
+    ) {
+        guard acknowledgement.protocolVersion == Libre3WorkoutOwnershipEvent.currentProtocolVersion,
+              acknowledgement.revision > 0 else {
+            Logger.connectivity.info("Ignored malformed Libre 3 workout ownership acknowledgement")
+            return
+        }
+        guard acknowledgement.accepted else {
+            Logger.connectivity.warning(
+                "Libre 3 workout ownership revision=\(acknowledgement.revision, privacy: .public) rejected reason=\(acknowledgement.reason, privacy: .public)"
+            )
+            if acknowledgement.reason == "revision-conflict",
+               let pending = SharedData.libre3SessionOwner.pendingOutboundEvent,
+               pending.workoutSessionID == acknowledgement.workoutSessionID,
+               pending.revision == acknowledgement.revision {
+                let retried = makeLibre3WorkoutOwnershipEvent(
+                    kind: pending.kind,
+                    origin: pending.origin,
+                    owner: pending.owner,
+                    workoutSessionID: pending.workoutSessionID,
+                    provisioningRevision: pending.provisioningRevision,
+                    disconnectOutcome: pending.disconnectOutcome
+                )
+                publishLocalLibre3WorkoutOwnershipEvent(retried)
+                return
+            }
+#if os(watchOS)
+            if acknowledgement.reason == "provisioning-not-current" {
+                var state = SharedData.libre3SessionOwner
+                guard state.pendingOutboundEvent?.kind == .claim,
+                      state.pendingOutboundEvent?.workoutSessionID == acknowledgement.workoutSessionID,
+                      state.pendingOutboundEvent?.revision == acknowledgement.revision else {
+                    return
+                }
+                state.recordClaimRejection(
+                    reason: acknowledgement.reason,
+                    workoutSessionID: acknowledgement.workoutSessionID,
+                    revision: acknowledgement.revision
+                )
+                SharedData.libre3SessionOwner = state
+                Task { @MainActor in
+                    _ = await Libre3DirectManager.shared.standDownForHandoff()
+                }
+                return
+            }
+            if acknowledgement.reason == "terminal-reclaim" {
+                var state = SharedData.libre3SessionOwner
+                guard state.pendingOutboundEvent?.kind == .claim,
+                      state.pendingOutboundEvent?.workoutSessionID == acknowledgement.workoutSessionID,
+                      state.pendingOutboundEvent?.revision == acknowledgement.revision else {
+                    return
+                }
+                state.recordTerminalRejection(
+                    for: acknowledgement.workoutSessionID,
+                    revision: acknowledgement.revision
+                )
+                SharedData.libre3SessionOwner = state
+                NotificationCenter.default.post(name: .libreWristDataDidChange, object: nil)
+                Task { @MainActor in
+                    _ = await Libre3DirectManager.shared.standDownForHandoff()
+                }
+            }
+#endif
+            return
+        }
+        var state = SharedData.libre3SessionOwner
+        guard state.pendingOutboundEvent?.workoutSessionID == acknowledgement.workoutSessionID else {
+            return
+        }
+        state.acknowledge(revision: acknowledgement.revision)
+        SharedData.libre3SessionOwner = state
+    }
+
+    @MainActor
+    private func applyLibre3WorkoutOwnershipEvent(
+        _ event: Libre3WorkoutOwnershipEvent
+    ) async {
+        var state = SharedData.libre3SessionOwner
+
+#if os(iOS)
+        guard event.origin == .watch,
+              (event.kind == .claim || event.kind == .released) else {
+            sendLibre3WorkoutOwnershipAcknowledgement(
+                for: event,
+                accepted: false,
+                reason: "wrong-origin"
+            )
+            return
+        }
+        if event.kind == .claim {
+            if state.hasTerminalReclaim(for: event.workoutSessionID) {
+                sendLibre3WorkoutOwnershipAcknowledgement(
+                    for: event,
+                    accepted: false,
+                    reason: "terminal-reclaim"
+                )
+                return
+            }
+            if state.hasActiveWatchClaim,
+               state.workoutSessionID != event.workoutSessionID {
+                sendLibre3WorkoutOwnershipAcknowledgement(
+                    for: event,
+                    accepted: false,
+                    reason: "different-active-session"
+                )
+                return
+            }
+            let provisioningIsCurrent =
+                event.provisioningRevision > 0
+                && event.provisioningRevision == SharedData.libre3ProvisioningCurrentRevision
+                && SharedData.libre3SensorIsPaired
+                && SharedData.cgmProviderKind == .libre3BLE
+            guard provisioningIsCurrent else {
+                sendLibre3WorkoutOwnershipAcknowledgement(
+                    for: event,
+                    accepted: false,
+                    reason: "provisioning-not-current"
+                )
+                sendLibre3ProvisioningPackageToWatch(force: true)
+                return
+            }
+        } else if state.hasActiveWatchClaim,
+                  state.workoutSessionID != event.workoutSessionID {
+            sendLibre3WorkoutOwnershipAcknowledgement(
+                for: event,
+                accepted: false,
+                reason: "different-active-session"
+            )
+            return
+        }
+#elseif os(watchOS)
+        guard event.origin == .phone,
+              (event.kind == .released || event.kind == .reclaim) else {
+            sendLibre3WorkoutOwnershipAcknowledgement(
+                for: event,
+                accepted: false,
+                reason: "wrong-origin"
+            )
+            return
+        }
+        if event.kind == .released,
+           event.owner == .watch,
+           (!state.hasActiveWatchClaim || state.workoutSessionID != event.workoutSessionID) {
+            // A phone release acknowledges a claim that this watch must already
+            // hold locally. This prevents a replacement/reinstalled watch from
+            // starting BLE when an old phone-side event is replayed.
+            sendLibre3WorkoutOwnershipAcknowledgement(
+                for: event,
+                accepted: false,
+                reason: "no-local-workout"
+            )
+            return
+        }
+#endif
+
+        let decision = state.apply(event, isLocal: false)
+        switch decision {
+        case .applied:
+            SharedData.libre3SessionOwner = state
+            NotificationCenter.default.post(name: .libreWristDataDidChange, object: nil)
+            sendLibre3WorkoutOwnershipAcknowledgement(for: event, accepted: true, reason: "applied")
+        case .duplicate:
+            sendLibre3WorkoutOwnershipAcknowledgement(for: event, accepted: true, reason: "duplicate")
+            return
+        case .stale:
+            sendLibre3WorkoutOwnershipAcknowledgement(for: event, accepted: true, reason: "superseded")
+            return
+        case .terminallyReclaimed:
+            sendLibre3WorkoutOwnershipAcknowledgement(for: event, accepted: false, reason: "terminal-reclaim")
+            return
+        case .conflict:
+            sendLibre3WorkoutOwnershipAcknowledgement(for: event, accepted: false, reason: "revision-conflict")
+            return
+        case .malformed:
+            sendLibre3WorkoutOwnershipAcknowledgement(for: event, accepted: false, reason: "malformed")
+            return
+        }
+
+#if os(iOS)
+        switch event.kind {
+        case .claim:
+            let result = await Libre3DirectManager.shared.standDownForHandoff()
+            let latest = SharedData.libre3SessionOwner
+            guard latest.hasActiveWatchClaim,
+                  latest.workoutSessionID == event.workoutSessionID,
+                  !latest.hasTerminalReclaim(for: event.workoutSessionID) else { return }
+            let released = makeLibre3WorkoutOwnershipEvent(
+                kind: .released,
+                origin: .phone,
+                owner: .watch,
+                workoutSessionID: event.workoutSessionID,
+                provisioningRevision: event.provisioningRevision,
+                disconnectOutcome: result == .confirmedDisconnect
+                    ? .confirmedDisconnect
+                    : .timedOut
+            )
+            publishLocalLibre3WorkoutOwnershipEvent(released)
+            await LowGlucoseNotificationManager.shared.evaluateCurrentReading()
+            await LiveActivityManager.shared.refreshFromCurrentHistory(
+                useLiveActivities: SharedData.useLiveActivities,
+                refreshIOB: false
+            )
+        case .released:
+            if event.owner == .phone {
+                Libre3DirectManager.shared.resumeAfterHandoff()
+            }
+        case .reclaim:
+            break
+        }
+#elseif os(watchOS)
+        switch event.kind {
+        case .released:
+            if event.owner == .watch {
+                Libre3DirectManager.shared.resumeAfterHandoff()
+            }
+        case .reclaim:
+            let result = await Libre3DirectManager.shared.standDownForHandoff()
+            let latest = SharedData.libre3SessionOwner
+            guard latest.owner == .phone,
+                  latest.workoutSessionID == event.workoutSessionID else { return }
+            let released = makeLibre3WorkoutOwnershipEvent(
+                kind: .released,
+                origin: .watch,
+                owner: .phone,
+                workoutSessionID: event.workoutSessionID,
+                provisioningRevision: event.provisioningRevision,
+                disconnectOutcome: result == .confirmedDisconnect
+                    ? .confirmedDisconnect
+                    : .timedOut
+            )
+            publishLocalLibre3WorkoutOwnershipEvent(released)
+        case .claim:
+            break
+        }
+#endif
+    }
+
+#if os(watchOS)
+    /// Called only after the HealthKit workout transaction has committed. BLE
+    /// acquisition remains best-effort and never rolls the workout back.
+    @MainActor
+    @discardableResult
+    func claimLibre3SensorForWorkout(workoutSessionID: UUID) -> Bool {
+        let provisioningRevision = SharedData.libre3ProvisioningInstalledRevision
+        let state = SharedData.libre3SessionOwner
+        guard SharedData.cgmProviderKind == .libre3BLE,
+              Libre3StateStore.isPaired,
+              provisioningRevision > 0,
+              !state.hasActiveWatchClaim || state.workoutSessionID == workoutSessionID,
+              !state.hasTerminalReclaim(for: workoutSessionID) else {
+            return false
+        }
+        if state.hasActiveWatchClaim,
+           state.workoutSessionID == workoutSessionID {
+            guard state.claimRejectionReason == nil else { return false }
+            resendPendingLibre3WorkoutOwnershipEvent()
+            if let currentEvent = state.currentEvent,
+               currentEvent.kind == .claim {
+                beginWatchBLEAcquisitionAfterClaim(currentEvent)
+            } else if state.currentEvent?.kind == .released {
+                Libre3DirectManager.shared.resumeAfterHandoff()
+            }
+            return true
+        }
+
+        let claim = makeLibre3WorkoutOwnershipEvent(
+            kind: .claim,
+            origin: .watch,
+            owner: .watch,
+            workoutSessionID: workoutSessionID,
+            provisioningRevision: provisioningRevision
+        )
+        publishLocalLibre3WorkoutOwnershipEvent(claim)
+        beginWatchBLEAcquisitionAfterClaim(claim)
+        return true
+    }
+
+    @MainActor
+    private func beginWatchBLEAcquisitionAfterClaim(_ claim: Libre3WorkoutOwnershipEvent) {
+        if session.activationState == .activated && session.isReachable {
+            Task { @MainActor in
+                try? await Task.sleep(
+                    nanoseconds: UInt64(
+                        Libre3WorkoutOwnershipState.phoneReclaimFallbackDelay * 1_000_000_000
+                    )
+                )
+                let latest = SharedData.libre3SessionOwner
+                guard latest.hasActiveWatchClaim,
+                      latest.workoutSessionID == claim.workoutSessionID,
+                      latest.currentEvent?.revision == claim.revision,
+                      latest.claimRejectionReason == nil else { return }
+                // The phone's stand-down is itself bounded at five seconds. If
+                // its one-way release never arrives, proceed and let normal BLE
+                // contention/backoff handle the unreachable-phone edge case.
+                Libre3DirectManager.shared.resumeAfterHandoff()
+            }
+        } else {
+            Libre3DirectManager.shared.resumeAfterHandoff()
+        }
+    }
+
+    /// Idempotent after a phone reclaim: ending the workout must not create a
+    /// new phone-owned event that could disturb the terminal decision.
+    @MainActor
+    func releaseLibre3SensorAfterWorkout(workoutSessionID: UUID) async {
+        let state = SharedData.libre3SessionOwner
+        guard state.hasActiveWatchClaim,
+              state.workoutSessionID == workoutSessionID else { return }
+
+        let result = await Libre3DirectManager.shared.standDownForHandoff()
+        let released = makeLibre3WorkoutOwnershipEvent(
+            kind: .released,
+            origin: .watch,
+            owner: .phone,
+            workoutSessionID: workoutSessionID,
+            provisioningRevision: SharedData.libre3ProvisioningInstalledRevision,
+            disconnectOutcome: result == .confirmedDisconnect
+                ? .confirmedDisconnect
+                : .timedOut
+        )
+        publishLocalLibre3WorkoutOwnershipEvent(released)
+    }
+#endif
+
+#if os(iOS)
+    @MainActor
+    func takeLibre3SensorBack() {
+        reclaimLibre3SensorForPhone(resumeImmediately: false)
+    }
+
+    /// An NFC pair invalidates the watch's cached key, so it must terminally
+    /// reclaim any active workout session before the phone starts with the new
+    /// material. Unlike the UI action, the new pair is already disconnected and
+    /// may resume immediately.
+    @MainActor
+    func reclaimLibre3SensorForNewPairIfNeeded() {
+        reclaimLibre3SensorForPhone(resumeImmediately: true)
+    }
+
+    @MainActor
+    func reclaimLibre3SensorBeforeDisconnectIfNeeded() {
+        reclaimLibre3SensorForPhone(resumeImmediately: false)
+    }
+
+    @MainActor
+    private func reclaimLibre3SensorForPhone(resumeImmediately: Bool) {
+        let state = SharedData.libre3SessionOwner
+        guard state.hasActiveWatchClaim,
+              let workoutSessionID = state.workoutSessionID else {
+            if resumeImmediately {
+                Libre3DirectManager.shared.resumeAfterHandoff(immediately: true)
+            }
+            return
+        }
+
+        let reclaim = makeLibre3WorkoutOwnershipEvent(
+            kind: .reclaim,
+            origin: .phone,
+            owner: .phone,
+            workoutSessionID: workoutSessionID,
+            provisioningRevision: SharedData.libre3ProvisioningCurrentRevision
+        )
+        publishLocalLibre3WorkoutOwnershipEvent(reclaim)
+
+        if resumeImmediately {
+            Libre3DirectManager.shared.resumeAfterHandoff(immediately: true)
+            return
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(
+                nanoseconds: UInt64(
+                    Libre3WorkoutOwnershipState.phoneReclaimFallbackDelay * 1_000_000_000
+                )
+            )
+            let latest = SharedData.libre3SessionOwner
+            guard latest.owner == .phone,
+                  latest.workoutSessionID == workoutSessionID,
+                  latest.currentEvent?.revision == reclaim.revision else { return }
+            Libre3DirectManager.shared.resumeAfterHandoff()
+        }
+    }
+#endif
 
 #if os(iOS)
     func sendSettingsSnapshotToWatch() {
@@ -1028,6 +1577,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             }
             CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
             sendInstalledLibre3ProvisioningAcknowledgement()
+            refreshLibre3WorkoutClaimAfterProvisioningIfNeeded()
             Logger.connectivity.info(
                 "Installed Libre 3 provisioning revision=\(payload.revision, privacy: .public) hasState=\(payload.state != nil, privacy: .public)"
             )
@@ -1055,6 +1605,25 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         } catch {
             Logger.connectivity.error("Failed to encode Libre 3 provisioning acknowledgement: \(error.localizedDescription)")
         }
+    }
+
+    @MainActor
+    private func refreshLibre3WorkoutClaimAfterProvisioningIfNeeded() {
+        let state = SharedData.libre3SessionOwner
+        guard state.hasActiveWatchClaim,
+              let workoutSessionID = state.workoutSessionID,
+              state.currentEvent?.kind == .claim,
+              !state.hasTerminalReclaim(for: workoutSessionID) else { return }
+
+        let refreshedClaim = makeLibre3WorkoutOwnershipEvent(
+            kind: .claim,
+            origin: .watch,
+            owner: .watch,
+            workoutSessionID: workoutSessionID,
+            provisioningRevision: SharedData.libre3ProvisioningInstalledRevision
+        )
+        publishLocalLibre3WorkoutOwnershipEvent(refreshedClaim)
+        beginWatchBLEAcquisitionAfterClaim(refreshedClaim)
     }
 
     func requestLibre3ProvisioningFromPhone() {
@@ -1090,6 +1659,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     
     func sessionReachabilityDidChange(_ session: WCSession) {
         Logger.connectivity.info("Reachability changed: reachable=\(session.isReachable)")
+        if session.isReachable {
+            Task { @MainActor in
+                self.resendPendingLibre3WorkoutOwnershipEvent()
+            }
+        }
 #if os(iOS)
         if session.isReachable {
             sendLibre3ProvisioningPackageToWatch()

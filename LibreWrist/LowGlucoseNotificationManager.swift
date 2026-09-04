@@ -146,6 +146,15 @@ final class LowGlucoseNotificationManager: NSObject {
     }
 
     func evaluateCurrentReading(now: Date = Date()) async {
+        if SharedData.libre3SessionOwner.suppressesGlucose(on: .phone) {
+            await clearNotifications(
+                for: Set(GlucoseAlertTier.allCases),
+                resetCooldown: false,
+                forceCleanup: true
+            )
+            return
+        }
+
         let effectiveTiers = GlucoseAlertTier.allCases.filter {
             isEffectivelyEnabled($0, now: now)
         }
@@ -230,6 +239,14 @@ final class LowGlucoseNotificationManager: NSObject {
             Logger.connectivity.info("Glucose notification skipped: alerts disabled in system settings")
             return
         }
+        guard !SharedData.libre3SessionOwner.suppressesGlucose(on: .phone) else {
+            await clearNotifications(
+                for: Set(GlucoseAlertTier.allCases),
+                resetCooldown: false,
+                forceCleanup: true
+            )
+            return
+        }
 
         // Another evaluation may have completed while notification settings were
         // being fetched. Re-check the persisted gate before scheduling.
@@ -251,6 +268,7 @@ final class LowGlucoseNotificationManager: NSObject {
         settings: UNNotificationSettings,
         now: Date
     ) async {
+        guard !SharedData.libre3SessionOwner.suppressesGlucose(on: .phone) else { return }
         // `add` suspends, so keep a per-tier in-flight guard as well as the
         // persisted due check above. A concurrent evaluation can still schedule
         // a different tier independently.
@@ -298,6 +316,11 @@ final class LowGlucoseNotificationManager: NSObject {
 
         do {
             try await notificationCenter.add(request)
+            if SharedData.libre3SessionOwner.suppressesGlucose(on: .phone) {
+                notificationCenter.removePendingNotificationRequests(withIdentifiers: [requestIdentifier])
+                notificationCenter.removeDeliveredNotifications(withIdentifiers: [requestIdentifier])
+                return
+            }
             tiersKnownClearInNotificationCenter.remove(tier)
             setLastSentDate(now, for: tier)
             setPendingRepeat(false, for: tier)
@@ -367,6 +390,7 @@ final class LowGlucoseNotificationManager: NSObject {
     }
 
     func shouldShowSnoozeAction(now: Date = Date()) -> Bool {
+        guard !SharedData.libre3SessionOwner.suppressesGlucose(on: .phone) else { return false }
         let effectiveTiers: [GlucoseAlertTier] = [.low, .criticalLow].filter {
             isEffectivelyEnabled($0, now: now)
         }
@@ -386,6 +410,7 @@ final class LowGlucoseNotificationManager: NSObject {
     }
 
     func shouldShowHighGlucoseSnoozeAction(now: Date = Date()) -> Bool {
+        guard !SharedData.libre3SessionOwner.suppressesGlucose(on: .phone) else { return false }
         guard isEffectivelyEnabled(.high, now: now) else { return false }
 
         let history = LibreLinkUpHistory.shared

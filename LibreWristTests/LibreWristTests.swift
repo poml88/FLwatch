@@ -1325,6 +1325,228 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(advance(&tracker, lifeCount: 102), .reset)
     }
 
+    // MARK: - Libre 3 workout ownership
+
+    private func workoutOwnershipEvent(
+        kind: Libre3WorkoutOwnershipEventKind,
+        origin: Libre3WorkoutOwnershipDevice,
+        owner: Libre3WorkoutOwnershipDevice,
+        sessionID: UUID,
+        revision: Int64,
+        disconnectOutcome: Libre3WorkoutDisconnectOutcome? = nil
+    ) -> Libre3WorkoutOwnershipEvent {
+        Libre3WorkoutOwnershipEvent(
+            protocolVersion: Libre3WorkoutOwnershipEvent.currentProtocolVersion,
+            kind: kind,
+            origin: origin,
+            owner: owner,
+            workoutSessionID: sessionID,
+            revision: revision,
+            provisioningRevision: 42,
+            disconnectOutcome: disconnectOutcome,
+            createdAt: Date(timeIntervalSince1970: Double(revision))
+        )
+    }
+
+    func testWorkoutOwnershipRejectsDelayedClaimAfterRelease() {
+        let sessionID = UUID()
+        let claim = workoutOwnershipEvent(
+            kind: .claim,
+            origin: .watch,
+            owner: .watch,
+            sessionID: sessionID,
+            revision: 100
+        )
+        let release = workoutOwnershipEvent(
+            kind: .released,
+            origin: .watch,
+            owner: .phone,
+            sessionID: sessionID,
+            revision: 101,
+            disconnectOutcome: .confirmedDisconnect
+        )
+        var state = Libre3WorkoutOwnershipState()
+
+        XCTAssertEqual(state.apply(claim, isLocal: false), .applied)
+        XCTAssertEqual(state.apply(release, isLocal: false), .applied)
+        XCTAssertEqual(state.apply(claim, isLocal: false), .stale)
+        XCTAssertEqual(state.owner, .phone)
+    }
+
+    func testWorkoutOwnershipTerminalReclaimRejectsNewerClaimForSameSession() {
+        let sessionID = UUID()
+        let reclaim = workoutOwnershipEvent(
+            kind: .reclaim,
+            origin: .phone,
+            owner: .phone,
+            sessionID: sessionID,
+            revision: 200
+        )
+        let laterClaim = workoutOwnershipEvent(
+            kind: .claim,
+            origin: .watch,
+            owner: .watch,
+            sessionID: sessionID,
+            revision: 201
+        )
+        var state = Libre3WorkoutOwnershipState()
+
+        XCTAssertEqual(state.apply(reclaim, isLocal: false), .applied)
+        XCTAssertEqual(state.apply(laterClaim, isLocal: false), .terminallyReclaimed)
+        XCTAssertEqual(state.owner, .phone)
+    }
+
+    func testWorkoutOwnershipAllowsClaimForNewSessionAfterReclaim() {
+        let reclaimedSessionID = UUID()
+        let newSessionID = UUID()
+        var state = Libre3WorkoutOwnershipState()
+        XCTAssertEqual(
+            state.apply(
+                workoutOwnershipEvent(
+                    kind: .reclaim,
+                    origin: .phone,
+                    owner: .phone,
+                    sessionID: reclaimedSessionID,
+                    revision: 300
+                ),
+                isLocal: false
+            ),
+            .applied
+        )
+
+        XCTAssertEqual(
+            state.apply(
+                workoutOwnershipEvent(
+                    kind: .claim,
+                    origin: .watch,
+                    owner: .watch,
+                    sessionID: newSessionID,
+                    revision: 301
+                ),
+                isLocal: false
+            ),
+            .applied
+        )
+        XCTAssertTrue(state.hasActiveWatchClaim)
+    }
+
+    func testWorkoutOwnershipRejectsEqualRevisionConflict() {
+        let sessionID = UUID()
+        let claim = workoutOwnershipEvent(
+            kind: .claim,
+            origin: .watch,
+            owner: .watch,
+            sessionID: sessionID,
+            revision: 400
+        )
+        let conflictingRelease = workoutOwnershipEvent(
+            kind: .released,
+            origin: .watch,
+            owner: .phone,
+            sessionID: sessionID,
+            revision: 400
+        )
+        var state = Libre3WorkoutOwnershipState()
+
+        XCTAssertEqual(state.apply(claim, isLocal: false), .applied)
+        XCTAssertEqual(state.apply(claim, isLocal: false), .duplicate)
+        XCTAssertEqual(state.apply(conflictingRelease, isLocal: false), .conflict)
+        XCTAssertEqual(state.owner, .watch)
+    }
+
+    func testWorkoutOwnershipWatchGateSurvivesPersistenceRoundTrip() throws {
+        let unclaimedState = Libre3WorkoutOwnershipState()
+        XCTAssertTrue(unclaimedState.connectionIsPermitted(on: .phone))
+        XCTAssertFalse(unclaimedState.connectionIsPermitted(on: .watch))
+        XCTAssertTrue(unclaimedState.suppressesGlucose(on: .watch))
+
+        let sessionID = UUID()
+        var state = Libre3WorkoutOwnershipState()
+        XCTAssertEqual(
+            state.apply(
+                workoutOwnershipEvent(
+                    kind: .released,
+                    origin: .phone,
+                    owner: .watch,
+                    sessionID: sessionID,
+                    revision: 500,
+                    disconnectOutcome: .confirmedDisconnect
+                ),
+                isLocal: false
+            ),
+            .applied
+        )
+
+        let restored = try JSONDecoder().decode(
+            Libre3WorkoutOwnershipState.self,
+            from: JSONEncoder().encode(state)
+        )
+
+        XCTAssertTrue(restored.hasActiveWatchClaim)
+        XCTAssertFalse(restored.connectionIsPermitted(on: .phone))
+        XCTAssertTrue(restored.connectionIsPermitted(on: .watch))
+        XCTAssertFalse(restored.suppressesGlucose(on: .watch))
+    }
+
+    func testWorkoutOwnershipBoundsPhoneReclaimWait() {
+        let sessionID = UUID()
+        let reclaim = workoutOwnershipEvent(
+            kind: .reclaim,
+            origin: .phone,
+            owner: .phone,
+            sessionID: sessionID,
+            revision: 600
+        )
+        var state = Libre3WorkoutOwnershipState()
+        XCTAssertEqual(state.apply(reclaim, isLocal: true), .applied)
+
+        XCTAssertFalse(
+            state.connectionIsPermitted(
+                on: .phone,
+                at: reclaim.createdAt.addingTimeInterval(
+                    Libre3WorkoutOwnershipState.phoneReclaimFallbackDelay - 0.1
+                )
+            )
+        )
+        XCTAssertTrue(
+            state.connectionIsPermitted(
+                on: .phone,
+                at: reclaim.createdAt.addingTimeInterval(
+                    Libre3WorkoutOwnershipState.phoneReclaimFallbackDelay
+                )
+            )
+        )
+    }
+
+    func testWorkoutOwnershipKeepsOnlyRecentTerminalReclaims() {
+        var state = Libre3WorkoutOwnershipState()
+        let sessionIDs = (0...Libre3WorkoutOwnershipState.terminalReclaimLimit).map { _ in UUID() }
+
+        for (index, sessionID) in sessionIDs.enumerated() {
+            XCTAssertEqual(
+                state.apply(
+                    workoutOwnershipEvent(
+                        kind: .reclaim,
+                        origin: .phone,
+                        owner: .phone,
+                        sessionID: sessionID,
+                        revision: Int64(700 + index)
+                    ),
+                    isLocal: false
+                ),
+                .applied
+            )
+        }
+
+        XCTAssertEqual(
+            state.terminalReclaims.count,
+            Libre3WorkoutOwnershipState.terminalReclaimLimit
+        )
+        XCTAssertFalse(state.hasTerminalReclaim(for: sessionIDs[0]))
+        XCTAssertTrue(state.hasTerminalReclaim(for: sessionIDs[1]))
+        XCTAssertTrue(state.hasTerminalReclaim(for: sessionIDs.last!))
+    }
+
     // MARK: - Libre 3 disconnect handoff
 
     func testDidConnectAdoptsWhenDisconnectHandoffIsInactive() throws {

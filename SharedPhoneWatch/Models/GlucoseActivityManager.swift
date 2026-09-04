@@ -53,6 +53,10 @@ final class LiveActivityManager {
         restartIfOlderThan threshold: TimeInterval? = nil,
         refreshIOB: Bool = true
     ) async {
+        if SharedData.libre3SessionOwner.suppressesGlucose(on: .phone) {
+            await endAllActivities()
+            return
+        }
         guard useLiveActivities else {
             await endAllActivities()
             return
@@ -210,6 +214,10 @@ final class LiveActivityManager {
 #endif
 
             return state
+        }
+        if SharedData.libre3SessionOwner.suppressesGlucose(on: .phone) {
+            await endAllActivities()
+            return
         }
         let content = ActivityContent(
             state: state,

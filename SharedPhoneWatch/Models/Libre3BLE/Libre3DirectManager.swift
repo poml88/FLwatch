@@ -106,8 +106,14 @@ struct Libre3LiveActivityHost {
     }
 }
 
+enum Libre3HostDevice: Equatable, Sendable {
+    case phone
+    case watchWorkout
+}
+
 @MainActor
 struct Libre3HostProfile {
+    let device: Libre3HostDevice
     let sensorAlerts: Libre3SensorAlertHost
     let backgroundRuntime: Libre3BackgroundRuntimeHost
     let phoneConnectivity: Libre3PhoneConnectivityHost
@@ -121,6 +127,7 @@ struct Libre3HostProfile {
     let allowsFullAuthorization: Bool
 
     static let watchWorkout = Libre3HostProfile(
+        device: .watchWorkout,
         sensorAlerts: Libre3SensorAlertHost(
             requestAuthorizationIfNeeded: {},
             retractReconnectFailing: {},
@@ -169,6 +176,7 @@ struct Libre3HostProfile {
 #if os(iOS)
 extension Libre3HostProfile {
     static let phone = Libre3HostProfile(
+        device: .phone,
         sensorAlerts: Libre3SensorAlertHost(
             requestAuthorizationIfNeeded: {
                 await SensorAlertNotificationManager.shared.requestAuthorizationIfNeeded()
@@ -1359,10 +1367,6 @@ final class Libre3DirectManager: ObservableObject {
     /// attempt only while this remains true; `stop()` clears it before issuing
     /// any cancellation whose disconnect callback could otherwise reconnect.
     private var shouldMaintainConnection = false
-    /// Temporary in-process ownership gate for Step 1. Part 4 replaces this with
-    /// the persisted, versioned `SharedData.libre3SessionOwner` claim so a cold
-    /// process launch can make the same decision.
-    private var isStoodDownForHandoff = false
     /// Identifies the currently-owned attempt so a cancelled/stale task cannot
     /// clear or clean up a newer attempt after suspension resumes it late.
     private var lifecycleAttemptID: UUID?
@@ -1577,6 +1581,19 @@ final class Libre3DirectManager: ObservableObject {
 
     private var isActiveProvider: Bool { SharedData.cgmProviderKind == .libre3BLE }
 
+    /// Phone and watch read separate app-group containers, but apply opposite
+    /// sides of the same persisted ownership rule. This also keeps the dormant
+    /// watch engine from starting unless a workout has explicitly claimed it.
+    private var ownershipPermitsConnection: Bool {
+        let ownership = SharedData.libre3SessionOwner
+        switch hostProfile.device {
+        case .phone:
+            return ownership.connectionIsPermitted(on: .phone)
+        case .watchWorkout:
+            return ownership.connectionIsPermitted(on: .watch)
+        }
+    }
+
     private func activeProviderChanged() {
         if isActiveProvider {
             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
@@ -1601,13 +1618,17 @@ final class Libre3DirectManager: ObservableObject {
     /// active provider; otherwise stays fully idle (no central created), so
     /// CoreBluetooth state restoration only ever resurrects the right one.
     func startIfNeeded() {
-        guard isActiveProvider, !isStoodDownForHandoff else { return }
+        guard isActiveProvider, ownershipPermitsConnection else { return }
         start()
     }
 
     /// Begin (or continue) connecting to the paired sensor and streaming.
     func start() {
-        guard !isStoodDownForHandoff else {
+        start(allowPendingPhoneReclaim: false)
+    }
+
+    private func start(allowPendingPhoneReclaim: Bool) {
+        guard ownershipPermitsConnection || allowPendingPhoneReclaim else {
             shouldMaintainConnection = false
             return
         }
@@ -1710,13 +1731,12 @@ final class Libre3DirectManager: ObservableObject {
         connectionState = .idle
     }
 
-    /// Stop maintaining the phone's Libre 3 link so another host can acquire it.
+    /// Stop maintaining this host's Libre 3 link so the peer can acquire it.
     ///
     /// Unlike `stop()`, this deliberately keeps `scannerEventTask` alive until
     /// the matching `.didDisconnect` arrives. Sensor-alert state is untouched:
-    /// ownership is moving to the watch, not being removed from the user.
+    /// ownership is moving to the peer, not being removed from the user.
     func standDownForHandoff() async -> Libre3WorkoutHandoffStandDownResult {
-        isStoodDownForHandoff = true
         shouldMaintainConnection = false
         // This is the one phone alert that must be removed during ownership
         // transfer: leaving its OS deadline armed would produce a false signal-
@@ -1768,15 +1788,18 @@ final class Libre3DirectManager: ObservableObject {
         return result
     }
 
-    /// Return Libre 3 ownership to the phone after a workout handoff. `start()`
-    /// re-arms the signal-loss deadline through the normal lifecycle policy.
-    func resumeAfterHandoff() {
-        let wasStoodDown = isStoodDownForHandoff
-        isStoodDownForHandoff = false
-        if wasStoodDown {
-            Libre3DiagnosticsLog.traceReconnect("workout-handoff-resume")
+    /// Resume Libre 3 on the host selected by the persisted ownership record.
+    /// On the phone, `start()` re-arms signal loss through the normal policy.
+    func resumeAfterHandoff(immediately: Bool = false) {
+        guard ownershipPermitsConnection ||
+                (immediately &&
+                 hostProfile.device == .phone &&
+                 SharedData.libre3SessionOwner.owner == .phone) else {
+            Libre3DiagnosticsLog.traceReconnect("workout-handoff-resume blocked=ownership")
+            return
         }
-        start()
+        Libre3DiagnosticsLog.traceReconnect("workout-handoff-resume")
+        start(allowPendingPhoneReclaim: immediately)
     }
 
     private func waitForWorkoutHandoffDisconnect(
@@ -1843,7 +1866,7 @@ final class Libre3DirectManager: ObservableObject {
     /// traffic for `recoveryStaleThreshold`. Initiates only — the reconnect itself
     /// is carried by the event-driven owner + CoreBluetooth.
     func recoverIfStale() {
-        guard isActiveProvider, !isStoodDownForHandoff else { return }
+        guard isActiveProvider, ownershipPermitsConnection else { return }
         // Keeps the anchor-derived warm-up countdown moving while no patch status
         // has arrived yet — e.g. right after a fresh activation, before the BLE
         // session exists — instead of leaving the seeded value frozen.
@@ -1980,7 +2003,6 @@ final class Libre3DirectManager: ObservableObject {
     /// (Credential clearing itself is `Libre3StateStore.clear()`.)
     func forgetSensor() {
         stop()
-        isStoodDownForHandoff = false
         historicalByLifeCount.removeAll()
         minuteByLifeCount.removeAll()
         backfillResumeLifeCount = nil
@@ -3988,7 +4010,7 @@ final class Libre3DirectManager: ObservableObject {
         // Only an advancing lifeCount proves a new minute arrived. Duplicate
         // frames must not postpone the deadline; this comparison depends on
         // `forgetSensor()` resetting the old sensor's much larger life count.
-        guard !isStoodDownForHandoff,
+        guard ownershipPermitsConnection,
               reading.lifeCount > (lastArmedLifeCount ?? 0) else { return }
         lastArmedLifeCount = reading.lifeCount
         setSignalLossState(deadline: Date().addingTimeInterval(Self.signalLossThreshold))
@@ -4268,7 +4290,7 @@ final class Libre3DirectManager: ObservableObject {
         // A startup recovery task or a late lifecycle packet can finish after
         // stand-down began. Reassert cancellation instead of restoring its stale
         // deadline while the watch owns glucose delivery.
-        guard !isStoodDownForHandoff else {
+        guard ownershipPermitsConnection else {
             setSignalLossState(deadline: nil)
             return
         }

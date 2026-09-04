@@ -229,10 +229,11 @@ final class Libre3PairingCoordinator: ObservableObject {
 
             // Reflect "set up" for the rest of the app and kick off the BLE
             // engine. An NFC pair deletes/replaces cached reconnect material, so
-            // it also terminates any watch handoff: the watch's provisioned key
-            // is no longer valid and phone ownership must win.
+            // it also emits a terminal reclaim for any watch workout: the
+            // watch's provisioned key is no longer valid and phone ownership
+            // must win even if an older queued claim arrives later.
             UserDefaults.group.connected = .connected
-            Libre3DirectManager.shared.resumeAfterHandoff()
+            WatchConnectivityManager.shared.reclaimLibre3SensorForNewPairIfNeeded()
             // The first package intentionally has no reconnect key yet: the NFC
             // pair invalidated it, and the successful full BLE authorization
             // will immediately send the next revision containing the new key.
@@ -263,6 +264,7 @@ final class Libre3PairingCoordinator: ObservableObject {
 
     /// Forget the paired sensor and clear stored credentials.
     func disconnect() {
+        WatchConnectivityManager.shared.reclaimLibre3SensorBeforeDisconnectIfNeeded()
         Libre3DirectManager.shared.forgetSensor()
         Libre3StateStore.clear()
         UserDefaults.group.connected = .disconnected
