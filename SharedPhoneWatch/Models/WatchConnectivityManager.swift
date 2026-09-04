@@ -116,7 +116,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     }
 
     private struct Libre3ProvisioningPayload: Codable, Sendable {
-        static let currentPackageVersion = 1
+        static let currentPackageVersion = 3
 
         let packageVersion: Int
         let sensorIdentity: String
@@ -546,6 +546,9 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
 
 //                    CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs() // Seems to be totally unnecessary here.
                     Logger.connectivity.info("Applied fresh LibreLinkUp snapshot from WatchConnectivity")
+#if os(watchOS)
+                    await WorkoutAlertNotificationManager.shared.evaluateCurrentReading()
+#endif
                 }
             } catch {
                 Logger.connectivity.error("Failed to decode LibreLinkUp snapshot: \(error.localizedDescription)")
@@ -1328,10 +1331,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
                 calibrationSensorSerial: SharedData.libre3CalibrationSensorSerial,
                 calibrationOffsetMgDL: SharedData.libre3CalibrationOffsetMgDL,
                 sensorSettings: SensorSettingsStore.shared.sensorSettings,
-                workoutLowDefaultMgDL: SharedData.lowGlucoseNotificationThreshold,
-                workoutLowCriticalAlertsEnabled: SharedData.lowGlucoseCriticalAlertsEnabled,
-                criticalLowNotificationsEnabled: SharedData.criticalLowGlucoseNotificationsEnabled,
-                criticalLowThresholdMgDL: SharedData.criticalLowGlucoseNotificationThreshold
+                workoutLowDefaultMgDL: SharedData.lowGlucoseNotificationThreshold
             )
         } else {
             state = nil
@@ -1885,7 +1885,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             session.delegate = self
             session.activate()
 #if os(watchOS)
-            configureWatchLowGlucoseNotifications()
+            configureWatchNotifications()
 #endif
             for transfer in session.outstandingUserInfoTransfers {
                 Logger.connectivity.info("Outstanding transfer: \(transfer.userInfo.keys) isTransferring=\(transfer.isTransferring)")
@@ -1992,7 +1992,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         Logger.connectivity.info("Updated watch scene phase to \(String(describing: scenePhase), privacy: .public)")
     }
 
-    private func configureWatchLowGlucoseNotifications() {
+    private func configureWatchNotifications() {
         watchNotificationCenter.delegate = self
     }
 
@@ -2000,6 +2000,20 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         Task {
             _ = await requestWatchNotificationAuthorizationIfNeeded()
         }
+    }
+
+    /// Workout notification criticality is watch-owned. Passing an explicit
+    /// preference keeps unrelated phone-mirrored alert settings from prompting
+    /// for critical authorization when every workout critical flag is off.
+    @MainActor
+    func requestWatchWorkoutNotificationAuthorization() async -> Bool {
+        let wantsCritical = SharedData.workoutLowCriticalAlertsEnabled
+            || SharedData.workoutCriticalLowCriticalAlertsEnabled
+            || SharedData.workoutRapidDropCriticalAlertsEnabled
+            || SharedData.workoutNoReadingCriticalAlertsEnabled
+        return await requestWatchNotificationAuthorizationIfNeeded(
+            criticalDeliveryOverride: wantsCritical
+        )
     }
 
     private func watchNotificationIdentifierPrefix(for tier: GlucoseAlertTier) -> String {
@@ -2024,10 +2038,13 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         }
     }
 
-    private func requestWatchNotificationAuthorizationIfNeeded() async -> Bool {
+    @MainActor
+    private func requestWatchNotificationAuthorizationIfNeeded(
+        criticalDeliveryOverride: Bool? = nil
+    ) async -> Bool {
         let settings = await watchNotificationCenter.notificationSettings()
         guard settings.authorizationStatus != .denied else {
-            Logger.connectivity.warning("Watch low glucose notification authorization denied")
+            Logger.connectivity.warning("Watch notification authorization denied")
             return false
         }
 
@@ -2035,9 +2052,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         // base alert grant exists, so iOS prompts for the incremental
         // critical-alert permission. Skip the request only when already
         // authorized AND the critical grant is satisfied (or not wanted).
-        let wantsCritical = SharedData.lowGlucoseCriticalAlertsEnabled ||
-            SharedData.criticalLowGlucoseCriticalAlertsEnabled ||
-            SharedData.highGlucoseCriticalAlertsEnabled
+        let wantsCritical = criticalDeliveryOverride ?? (
+            SharedData.lowGlucoseCriticalAlertsEnabled
+                || SharedData.criticalLowGlucoseCriticalAlertsEnabled
+                || SharedData.highGlucoseCriticalAlertsEnabled
+        )
         let criticalSatisfied = !wantsCritical || settings.criticalAlertSetting == .enabled
         if [.authorized, .provisional].contains(settings.authorizationStatus), criticalSatisfied {
             return true
@@ -2051,16 +2070,24 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         do {
             return try await watchNotificationCenter.requestAuthorization(options: options)
         } catch {
-            Logger.connectivity.error("Watch low glucose notification authorization failed: \(error.localizedDescription)")
+            Logger.connectivity.error("Watch notification authorization failed: \(error.localizedDescription)")
             return false
         }
     }
 
+    @MainActor
     private func scheduleWatchLowGlucoseNotificationIfNeeded(for payload: LowGlucoseAlertPayload) async {
         let tier = payload.tier ?? .low
         Logger.connectivity.info(
             "Watch \(tier.rawValue, privacy: .public) glucose fallback received: state=\(String(describing: self.watchAppVisibilityState), privacy: .public), sentAt=\(payload.sentAt.formatted(date: .omitted, time: .standard), privacy: .public)"
         )
+        // During any locally owned workout, the watch evaluates the same shared
+        // glucose history itself. Dropping every relayed tier also makes cloud
+        // workouts match Libre 3, whose phone alerts are ownership-suppressed.
+        guard !WorkoutModeStore.shared.isActive else {
+            Logger.connectivity.info("Skipping relayed glucose alert during an active watch workout")
+            return
+        }
         guard watchAppVisibilityState.isFrontmost else {
             Logger.connectivity.info("Skipping watch low glucose fallback: app not frontmost")
             return
@@ -2159,7 +2186,9 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         let isWatchGlucoseAlert = GlucoseAlertTier.allCases.contains {
             identifier.hasPrefix(watchNotificationIdentifierPrefix(for: $0))
         }
-        guard isWatchGlucoseAlert else {
+        let isWorkoutAlert = WorkoutAlertNotificationManager
+            .handlesNotificationIdentifier(identifier)
+        guard isWatchGlucoseAlert || isWorkoutAlert else {
             completionHandler([])
             return
         }

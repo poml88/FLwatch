@@ -508,12 +508,16 @@ enum DefaultsKey: String {
     // exists only so SwiftUI can observe ownership changes with `@AppStorage`.
     case libre3SessionOwner = "libre3SessionOwnerKey"
     case libre3SessionOwnerMirror = "libre3SessionOwnerMirrorKey"
-    // Workout alert defaults are kept separate from the phone-alert settings so
-    // a delayed, unrevisioned settings snapshot cannot overwrite a package.
+    // The provisioned workout-low default is separate from the phone-alert
+    // settings so a delayed, unrevisioned settings snapshot cannot overwrite
+    // the package. All other workout alert preferences are watch-owned.
     case libre3WorkoutLowDefaultMgDL = "libre3WorkoutLowDefaultMgDLKey"
-    case libre3WorkoutLowCriticalAlertsEnabled = "libre3WorkoutLowCriticalAlertsEnabledKey"
-    case libre3WorkoutCriticalLowNotificationsEnabled = "libre3WorkoutCriticalLowNotificationsEnabledKey"
-    case libre3WorkoutCriticalLowThresholdMgDL = "libre3WorkoutCriticalLowThresholdMgDLKey"
+    case workoutLowCriticalAlertsEnabled = "workoutLowCriticalAlertsEnabledKey"
+    case workoutCriticalLowThresholdMgDL = "workoutCriticalLowThresholdMgDLKey"
+    case workoutCriticalLowCriticalAlertsEnabled = "workoutCriticalLowCriticalAlertsEnabledKey"
+    case workoutRapidDropAlertsEnabled = "workoutRapidDropAlertsEnabledKey"
+    case workoutRapidDropCriticalAlertsEnabled = "workoutRapidDropCriticalAlertsEnabledKey"
+    case workoutNoReadingCriticalAlertsEnabled = "workoutNoReadingCriticalAlertsEnabledKey"
 }
 
 // MARK: - Convenience typed helpers + Codable helpers
@@ -1206,19 +1210,34 @@ enum SharedData {
         set { store.setInt(newValue, forKey: .libre3WorkoutLowDefaultMgDL) }
     }
 
-    static var libre3WorkoutLowCriticalAlertsEnabled: Bool {
-        get { store.getBool(.libre3WorkoutLowCriticalAlertsEnabled) }
-        set { store.setBool(newValue, forKey: .libre3WorkoutLowCriticalAlertsEnabled) }
+    static var workoutLowCriticalAlertsEnabled: Bool {
+        get { store.getBool(.workoutLowCriticalAlertsEnabled) }
+        set { store.setBool(newValue, forKey: .workoutLowCriticalAlertsEnabled) }
     }
 
-    static var libre3WorkoutCriticalLowNotificationsEnabled: Bool {
-        get { store.getBool(.libre3WorkoutCriticalLowNotificationsEnabled) }
-        set { store.setBool(newValue, forKey: .libre3WorkoutCriticalLowNotificationsEnabled) }
+    static var workoutCriticalLowThresholdMgDL: Int {
+        get { store.getInt(.workoutCriticalLowThresholdMgDL, defaultValue: 55) }
+        set { store.setInt(newValue, forKey: .workoutCriticalLowThresholdMgDL) }
     }
 
-    static var libre3WorkoutCriticalLowThresholdMgDL: Int {
-        get { store.getInt(.libre3WorkoutCriticalLowThresholdMgDL, defaultValue: 55) }
-        set { store.setInt(newValue, forKey: .libre3WorkoutCriticalLowThresholdMgDL) }
+    static var workoutCriticalLowCriticalAlertsEnabled: Bool {
+        get { store.getBool(.workoutCriticalLowCriticalAlertsEnabled, defaultValue: true) }
+        set { store.setBool(newValue, forKey: .workoutCriticalLowCriticalAlertsEnabled) }
+    }
+
+    static var workoutRapidDropAlertsEnabled: Bool {
+        get { store.getBool(.workoutRapidDropAlertsEnabled, defaultValue: true) }
+        set { store.setBool(newValue, forKey: .workoutRapidDropAlertsEnabled) }
+    }
+
+    static var workoutRapidDropCriticalAlertsEnabled: Bool {
+        get { store.getBool(.workoutRapidDropCriticalAlertsEnabled) }
+        set { store.setBool(newValue, forKey: .workoutRapidDropCriticalAlertsEnabled) }
+    }
+
+    static var workoutNoReadingCriticalAlertsEnabled: Bool {
+        get { store.getBool(.workoutNoReadingCriticalAlertsEnabled, defaultValue: true) }
+        set { store.setBool(newValue, forKey: .workoutNoReadingCriticalAlertsEnabled) }
     }
 
     static var libre3BleAddress: String {

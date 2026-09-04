@@ -155,6 +155,15 @@ enum WorkoutStartResult: Equatable, Sendable {
     }
 }
 
+struct WorkoutAlertState: Codable, Equatable, Sendable {
+    var activeGlucoseTier: GlucoseAlertTier?
+    var lastGlucoseNotificationDate: Date?
+    var wasDroppingQuickly = false
+    var lastRapidDropNotificationDate: Date?
+
+    static let empty = WorkoutAlertState()
+}
+
 @MainActor
 @Observable
 final class WorkoutModeStore {
@@ -167,6 +176,9 @@ final class WorkoutModeStore {
         var workoutTypeRawValue = WorkoutTypeOption.hiking.rawValue
         var workoutLocationRawValue = WorkoutLocationOption.outdoor.rawValue
         var providerKindRawValue = CGMProviderKind.libreLinkUp.rawValue
+        // Optional so workout snapshots written before alerting shipped remain
+        // decodable and naturally start with a clear alert state.
+        var alertState: WorkoutAlertState?
         var updatedAt = Date.distantPast
 
         var workoutType: WorkoutTypeOption {
@@ -192,6 +204,7 @@ final class WorkoutModeStore {
     private(set) var workoutType: WorkoutTypeOption
     private(set) var workoutLocation: WorkoutLocationOption
     private(set) var providerKind: CGMProviderKind
+    private(set) var alertState: WorkoutAlertState
     private(set) var updatedAt: Date
 
     private let fileManager: FileManager
@@ -237,6 +250,7 @@ final class WorkoutModeStore {
         self.workoutType = snapshot.workoutType
         self.workoutLocation = snapshot.workoutLocation
         self.providerKind = snapshot.providerKind
+        self.alertState = snapshot.alertState ?? .empty
         self.updatedAt = snapshot.updatedAt
     }
 
@@ -256,6 +270,7 @@ final class WorkoutModeStore {
                 workoutTypeRawValue: workoutType.rawValue,
                 workoutLocationRawValue: workoutType.defaultLocation.rawValue,
                 providerKindRawValue: providerKind.rawValue,
+                alertState: isActive ? alertState : nil,
                 updatedAt: Date()
             )
         )
@@ -268,7 +283,8 @@ final class WorkoutModeStore {
         lowGlucoseThreshold: Int,
         workoutType: WorkoutTypeOption,
         workoutLocation: WorkoutLocationOption,
-        providerKind: CGMProviderKind
+        providerKind: CGMProviderKind,
+        preservingAlertState: Bool = false
     ) -> Bool {
         persist(
             Snapshot(
@@ -280,6 +296,7 @@ final class WorkoutModeStore {
                 workoutTypeRawValue: workoutType.rawValue,
                 workoutLocationRawValue: workoutLocation.rawValue,
                 providerKindRawValue: providerKind.rawValue,
+                alertState: preservingAlertState ? alertState : .empty,
                 updatedAt: Date()
             )
         )
@@ -297,6 +314,7 @@ final class WorkoutModeStore {
                 workoutTypeRawValue: workoutType.rawValue,
                 workoutLocationRawValue: workoutLocation.rawValue,
                 providerKindRawValue: providerKind.rawValue,
+                alertState: alertState,
                 updatedAt: date
             )
         )
@@ -314,6 +332,26 @@ final class WorkoutModeStore {
                 workoutTypeRawValue: workoutType.rawValue,
                 workoutLocationRawValue: workoutLocation.rawValue,
                 providerKindRawValue: providerKind.rawValue,
+                alertState: nil,
+                updatedAt: date
+            )
+        )
+    }
+
+    @discardableResult
+    func updateAlertState(_ alertState: WorkoutAlertState, at date: Date = Date()) -> Bool {
+        guard isActive else { return false }
+        return persist(
+            Snapshot(
+                isActive: isActive,
+                isEnding: isEnding,
+                workoutSessionID: workoutSessionID,
+                startedAt: startedAt,
+                lowGlucoseThreshold: lowGlucoseThreshold,
+                workoutTypeRawValue: workoutType.rawValue,
+                workoutLocationRawValue: workoutLocation.rawValue,
+                providerKindRawValue: providerKind.rawValue,
+                alertState: alertState,
                 updatedAt: date
             )
         )
@@ -345,6 +383,7 @@ final class WorkoutModeStore {
         workoutType = snapshot.workoutType
         workoutLocation = snapshot.workoutLocation
         providerKind = snapshot.providerKind
+        alertState = snapshot.alertState ?? .empty
         updatedAt = snapshot.updatedAt
     }
 }

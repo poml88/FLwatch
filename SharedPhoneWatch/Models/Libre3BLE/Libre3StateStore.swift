@@ -59,9 +59,6 @@ struct Libre3ProvisionedState: Codable, Equatable, Sendable {
     let calibrationOffsetMgDL: Int
     let sensorSettings: SensorSettings
     let workoutLowDefaultMgDL: Int
-    let workoutLowCriticalAlertsEnabled: Bool
-    let criticalLowNotificationsEnabled: Bool
-    let criticalLowThresholdMgDL: Int
 
     /// Integer wire representation keeps the provisioning digest independent
     /// of Foundation's platform-specific Double-to-JSON formatting.
@@ -413,9 +410,6 @@ enum Libre3StateStore {
         SharedData.libre3CalibrationSensorSerial = state.calibrationSensorSerial
         SharedData.libre3CalibrationOffsetMgDL = state.calibrationOffsetMgDL
         SharedData.libre3WorkoutLowDefaultMgDL = state.workoutLowDefaultMgDL
-        SharedData.libre3WorkoutLowCriticalAlertsEnabled = state.workoutLowCriticalAlertsEnabled
-        SharedData.libre3WorkoutCriticalLowNotificationsEnabled = state.criticalLowNotificationsEnabled
-        SharedData.libre3WorkoutCriticalLowThresholdMgDL = state.criticalLowThresholdMgDL
 
         if sensorChanged {
             SharedData.libre3LastLifeCount = 0

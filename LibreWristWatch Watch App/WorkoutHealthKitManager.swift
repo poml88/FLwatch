@@ -210,6 +210,9 @@ final class WorkoutHealthKitManager: NSObject {
             return .ownershipClaimRejected
         }
 
+        await WorkoutAlertNotificationManager.shared.startOrRecoverWorkout(
+            isRecovery: false
+        )
         WorkoutModeRefreshManager.shared.start()
         operationState = .active
         return .started
@@ -226,6 +229,7 @@ final class WorkoutHealthKitManager: NSObject {
 
         _ = WorkoutModeStore.shared.markEnding(at: endedAt)
         WorkoutModeRefreshManager.shared.stop()
+        await WorkoutAlertNotificationManager.shared.stopWorkout()
         if providerKind == .libre3BLE, let workoutSessionID {
             await WatchConnectivityManager.shared.releaseLibre3SensorAfterWorkout(
                 workoutSessionID: workoutSessionID
@@ -302,6 +306,7 @@ final class WorkoutHealthKitManager: NSObject {
             explicitEndInProgress = true
             operationState = .ending
             WorkoutModeRefreshManager.shared.stop()
+            await WorkoutAlertNotificationManager.shared.stopWorkout()
             if providerKind == .libre3BLE {
                 await WatchConnectivityManager.shared.releaseLibre3SensorAfterWorkout(
                     workoutSessionID: workoutSessionID
@@ -321,7 +326,8 @@ final class WorkoutHealthKitManager: NSObject {
             lowGlucoseThreshold: threshold,
             workoutType: workoutType,
             workoutLocation: workoutLocation,
-            providerKind: providerKind
+            providerKind: providerKind,
+            preservingAlertState: true
         ) else {
             logger.error("Recovered workout could not be persisted; ending untracked session")
             recoveredSession.end()
@@ -342,6 +348,9 @@ final class WorkoutHealthKitManager: NSObject {
             )
         }
 
+        await WorkoutAlertNotificationManager.shared.startOrRecoverWorkout(
+            isRecovery: true
+        )
         WorkoutModeRefreshManager.shared.start()
         operationState = .active
         logger.info("Recovered active watch workout")
@@ -553,6 +562,7 @@ final class WorkoutHealthKitManager: NSObject {
         operationState = .ending
         _ = WorkoutModeStore.shared.markEnding(at: endedAt)
         WorkoutModeRefreshManager.shared.stop()
+        await WorkoutAlertNotificationManager.shared.stopWorkout()
         let ownershipState = SharedData.libre3SessionOwner
         let workoutSessionID = WorkoutModeStore.shared.workoutSessionID
             ?? ownershipState.workoutSessionID
@@ -570,6 +580,8 @@ final class WorkoutHealthKitManager: NSObject {
     }
 
     private func clearStaleWorkoutOwnership() async {
+        WorkoutModeRefreshManager.shared.stop()
+        await WorkoutAlertNotificationManager.shared.stopWorkout()
         let ownershipState = SharedData.libre3SessionOwner
         let staleWorkoutSessionID = WorkoutModeStore.shared.workoutSessionID
             ?? ownershipState.workoutSessionID
@@ -580,7 +592,6 @@ final class WorkoutHealthKitManager: NSObject {
                 workoutSessionID: staleWorkoutSessionID
             )
         }
-        WorkoutModeRefreshManager.shared.stop()
         let workoutStore = WorkoutModeStore.shared
         if workoutStore.isActive
             || workoutStore.isEnding

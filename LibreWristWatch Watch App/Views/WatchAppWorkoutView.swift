@@ -103,17 +103,19 @@ struct WatchAppWorkoutView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 9) {
-                if workoutModeStore.isActive {
-                    TimelineView(.periodic(from: .now, by: 1)) { context in
-                        activeWorkout(at: context.date)
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 9) {
+                    if workoutModeStore.isActive {
+                        TimelineView(.periodic(from: .now, by: 1)) { context in
+                            activeWorkout(at: context.date)
+                        }
+                    } else {
+                        startCard
                     }
-                } else {
-                    startCard
                 }
+                .padding(.horizontal, 7)
             }
-            .padding(.horizontal, 7)
         }
         .onAppear {
             selectedThreshold = workoutModeStore.lowGlucoseThreshold
@@ -221,6 +223,15 @@ struct WatchAppWorkoutView: View {
                 )
             }
             .font(.title3)
+
+            NavigationLink {
+                WorkoutAlertSettingsView(workoutLowThreshold: selectedThreshold)
+            } label: {
+                Text(
+                    "Workout alerts",
+                    comment: "Navigation link from the Apple Watch workout start screen to workout alert settings."
+                )
+            }
 
             Button {
                 Task {
@@ -362,11 +373,158 @@ struct WatchAppWorkoutView: View {
     }
 
     private func persistPreferences() {
+        let maximumCriticalLowThreshold = max(50, min(80, selectedThreshold - 5))
+        SharedData.workoutCriticalLowThresholdMgDL = min(
+            max(SharedData.workoutCriticalLowThresholdMgDL, 50),
+            maximumCriticalLowThreshold
+        )
         _ = workoutModeStore.savePreferences(
             lowGlucoseThreshold: selectedThreshold,
             workoutType: selectedWorkoutType,
             providerKind: currentProviderKind
         )
+    }
+}
+
+private struct WorkoutAlertSettingsView: View {
+    let workoutLowThreshold: Int
+
+    @Environment(\.sensorSettingsStore) private var sensorSettingsStore
+
+    @AppStorage(DefaultsKey.workoutLowCriticalAlertsEnabled.rawValue, store: UserDefaults.group)
+    private var workoutLowCriticalAlertsEnabled = false
+    @AppStorage(DefaultsKey.workoutCriticalLowThresholdMgDL.rawValue, store: UserDefaults.group)
+    private var workoutCriticalLowThresholdMgDL = 55
+    @AppStorage(DefaultsKey.workoutCriticalLowCriticalAlertsEnabled.rawValue, store: UserDefaults.group)
+    private var workoutCriticalLowCriticalAlertsEnabled = true
+    @AppStorage(DefaultsKey.workoutRapidDropAlertsEnabled.rawValue, store: UserDefaults.group)
+    private var workoutRapidDropAlertsEnabled = true
+    @AppStorage(DefaultsKey.workoutRapidDropCriticalAlertsEnabled.rawValue, store: UserDefaults.group)
+    private var workoutRapidDropCriticalAlertsEnabled = false
+    @AppStorage(DefaultsKey.workoutNoReadingCriticalAlertsEnabled.rawValue, store: UserDefaults.group)
+    private var workoutNoReadingCriticalAlertsEnabled = true
+
+    private var glucoseUnit: GlucoseUnit {
+        GlucoseUnit(uom: sensorSettingsStore.sensorSettings.uom)
+    }
+
+    private var maximumCriticalLowThreshold: Int {
+        max(50, min(80, workoutLowThreshold - 5))
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 10) {
+                HStack {
+                    Text(
+                        "Critically low",
+                        comment: "Label for the critically-low glucose threshold used during Apple Watch workouts."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(
+                        verbatim: workoutCriticalLowThresholdMgDL.asGlucose(
+                            glucoseUnit: glucoseUnit,
+                            withUnit: true
+                        )
+                    )
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                }
+
+                HStack(spacing: 28) {
+                    Button {
+                        workoutCriticalLowThresholdMgDL = max(
+                            workoutCriticalLowThresholdMgDL - 5,
+                            50
+                        )
+                    } label: {
+                        Image(systemName: "minus.circle.fill")
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(
+                        Text(
+                            "Lower critically-low threshold",
+                            comment: "Accessibility label for lowering the Apple Watch workout critically-low glucose threshold."
+                        )
+                    )
+
+                    Button {
+                        workoutCriticalLowThresholdMgDL = min(
+                            workoutCriticalLowThresholdMgDL + 5,
+                            maximumCriticalLowThreshold
+                        )
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(
+                        Text(
+                            "Raise critically-low threshold",
+                            comment: "Accessibility label for raising the Apple Watch workout critically-low glucose threshold."
+                        )
+                    )
+                }
+                .font(.title3)
+
+                Toggle(isOn: $workoutLowCriticalAlertsEnabled) {
+                    Text(
+                        "Critical workout-low alerts",
+                        comment: "Toggle that makes workout-low glucose notifications use critical delivery on Apple Watch."
+                    )
+                }
+
+                Toggle(isOn: $workoutCriticalLowCriticalAlertsEnabled) {
+                    Text(
+                        "Critical critically-low alerts",
+                        comment: "Toggle that makes critically-low glucose notifications during workouts use critical delivery on Apple Watch."
+                    )
+                }
+
+                Toggle(isOn: $workoutRapidDropAlertsEnabled) {
+                    Text(
+                        "Rapid-drop alerts",
+                        comment: "Toggle that enables rapid glucose-drop notifications during Apple Watch workouts."
+                    )
+                }
+
+                Text(
+                    "Alerts when the sensor trend arrow is pointing straight down.",
+                    comment: "Explanation of when rapid-drop workout alerts fire on Apple Watch."
+                )
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+                Toggle(isOn: $workoutRapidDropCriticalAlertsEnabled) {
+                    Text(
+                        "Critical rapid-drop alerts",
+                        comment: "Toggle that makes rapid glucose-drop notifications during workouts use critical delivery on Apple Watch."
+                    )
+                }
+
+                Toggle(isOn: $workoutNoReadingCriticalAlertsEnabled) {
+                    Text(
+                        "Critical no-reading alerts",
+                        comment: "Toggle that makes missing-glucose-reading notifications during workouts use critical delivery on Apple Watch."
+                    )
+                }
+            }
+            .padding(.horizontal, 7)
+        }
+        .navigationTitle(
+            Text(
+                "Workout alerts",
+                comment: "Navigation title for Apple Watch workout alert settings."
+            )
+        )
+        .onAppear {
+            workoutCriticalLowThresholdMgDL = min(
+                max(workoutCriticalLowThresholdMgDL, 50),
+                maximumCriticalLowThreshold
+            )
+        }
     }
 }
 

@@ -126,6 +126,20 @@ struct Libre3HostProfile {
     /// escalating to a full handshake. Provisioning is its only credential path.
     let allowsFullAuthorization: Bool
 
+#if os(watchOS)
+    private static let watchWorkoutLowGlucoseAlerts = Libre3LowGlucoseAlertHost(
+        isEnabled: true,
+        evaluateCurrentReading: {
+            await WorkoutAlertNotificationManager.shared.evaluateCurrentReading()
+        }
+    )
+#else
+    private static let watchWorkoutLowGlucoseAlerts = Libre3LowGlucoseAlertHost(
+        isEnabled: false,
+        evaluateCurrentReading: {}
+    )
+#endif
+
     static let watchWorkout = Libre3HostProfile(
         device: .watchWorkout,
         sensorAlerts: Libre3SensorAlertHost(
@@ -152,10 +166,7 @@ struct Libre3HostProfile {
             sendGlucoseSnapshot: {},
             sendProvisioningPackage: {}
         ),
-        lowGlucoseAlerts: Libre3LowGlucoseAlertHost(
-            isEnabled: false,
-            evaluateCurrentReading: {}
-        ),
+        lowGlucoseAlerts: watchWorkoutLowGlucoseAlerts,
         liveActivity: Libre3LiveActivityHost(
             isEnabled: false,
             refreshFromCurrentHistory: { _, _ in }
@@ -3991,10 +4002,10 @@ final class Libre3DirectManager: ObservableObject {
     /// the moment a fresh *usable* minute reading has been written into the
     /// shared `LibreLinkUpHistory` store by `pushHistory()`.
     ///
-    /// On the phone, `LowGlucoseNotificationManager` reads the shared history +
-    /// `activeProvider.staleReadingAfter` (3 min for `.libre3BLE`) and self-gates
-    /// each enabled tier with its own 5-minute repeat throttle. Only called on a usable reading
-    /// (not warm-up/garbage, not per backfill page), mirroring
+    /// The phone profile routes to the ordinary app alert policy; the watch
+    /// profile routes to the workout-only policy. Both read the shared history
+    /// and apply their own freshness, threshold and repeat gates. Only called on
+    /// a usable reading (not warm-up/garbage, not per backfill page), mirroring
     /// `refreshLiveActivityForNewReading`.
     private func evaluateLowGlucoseForNewReading() {
         guard hostProfile.lowGlucoseAlerts.isEnabled else { return }
