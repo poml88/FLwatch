@@ -279,6 +279,24 @@ enum DefaultsKey: String {
     case libre3CalibrationOffsetMgDL = "libre3CalibrationOffsetMgDLKey"
     case libre3CalibrationSensorSerial = "libre3CalibrationSensorSerialKey"
     case libre3CalibrationLog = "libre3CalibrationLogKey"
+    // Direct-to-watch provisioning is revisioned independently from the general
+    // settings snapshot. These keys are device-local despite using the shared
+    // defaults facade: phone and watch have separate app-group containers.
+    case libre3ProvisioningCurrentRevision = "libre3ProvisioningCurrentRevisionKey"
+    case libre3ProvisioningCurrentDigest = "libre3ProvisioningCurrentDigestKey"
+    case libre3ProvisioningCurrentSensorIdentity = "libre3ProvisioningCurrentSensorIdentityKey"
+    case libre3ProvisioningAcknowledgedRevision = "libre3ProvisioningAcknowledgedRevisionKey"
+    case libre3ProvisioningAcknowledgedDigest = "libre3ProvisioningAcknowledgedDigestKey"
+    case libre3ProvisioningAcknowledgedSensorIdentity = "libre3ProvisioningAcknowledgedSensorIdentityKey"
+    case libre3ProvisioningInstalledRevision = "libre3ProvisioningInstalledRevisionKey"
+    case libre3ProvisioningInstalledDigest = "libre3ProvisioningInstalledDigestKey"
+    case libre3ProvisioningInstalledSensorIdentity = "libre3ProvisioningInstalledSensorIdentityKey"
+    // Workout alert defaults are kept separate from the phone-alert settings so
+    // a delayed, unrevisioned settings snapshot cannot overwrite a package.
+    case libre3WorkoutLowDefaultMgDL = "libre3WorkoutLowDefaultMgDLKey"
+    case libre3WorkoutLowCriticalAlertsEnabled = "libre3WorkoutLowCriticalAlertsEnabledKey"
+    case libre3WorkoutCriticalLowNotificationsEnabled = "libre3WorkoutCriticalLowNotificationsEnabledKey"
+    case libre3WorkoutCriticalLowThresholdMgDL = "libre3WorkoutCriticalLowThresholdMgDLKey"
 }
 
 // MARK: - Convenience typed helpers + Codable helpers
@@ -892,6 +910,73 @@ enum SharedData {
         libre3CalibrationOffsetMgDL = 0
         libre3CalibrationSensorSerial = ""
         store.removeObject(forKey: DefaultsKey.libre3CalibrationLog.rawValue)
+    }
+
+    // MARK: Direct-to-watch provisioning
+
+    static var libre3ProvisioningCurrentRevision: Int64 {
+        get { (store.object(forKey: DefaultsKey.libre3ProvisioningCurrentRevision.rawValue) as? NSNumber)?.int64Value ?? 0 }
+        set { store.set(max(0, newValue), forKey: DefaultsKey.libre3ProvisioningCurrentRevision.rawValue) }
+    }
+
+    static var libre3ProvisioningCurrentDigest: String {
+        get { store.getString(.libre3ProvisioningCurrentDigest) }
+        set { store.setString(newValue, forKey: .libre3ProvisioningCurrentDigest) }
+    }
+
+    static var libre3ProvisioningCurrentSensorIdentity: String {
+        get { store.getString(.libre3ProvisioningCurrentSensorIdentity) }
+        set { store.setString(newValue, forKey: .libre3ProvisioningCurrentSensorIdentity) }
+    }
+
+    static var libre3ProvisioningAcknowledgedRevision: Int64 {
+        get { (store.object(forKey: DefaultsKey.libre3ProvisioningAcknowledgedRevision.rawValue) as? NSNumber)?.int64Value ?? 0 }
+        set { store.set(max(0, newValue), forKey: DefaultsKey.libre3ProvisioningAcknowledgedRevision.rawValue) }
+    }
+
+    static var libre3ProvisioningAcknowledgedDigest: String {
+        get { store.getString(.libre3ProvisioningAcknowledgedDigest) }
+        set { store.setString(newValue, forKey: .libre3ProvisioningAcknowledgedDigest) }
+    }
+
+    static var libre3ProvisioningAcknowledgedSensorIdentity: String {
+        get { store.getString(.libre3ProvisioningAcknowledgedSensorIdentity) }
+        set { store.setString(newValue, forKey: .libre3ProvisioningAcknowledgedSensorIdentity) }
+    }
+
+    static var libre3ProvisioningInstalledRevision: Int64 {
+        get { (store.object(forKey: DefaultsKey.libre3ProvisioningInstalledRevision.rawValue) as? NSNumber)?.int64Value ?? 0 }
+        set { store.set(max(0, newValue), forKey: DefaultsKey.libre3ProvisioningInstalledRevision.rawValue) }
+    }
+
+    static var libre3ProvisioningInstalledDigest: String {
+        get { store.getString(.libre3ProvisioningInstalledDigest) }
+        set { store.setString(newValue, forKey: .libre3ProvisioningInstalledDigest) }
+    }
+
+    static var libre3ProvisioningInstalledSensorIdentity: String {
+        get { store.getString(.libre3ProvisioningInstalledSensorIdentity) }
+        set { store.setString(newValue, forKey: .libre3ProvisioningInstalledSensorIdentity) }
+    }
+
+    static var libre3WorkoutLowDefaultMgDL: Int {
+        get { store.getInt(.libre3WorkoutLowDefaultMgDL, defaultValue: 70) }
+        set { store.setInt(newValue, forKey: .libre3WorkoutLowDefaultMgDL) }
+    }
+
+    static var libre3WorkoutLowCriticalAlertsEnabled: Bool {
+        get { store.getBool(.libre3WorkoutLowCriticalAlertsEnabled) }
+        set { store.setBool(newValue, forKey: .libre3WorkoutLowCriticalAlertsEnabled) }
+    }
+
+    static var libre3WorkoutCriticalLowNotificationsEnabled: Bool {
+        get { store.getBool(.libre3WorkoutCriticalLowNotificationsEnabled) }
+        set { store.setBool(newValue, forKey: .libre3WorkoutCriticalLowNotificationsEnabled) }
+    }
+
+    static var libre3WorkoutCriticalLowThresholdMgDL: Int {
+        get { store.getInt(.libre3WorkoutCriticalLowThresholdMgDL, defaultValue: 55) }
+        set { store.setInt(newValue, forKey: .libre3WorkoutCriticalLowThresholdMgDL) }
     }
 
     static var libre3BleAddress: String {

@@ -29,6 +29,47 @@ enum Libre3StateStoreError: Error {
     /// own installation identity when the user named a vendor app would write an
     /// ID that app can never reproduce, stranding the sensor for its whole wear.
     case invalidReceiverIDConfiguration
+
+    /// The watch must not acknowledge a provisioning package unless its sensor
+    /// settings reached the same persistent store the BLE engine will read.
+    case provisionedSensorSettingsNotPersisted
+
+    /// A successful Security.framework return is not enough for the package
+    /// acknowledgement; verify both secrets can be read back byte-for-byte.
+    case provisionedSecretsNotPersisted
+}
+
+/// Complete phone-owned state needed for cached Libre 3 reconnects on the
+/// watch. CoreBluetooth's peripheral UUID is intentionally absent because it is
+/// local to one central and the watch must discover and bind its own.
+struct Libre3ProvisionedState: Codable, Equatable, Sendable {
+    let serial: String
+    let bleAddress: String
+    let receiverIDHex: String
+    let mode: Libre3Mode?
+    let firmwareVersion: String
+    let warmupMinutes: Int
+    let wearDurationMinutes: Int
+    let generation: Int
+    let productType: Int
+    let sensorStartDateMillisecondsSince1970: Int64?
+    let blePIN: Data
+    let reconnectKey: Data?
+    let calibrationSensorSerial: String
+    let calibrationOffsetMgDL: Int
+    let sensorSettings: SensorSettings
+    let workoutLowDefaultMgDL: Int
+    let workoutLowCriticalAlertsEnabled: Bool
+    let criticalLowNotificationsEnabled: Bool
+    let criticalLowThresholdMgDL: Int
+
+    /// Integer wire representation keeps the provisioning digest independent
+    /// of Foundation's platform-specific Double-to-JSON formatting.
+    var sensorStartDate: Date? {
+        sensorStartDateMillisecondsSince1970.map {
+            Date(timeIntervalSince1970: TimeInterval($0) / 1_000)
+        }
+    }
 }
 
 /// The LibreCRKit fold this app applies to a LibreView Account ID, or nil when it
@@ -312,6 +353,93 @@ enum Libre3StateStore {
         )
     }
 
+    /// Install a phone-created package on the watch without using `save`, whose
+    /// NFC semantics deliberately delete cached authorization. Keychain changes
+    /// are rolled back if either secret or the shared sensor-settings snapshot
+    /// cannot be persisted; the caller may acknowledge only after this returns.
+    @MainActor
+    static func installProvisionedState(_ state: Libre3ProvisionedState) throws {
+        let previousPIN = try Libre3PINStore.read()
+        let previousReconnectKey = try Libre3PINStore.readReconnectKey()
+
+        do {
+            try Libre3PINStore.save(state.blePIN)
+            if let reconnectKey = state.reconnectKey {
+                try Libre3PINStore.saveReconnectKey(reconnectKey)
+            } else {
+                try Libre3PINStore.deleteReconnectKey()
+            }
+            guard try Libre3PINStore.read() == state.blePIN,
+                  try Libre3PINStore.readReconnectKey() == state.reconnectKey else {
+                throw Libre3StateStoreError.provisionedSecretsNotPersisted
+            }
+
+            let sensorType = sensorType(
+                productType: state.productType,
+                generation: state.generation
+            )
+            guard SensorSettingsStore.shared.replaceCacheAndPersist(
+                sensorSettings: state.sensorSettings,
+                sensorType: sensorType
+            ) else {
+                throw Libre3StateStoreError.provisionedSensorSettingsNotPersisted
+            }
+        } catch {
+            restoreKeychainValue(
+                previousPIN,
+                save: { try Libre3PINStore.save($0) },
+                delete: { try Libre3PINStore.delete() }
+            )
+            restoreKeychainValue(
+                previousReconnectKey,
+                save: { try Libre3PINStore.saveReconnectKey($0) },
+                delete: { try Libre3PINStore.deleteReconnectKey() }
+            )
+            throw error
+        }
+
+        let sensorChanged = SharedData.libre3Serial != state.serial
+        SharedData.libre3PeripheralUUID = ""
+        SharedData.libre3Serial = state.serial
+        SharedData.libre3BleAddress = state.bleAddress
+        SharedData.libre3ReceiverIDHex = state.receiverIDHex
+        SharedData.libre3Mode = state.mode
+        SharedData.libre3FirmwareVersion = state.firmwareVersion
+        SharedData.libre3WarmupMinutes = state.warmupMinutes
+        SharedData.libre3WearDurationMinutes = state.wearDurationMinutes
+        SharedData.libre3Generation = state.generation
+        SharedData.libre3ProductType = state.productType
+        SharedData.libre3SensorStartDate = state.sensorStartDate
+        SharedData.libre3CalibrationSensorSerial = state.calibrationSensorSerial
+        SharedData.libre3CalibrationOffsetMgDL = state.calibrationOffsetMgDL
+        SharedData.libre3WorkoutLowDefaultMgDL = state.workoutLowDefaultMgDL
+        SharedData.libre3WorkoutLowCriticalAlertsEnabled = state.workoutLowCriticalAlertsEnabled
+        SharedData.libre3WorkoutCriticalLowNotificationsEnabled = state.criticalLowNotificationsEnabled
+        SharedData.libre3WorkoutCriticalLowThresholdMgDL = state.criticalLowThresholdMgDL
+
+        if sensorChanged {
+            SharedData.libre3LastLifeCount = 0
+            SharedData.libre3LastGlucoseMgDL = 0
+            SharedData.libre3LastGlucoseAt = nil
+        }
+    }
+
+    private static func restoreKeychainValue(
+        _ value: Data?,
+        save: (Data) throws -> Void,
+        delete: () throws -> Void
+    ) {
+        do {
+            if let value {
+                try save(value)
+            } else {
+                try delete()
+            }
+        } catch {
+            Logger.libre3.error("Couldn't roll back a partial watch provisioning keychain write: \(String(describing: error), privacy: .public)")
+        }
+    }
+
     /// Forget the paired sensor (disconnect).
     ///
     /// `libre3ReceiverIDHex` goes with it: it records what *that* sensor holds, so
@@ -327,6 +455,11 @@ enum Libre3StateStore {
         SharedData.libre3FirmwareVersion = ""
         SharedData.libre3Mode = nil
         SharedData.libre3PeripheralUUID = ""
+        SharedData.libre3SensorStartDate = nil
+        SharedData.libre3LastLifeCount = 0
+        SharedData.libre3LastGlucoseMgDL = 0
+        SharedData.libre3LastGlucoseAt = nil
+        SharedData.libre3WarmupMinutes = 0
         SharedData.libre3WearDurationMinutes = 0
         SharedData.libre3Generation = 0
         SharedData.libre3ProductType = 0
@@ -340,13 +473,13 @@ enum Libre3StateStore {
     /// handshake. `runCachedReconnectHandshake` reuses this authorization key
     /// on every later connection; cached reconnects do not replace it with their
     /// fresh Phase-6 data-plane keys.
-    static func saveReconnectKey(_ rawKey: Data) {
-        try? Libre3PINStore.saveReconnectKey(rawKey)
+    static func saveReconnectKey(_ rawKey: Data) throws {
+        try Libre3PINStore.saveReconnectKey(rawKey)
     }
 
-    /// The persisted cached-reconnect key, or `nil` if a full handshake hasn't
-    /// completed since pairing or the app predates this stored material. Only
-    /// this no-key establishment path runs full authorization.
+    /// The persisted cached-reconnect key, or `nil` if a phone full handshake
+    /// hasn't completed since pairing or the app predates this stored material.
+    /// A watch treats nil as not ready; it never establishes this key itself.
     static func loadReconnectKey() -> Data? {
         (try? Libre3PINStore.readReconnectKey()) ?? nil
     }
@@ -356,9 +489,16 @@ enum Libre3StateStore {
     /// sensor name and `isALibre` behaviour, mirroring how DiaBLE/Juggluco read
     /// the patch frame.
     static var sensorType: SensorType {
-        switch SharedData.libre3ProductType {
+        sensorType(
+            productType: SharedData.libre3ProductType,
+            generation: SharedData.libre3Generation
+        )
+    }
+
+    private static func sensorType(productType: Int, generation: Int) -> SensorType {
+        switch productType {
         case 9: return .lingo
-        default: return SharedData.libre3Generation >= 1 ? .libre3Plus : .libre3
+        default: return generation >= 1 ? .libre3Plus : .libre3
         }
     }
 

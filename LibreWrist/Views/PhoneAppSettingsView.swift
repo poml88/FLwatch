@@ -1083,6 +1083,7 @@ struct PhoneAppSettingsView: View {
             Section {
                 Button("Re-send all settings to watch") {
                     watchConnector.sendSettingsSnapshotToWatch()
+                    watchConnector.sendLibre3ProvisioningPackageToWatch(force: true)
                 }
             } header: {
                 Text("Watch Settings")

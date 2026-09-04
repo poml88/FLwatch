@@ -517,6 +517,7 @@ struct PhoneAppCalibrationView: View {
         guard !serial.isEmpty else { return }
         SharedData.libre3CalibrationSensorSerial = serial
         SharedData.libre3CalibrationOffsetMgDL = draftOffsetMgDL
+        WatchConnectivityManager.shared.sendLibre3ProvisioningPackageToWatch()
         statusMessage = draftOffsetMgDL == 0
             ? String(localized: "Calibration disabled for future readings.")
             : String(localized: "Saved. The offset applies to the next received reading.")
@@ -536,6 +537,7 @@ struct PhoneAppCalibrationView: View {
         guard !serial.isEmpty else { return }
         SharedData.libre3CalibrationSensorSerial = serial
         UserDefaults.group.setArray(entries, forKey: .libre3CalibrationLog)
+        WatchConnectivityManager.shared.sendLibre3ProvisioningPackageToWatch()
     }
 
     private func formattedOffset(_ valueMgDL: Int) -> String {

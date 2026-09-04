@@ -10,6 +10,13 @@ import SwiftUI
 import UserNotifications
 import WatchConnectivity
 import OSLog
+import CryptoKit
+
+enum Libre3ProvisioningReadiness: Equatable, Sendable {
+    case waitingForSensorSetup
+    case ready
+    case outdated
+}
 
 class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationCenterDelegate {  // ObservableObject is the old method, Swiftui now uses @Observable
     // https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app
@@ -22,6 +29,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     private static let settingsSnapshotContent = "settingsSnapshot"
     private static let settingsSnapshotDataKey = "settingsSnapshotData"
     private static let requestSettingsSnapshotContent = "requestSettingsSnapshot"
+    private static let libre3ProvisioningContent = "libre3Provisioning"
+    private static let libre3ProvisioningDataKey = "libre3ProvisioningData"
+    private static let libre3ProvisioningAcknowledgementContent = "libre3ProvisioningAcknowledgement"
+    private static let libre3ProvisioningAcknowledgementDataKey = "libre3ProvisioningAcknowledgementData"
+    private static let requestLibre3ProvisioningContent = "requestLibre3Provisioning"
     private static let lowGlucoseAlertContent = "lowGlucoseAlert"
     private static let highGlucoseAlertContent = "highGlucoseAlert"
     private static let lowGlucoseAlertDataKey = "lowGlucoseAlertData"
@@ -97,6 +109,37 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         let criticalLowGlucoseCriticalAlertsEnabled: Bool?
         let highGlucoseCriticalAlertsEnabled: Bool?
         let updatedAt: Date
+    }
+
+    private struct Libre3ProvisioningPayload: Codable, Sendable {
+        static let currentPackageVersion = 1
+
+        let packageVersion: Int
+        let sensorIdentity: String
+        let revision: Int64
+        let digest: String
+        let state: Libre3ProvisionedState?
+        let createdAt: Date
+    }
+
+    private struct Libre3ProvisioningDigestMaterial: Codable, Sendable {
+        let packageVersion: Int
+        let sensorIdentity: String
+        let state: Libre3ProvisionedState?
+    }
+
+    private struct DesiredLibre3ProvisioningPackage: Sendable {
+        let sensorIdentity: String
+        let state: Libre3ProvisionedState?
+        let digest: String
+    }
+
+    private struct Libre3ProvisioningAcknowledgement: Codable, Sendable {
+        let packageVersion: Int
+        let sensorIdentity: String
+        let revision: Int64
+        let digest: String
+        let installedAt: Date
     }
 
     private struct LowGlucoseAlertPayload: Codable {
@@ -204,6 +247,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
 #if os(watchOS)
         if activationState == .activated {
             requestSettingsSnapshotFromPhone()
+            requestLibre3ProvisioningFromPhone()
+        }
+#elseif os(iOS)
+        if activationState == .activated {
+            sendSettingsSnapshotToWatch()
         }
 #endif
     }
@@ -221,6 +269,10 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     func sessionWatchStateDidChange(_ session: WCSession) {
 //        print("\(#function): activationState = \(session.activationState.rawValue)")
         Logger.connectivity.info("Session Watch State did change")
+        // Send the ordinary snapshot now. A replacement watch separately asks
+        // for provisioning during its activation, and that request takes the
+        // forced path even if this phone still remembers the old watch's ack.
+        sendSettingsSnapshotToWatch()
     }
 
 #endif
@@ -335,6 +387,50 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         if message["content"] as? String == Self.requestSettingsSnapshotContent {
 #if os(iOS)
             sendSettingsSnapshotToWatch()
+#endif
+        }
+
+        if message["content"] as? String == Self.requestLibre3ProvisioningContent {
+#if os(iOS)
+            // A watch-originated request is authoritative evidence that its
+            // local package is absent or suspect; do not trust an old ack from
+            // a replaced/reinstalled watch to suppress this transfer.
+            sendLibre3ProvisioningPackageToWatch(force: true)
+#endif
+        }
+
+        if message["content"] as? String == Self.libre3ProvisioningContent {
+#if os(watchOS)
+            guard let provisioningData = message[Self.libre3ProvisioningDataKey] as? Data else {
+                Logger.connectivity.error("Missing Libre 3 provisioning data in message")
+                return
+            }
+            do {
+                let payload = try JSONDecoder().decode(Libre3ProvisioningPayload.self, from: provisioningData)
+                applyLibre3ProvisioningPayload(payload)
+            } catch {
+                Logger.connectivity.error("Failed to decode Libre 3 provisioning package: \(error.localizedDescription)")
+            }
+#endif
+        }
+
+        if message["content"] as? String == Self.libre3ProvisioningAcknowledgementContent {
+#if os(iOS)
+            guard let acknowledgementData = message[Self.libre3ProvisioningAcknowledgementDataKey] as? Data else {
+                Logger.connectivity.error("Missing Libre 3 provisioning acknowledgement data in message")
+                return
+            }
+            do {
+                let acknowledgement = try JSONDecoder().decode(
+                    Libre3ProvisioningAcknowledgement.self,
+                    from: acknowledgementData
+                )
+                Task { @MainActor in
+                    applyLibre3ProvisioningAcknowledgement(acknowledgement)
+                }
+            } catch {
+                Logger.connectivity.error("Failed to decode Libre 3 provisioning acknowledgement: \(error.localizedDescription)")
+            }
 #endif
         }
 
@@ -592,7 +688,200 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         } catch {
             Logger.connectivity.error("Failed to encode settings snapshot: \(error.localizedDescription)")
         }
+
+        // Direct BLE has an acknowledged, revisioned package of its own. The
+        // general snapshot remains responsible for provider selection and
+        // backward compatibility, while this call makes all existing settings
+        // sync triggers also notice provisioning-relevant changes.
+        sendLibre3ProvisioningPackageToWatch()
       }
+    }
+
+    /// Send the current phone-owned Libre 3 package when its digest changed or
+    /// the watch has not acknowledged the current revision. `force` is reserved
+    /// for an explicit watch resync/install request, where an acknowledgement
+    /// may belong to a previous watch.
+    func sendLibre3ProvisioningPackageToWatch(force: Bool = false) {
+        Task { @MainActor in
+            guard let desired = makeDesiredLibre3ProvisioningPackage() else { return }
+            let payload = commitLibre3ProvisioningPackage(desired)
+            let isAcknowledged =
+                SharedData.libre3ProvisioningAcknowledgedRevision == payload.revision
+                && SharedData.libre3ProvisioningAcknowledgedDigest == payload.digest
+                && SharedData.libre3ProvisioningAcknowledgedSensorIdentity == payload.sensorIdentity
+            guard force || !isAcknowledged else { return }
+
+            do {
+                let data = try JSONEncoder().encode(payload)
+                let message: [String: Any] = [
+                    "content": Self.libre3ProvisioningContent,
+                    Self.libre3ProvisioningDataKey: data,
+                    // Provisioning must be delivered once and in FIFO order.
+                    // Application context is replayed and coalesced, which can
+                    // resurrect an obsolete package after a later clear.
+                    "useApplicationContext": false
+                ]
+                sendMessageToPairedDevice(message)
+                Logger.connectivity.info(
+                    "Queued Libre 3 provisioning revision=\(payload.revision, privacy: .public) sensor=\(payload.sensorIdentity, privacy: .private(mask: .hash)) hasState=\(payload.state != nil, privacy: .public)"
+                )
+            } catch {
+                Logger.connectivity.error("Failed to encode Libre 3 provisioning package: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Part 1's phone readiness surface will consume this. Keep the getter pure:
+    /// observing SwiftUI state must not itself advance a provisioning revision.
+    @MainActor
+    var libre3ProvisioningReadiness: Libre3ProvisioningReadiness {
+        guard SharedData.libre3SensorIsPaired,
+              Libre3StateStore.loadReconnectKey() != nil,
+              let desired = makeDesiredLibre3ProvisioningPackage() else {
+            return .waitingForSensorSetup
+        }
+        let desiredStateIsCurrent =
+            SharedData.libre3ProvisioningCurrentRevision > 0
+            && SharedData.libre3ProvisioningCurrentDigest == desired.digest
+            && SharedData.libre3ProvisioningCurrentSensorIdentity == desired.sensorIdentity
+        guard desiredStateIsCurrent else { return .outdated }
+
+        let isAcknowledged =
+            SharedData.libre3ProvisioningAcknowledgedRevision == SharedData.libre3ProvisioningCurrentRevision
+            && SharedData.libre3ProvisioningAcknowledgedDigest == desired.digest
+            && SharedData.libre3ProvisioningAcknowledgedSensorIdentity == desired.sensorIdentity
+        return isAcknowledged ? .ready : .outdated
+    }
+
+    @MainActor
+    private func makeDesiredLibre3ProvisioningPackage() -> DesiredLibre3ProvisioningPackage? {
+        let state: Libre3ProvisionedState?
+        if SharedData.libre3SensorIsPaired {
+            guard let pin = (try? Libre3PINStore.read()) ?? nil else {
+                Logger.connectivity.error("Cannot provision Libre 3: paired metadata has no keychain PIN")
+                return nil
+            }
+            state = Libre3ProvisionedState(
+                serial: SharedData.libre3Serial,
+                bleAddress: SharedData.libre3BleAddress,
+                receiverIDHex: SharedData.libre3ReceiverIDHex,
+                mode: SharedData.libre3Mode,
+                firmwareVersion: SharedData.libre3FirmwareVersion,
+                warmupMinutes: SharedData.libre3WarmupMinutes,
+                wearDurationMinutes: SharedData.libre3WearDurationMinutes,
+                generation: SharedData.libre3Generation,
+                productType: SharedData.libre3ProductType,
+                sensorStartDateMillisecondsSince1970: SharedData.libre3SensorStartDate.map {
+                    Int64(($0.timeIntervalSince1970 * 1_000).rounded())
+                },
+                blePIN: pin,
+                reconnectKey: Libre3StateStore.loadReconnectKey(),
+                calibrationSensorSerial: SharedData.libre3CalibrationSensorSerial,
+                calibrationOffsetMgDL: SharedData.libre3CalibrationOffsetMgDL,
+                sensorSettings: SensorSettingsStore.shared.sensorSettings,
+                workoutLowDefaultMgDL: SharedData.lowGlucoseNotificationThreshold,
+                workoutLowCriticalAlertsEnabled: SharedData.lowGlucoseCriticalAlertsEnabled,
+                criticalLowNotificationsEnabled: SharedData.criticalLowGlucoseNotificationsEnabled,
+                criticalLowThresholdMgDL: SharedData.criticalLowGlucoseNotificationThreshold
+            )
+        } else {
+            state = nil
+        }
+
+        // Retain the last non-empty identity in a clear package. It makes logs
+        // and acknowledgements attributable while the global revision remains
+        // the actual ordering authority.
+        let sensorIdentity = state?.serial
+            ?? SharedData.libre3ProvisioningCurrentSensorIdentity
+        let material = Libre3ProvisioningDigestMaterial(
+            packageVersion: Libre3ProvisioningPayload.currentPackageVersion,
+            sensorIdentity: sensorIdentity,
+            state: state
+        )
+
+        let digest: String
+        do {
+            digest = try Self.libre3ProvisioningDigest(for: material)
+        } catch {
+            Logger.connectivity.error("Failed to digest Libre 3 provisioning package: \(error.localizedDescription)")
+            return nil
+        }
+
+        return DesiredLibre3ProvisioningPackage(
+            sensorIdentity: sensorIdentity,
+            state: state,
+            digest: digest
+        )
+    }
+
+    @MainActor
+    private func commitLibre3ProvisioningPackage(
+        _ desired: DesiredLibre3ProvisioningPackage
+    ) -> Libre3ProvisioningPayload {
+        var revision = SharedData.libre3ProvisioningCurrentRevision
+        if revision <= 0
+            || desired.digest != SharedData.libre3ProvisioningCurrentDigest
+            || desired.sensorIdentity != SharedData.libre3ProvisioningCurrentSensorIdentity {
+            revision = Self.nextLibre3ProvisioningRevision(after: revision)
+            SharedData.libre3ProvisioningCurrentRevision = revision
+            SharedData.libre3ProvisioningCurrentDigest = desired.digest
+            SharedData.libre3ProvisioningCurrentSensorIdentity = desired.sensorIdentity
+        }
+        return Libre3ProvisioningPayload(
+            packageVersion: Libre3ProvisioningPayload.currentPackageVersion,
+            sensorIdentity: desired.sensorIdentity,
+            revision: revision,
+            digest: desired.digest,
+            state: desired.state,
+            createdAt: Date()
+        )
+    }
+
+    @MainActor
+    private func applyLibre3ProvisioningAcknowledgement(
+        _ acknowledgement: Libre3ProvisioningAcknowledgement
+    ) {
+        guard acknowledgement.packageVersion == Libre3ProvisioningPayload.currentPackageVersion else {
+            Logger.connectivity.info("Ignored Libre 3 provisioning acknowledgement for an unsupported package version")
+            return
+        }
+        guard acknowledgement.revision > 0, acknowledgement.revision < .max else {
+            Logger.connectivity.info("Ignored Libre 3 provisioning acknowledgement with an invalid revision")
+            return
+        }
+        if acknowledgement.revision > SharedData.libre3ProvisioningCurrentRevision {
+            // This can happen after the phone app was reinstalled while the
+            // watch retained a later revision. Move the local floor forward and
+            // force the desired state into a strictly newer package.
+            SharedData.libre3ProvisioningCurrentRevision = acknowledgement.revision
+            SharedData.libre3ProvisioningCurrentDigest = ""
+            sendLibre3ProvisioningPackageToWatch()
+            return
+        }
+        if acknowledgement.revision == SharedData.libre3ProvisioningCurrentRevision,
+           (acknowledgement.digest != SharedData.libre3ProvisioningCurrentDigest
+            || acknowledgement.sensorIdentity != SharedData.libre3ProvisioningCurrentSensorIdentity) {
+            // Equal revisions with different content are never accepted. Treat
+            // the watch's installed revision as the floor, then issue the phone's
+            // desired state under a new revision.
+            SharedData.libre3ProvisioningCurrentDigest = ""
+            sendLibre3ProvisioningPackageToWatch()
+            return
+        }
+        guard acknowledgement.revision == SharedData.libre3ProvisioningCurrentRevision,
+              acknowledgement.digest == SharedData.libre3ProvisioningCurrentDigest,
+              acknowledgement.sensorIdentity == SharedData.libre3ProvisioningCurrentSensorIdentity else {
+            Logger.connectivity.info(
+                "Ignored stale Libre 3 provisioning acknowledgement revision=\(acknowledgement.revision, privacy: .public)"
+            )
+            return
+        }
+        SharedData.libre3ProvisioningAcknowledgedRevision = acknowledgement.revision
+        SharedData.libre3ProvisioningAcknowledgedDigest = acknowledgement.digest
+        SharedData.libre3ProvisioningAcknowledgedSensorIdentity = acknowledgement.sensorIdentity
+        Logger.connectivity.info(
+            "Acknowledged Libre 3 provisioning revision=\(acknowledgement.revision, privacy: .public)"
+        )
     }
 
     func sendLibreLinkUpSnapshotToWatch() {
@@ -647,6 +936,135 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         sendMessageToPairedDevice(messageToWatch)
     }
 #endif
+
+    private static func libre3ProvisioningDigest(
+        for material: Libre3ProvisioningDigestMaterial
+    ) throws -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        let data = try encoder.encode(material)
+        return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func nextLibre3ProvisioningRevision(after current: Int64) -> Int64 {
+        // A wall-clock floor keeps a reinstalled phone from normally restarting
+        // below a revision retained by the watch. `current + 1` preserves strict
+        // monotonicity if several settings change in one millisecond.
+        let wallClockMilliseconds = Int64(Date().timeIntervalSince1970 * 1_000)
+        let incremented = current == .max ? current : current + 1
+        return max(incremented, wallClockMilliseconds)
+    }
+
+#if os(watchOS)
+    private func applyLibre3ProvisioningPayload(_ payload: Libre3ProvisioningPayload) {
+        Task { @MainActor in
+            guard payload.packageVersion == Libre3ProvisioningPayload.currentPackageVersion else {
+                Logger.connectivity.error(
+                    "Unsupported Libre 3 provisioning package version=\(payload.packageVersion, privacy: .public)"
+                )
+                return
+            }
+            guard payload.revision > 0 else {
+                Logger.connectivity.error("Rejected Libre 3 provisioning package with an invalid revision")
+                return
+            }
+            guard payload.state?.serial == payload.sensorIdentity || payload.state == nil else {
+                Logger.connectivity.error("Rejected Libre 3 provisioning package with mismatched sensor identity")
+                return
+            }
+
+            let material = Libre3ProvisioningDigestMaterial(
+                packageVersion: payload.packageVersion,
+                sensorIdentity: payload.sensorIdentity,
+                state: payload.state
+            )
+            let expectedDigest: String
+            do {
+                expectedDigest = try Self.libre3ProvisioningDigest(for: material)
+            } catch {
+                Logger.connectivity.error("Failed to verify Libre 3 provisioning digest: \(error.localizedDescription)")
+                return
+            }
+            guard expectedDigest == payload.digest else {
+                Logger.connectivity.error("Rejected Libre 3 provisioning package with invalid digest")
+                return
+            }
+
+            let installedRevision = SharedData.libre3ProvisioningInstalledRevision
+            if payload.revision < installedRevision {
+                Logger.connectivity.info(
+                    "Ignored stale Libre 3 provisioning revision=\(payload.revision, privacy: .public) installed=\(installedRevision, privacy: .public)"
+                )
+                sendInstalledLibre3ProvisioningAcknowledgement()
+                return
+            }
+            if payload.revision == installedRevision {
+                guard payload.digest == SharedData.libre3ProvisioningInstalledDigest,
+                      payload.sensorIdentity == SharedData.libre3ProvisioningInstalledSensorIdentity else {
+                    Logger.connectivity.error("Rejected conflicting Libre 3 provisioning package at installed revision")
+                    sendInstalledLibre3ProvisioningAcknowledgement()
+                    return
+                }
+                sendInstalledLibre3ProvisioningAcknowledgement()
+                return
+            }
+
+            do {
+                if let state = payload.state {
+                    try Libre3StateStore.installProvisionedState(state)
+                } else {
+                    Libre3StateStore.clear()
+                }
+            } catch {
+                Logger.connectivity.error("Failed to install Libre 3 provisioning package: \(String(describing: error), privacy: .public)")
+                return
+            }
+
+            SharedData.libre3ProvisioningInstalledRevision = payload.revision
+            SharedData.libre3ProvisioningInstalledDigest = payload.digest
+            SharedData.libre3ProvisioningInstalledSensorIdentity = payload.sensorIdentity
+            if SharedData.cgmProviderKind == .libre3BLE {
+                UserDefaults.group.connected = payload.state == nil ? .disconnected : .connected
+            }
+            CurrentIOBSingleton.shared.updateCurrentIOBAndGraphs()
+            sendInstalledLibre3ProvisioningAcknowledgement()
+            Logger.connectivity.info(
+                "Installed Libre 3 provisioning revision=\(payload.revision, privacy: .public) hasState=\(payload.state != nil, privacy: .public)"
+            )
+        }
+    }
+
+    private func sendInstalledLibre3ProvisioningAcknowledgement() {
+        let revision = SharedData.libre3ProvisioningInstalledRevision
+        guard revision > 0 else { return }
+        let acknowledgement = Libre3ProvisioningAcknowledgement(
+            packageVersion: Libre3ProvisioningPayload.currentPackageVersion,
+            sensorIdentity: SharedData.libre3ProvisioningInstalledSensorIdentity,
+            revision: revision,
+            digest: SharedData.libre3ProvisioningInstalledDigest,
+            installedAt: Date()
+        )
+        do {
+            let data = try JSONEncoder().encode(acknowledgement)
+            let message: [String: Any] = [
+                "content": Self.libre3ProvisioningAcknowledgementContent,
+                Self.libre3ProvisioningAcknowledgementDataKey: data,
+                "useApplicationContext": false
+            ]
+            sendMessageToPairedDevice(message)
+        } catch {
+            Logger.connectivity.error("Failed to encode Libre 3 provisioning acknowledgement: \(error.localizedDescription)")
+        }
+    }
+
+    func requestLibre3ProvisioningFromPhone() {
+        let message: [String: Any] = [
+            "content": Self.requestLibre3ProvisioningContent,
+            "useApplicationContext": false
+        ]
+        sendMessageToPairedDevice(message)
+    }
+#endif
     
     func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
         received(message)
@@ -672,7 +1090,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     
     func sessionReachabilityDidChange(_ session: WCSession) {
         Logger.connectivity.info("Reachability changed: reachable=\(session.isReachable)")
-        // Optional: when becoming reachable, try sending any locally queued events
+#if os(iOS)
+        if session.isReachable {
+            sendLibre3ProvisioningPackageToWatch()
+        }
+#endif
     }
     
     var session: WCSession = .default // not sure what happens if WatchConnectivity is not supported, I guess it does not matter, as all modern iPhones and iOS versions support it. All apple watches support it as well, obviously
@@ -774,10 +1196,17 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
                 await self.applyLibreLinkUpCredentials(from: snapshot)
             case .libre3BLE:
                 // No cloud credentials for direct BLE — glucose arrives via the
-                // dedicated snapshot path. But mirror the paired sensor serial so
-                // the watch's provider-account gate opens (app groups are
-                // per-device, so the watch only knows it's paired via this).
-                if let serial = snapshot.libre3Serial, !serial.isEmpty {
+                // dedicated snapshot path. Before the revisioned provisioning
+                // protocol has ever installed, retain the legacy serial mirror
+                // so an older phone still opens the provider-account gate. Once
+                // a package has landed it is authoritative: an out-of-order,
+                // unacknowledged settings snapshot must not resurrect a sensor
+                // that a later provisioning package cleared.
+                if SharedData.libre3ProvisioningInstalledRevision > 0 {
+                    UserDefaults.group.connected = Libre3StateStore.isPaired
+                        ? .connected
+                        : .disconnected
+                } else if let serial = snapshot.libre3Serial, !serial.isEmpty {
                     SharedData.libre3Serial = serial
                     UserDefaults.group.connected = .connected
                 } else {

@@ -530,6 +530,9 @@ struct PhoneAppNotificationsView: View {
             } else {
                 await LowGlucoseNotificationManager.shared.disableNotifications(for: tier)
             }
+            // This also lets the revisioned Libre 3 package observe the final
+            // value after a denied authorization has rolled the toggle back.
+            watchConnector.sendSettingsSnapshotToWatch()
         }
     }
 
@@ -645,6 +648,7 @@ struct PhoneAppNotificationsView: View {
             get: { criticalLowGlucoseNotificationThreshold },
             set: { newValue in
                 criticalLowGlucoseNotificationThreshold = newValue
+                watchConnector.sendLibre3ProvisioningPackageToWatch()
                 Task {
                     await LowGlucoseNotificationManager.shared.rearmNotifications(for: [.criticalLow])
                 }

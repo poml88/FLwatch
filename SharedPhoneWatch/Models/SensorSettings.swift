@@ -10,7 +10,7 @@ import OSLog
 import SwiftUI
 
 
-struct SensorSettings: Codable, Equatable {
+struct SensorSettings: Codable, Equatable, Sendable {
     private static let defaultUom = 1
     private static let defaultTargetLow = 70
     private static let defaultTargetHigh = 180

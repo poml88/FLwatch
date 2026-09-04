@@ -76,6 +76,7 @@ struct Libre3BackgroundRuntimeHost {
 struct Libre3PhoneConnectivityHost {
     let sendSettingsSnapshot: @MainActor () -> Void
     let sendGlucoseSnapshot: @MainActor () -> Void
+    let sendProvisioningPackage: @MainActor () -> Void
 }
 
 @MainActor
@@ -115,6 +116,9 @@ struct Libre3HostProfile {
     /// Whether this host requests and consumes historical/clinical backfill.
     /// Workout mode is deliberately realtime-only, including unsolicited bursts.
     let usesBackfill: Bool
+    /// A watch must never replace the phone's cached authorization material by
+    /// escalating to a full handshake. Provisioning is its only credential path.
+    let allowsFullAuthorization: Bool
 
     static let watchWorkout = Libre3HostProfile(
         sensorAlerts: Libre3SensorAlertHost(
@@ -138,7 +142,8 @@ struct Libre3HostProfile {
         ),
         phoneConnectivity: Libre3PhoneConnectivityHost(
             sendSettingsSnapshot: {},
-            sendGlucoseSnapshot: {}
+            sendGlucoseSnapshot: {},
+            sendProvisioningPackage: {}
         ),
         lowGlucoseAlerts: Libre3LowGlucoseAlertHost(
             isEnabled: false,
@@ -148,7 +153,8 @@ struct Libre3HostProfile {
             isEnabled: false,
             refreshFromCurrentHistory: { _, _ in }
         ),
-        usesBackfill: false
+        usesBackfill: false,
+        allowsFullAuthorization: false
     )
 
     static var current: Libre3HostProfile {
@@ -231,6 +237,9 @@ extension Libre3HostProfile {
             },
             sendGlucoseSnapshot: {
                 WatchConnectivityManager.shared.sendLibreLinkUpSnapshotToWatch()
+            },
+            sendProvisioningPackage: {
+                WatchConnectivityManager.shared.sendLibre3ProvisioningPackageToWatch()
             }
         ),
         lowGlucoseAlerts: Libre3LowGlucoseAlertHost(
@@ -248,7 +257,8 @@ extension Libre3HostProfile {
                 )
             }
         ),
-        usesBackfill: true
+        usesBackfill: true,
+        allowsFullAuthorization: true
     )
 }
 #endif
@@ -3334,16 +3344,22 @@ final class Libre3DirectManager: ObservableObject {
         throw SensorScannerError.connectionFailed("event stream ended")
     }
 
-    /// Authorize a connected sensor. With a saved Phase-5 key the recovery order
-    /// is cached, cached, full, cached, cached, cached. The sixth qualifying
-    /// failure raises the re-scan hint while cached retries continue.
+    /// Authorize a connected sensor. On the phone, a saved Phase-5 key uses the
+    /// recovery order cached, cached, full, cached, cached, cached. The watch is
+    /// cached-only: a full handshake there would invalidate the phone's key.
+    /// The sixth qualifying failure raises the re-scan hint while retries continue.
     /// Returns the Phase-6 session material the decoder needs.
     private func authorize(session: SensorSession, sensorState: Libre3SensorState) async throws -> Phase6SessionMaterial {
         let reconnectKey = Libre3StateStore.loadReconnectKey()
-        let path = Libre3AuthorizationRecoveryPolicy.path(
-            hasReconnectKey: reconnectKey != nil,
-            authenticationFailures: reconnectFailureTracker.authenticationFailures
-        )
+        if !hostProfile.allowsFullAuthorization, reconnectKey == nil {
+            throw Libre3DirectError.cachedReconnectKeyUnavailable
+        }
+        let path: Libre3AuthorizationPath = hostProfile.allowsFullAuthorization
+            ? Libre3AuthorizationRecoveryPolicy.path(
+                hasReconnectKey: reconnectKey != nil,
+                authenticationFailures: reconnectFailureTracker.authenticationFailures
+            )
+            : .cached
 
         if path == .cached, let reconnectKey {
             Libre3DiagnosticsLog.traceReconnect(
@@ -3367,6 +3383,11 @@ final class Libre3DirectManager: ObservableObject {
             }
         }
 
+        // Defence in depth if a future authorization policy adds a path that
+        // falls through the cached branch on the watch.
+        guard hostProfile.allowsFullAuthorization else {
+            throw Libre3DirectError.fullAuthorizationNotPermitted
+        }
         if reconnectKey != nil {
             // One full handshake refreshes a cached key that the sensor may reject.
             Logger.libre3.info(
@@ -3376,7 +3397,10 @@ final class Libre3DirectManager: ObservableObject {
         }
         let result = try await runHandshake(session: session, blePIN: sensorState.blePIN)
         // A successful full attempt replaces stale cached authorization material.
-        Libre3StateStore.saveReconnectKey(result.phase5Material.rawKey)
+        try Libre3StateStore.saveReconnectKey(result.phase5Material.rawKey)
+        // The raw key changes on every successful full authorization. Publish
+        // it immediately rather than waiting for an unrelated settings sync.
+        hostProfile.phoneConnectivity.sendProvisioningPackage()
         return result.handshake.sessionMaterial
     }
 
@@ -4395,6 +4419,7 @@ final class Libre3DirectManager: ObservableObject {
         )
         sensorStartDate = anchor
         SharedData.libre3SensorStartDate = anchor
+        hostProfile.phoneConnectivity.sendProvisioningPackage()
         // First reliable anchor derivation is the earliest point where expiry
         // reminders can be scheduled for a newly paired sensor.
         refreshExpiryReminders()
@@ -4765,6 +4790,8 @@ final class Libre3DirectManager: ObservableObject {
 enum Libre3DirectError: Error {
     case notStarted
     case notPaired
+    case cachedReconnectKeyUnavailable
+    case fullAuthorizationNotPermitted
     case sensorNotFound
     case entropyUnavailable(OSStatus)
     case entropySizeMismatch(expected: Int, actual: Int)

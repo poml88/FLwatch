@@ -233,6 +233,10 @@ final class Libre3PairingCoordinator: ObservableObject {
             // is no longer valid and phone ownership must win.
             UserDefaults.group.connected = .connected
             Libre3DirectManager.shared.resumeAfterHandoff()
+            // The first package intentionally has no reconnect key yet: the NFC
+            // pair invalidated it, and the successful full BLE authorization
+            // will immediately send the next revision containing the new key.
+            WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()
 
             Logger.libre3.info("Paired via \(mode.rawValue, privacy: .public): serial=\(result.patchInfo.serialNumber, privacy: .public) fw=\(result.patchInfo.firmwareVersion, privacy: .public) addr=\(activation.bleAddressDisplay, privacy: .private)")
 

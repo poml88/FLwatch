@@ -16,7 +16,7 @@
 
 import Foundation
 
-enum Libre3Mode: String, Codable, CaseIterable, Identifiable {
+enum Libre3Mode: String, Codable, CaseIterable, Identifiable, Sendable {
     /// Take over an already-active sensor (NFC `0xA8`, `switchReceiver`).
     /// Rotates the BLE PIN → FLwatch becomes the sole receiver; the vendor app
     /// loses the sensor and its LibreView upload stops.
