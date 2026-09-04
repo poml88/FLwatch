@@ -26,6 +26,16 @@ struct PhoneAppLibre3ConnectView: View {
     @State private var expandedStuckSnapshotIDs: Set<UUID> = []
     @State private var livePacketRecords: [Libre3LivePacketRecord] = []
     @State private var expandedLivePacketRecordIDs: Set<Int> = []
+    // These mirrors make the pure readiness getter reactive without advancing
+    // or resending a provisioning revision from SwiftUI rendering.
+    @AppStorage(DefaultsKey.libre3ProvisioningCurrentRevision.rawValue, store: UserDefaults.group)
+    private var provisioningCurrentRevisionMirror = 0
+    @AppStorage(DefaultsKey.libre3ProvisioningCurrentDigest.rawValue, store: UserDefaults.group)
+    private var provisioningCurrentDigestMirror = ""
+    @AppStorage(DefaultsKey.libre3ProvisioningAcknowledgedRevision.rawValue, store: UserDefaults.group)
+    private var provisioningAcknowledgedRevisionMirror = 0
+    @AppStorage(DefaultsKey.libre3ProvisioningAcknowledgedDigest.rawValue, store: UserDefaults.group)
+    private var provisioningAcknowledgedDigestMirror = ""
 
     /// `isAwaitingFirstReading` ends either on a packet (which republishes the
     /// manager's state anyway) or on a wall-clock cutoff, which publishes nothing.
@@ -85,6 +95,7 @@ struct PhoneAppLibre3ConnectView: View {
 
     var body: some View {
         Form {
+            directToWatchReadinessSection
             switch coordinator.state {
             case .paired(let serial, let bleAddress, let firmware):
                 pairedSection(serial: serial, bleAddress: bleAddress, firmware: firmware)
@@ -160,6 +171,87 @@ struct PhoneAppLibre3ConnectView: View {
             }
         } message: {
             Text(coordinator.calibrationResetNotice ?? "")
+        }
+    }
+
+    private var directToWatchReadiness: Libre3ProvisioningReadiness {
+        // Establish observation of both sides of the revision/digest pair. The
+        // getter itself intentionally stays free of transport side effects.
+        _ = provisioningCurrentRevisionMirror
+        _ = provisioningCurrentDigestMirror
+        _ = provisioningAcknowledgedRevisionMirror
+        _ = provisioningAcknowledgedDigestMirror
+        return WatchConnectivityManager.shared.libre3ProvisioningReadiness
+    }
+
+    private var directToWatchReadinessSection: some View {
+        Section {
+            LabeledContent {
+                switch directToWatchReadiness {
+                case .ready:
+                    Label {
+                        Text(
+                            "Ready for direct sensor",
+                            comment: "iPhone status confirming the paired Apple Watch has the current Libre 3 direct-sensor setup."
+                        )
+                    } icon: {
+                        Image(systemName: "checkmark.circle.fill")
+                    }
+                    .foregroundStyle(.green)
+                case .waitingForSensorSetup:
+                    Label {
+                        Text(
+                            "Waiting for sensor setup from iPhone",
+                            comment: "iPhone status shown until Libre 3 pairing and cached authorization are ready to provision to Apple Watch."
+                        )
+                    } icon: {
+                        Image(systemName: "hourglass.circle")
+                    }
+                    .foregroundStyle(.secondary)
+                case .outdated:
+                    Label {
+                        Text(
+                            "Sensor setup is outdated",
+                            comment: "iPhone status warning that Apple Watch has not acknowledged the current Libre 3 direct-sensor setup."
+                        )
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                    }
+                    .foregroundStyle(.orange)
+                }
+            } label: {
+                Text(
+                    "Apple Watch",
+                    comment: "Label for Libre 3 direct-to-watch provisioning readiness on the iPhone connect screen."
+                )
+            }
+
+            LabeledContent {
+                if provisioningAcknowledgedRevisionMirror > 0 {
+                    Text(verbatim: String(provisioningAcknowledgedRevisionMirror))
+                        .monospacedDigit()
+                } else {
+                    Text(
+                        "Not installed",
+                        comment: "Value shown when Apple Watch has not acknowledged any Libre 3 provisioning revision."
+                    )
+                }
+            } label: {
+                Text(
+                    "Watch revision",
+                    comment: "Label for the Libre 3 provisioning revision acknowledged as installed on Apple Watch."
+                )
+            }
+        } header: {
+            Text(
+                "Direct to Apple Watch",
+                comment: "Section heading for Libre 3 sensor credentials provisioned from iPhone to Apple Watch."
+            )
+        } footer: {
+            Text(
+                "A current setup lets Workout Mode receive Libre 3 readings without the iPhone nearby.",
+                comment: "Explains why Libre 3 provisioning readiness matters for Apple Watch Workout Mode."
+            )
         }
     }
 

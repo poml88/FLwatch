@@ -13,6 +13,7 @@ struct ContentView: View {
 //    @StateObject var watchConnector = WatchConnectivityManager()
     
     @State var selected = "Home"
+    @Environment(\.workoutModeStore) private var workoutModeStore
     
 
         var body: some View {
@@ -21,6 +22,8 @@ struct ContentView: View {
 //                    .tag("Action")
                 WatchAppHomeView()
                     .tag("Home")
+                WatchAppWorkoutView()
+                    .tag("Workout")
                 WatchAppNightView()
                     .tag("NightView")
 //                WatchAppSettingsView()
@@ -31,6 +34,16 @@ struct ContentView: View {
                 
             }
             .tabViewStyle(.page)
+            .onAppear {
+                if workoutModeStore.isActive {
+                    selected = "Workout"
+                }
+            }
+            .onChange(of: workoutModeStore.isActive) { _, isActive in
+                if isActive {
+                    selected = "Workout"
+                }
+            }
         }
     }
 

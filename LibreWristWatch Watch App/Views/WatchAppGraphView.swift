@@ -42,6 +42,17 @@ struct WatchAppGraphView: View {
     /// Intentionally has no default — a `Date()` default would be re-evaluated on
     /// each parent body pass and reintroduce the instability this removes.
     let windowEnd: Date
+    /// Defaults to the existing home-screen window. Workout Mode supplies a
+    /// shorter duration without maintaining a second chart implementation.
+    let windowDuration: TimeInterval
+
+    init(
+        windowEnd: Date,
+        windowDuration: TimeInterval = 6 * 60 * 60 + 10 * 60
+    ) {
+        self.windowEnd = windowEnd
+        self.windowDuration = windowDuration
+    }
 
     @AppStorage(DefaultsKey.showInsulinDeliveryMarksWatch.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksWatch: Bool = false
     @AppStorage(DefaultsKey.showIOBCurveWatch.rawValue, store: UserDefaults.group) private var showIOBCurveWatch: Bool = false
@@ -60,12 +71,12 @@ struct WatchAppGraphView: View {
 
         let date: Date = windowEnd
 
-        let dateSixHoursTenAgo: Date = date.addingTimeInterval(-6 * 60 * 60 - 10 * 60)
+        let chartWindowStart = date.addingTimeInterval(-windowDuration)
         let timeIntervalSince1970: Double = date.timeIntervalSince1970
-        let chartStartTimestamp: Double = timeIntervalSince1970 - 3600 * 6 - 60 * 10
+        let chartStartTimestamp: Double = timeIntervalSince1970 - windowDuration
 
 
-        let rectXStart: Date = dateSixHoursTenAgo
+        let rectXStart: Date = chartWindowStart
         let rectXStop: Date = date
 
         //Configuration
@@ -78,7 +89,7 @@ struct WatchAppGraphView: View {
 
         let maxBG = libreLinkUpHistory.maxBG
 
-        let chartXScaleMin: Date = dateSixHoursTenAgo
+        let chartXScaleMin: Date = chartWindowStart
         let chartXScaleMax: Date = date
 
         // Tighter tiers than the phone: the watch chart is much shorter, so the
@@ -100,8 +111,10 @@ struct WatchAppGraphView: View {
         let chartRectangleYStart = displaysMmol ? sensorSettings.targetLow.toMmolL() : Double(sensorSettings.targetLow)
         let chartRectangleYEnd = displaysMmol ? sensorSettings.targetHigh.toMmolL() : Double(sensorSettings.targetHigh)
         let chartRuleAlarmLL = displaysMmol ? sensorSettings.alarmLow.toMmolL() : Double(sensorSettings.alarmLow)
-        let graphData = libreLinkUpHistory.libreLinkUpGlucose.filter { $0.glucose.date > dateSixHoursTenAgo }
-        let minuteGlucose = Array(libreLinkUpHistory.libreLinkUpMinuteGlucose.dropFirst())
+        let graphData = libreLinkUpHistory.libreLinkUpGlucose.filter { $0.glucose.date > chartWindowStart }
+        let minuteGlucose = libreLinkUpHistory.libreLinkUpMinuteGlucose.dropFirst().filter {
+            $0.glucose.date > chartWindowStart
+        }
         let insulinOnBoardCurve = currentIOBSingleton.insulinOnBoardCurve
         let insulinActivityCurve = currentIOBSingleton.insulinActivityCurve
         let safeMaxIOB = max(currentIOBSingleton.maxIOB, 0.01)
@@ -111,8 +124,17 @@ struct WatchAppGraphView: View {
         // Wider than the phone's 5 mg/dL so the markers clear the IOB curve on
         // the shorter watch chart; the alignment thresholds are wider too.
         let insulinMarkerShift = displaysMmol ? Double(10).toMmolL() : 10
-        let trailingMarkerThreshold = timeIntervalSince1970 - 40 * 60
-        let leadingMarkerThreshold = timeIntervalSince1970 - 3600 * 6 + 40 * 60
+        let usesShortWorkoutWindow = windowDuration <= 2 * 60 * 60
+        let trailingMarkerInset = usesShortWorkoutWindow
+            ? min(10 * 60, windowDuration / 4)
+            : 40 * 60
+        // The existing home chart used a 50-minute leading inset and a
+        // 40-minute trailing inset. Keep that layout unchanged.
+        let leadingMarkerInset = usesShortWorkoutWindow
+            ? trailingMarkerInset
+            : 50 * 60
+        let trailingMarkerThreshold = timeIntervalSince1970 - trailingMarkerInset
+        let leadingMarkerThreshold = chartStartTimestamp + leadingMarkerInset
         let glucoseChartPoints: [GlucosePlotPoint] = graphData.compactMap { item in
             let yValue = item.glucose.value.displayedGlucoseValue(glucoseUnit: glucoseUnit)
             guard yValue.isFinite else { return nil }
@@ -332,18 +354,26 @@ struct WatchAppGraphView: View {
 //                                majorAlignment: .page))
 
         .chartXAxis {
-            AxisMarks(values: .stride(by: .hour, count: 2)) { _ in
-                AxisGridLine(stroke: .init(lineWidth: 0.5, dash: [2, 3]))
-                AxisTick(length: -5, stroke: .init(lineWidth: 1))
-                    .foregroundStyle(.gray)
-                //                        AxisValueLabel( anchor: .top)
-                AxisValueLabel(format: .dateTime.hour(.defaultDigits(amPM: .narrow)), anchor: .top)
-                    .font(.system(size: 10))
-            }
-            AxisMarks(values: .stride(by: .hour, count: 1)) { _ in
-                //                        AxisGridLine(stroke: .init(lineWidth: 0.5, dash: [2, 3]))
-                AxisTick(length: -5, stroke: .init(lineWidth: 1))
-                    .foregroundStyle(.gray)
+            if usesShortWorkoutWindow {
+                AxisMarks(values: .stride(by: .minute, count: 30)) { _ in
+                    AxisGridLine(stroke: .init(lineWidth: 0.5, dash: [2, 3]))
+                    AxisTick(length: -5, stroke: .init(lineWidth: 1))
+                        .foregroundStyle(.gray)
+                    AxisValueLabel(format: .dateTime.hour().minute(), anchor: .top)
+                        .font(.system(size: 9))
+                }
+            } else {
+                AxisMarks(values: .stride(by: .hour, count: 2)) { _ in
+                    AxisGridLine(stroke: .init(lineWidth: 0.5, dash: [2, 3]))
+                    AxisTick(length: -5, stroke: .init(lineWidth: 1))
+                        .foregroundStyle(.gray)
+                    AxisValueLabel(format: .dateTime.hour(.defaultDigits(amPM: .narrow)), anchor: .top)
+                        .font(.system(size: 10))
+                }
+                AxisMarks(values: .stride(by: .hour, count: 1)) { _ in
+                    AxisTick(length: -5, stroke: .init(lineWidth: 1))
+                        .foregroundStyle(.gray)
+                }
             }
         }
         .chartYAxis {

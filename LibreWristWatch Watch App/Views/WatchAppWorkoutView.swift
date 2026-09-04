@@ -1,0 +1,379 @@
+//
+//  WatchAppWorkoutView.swift
+//  FLwatchWatchApp
+//
+
+import SwiftUI
+
+struct WatchAppWorkoutView: View {
+    @Environment(\.libreLinkUpHistory) private var libreLinkUpHistory
+    @Environment(\.sensorSettingsStore) private var sensorSettingsStore
+    @Environment(\.currentIOBSingleton) private var currentIOBSingleton
+    @Environment(\.workoutModeStore) private var workoutModeStore
+
+    @State private var workoutManager = WorkoutHealthKitManager.shared
+    @State private var selectedThreshold = SharedData.libre3WorkoutLowDefaultMgDL
+    @State private var selectedWorkoutType: WorkoutTypeOption = .hiking
+    @State private var startFailureMessage: String?
+
+    @AppStorage(DefaultsKey.cgmProviderKind.rawValue, store: UserDefaults.group)
+    private var providerKindRawValue = CGMProviderKind.libreLinkUp.rawValue
+    @AppStorage(DefaultsKey.libre3SessionOwnerMirror.rawValue, store: UserDefaults.group)
+    private var ownershipMirror = Libre3WorkoutOwnershipDevice.phone.rawValue
+    @AppStorage(DefaultsKey.libre3EngineStatusMessage.rawValue, store: UserDefaults.group)
+    private var libre3EngineStatusMessage = "[...]"
+    @AppStorage(DefaultsKey.libre3EngineDidFail.rawValue, store: UserDefaults.group)
+    private var libre3EngineDidFail = false
+
+    private let workoutGraphWindow: TimeInterval = 90 * 60
+
+    private var currentProviderKind: CGMProviderKind {
+        CGMProviderKind(rawValue: providerKindRawValue) ?? .libreLinkUp
+    }
+
+    private var glucoseUnit: GlucoseUnit {
+        GlucoseUnit(uom: sensorSettingsStore.sensorSettings.uom)
+    }
+
+    private var currentGlucoseText: String {
+        guard libreLinkUpHistory.currentGlucose > 0 else { return "--" }
+        return libreLinkUpHistory.currentGlucose.asGlucose(glucoseUnit: glucoseUnit)
+    }
+
+    private var currentTrendText: String {
+        libreLinkUpHistory.currentGlucose > 0
+            ? libreLinkUpHistory.currentTrendArrow
+            : "--"
+    }
+
+    private func elapsedText(at now: Date) -> String {
+        guard let startedAt = workoutModeStore.startedAt else { return "--:--" }
+        let elapsed = max(Int(now.timeIntervalSince(startedAt)), 0)
+        let hours = elapsed / 3_600
+        let minutes = (elapsed % 3_600) / 60
+        let seconds = elapsed % 60
+        if hours > 0 {
+            return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+        }
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    private var fiveMinuteDeltaText: String {
+        guard let latest = libreLinkUpHistory.latestLibreLinkUpGlucose else { return "--" }
+        let targetDate = latest.glucose.date.addingTimeInterval(-5 * 60)
+        let oldestAcceptableDate = targetDate.addingTimeInterval(-5 * 60)
+        let previous = (libreLinkUpHistory.libreLinkUpMinuteGlucose + libreLinkUpHistory.libreLinkUpGlucose)
+            .filter {
+                $0.glucose.date <= targetDate
+                    && $0.glucose.date >= oldestAcceptableDate
+                    && $0.glucose.date < latest.glucose.date
+            }
+            .max { $0.glucose.date < $1.glucose.date }
+        guard let previous else { return "--" }
+        return Double(latest.glucose.value - previous.glucose.value)
+            .asShortMinuteChange(glucoseUnit: glucoseUnit)
+    }
+
+    private var activeLibre3Status: String? {
+        guard workoutModeStore.providerKind == .libre3BLE,
+              let workoutSessionID = workoutModeStore.workoutSessionID else { return nil }
+
+        _ = ownershipMirror
+        let ownership = SharedData.libre3SessionOwner
+        if ownership.hasTerminalReclaim(for: workoutSessionID)
+            || (ownership.workoutSessionID == workoutSessionID && ownership.owner == .phone) {
+            return String(
+                localized: "Sensor moved to iPhone",
+                comment: "Apple Watch workout status after the user took Libre 3 sensor readings back on the iPhone. The workout itself is still running."
+            )
+        }
+        if ownership.claimRejectionReason != nil {
+            return String(
+                localized: "Waiting for current sensor setup",
+                comment: "Apple Watch workout status while a rejected Libre 3 ownership claim waits for refreshed provisioning from iPhone."
+            )
+        }
+        if libre3EngineStatusMessage == "[...]" || libre3EngineStatusMessage.isEmpty {
+            return String(
+                localized: "Acquiring sensor…",
+                comment: "Apple Watch workout status while discovering and authenticating directly with the Libre 3 sensor."
+            )
+        }
+        return libre3EngineStatusMessage
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 9) {
+                if workoutModeStore.isActive {
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        activeWorkout(at: context.date)
+                    }
+                } else {
+                    startCard
+                }
+            }
+            .padding(.horizontal, 7)
+        }
+        .onAppear {
+            selectedThreshold = workoutModeStore.lowGlucoseThreshold
+            selectedWorkoutType = workoutModeStore.workoutType
+            if !workoutModeStore.isActive,
+               (workoutModeStore.updatedAt == .distantPast
+                || workoutModeStore.providerKind != currentProviderKind) {
+                selectedThreshold = currentProviderKind == .libre3BLE
+                    ? SharedData.libre3WorkoutLowDefaultMgDL
+                    : sensorSettingsStore.sensorSettings.alarmLow
+                persistPreferences()
+            }
+            workoutManager.preflightBluetoothPermissionIfNeeded()
+        }
+        .onChange(of: providerKindRawValue) { _, newValue in
+            guard !workoutModeStore.isActive else { return }
+            if CGMProviderKind(rawValue: newValue) == .libre3BLE {
+                selectedThreshold = SharedData.libre3WorkoutLowDefaultMgDL
+            } else {
+                selectedThreshold = sensorSettingsStore.sensorSettings.alarmLow
+            }
+            persistPreferences()
+            workoutManager.preflightBluetoothPermissionIfNeeded()
+        }
+        .alert(
+            String(
+                localized: "Couldn’t Start Workout",
+                comment: "Title of an Apple Watch alert explaining why a workout could not start."
+            ),
+            isPresented: Binding(
+                get: { startFailureMessage != nil },
+                set: { if !$0 { startFailureMessage = nil } }
+            )
+        ) {
+            Button(
+                String(localized: "OK", comment: "Dismisses a workout start failure alert."),
+                role: .cancel
+            ) {
+                startFailureMessage = nil
+            }
+        } message: {
+            if let startFailureMessage {
+                Text(verbatim: startFailureMessage)
+            }
+        }
+    }
+
+    private var startCard: some View {
+        VStack(spacing: 10) {
+            Text("Workout Mode", comment: "Heading of the Apple Watch workout start screen.")
+                .font(.headline)
+
+            Text(verbatim: currentProviderKind.displayName)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            if currentProviderKind == .libre3BLE {
+                bluetoothPermissionStatus
+            }
+
+            Picker(
+                String(localized: "Workout", comment: "Label for the Apple Watch workout activity picker."),
+                selection: $selectedWorkoutType
+            ) {
+                ForEach(WorkoutTypeOption.sortedOptions) { workoutType in
+                    Text(verbatim: "\(workoutType.displayName) · \(workoutType.defaultLocation.displayName)")
+                        .tag(workoutType)
+                }
+            }
+            .pickerStyle(.navigationLink)
+            .onChange(of: selectedWorkoutType) { _, _ in persistPreferences() }
+
+            HStack {
+                Text("Workout low", comment: "Label for the glucose threshold used by workout alerts on Apple Watch.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(verbatim: selectedThreshold.asGlucose(glucoseUnit: glucoseUnit, withUnit: true))
+                    .font(.caption)
+                    .fontWeight(.semibold)
+            }
+
+            HStack(spacing: 28) {
+                Button {
+                    selectedThreshold = max(selectedThreshold - 5, 60)
+                    persistPreferences()
+                } label: {
+                    Image(systemName: "minus.circle.fill")
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(
+                    Text("Lower workout threshold", comment: "Accessibility label for lowering the Apple Watch workout glucose threshold.")
+                )
+
+                Button {
+                    selectedThreshold = min(selectedThreshold + 5, 200)
+                    persistPreferences()
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(
+                    Text("Raise workout threshold", comment: "Accessibility label for raising the Apple Watch workout glucose threshold.")
+                )
+            }
+            .font(.title3)
+
+            Button {
+                Task {
+                    let result = await workoutManager.startWorkout(
+                        lowGlucoseThreshold: selectedThreshold,
+                        workoutType: selectedWorkoutType
+                    )
+                    if result != .started {
+                        startFailureMessage = result.userMessage
+                    }
+                }
+            } label: {
+                if workoutManager.operationState == .starting {
+                    ProgressView()
+                } else {
+                    Text("Start", comment: "Starts the selected workout on Apple Watch.")
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(
+                workoutManager.isBusy
+                    || (currentProviderKind == .libre3BLE
+                        && workoutManager.bluetoothAuthorization != .allowedAlways)
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var bluetoothPermissionStatus: some View {
+        switch workoutManager.bluetoothAuthorization {
+        case .allowedAlways:
+            Label {
+                Text("Bluetooth ready", comment: "Apple Watch workout preflight status when Bluetooth permission is granted.")
+            } icon: {
+                Image(systemName: "checkmark.circle.fill")
+            }
+            .foregroundStyle(.green)
+        case .notDetermined:
+            Label {
+                Text("Allow Bluetooth access to continue", comment: "Apple Watch workout preflight status while its Bluetooth permission prompt awaits a choice.")
+            } icon: {
+                ProgressView()
+            }
+            .foregroundStyle(.secondary)
+        case .denied, .restricted:
+            Label {
+                Text("Bluetooth access is off", comment: "Apple Watch workout preflight status when Bluetooth permission is denied or restricted.")
+            } icon: {
+                Image(systemName: "exclamationmark.triangle.fill")
+            }
+            .foregroundStyle(.orange)
+        @unknown default:
+            EmptyView()
+        }
+    }
+
+    private func activeWorkout(at now: Date) -> some View {
+        VStack(spacing: 8) {
+            HStack {
+                Text(verbatim: workoutModeStore.workoutType.shortDisplayName)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(verbatim: elapsedText(at: now))
+                    .font(.system(.headline, design: .rounded, weight: .bold))
+                    .monospacedDigit()
+            }
+
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(verbatim: currentGlucoseText)
+                    .font(.system(size: 43, weight: .bold, design: .rounded))
+                    .minimumScaleFactor(0.65)
+                Text(verbatim: currentTrendText)
+                    .font(.title2)
+                Spacer(minLength: 0)
+            }
+
+            HStack {
+                compactStat(
+                    title: String(localized: "5 min", comment: "Label for glucose change over the previous five minutes on Apple Watch."),
+                    value: fiveMinuteDeltaText
+                )
+                Spacer()
+                compactStat(
+                    title: String(localized: "IOB", comment: "Abbreviation for insulin on board on Apple Watch."),
+                    value: String(
+                        localized: "\(currentIOBSingleton.currentIOB.asInsulin()) U",
+                        comment: "Insulin on board amount on Apple Watch. The interpolated value is a localized decimal number; U means insulin units."
+                    )
+                )
+            }
+
+            if let activeLibre3Status {
+                Label {
+                    Text(verbatim: activeLibre3Status)
+                        .lineLimit(2)
+                } icon: {
+                    Image(
+                        systemName: libre3EngineDidFail
+                            ? "exclamationmark.triangle.fill"
+                            : "antenna.radiowaves.left.and.right"
+                    )
+                }
+                .font(.caption2)
+                .foregroundStyle(libre3EngineDidFail ? .orange : .secondary)
+            }
+
+            if !libreLinkUpHistory.libreLinkUpGlucose.isEmpty {
+                WatchAppGraphView(
+                    windowEnd: .chartWindowEnd(from: now),
+                    windowDuration: workoutGraphWindow
+                )
+                .frame(height: 105)
+            }
+
+            Button(role: .destructive) {
+                Task { await workoutManager.endWorkout() }
+            } label: {
+                if workoutManager.operationState == .ending {
+                    ProgressView()
+                } else {
+                    Text("End Workout", comment: "Ends and saves the active Apple Watch workout.")
+                }
+            }
+            .buttonStyle(.bordered)
+            .disabled(workoutManager.isBusy)
+        }
+    }
+
+    private func compactStat(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(verbatim: title)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text(verbatim: value)
+                .font(.caption)
+                .fontWeight(.semibold)
+        }
+    }
+
+    private func persistPreferences() {
+        _ = workoutModeStore.savePreferences(
+            lowGlucoseThreshold: selectedThreshold,
+            workoutType: selectedWorkoutType,
+            providerKind: currentProviderKind
+        )
+    }
+}
+
+#Preview {
+    WatchAppWorkoutView()
+        .environment(\.libreLinkUpHistory, LibreLinkUpHistory.shared)
+        .environment(\.sensorSettingsStore, SensorSettingsStore.shared)
+        .environment(\.currentIOBSingleton, CurrentIOBSingleton.shared)
+        .environment(\.workoutModeStore, WorkoutModeStore.shared)
+}

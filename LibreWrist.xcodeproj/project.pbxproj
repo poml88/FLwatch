@@ -138,6 +138,10 @@
 		7BA3043D2F5E31F6005384BF /* FileStoreHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA3043B2F5E31E8005384BF /* FileStoreHelper.swift */; };
 		7BA3043E2F5E31F6005384BF /* FileStoreHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA3043B2F5E31E8005384BF /* FileStoreHelper.swift */; };
 		7BA3043F2F5E31F6005384BF /* FileStoreHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA3043B2F5E31E8005384BF /* FileStoreHelper.swift */; };
+		7BA35DEF304AE5DE00E4A144 /* WatchAppWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA35DEE304AE5DE00E4A144 /* WatchAppWorkoutView.swift */; };
+		7BA35DF3304AE5F000E4A144 /* WorkoutHealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA35DF0304AE5F000E4A144 /* WorkoutHealthKitManager.swift */; };
+		7BA35DF4304AE5F000E4A144 /* WorkoutMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA35DF1304AE5F000E4A144 /* WorkoutMode.swift */; };
+		7BA35DF5304AE5F000E4A144 /* WorkoutModeRefreshManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA35DF2304AE5F000E4A144 /* WorkoutModeRefreshManager.swift */; };
 		7BA567992CBA974D003244EE /* MailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA567962CBA9584003244EE /* MailView.swift */; };
 		7BA5679C2CBC1079003244EE /* GlucoseIOBTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA5679B2CBC1079003244EE /* GlucoseIOBTimelineProvider.swift */; };
 		7BA5679D2CBC1079003244EE /* GlucoseIOBTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA5679B2CBC1079003244EE /* GlucoseIOBTimelineProvider.swift */; };
@@ -410,6 +414,10 @@
 		7BA0AE5A2C5AE980004226FE /* PhoneAppHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppHomeView.swift; sourceTree = "<group>"; };
 		7BA0AE5C2C5AEB89004226FE /* PhoneAppDonateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAppDonateView.swift; sourceTree = "<group>"; };
 		7BA3043B2F5E31E8005384BF /* FileStoreHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileStoreHelper.swift; sourceTree = "<group>"; };
+		7BA35DEE304AE5DE00E4A144 /* WatchAppWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAppWorkoutView.swift; sourceTree = "<group>"; };
+		7BA35DF0304AE5F000E4A144 /* WorkoutHealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutHealthKitManager.swift; sourceTree = "<group>"; };
+		7BA35DF1304AE5F000E4A144 /* WorkoutMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutMode.swift; sourceTree = "<group>"; };
+		7BA35DF2304AE5F000E4A144 /* WorkoutModeRefreshManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutModeRefreshManager.swift; sourceTree = "<group>"; };
 		7BA567962CBA9584003244EE /* MailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailView.swift; sourceTree = "<group>"; };
 		7BA5679B2CBC1079003244EE /* GlucoseIOBTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseIOBTimelineProvider.swift; sourceTree = "<group>"; };
 		7BA973682E8B324F00B71523 /* GlucoseActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlucoseActivityAttributes.swift; sourceTree = "<group>"; };
@@ -764,6 +772,9 @@
 		7BC51F362C7C77B2009542D2 /* LibreWristWatch Watch App */ = {
 			isa = PBXGroup;
 			children = (
+				7BA35DF0304AE5F000E4A144 /* WorkoutHealthKitManager.swift */,
+				7BA35DF1304AE5F000E4A144 /* WorkoutMode.swift */,
+				7BA35DF2304AE5F000E4A144 /* WorkoutModeRefreshManager.swift */,
 				7BC51F372C7C77B2009542D2 /* LibreWristWatchApp.swift */,
 				7BC51FBF2C7D3D4B009542D2 /* Views */,
 				7B69F7C22CDD74DF00E3A50C /* Localizable.oldwatchstrings */,
@@ -795,6 +806,7 @@
 		7BC51FBF2C7D3D4B009542D2 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7BA35DEE304AE5DE00E4A144 /* WatchAppWorkoutView.swift */,
 				7BC51F392C7C77B2009542D2 /* ContentView.swift */,
 				7BC51F472C7C7FA3009542D2 /* WatchAppHomeView.swift */,
 				7BC51F492C7C80FE009542D2 /* WatchAppNightView.swift */,
@@ -1344,8 +1356,12 @@
 				7BC51F592C7C8564009542D2 /* Data.swift in Sources */,
 				7BB143102FCC837200F31802 /* Libre3Mode.swift in Sources */,
 				7B462BFE2C7FC46A003FEDC3 /* MeasurementColor.swift in Sources */,
+				7BA35DF3304AE5F000E4A144 /* WorkoutHealthKitManager.swift in Sources */,
+				7BA35DF4304AE5F000E4A144 /* WorkoutMode.swift in Sources */,
+				7BA35DF5304AE5F000E4A144 /* WorkoutModeRefreshManager.swift in Sources */,
 				7BA3042A2F5E30B0005384BF /* PasswordKeychain.swift in Sources */,
 				7BD15EA70000000000000005 /* LibreViewAccountClient.swift in Sources */,
+				7BA35DEF304AE5DE00E4A144 /* WatchAppWorkoutView.swift in Sources */,
 				7BB762FE2C8262E600C43600 /* WatchAppActionView.swift in Sources */,
 				7BA3042B2F5E30B0005384BF /* Logger.swift in Sources */,
 				7BDB81332CB09AF800F4A60F /* LLUHeaders.swift in Sources */,
@@ -1859,6 +1875,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "LibreWristWatch Watch App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = FLwatch;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "FLwatch connects to your sensor transmitter to receive glucose data.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "We read your heart rate and active energy data from Apple Health to display your workout metrics and track your activity progress.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "We save your completed workouts to Apple Health so you can view them alongside your other health data.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = de.poeml.philipp.LibreWrist;
 				INFOPLIST_KEY_WKSupportsLiveActivityLaunchAttributeTypes = FLWatchAttributes;
@@ -1892,6 +1911,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "LibreWristWatch Watch App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = FLwatch;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "FLwatch connects to your sensor transmitter to receive glucose data.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "We read your heart rate and active energy data from Apple Health to display your workout metrics and track your activity progress.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "We save your completed workouts to Apple Health so you can view them alongside your other health data.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = de.poeml.philipp.LibreWrist;
 				INFOPLIST_KEY_WKSupportsLiveActivityLaunchAttributeTypes = FLWatchAttributes;

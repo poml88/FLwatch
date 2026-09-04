@@ -24,6 +24,7 @@ struct LibreWristWatch_Watch_AppApp: App {
     @State private var sensorSettingsStore = SensorSettingsStore.shared
     @State private var currentIOBSingleton = CurrentIOBSingleton.shared
     @State private var insulinDeliveryHistorySingleton = InsulinDeliveryHistorySingleton.shared
+    @State private var workoutModeStore = WorkoutModeStore.shared
     
     var body: some Scene {
         WindowGroup {
@@ -32,9 +33,13 @@ struct LibreWristWatch_Watch_AppApp: App {
                 .environment(\.sensorSettingsStore, sensorSettingsStore)
                 .environment(\.currentIOBSingleton, currentIOBSingleton)
                 .environment(\.insulinDeliveryHistorySingleton, insulinDeliveryHistorySingleton)
+                .environment(\.workoutModeStore, workoutModeStore)
                 .onAppear {
                     WatchConnectivityManager.shared.updateWatchScenePhase(scenePhase)
                     WatchConnectivityManager.shared.requestWatchLowGlucoseNotificationAuthorization()
+                }
+                .task {
+                    await WorkoutHealthKitManager.shared.recoverActiveWorkoutIfNeeded()
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     WatchConnectivityManager.shared.updateWatchScenePhase(newPhase)
