@@ -30,6 +30,17 @@ enum Libre3DirectConnectionState: Equatable {
         return false
     }
 
+    /// Whether the engine is working towards a link rather than streaming over
+    /// one or standing down. `.failed` is included: the manager normally keeps a
+    /// CoreBluetooth intent standing through a failure and retries, so that state
+    /// means "still trying", not "given up".
+    var isAcquiring: Bool {
+        switch self {
+        case .scanning, .connecting, .authorizing, .failed: return true
+        case .idle, .streaming:                             return false
+        }
+    }
+
     /// Short, user-facing status line.
     var message: String {
         switch self {

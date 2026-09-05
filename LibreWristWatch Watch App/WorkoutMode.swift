@@ -25,8 +25,8 @@ enum WorkoutTypeOption: String, Codable, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
 
     static let sortedOptions: [WorkoutTypeOption] = [
-        .hiking,
         .yoga,
+        .hiking,
         .walking,
         .running,
         .cycling,
@@ -173,8 +173,8 @@ final class WorkoutModeStore {
         var workoutSessionID: UUID?
         var startedAt: Date?
         var lowGlucoseThreshold = 70
-        var workoutTypeRawValue = WorkoutTypeOption.hiking.rawValue
-        var workoutLocationRawValue = WorkoutLocationOption.outdoor.rawValue
+        var workoutTypeRawValue = WorkoutTypeOption.yoga.rawValue
+        var workoutLocationRawValue = WorkoutLocationOption.indoor.rawValue
         var providerKindRawValue = CGMProviderKind.libreLinkUp.rawValue
         // Optional so workout snapshots written before alerting shipped remain
         // decodable and naturally start with a clear alert state.
@@ -182,7 +182,7 @@ final class WorkoutModeStore {
         var updatedAt = Date.distantPast
 
         var workoutType: WorkoutTypeOption {
-            WorkoutTypeOption(rawValue: workoutTypeRawValue) ?? .hiking
+            WorkoutTypeOption(rawValue: workoutTypeRawValue) ?? .yoga
         }
 
         var workoutLocation: WorkoutLocationOption {

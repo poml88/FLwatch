@@ -2063,6 +2063,19 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         Logger.connectivity.info("Updated watch scene phase to \(String(describing: scenePhase), privacy: .public)")
     }
 
+    /// Diagnostics only: whether the watch app is currently on screen.
+    /// Sampled by the Libre 3 connect-wait trace.
+    var watchAppVisibilityDescription: String {
+        switch watchAppVisibilityState {
+        case .active:
+            "active"
+        case .inactive:
+            "inactive"
+        case .background:
+            "background"
+        }
+    }
+
     private func configureWatchNotifications() {
         watchNotificationCenter.delegate = self
     }

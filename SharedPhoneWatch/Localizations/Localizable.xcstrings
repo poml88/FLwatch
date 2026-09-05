@@ -3995,6 +3995,9 @@
         }
       }
     },
+    "Bring the sensor close to the watch." : {
+      "comment" : "Advice shown on Apple Watch when a Libre 3 sensor has taken a long time to connect during a workout. Moving the sensor nearer is the only thing the user can do to help."
+    },
     "Buy the developer quality coffee beans!\n🤝☕️" : {
       "localizations" : {
         "de" : {
@@ -13048,6 +13051,9 @@
           }
         }
       }
+    },
+    "HR" : {
+      "comment" : "Abbreviation for heart rate on Apple Watch."
     },
     "ICR" : {
 
@@ -29866,6 +29872,9 @@
         }
       }
     },
+    "Watch battery" : {
+      "comment" : "Accessibility label for the Apple Watch battery indicator during a workout."
+    },
     "Watch revision" : {
       "comment" : "Label for the Libre 3 provisioning revision acknowledged as installed on Apple Watch."
     },
@@ -30100,6 +30109,12 @@
           }
         }
       }
+    },
+    "Wear the watch on the arm closest to the sensor. Otherwise the signal has to cross your body, and reconnecting can take much longer." : {
+      "comment" : "Placement advice on the Apple Watch workout start screen for direct Libre 3 sensor readings. Body tissue absorbs the 2.4 GHz signal, so a sensor on the opposite arm makes reconnecting slow."
+    },
+    "Wear the watch on the arm closest to the sensor. Otherwise the signal has to cross your body, and reconnecting during a workout can take much longer." : {
+      "comment" : "Placement advice for direct Libre 3 readings on Apple Watch. Body tissue absorbs the 2.4 GHz signal, so a sensor on the opposite arm makes reconnecting slow."
     },
     "Weights" : {
       "comment" : "Short Apple Watch label for a traditional strength workout."

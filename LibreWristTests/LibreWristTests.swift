@@ -848,11 +848,28 @@ final class LibreWristTests: XCTestCase {
         XCTAssertTrue(phone.lowGlucoseAlerts.isEnabled)
         XCTAssertTrue(phone.liveActivity.isEnabled)
         XCTAssertTrue(phone.usesBackfill)
+        XCTAssertEqual(phone.postAuthRearmPerCharacteristicTimeout, 15)
+        XCTAssertFalse(phone.acquiresByActiveScan)
 
         let watch = Libre3HostProfile.watchWorkout
         XCTAssertFalse(watch.lowGlucoseAlerts.isEnabled)
         XCTAssertFalse(watch.liveActivity.isEnabled)
         XCTAssertFalse(watch.usesBackfill)
+        XCTAssertEqual(watch.postAuthRearmPerCharacteristicTimeout, 30)
+        XCTAssertTrue(watch.acquiresByActiveScan)
+    }
+
+    func testFailedConnectionStateStillCountsAsAcquiring() {
+        // The manager keeps a CoreBluetooth intent standing through a failure and
+        // retries, so the watch workout screen must keep offering sensor-placement
+        // advice rather than treating the attempt as over.
+        XCTAssertTrue(Libre3DirectConnectionState.scanning.isAcquiring)
+        XCTAssertTrue(Libre3DirectConnectionState.connecting.isAcquiring)
+        XCTAssertTrue(Libre3DirectConnectionState.authorizing.isAcquiring)
+        XCTAssertTrue(Libre3DirectConnectionState.failed("dropped").isAcquiring)
+
+        XCTAssertFalse(Libre3DirectConnectionState.streaming.isAcquiring)
+        XCTAssertFalse(Libre3DirectConnectionState.idle.isAcquiring)
     }
 
     // MARK: - Libre 3 persisted history seed
@@ -2138,6 +2155,56 @@ final class LibreWristTests: XCTestCase {
         guard case .scan = selection else {
             return XCTFail("Expected the scan path")
         }
+    }
+
+    func testPreferredScanSkipsSavedRetrievalButAdoptsConnectedPeripheral() throws {
+        var savedLookupCount = 0
+        var connectedLookupCount = 0
+        let scanSelection = Libre3PeripheralDiscoveryPolicy.select(
+            preferScan: true,
+            retrieveSaved: {
+                savedLookupCount += 1
+                return "saved"
+            },
+            retrieveConnected: {
+                connectedLookupCount += 1
+                return nil as String?
+            }
+        )
+
+        guard case .scan = scanSelection else {
+            return XCTFail("Expected the scan path")
+        }
+        XCTAssertEqual(savedLookupCount, 0)
+        XCTAssertEqual(connectedLookupCount, 1)
+
+        let connectedSelection = Libre3PeripheralDiscoveryPolicy.select(
+            preferScan: true,
+            retrieveSaved: { "saved" },
+            retrieveConnected: { "connected" }
+        )
+        guard case .alreadyConnected(let value) = connectedSelection else {
+            return XCTFail("Expected the already-connected path")
+        }
+        XCTAssertEqual(value, "connected")
+    }
+
+    func testDiscoveredIdentifierMustMatchSavedBinding() {
+        let savedID = UUID()
+        let discoveredID = UUID()
+
+        XCTAssertFalse(
+            Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                discoveredID,
+                savedID: savedID
+            )
+        )
+        XCTAssertTrue(
+            Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                discoveredID,
+                savedID: nil
+            )
+        )
     }
 
     func testPeripheralCandidateIsReturnedOnlyAfterAuthentication() throws {

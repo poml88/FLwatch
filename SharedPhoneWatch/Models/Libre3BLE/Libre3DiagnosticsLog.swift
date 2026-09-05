@@ -338,13 +338,18 @@ enum Libre3DiagnosticsLog {
     }
 
     /// Shared export header prefix, so the two clipboard exports always name the
-    /// same build.
+    /// same build and identify which device produced the diagnostics.
     private static var appBuildDescription: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
             as? String ?? "unknown"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")
             as? String ?? "unknown"
-        return "FLwatch \(version) (\(build))"
+#if os(watchOS)
+        let device = "Apple Watch"
+#else
+        let device = "iPhone"
+#endif
+        return "FLwatch \(version) (\(build)) on \(device)"
     }
 
     private static func timestamped(_ event: String, at date: Date) -> String {

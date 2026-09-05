@@ -250,10 +250,17 @@ struct PhoneAppLibre3ConnectView: View {
                 comment: "Section heading for Libre 3 sensor credentials provisioned from iPhone to Apple Watch."
             )
         } footer: {
-            Text(
-                "A current setup lets Workout Mode receive Libre 3 readings without the iPhone nearby.",
-                comment: "Explains why Libre 3 provisioning readiness matters for Apple Watch Workout Mode."
-            )
+            VStack(alignment: .leading, spacing: 8) {
+                Text(
+                    "A current setup lets Workout Mode receive Libre 3 readings without the iPhone nearby.",
+                    comment: "Explains why Libre 3 provisioning readiness matters for Apple Watch Workout Mode."
+                )
+                Text(
+                    "Wear the watch on the arm closest to the sensor. Otherwise the signal has to cross your body, and reconnecting during a workout can take much longer.",
+                    comment: "Placement advice for direct Libre 3 readings on Apple Watch. Body tissue absorbs the 2.4 GHz signal, so a sensor on the opposite arm makes reconnecting slow."
+                )
+            }
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 

@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import WatchKit
 
 struct WatchAppWorkoutView: View {
     @Environment(\.libreLinkUpHistory) private var libreLinkUpHistory
@@ -13,7 +14,7 @@ struct WatchAppWorkoutView: View {
 
     @State private var workoutManager = WorkoutHealthKitManager.shared
     @State private var selectedThreshold = SharedData.libre3WorkoutLowDefaultMgDL
-    @State private var selectedWorkoutType: WorkoutTypeOption = .hiking
+    @State private var selectedWorkoutType: WorkoutTypeOption = .yoga
     @State private var startFailureMessage: String?
 
     @AppStorage(DefaultsKey.cgmProviderKind.rawValue, store: UserDefaults.group)
@@ -24,6 +25,8 @@ struct WatchAppWorkoutView: View {
     private var libre3EngineStatusMessage = "[...]"
     @AppStorage(DefaultsKey.libre3EngineDidFail.rawValue, store: UserDefaults.group)
     private var libre3EngineDidFail = false
+    @AppStorage(DefaultsKey.libre3EngineIsAcquiring.rawValue, store: UserDefaults.group)
+    private var libre3EngineIsAcquiring = false
 
     private let workoutGraphWindow: TimeInterval = 90 * 60
 
@@ -44,6 +47,18 @@ struct WatchAppWorkoutView: View {
         libreLinkUpHistory.currentGlucose > 0
             ? libreLinkUpHistory.currentTrendArrow
             : "--"
+    }
+
+    /// Colour of the reading the workout value actually shows. `currentGlucose`
+    /// comes from `latestLibreLinkUpGlucose`, so take the colour from the same
+    /// reading rather than from the head of the graph series.
+    private var currentReadingColor: Color {
+        libreLinkUpHistory.latestLibreLinkUpGlucose?.color.color ?? .white
+    }
+
+    private var currentHeartRateText: String {
+        guard let currentHeartRate = workoutManager.currentHeartRate else { return "--" }
+        return currentHeartRate.formatted(.number.precision(.fractionLength(0)))
     }
 
     private func elapsedText(at now: Date) -> String {
@@ -74,7 +89,16 @@ struct WatchAppWorkoutView: View {
             .asShortMinuteChange(glucoseUnit: glucoseUnit)
     }
 
-    private var activeLibre3Status: String? {
+    /// What the workout screen says about the Libre 3 link, plus whether that
+    /// status is about reaching the sensor over the air. The two ownership states
+    /// are not: moving the sensor closer cannot help when the phone holds it, or
+    /// when provisioning is stale.
+    private struct Libre3WorkoutStatus {
+        let text: String
+        let concernsRadioLink: Bool
+    }
+
+    private var activeLibre3Status: Libre3WorkoutStatus? {
         guard workoutModeStore.providerKind == .libre3BLE,
               let workoutSessionID = workoutModeStore.workoutSessionID else { return nil }
 
@@ -82,24 +106,46 @@ struct WatchAppWorkoutView: View {
         let ownership = SharedData.libre3SessionOwner
         if ownership.hasTerminalReclaim(for: workoutSessionID)
             || (ownership.workoutSessionID == workoutSessionID && ownership.owner == .phone) {
-            return String(
-                localized: "Sensor moved to iPhone",
-                comment: "Apple Watch workout status after the user took Libre 3 sensor readings back on the iPhone. The workout itself is still running."
+            return Libre3WorkoutStatus(
+                text: String(
+                    localized: "Sensor moved to iPhone",
+                    comment: "Apple Watch workout status after the user took Libre 3 sensor readings back on the iPhone. The workout itself is still running."
+                ),
+                concernsRadioLink: false
             )
         }
         if ownership.claimRejectionReason != nil {
-            return String(
-                localized: "Waiting for current sensor setup",
-                comment: "Apple Watch workout status while a rejected Libre 3 ownership claim waits for refreshed provisioning from iPhone."
+            return Libre3WorkoutStatus(
+                text: String(
+                    localized: "Waiting for current sensor setup",
+                    comment: "Apple Watch workout status while a rejected Libre 3 ownership claim waits for refreshed provisioning from iPhone."
+                ),
+                concernsRadioLink: false
             )
         }
         if libre3EngineStatusMessage == "[...]" || libre3EngineStatusMessage.isEmpty {
-            return String(
-                localized: "Acquiring sensor…",
-                comment: "Apple Watch workout status while discovering and authenticating directly with the Libre 3 sensor."
+            return Libre3WorkoutStatus(
+                text: String(
+                    localized: "Acquiring sensor…",
+                    comment: "Apple Watch workout status while discovering and authenticating directly with the Libre 3 sensor."
+                ),
+                concernsRadioLink: true
             )
         }
-        return libre3EngineStatusMessage
+        return Libre3WorkoutStatus(text: libre3EngineStatusMessage, concernsRadioLink: true)
+    }
+
+    /// Whether to advise moving the sensor nearer the watch. Shown for the whole
+    /// acquisition rather than after a delay: distance is the only lever the user
+    /// has, and acting on it early is what shortens the wait.
+    ///
+    /// A Libre 3 advertises once a minute in a short burst with no retries, so a
+    /// connect has to be decoded, answered and acknowledged inside that one
+    /// burst. An established link has none of those constraints: it retries every
+    /// connection interval for seconds. That asymmetry is why a stream survives
+    /// across the body while the reconnect after it does not.
+    private var showsSensorPlacementHint: Bool {
+        libre3EngineIsAcquiring && activeLibre3Status?.concernsRadioLink == true
     }
 
     var body: some View {
@@ -175,6 +221,14 @@ struct WatchAppWorkoutView: View {
 
             if currentProviderKind == .libre3BLE {
                 bluetoothPermissionStatus
+
+                Text(
+                    "Wear the watch on the arm closest to the sensor. Otherwise the signal has to cross your body, and reconnecting can take much longer.",
+                    comment: "Placement advice on the Apple Watch workout start screen for direct Libre 3 sensor readings. Body tissue absorbs the 2.4 GHz signal, so a sensor on the opposite arm makes reconnecting slow."
+                )
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
             }
 
             Picker(
@@ -289,23 +343,34 @@ struct WatchAppWorkoutView: View {
     }
 
     private func activeWorkout(at now: Date) -> some View {
-        VStack(spacing: 8) {
+        let batteryLevel = WKInterfaceDevice.current().batteryLevel
+
+        return VStack(spacing: 8) {
             HStack {
                 Text(verbatim: workoutModeStore.workoutType.shortDisplayName)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
                 Spacer()
+                if batteryLevel >= 0 {
+                    batteryIndicator(level: batteryLevel)
+                    Spacer()
+                }
                 Text(verbatim: elapsedText(at: now))
                     .font(.system(.headline, design: .rounded, weight: .bold))
                     .monospacedDigit()
+                    .lineLimit(1)
+                    .layoutPriority(1)
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(verbatim: currentGlucoseText)
                     .font(.system(size: 43, weight: .bold, design: .rounded))
+                    .foregroundStyle(currentReadingColor)
                     .minimumScaleFactor(0.65)
                 Text(verbatim: currentTrendText)
                     .font(.title2)
+                    .foregroundStyle(currentReadingColor)
                 Spacer(minLength: 0)
             }
 
@@ -313,6 +378,11 @@ struct WatchAppWorkoutView: View {
                 compactStat(
                     title: String(localized: "5 min", comment: "Label for glucose change over the previous five minutes on Apple Watch."),
                     value: fiveMinuteDeltaText
+                )
+                Spacer()
+                compactStat(
+                    title: String(localized: "HR", comment: "Abbreviation for heart rate on Apple Watch."),
+                    value: currentHeartRateText
                 )
                 Spacer()
                 compactStat(
@@ -325,18 +395,30 @@ struct WatchAppWorkoutView: View {
             }
 
             if let activeLibre3Status {
-                Label {
-                    Text(verbatim: activeLibre3Status)
+                VStack(alignment: .leading, spacing: 2) {
+                    Label {
+                        Text(verbatim: activeLibre3Status.text)
+                            .lineLimit(2)
+                    } icon: {
+                        Image(
+                            systemName: libre3EngineDidFail
+                                ? "exclamationmark.triangle.fill"
+                                : "antenna.radiowaves.left.and.right"
+                        )
+                    }
+                    .foregroundStyle(libre3EngineDidFail ? .orange : .secondary)
+
+                    if showsSensorPlacementHint {
+                        Text(
+                            "Bring the sensor close to the watch.",
+                            comment: "Advice shown on Apple Watch when a Libre 3 sensor has taken a long time to connect during a workout. Moving the sensor nearer is the only thing the user can do to help."
+                        )
                         .lineLimit(2)
-                } icon: {
-                    Image(
-                        systemName: libre3EngineDidFail
-                            ? "exclamationmark.triangle.fill"
-                            : "antenna.radiowaves.left.and.right"
-                    )
+                        .foregroundStyle(.secondary)
+                    }
                 }
                 .font(.caption2)
-                .foregroundStyle(libre3EngineDidFail ? .orange : .secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             if !libreLinkUpHistory.libreLinkUpGlucose.isEmpty {
@@ -359,6 +441,29 @@ struct WatchAppWorkoutView: View {
             .buttonStyle(.bordered)
             .disabled(workoutManager.isBusy)
         }
+        .onAppear {
+            WKInterfaceDevice.current().isBatteryMonitoringEnabled = true
+        }
+        .onDisappear {
+            WKInterfaceDevice.current().isBatteryMonitoringEnabled = false
+        }
+    }
+
+    private func batteryIndicator(level: Float) -> some View {
+        let levelText = Double(level).formatted(
+            .percent.precision(.fractionLength(0))
+        )
+
+        return Text(verbatim: levelText)
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+        .accessibilityLabel(
+            Text(
+                "Watch battery",
+                comment: "Accessibility label for the Apple Watch battery indicator during a workout."
+            )
+        )
+        .accessibilityValue(Text(verbatim: levelText))
     }
 
     private func compactStat(title: String, value: String) -> some View {

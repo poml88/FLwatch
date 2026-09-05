@@ -42,7 +42,7 @@ private extension WorkoutTypeOption {
         case .elliptical: return .elliptical
         case .rowing: return .rowing
         case .stairClimbing: return .stairClimbing
-        default: return .hiking
+        default: return .yoga
         }
     }
 }
@@ -75,6 +75,7 @@ final class WorkoutHealthKitManager: NSObject {
 
     private(set) var operationState: OperationState = .idle
     private(set) var bluetoothAuthorization: CBManagerAuthorization = CBManager.authorization
+    private(set) var currentHeartRate: Double?
 
     var isBusy: Bool {
         operationState == .starting || operationState == .recovering || operationState == .ending
@@ -444,10 +445,15 @@ final class WorkoutHealthKitManager: NSObject {
         configuration: HKWorkoutConfiguration
     ) {
         session.delegate = self
-        builder.dataSource = HKLiveWorkoutDataSource(
+        builder.delegate = self
+        let dataSource = HKLiveWorkoutDataSource(
             healthStore: healthStore,
             workoutConfiguration: configuration
         )
+        if let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate) {
+            dataSource.enableCollection(for: heartRate, predicate: nil)
+        }
+        builder.dataSource = dataSource
     }
 
     private func defaultWorkoutThreshold(for providerKind: CGMProviderKind) -> Int {
@@ -511,6 +517,7 @@ final class WorkoutHealthKitManager: NSObject {
             session = nil
             builder = nil
         }
+        currentHeartRate = nil
         resolvePendingStart(
             for: workoutSession,
             result: .failure(NSError(
@@ -544,6 +551,7 @@ final class WorkoutHealthKitManager: NSObject {
     private func clearCurrentWorkout(at date: Date) {
         session = nil
         builder = nil
+        currentHeartRate = nil
         _ = WorkoutModeStore.shared.deactivate(at: date)
         explicitEndInProgress = false
         startupFailed = false
@@ -702,4 +710,27 @@ extension WorkoutHealthKitManager: HKWorkoutSessionDelegate {
             }
         }
     }
+}
+
+extension WorkoutHealthKitManager: HKLiveWorkoutBuilderDelegate {
+    nonisolated func workoutBuilder(
+        _ workoutBuilder: HKLiveWorkoutBuilder,
+        didCollectDataOf collectedTypes: Set<HKSampleType>
+    ) {
+        guard let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate),
+              collectedTypes.contains(heartRate),
+              let quantity = workoutBuilder.statistics(for: heartRate)?.mostRecentQuantity()
+        else { return }
+
+        // Reduce the HealthKit sample to a value on the builder's delegate queue;
+        // no HealthKit object crosses into the main actor.
+        let beatsPerMinute = quantity.doubleValue(
+            for: HKUnit.count().unitDivided(by: .minute())
+        )
+        Task { @MainActor in
+            self.currentHeartRate = beatsPerMinute
+        }
+    }
+
+    nonisolated func workoutBuilderDidCollectEvent(_ workoutBuilder: HKLiveWorkoutBuilder) {}
 }

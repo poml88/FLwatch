@@ -125,6 +125,22 @@ struct Libre3HostProfile {
     /// A watch must never replace the phone's cached authorization material by
     /// escalating to a full handshake. Provisioning is its only credential path.
     let allowsFullAuthorization: Bool
+    /// Discover by active scan instead of a retrieved handle. On watchOS the
+    /// controller's initiator for a pending connect almost never catches the
+    /// Libre 3's short once-a-minute advertising burst (field: ~1 in 100 windows),
+    /// while an app scan catches the next window every time. The saved UUID still
+    /// filters the scan, so identity is unchanged.
+    let acquiresByActiveScan: Bool
+    /// Per-characteristic ceiling for the seven-CCCD post-auth re-arm. LibreCRKit's
+    /// 15 s default was calibrated against the phone's ~1.56 s serial ACK cadence
+    /// (seventh ACK at ~8.85 s); observed phone re-arms take 7.7-10.8 s, so that
+    /// shipping host remains at 15 s. The watch runs roughly 1.5x slower:
+    /// successful field re-arms took 13.1, 13.1, 13.4, and 14.6 s, while failures
+    /// hit the ceiling at 15.0, 15.0, and 15.1 s. Give that host 30 s. This is a
+    /// ceiling, not a delay, and deliberately is not count-scaled. The suggested
+    /// max(8, count * 2) is only 14 s for seven characteristics and would reduce
+    /// today's bound.
+    let postAuthRearmPerCharacteristicTimeout: TimeInterval
 
 #if os(watchOS)
     private static let watchWorkoutLowGlucoseAlerts = Libre3LowGlucoseAlertHost(
@@ -172,7 +188,9 @@ struct Libre3HostProfile {
             refreshFromCurrentHistory: { _, _ in }
         ),
         usesBackfill: false,
-        allowsFullAuthorization: false
+        allowsFullAuthorization: false,
+        acquiresByActiveScan: true,
+        postAuthRearmPerCharacteristicTimeout: 30
     )
 
     static var current: Libre3HostProfile {
@@ -277,7 +295,9 @@ extension Libre3HostProfile {
             }
         ),
         usesBackfill: true,
-        allowsFullAuthorization: true
+        allowsFullAuthorization: true,
+        acquiresByActiveScan: false,
+        postAuthRearmPerCharacteristicTimeout: 15
     )
 }
 #endif
@@ -1283,16 +1303,24 @@ enum Libre3PeripheralDiscoverySelection<Value> {
 struct Libre3PeripheralDiscoveryPolicy {
     /// Keeps the normal lookup order and evaluates later sources only as needed.
     static func select<Value>(
+        preferScan: Bool = false,
         retrieveSaved: () -> Value?,
         retrieveConnected: () -> Value?
     ) -> Libre3PeripheralDiscoverySelection<Value> {
-        if let saved = retrieveSaved() {
+        if !preferScan, let saved = retrieveSaved() {
             return .retrieved(saved)
         }
         if let connected = retrieveConnected() {
             return .alreadyConnected(connected)
         }
         return .scan
+    }
+
+    static func acceptsDiscoveredIdentifier(
+        _ discoveredID: UUID,
+        savedID: UUID?
+    ) -> Bool {
+        savedID.map { discoveredID == $0 } ?? true
     }
 }
 
@@ -1609,6 +1637,7 @@ final class Libre3DirectManager: ObservableObject {
     private func publishStatusToAppGroup() {
         SharedData.libre3EngineDidFail = connectionState.isError
         SharedData.libre3EngineStatusMessage = connectionState.message
+        SharedData.libre3EngineIsAcquiring = connectionState.isAcquiring
     }
 
     // MARK: - Provider gating
@@ -1955,7 +1984,7 @@ final class Libre3DirectManager: ObservableObject {
         scanner.cancelConnection(session.peripheral)
     }
 
-    /// Samples an indefinite CoreBluetooth connect from an existing host wakeup.
+    /// Samples an indefinite CoreBluetooth connect wait.
     /// The active await timestamp prevents stale `.connecting` UI state from
     /// being reported after the underlying wait has already ended.
     func traceConnectWaitIfNeeded(at date: Date = Date()) {
@@ -1967,9 +1996,16 @@ final class Libre3DirectManager: ObservableObject {
             withIdentifiers: [lifecyclePeripheral.identifier]
         ).first ?? lifecyclePeripheral
         let elapsed = max(0, Int(date.timeIntervalSince(connectWaitStartedAt)))
+#if os(watchOS)
+        let appVisibility = WatchConnectivityManager.shared.watchAppVisibilityDescription
+        Libre3DiagnosticsLog.traceReconnect(
+            "connect-wait elapsed=\(elapsed)s state=\(currentPeripheral.state.rawValue) app=\(appVisibility)"
+        )
+#else
         Libre3DiagnosticsLog.traceReconnect(
             "connect-wait elapsed=\(elapsed)s state=\(currentPeripheral.state.rawValue)"
         )
+#endif
     }
 
     /// Developer-only probe: discard the host-local CoreBluetooth identity
@@ -2782,15 +2818,18 @@ final class Libre3DirectManager: ObservableObject {
         peripheralBindingTracker.recordCandidate(peripheral.identifier)
 
         connectionState = .connecting
-        let session = try await connectAndBuildSession(scanner: scanner, peripheral: peripheral)
+        let session = try await connectAndBuildSession(
+            scanner: scanner,
+            peripheral: peripheral
+        )
         // On the phone, ask CoreBluetooth to wake us when it next sees this
         // peripheral after a background range loss. LibreCRKit makes this a
         // no-op on watchOS, where the workout session supplies runtime instead.
         scanner.registerForConnectionEvents(peripheralIDs: [peripheral.identifier])
 
         // Protect authorization and the bounded post-auth re-arm on the phone,
-        // but not the indefinite connection wait or notification stream. The
-        // watch profile returns no activity because its workout supplies runtime.
+        // but not the connection wait or notification stream. The watch profile
+        // returns no activity because its workout supplies runtime.
         let backgroundActivity = hostProfile.backgroundRuntime.beginActivity("Libre3DirectAuth")
         defer {
             backgroundActivity?.end()
@@ -2936,17 +2975,20 @@ final class Libre3DirectManager: ObservableObject {
 
     private func rearmDataPlaneNotifications(session: SensorSession) async throws {
         let plan = Self.postAuthRearmPlan
+        let perCharacteristicTimeout =
+            hostProfile.postAuthRearmPerCharacteristicTimeout
         let startedAt = Date()
         rearmStartedAt = startedAt
         Libre3DiagnosticsLog.traceReconnect(
-            "post-auth-rearm-start count=\(plan.characteristics.count)"
+            "post-auth-rearm-start count=\(plan.characteristics.count) timeout=\(Int(perCharacteristicTimeout))s"
         )
 
         do {
             // LibreCRKit coordinates the seven operations and waits for every ACK.
             try await session.refreshDataPlaneNotifications(
                 characteristics: plan.characteristics,
-                forceReArm: plan.forceReArm
+                forceReArm: plan.forceReArm,
+                perCharacteristicTimeout: perCharacteristicTimeout
             )
             // The CCCD refresh waits on CoreBluetooth acknowledgements and does
             // not finish early just because its parent task was cancelled. A
@@ -3238,13 +3280,19 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
-    /// Find the paired sensor from CoreBluetooth's known state before scanning.
-    private func discoverPeripheral(scanner: SensorScannerNG) async throws -> CBPeripheral {
+    /// Find the paired sensor. The phone keeps its known-peripheral-first lookup
+    /// and stops scanning when discovery returns. The watch skips retrieved
+    /// handles, retains the saved-UUID filter, and leaves its scan running for
+    /// `connectAndBuildSession` to stop after the connection attempt.
+    private func discoverPeripheral(
+        scanner: SensorScannerNG
+    ) async throws -> CBPeripheral {
         let savedUUID = SharedData.libre3PeripheralUUID
         let savedID = UUID(uuidString: savedUUID)
 
         let selection: Libre3PeripheralDiscoverySelection<CBPeripheral> =
             Libre3PeripheralDiscoveryPolicy.select(
+                preferScan: hostProfile.acquiresByActiveScan,
                 retrieveSaved: {
                     guard let id = savedID else { return nil }
                     return scanner.retrievePeripherals(withIdentifiers: [id]).first
@@ -3276,14 +3324,27 @@ final class Libre3DirectManager: ObservableObject {
         // Subscribe before starting the scan so discovery cannot beat the waiter.
         let events = scanner.events()
         scanner.startScan()
-        defer { scanner.stopScan() }
+        var handedScanToConnection = false
+        defer {
+            if !handedScanToConnection,
+               scanner.centralState == .poweredOn {
+                scanner.stopScan()
+            }
+        }
         for await event in events {
             try Task.checkCancellation()
             if case .didDiscover(let found) = event,
-               savedID.map({ found.peripheral.identifier == $0 }) ?? true {
+               Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                   found.peripheral.identifier,
+                   savedID: savedID
+               ) {
                 Libre3DiagnosticsLog.traceReconnect(
-                    "discover-selection kind=scan id=\(found.peripheral.identifier.uuidString)"
+                    "discover-selection kind=scan id=\(found.peripheral.identifier.uuidString) rssi=\(found.rssi)"
                 )
+                if hostProfile.acquiresByActiveScan {
+                    Libre3DiagnosticsLog.traceReconnect("scan-kept-running")
+                    handedScanToConnection = true
+                }
                 return found.peripheral
             }
         }
@@ -3326,21 +3387,26 @@ final class Libre3DirectManager: ObservableObject {
         throw SensorScannerError.bluetoothUnavailable
     }
 
-    /// Adopt an already-connected/restored peripheral, or leave an indefinite
-    /// NG connection request standing until CoreBluetooth reaches it. A phantom
-    /// restored link is allowed to fail its bounded discovery/auth work; the
-    /// attempt cleanup then cancels it and rearms from `didDisconnect`.
-    /// The CoreBluetooth request has no application timeout, so it remains a
-    /// background wake source until connection or explicit cancellation.
+    /// Adopt an already-connected/restored peripheral, or leave the NG request
+    /// standing until CoreBluetooth reaches it. The watch's discovery scan stays
+    /// active through this attempt; the phone's scan has already stopped.
     private func connectAndBuildSession(
         scanner: SensorScannerNG,
         peripheral: CBPeripheral
     ) async throws -> SensorSession {
         try await withTaskCancellationHandler {
+            defer {
+                if scanner.centralState == .poweredOn {
+                    scanner.stopScan()
+                }
+            }
             let connected = try await awaitConnectedPeripheral(
                 scanner: scanner,
                 peripheral: peripheral
             )
+            if scanner.centralState == .poweredOn {
+                scanner.stopScan()
+            }
             attemptReachedDidConnect = true
             let connectedAt = Date()
             attemptConnectedAt = connectedAt
@@ -3360,6 +3426,7 @@ final class Libre3DirectManager: ObservableObject {
             // commands while the central is unavailable. Ordinary stop/cancel
             // still tears down an indefinite pending request immediately.
             if scanner.centralState == .poweredOn {
+                scanner.stopScan()
                 scanner.cancelConnection(peripheral)
             }
         }

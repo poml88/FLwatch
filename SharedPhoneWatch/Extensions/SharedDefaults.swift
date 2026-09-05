@@ -470,6 +470,7 @@ enum DefaultsKey: String {
     // widgets omit the engine and the watch workout owns its lifetime.
     case libre3EngineDidFail = "libre3EngineDidFailKey"
     case libre3EngineStatusMessage = "libre3EngineStatusMessageKey"
+    case libre3EngineIsAcquiring = "libre3EngineIsAcquiringKey"
     case libre3SensorNeedsReplacement = "libre3SensorNeedsReplacementKey"
     case libre3ConnectionRequiresUserAction = "libre3ConnectionRequiresUserActionKey"
     case libre3SensorNotResponding = "libre3SensorNotRespondingKey"
@@ -1433,6 +1434,14 @@ enum SharedData {
     static var libre3EngineStatusMessage: String {
         get { store.getString(.libre3EngineStatusMessage, defaultValue: "[...]") }
         set { store.setString(newValue, forKey: .libre3EngineStatusMessage) }
+    }
+
+    /// Whether the engine is currently trying to reach the sensor over the air,
+    /// as opposed to streaming or idle. The watch workout screen uses it to offer
+    /// sensor-placement advice, which only helps while a link is being attempted.
+    static var libre3EngineIsAcquiring: Bool {
+        get { store.getBool(.libre3EngineIsAcquiring) }
+        set { store.setBool(newValue, forKey: .libre3EngineIsAcquiring) }
     }
 
     /// Phone-only persisted echo of a terminal sensor attention state. This seeds

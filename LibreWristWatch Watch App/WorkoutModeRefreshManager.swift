@@ -69,9 +69,14 @@ final class WorkoutAlertNotificationManager {
 
     nonisolated private static let notificationIdentifierPrefix = "watch-workout-"
     private static let noReadingIdentifier = "watch-workout-no-reading"
-    /// Matches the phone's signal-loss dead-man and permits four missed Dexcom
-    /// five-minute readings before warning the user.
-    private static let noReadingInterval: TimeInterval = 20 * 60
+    /// Deliberately half the phone's 20-minute signal-loss dead-man. That one
+    /// covers a phone left behind on a table, where the user is not relying on it
+    /// minute to minute. A workout is the opposite: the watch is the only device
+    /// present, glucose is moving fastest, and the user can act on a warning
+    /// immediately by moving the sensor arm or ending the session. Ten minutes
+    /// still absorbs two missed Dexcom five-minute readings, and ten missed
+    /// Libre 3 ones.
+    private static let noReadingInterval: TimeInterval = 10 * 60
     private static let maximumGlucoseAgeForAlerts: TimeInterval = 3 * 60
     private static let minimumRepeatInterval: TimeInterval = 5 * 60
     // Sensor/network jitter can put a nominal five-minute reading a few seconds

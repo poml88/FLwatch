@@ -376,22 +376,26 @@ struct PhoneAppHomeView: View {
             ZStack {
                 Color(white: 0, opacity: 0.65)
                     .cornerRadius(10)
+                    .allowsHitTesting(false) // Keep the IOB button tappable below the overlay.
                 VStack(spacing: 14) {
-                    Image(systemName: "applewatch")
-                        .font(.system(size: 54))
+                    Group {
+                        Image(systemName: "applewatch")
+                            .font(.system(size: 54))
 
-                    Text(
-                        "Workout running on Apple Watch",
-                        comment: "Phone Home overlay title shown while an Apple Watch workout owns the Libre 3 sensor connection."
-                    )
-                    .font(.headline)
-                    .multilineTextAlignment(.center)
+                        Text(
+                            "Workout running on Apple Watch",
+                            comment: "Phone Home overlay title shown while an Apple Watch workout owns the Libre 3 sensor connection."
+                        )
+                        .font(.headline)
+                        .multilineTextAlignment(.center)
 
-                    Text(
-                        "Sensor connected to Apple Watch.",
-                        comment: "Phone Home overlay body shown while an Apple Watch workout owns the Libre 3 sensor connection."
-                    )
-                    .multilineTextAlignment(.center)
+                        Text(
+                            "Sensor connected to Apple Watch.",
+                            comment: "Phone Home overlay body shown while an Apple Watch workout owns the Libre 3 sensor connection."
+                        )
+                        .multilineTextAlignment(.center)
+                    }
+                    .allowsHitTesting(false) // Keep the IOB button tappable below the overlay.
 
                     Button {
                         isShowingTakeSensorBackConfirmation = true
