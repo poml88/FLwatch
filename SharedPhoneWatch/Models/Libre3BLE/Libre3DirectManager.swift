@@ -756,6 +756,26 @@ struct Libre3BackfillReadiness: Equatable {
     }
 }
 
+/// Restores the manager's pure five-minute buffer from the persisted graph.
+/// `pushHistory` injects the newest minute reading at index zero for display,
+/// so only that exact point may be removed; minute and historical readings
+/// legitimately share life-count IDs.
+struct Libre3PersistedHistorySeedPolicy {
+    static func historicalPoints(
+        fullHistory: [LibreLinkUpGlucose],
+        minuteHistory: [LibreLinkUpGlucose]
+    ) -> [LibreLinkUpGlucose] {
+        var historical = fullHistory.filter {
+            $0.glucose.source == CGMReadingSource.libre3BLE
+        }
+        if let newestMinute = minuteHistory.first,
+           historical.first == newestMinute {
+            historical.removeFirst()
+        }
+        return historical
+    }
+}
+
 /// Per-record acceptance rules for minute-resolution clinical backfill. The
 /// ordering is intentional: warm-up is the fundamental rejection reason even
 /// when a record would also fail a later boundary check.
@@ -1384,6 +1404,9 @@ final class Libre3DirectManager: ObservableObject {
     /// Peripheral currently being adopted, connected, or streamed. Unlike
     /// `session`, this is available while an indefinite connect is still pending.
     private var lifecyclePeripheral: CBPeripheral?
+    /// Set only while `awaitConnectedPeripheral` is suspended. Existing host
+    /// cadences sample this wait without adding a diagnostic timer or wakeup.
+    private var connectWaitStartedAt: Date?
     /// A failed connected setup is cancelled before another attempt. A callback
     /// or the bounded recheck clears this gate once the link is down.
     private var disconnectHandoffPolicy = Libre3DisconnectHandoffPolicy()
@@ -1878,6 +1901,7 @@ final class Libre3DirectManager: ObservableObject {
     /// is carried by the event-driven owner + CoreBluetooth.
     func recoverIfStale() {
         guard isActiveProvider, ownershipPermitsConnection else { return }
+        traceConnectWaitIfNeeded()
         // Keeps the anchor-derived warm-up countdown moving while no patch status
         // has arrived yet — e.g. right after a fresh activation, before the BLE
         // session exists — instead of leaving the seeded value frozen.
@@ -1929,6 +1953,23 @@ final class Libre3DirectManager: ObservableObject {
         // Disconnecting ends `notifications()`, allowing the existing lifecycle
         // loop to reconnect. Coincident kicks may repeat this harmless request.
         scanner.cancelConnection(session.peripheral)
+    }
+
+    /// Samples an indefinite CoreBluetooth connect from an existing host wakeup.
+    /// The active await timestamp prevents stale `.connecting` UI state from
+    /// being reported after the underlying wait has already ended.
+    func traceConnectWaitIfNeeded(at date: Date = Date()) {
+        guard connectionState == .connecting,
+              let connectWaitStartedAt,
+              let scanner,
+              let lifecyclePeripheral else { return }
+        let currentPeripheral = scanner.retrievePeripherals(
+            withIdentifiers: [lifecyclePeripheral.identifier]
+        ).first ?? lifecyclePeripheral
+        let elapsed = max(0, Int(date.timeIntervalSince(connectWaitStartedAt)))
+        Libre3DiagnosticsLog.traceReconnect(
+            "connect-wait elapsed=\(elapsed)s state=\(currentPeripheral.state.rawValue)"
+        )
     }
 
     /// Developer-only probe: discard the host-local CoreBluetooth identity
@@ -2803,15 +2844,16 @@ final class Libre3DirectManager: ObservableObject {
         // Restricted to our own source so a previous provider's points are never
         // resurfaced.
         let persistedMinute = LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose
-            .filter { $0.glucose.source == "Libre3 BLE" }
+            .filter { $0.glucose.source == CGMReadingSource.libre3BLE }
         if historicalByLifeCount.isEmpty {
             // `fullLibreLinkUpGlucose` carries the injected live minute reading as
-            // its newest element (see pushHistory). Exclude anything that's a minute
-            // point so the pure 5-min series isn't polluted with a 1-min point no
-            // future 5-min sample would replace.
-            let minuteIDs = Set(persistedMinute.map { $0.glucose.id })
-            for point in LibreLinkUpHistory.shared.fullLibreLinkUpGlucose
-            where point.glucose.source == "Libre3 BLE" && !minuteIDs.contains(point.glucose.id) {
+            // its newest element (see pushHistory). Remove only that exact point:
+            // the minute overlay can share IDs with valid 5-min history.
+            let persistedHistorical = Libre3PersistedHistorySeedPolicy.historicalPoints(
+                fullHistory: LibreLinkUpHistory.shared.fullLibreLinkUpGlucose,
+                minuteHistory: persistedMinute
+            )
+            for point in persistedHistorical {
                 historicalByLifeCount[point.glucose.id] = point
             }
         }
@@ -3217,8 +3259,14 @@ final class Libre3DirectManager: ObservableObject {
 
         switch selection {
         case .retrieved(let peripheral):
+            Libre3DiagnosticsLog.traceReconnect(
+                "discover-selection kind=retrieved id=\(peripheral.identifier.uuidString)"
+            )
             return peripheral
         case .alreadyConnected(let peripheral):
+            Libre3DiagnosticsLog.traceReconnect(
+                "discover-selection kind=connected id=\(peripheral.identifier.uuidString)"
+            )
             Libre3DiagnosticsLog.traceReconnect("reconnect-recovered-connected")
             return peripheral
         case .scan:
@@ -3233,6 +3281,9 @@ final class Libre3DirectManager: ObservableObject {
             try Task.checkCancellation()
             if case .didDiscover(let found) = event,
                savedID.map({ found.peripheral.identifier == $0 }) ?? true {
+                Libre3DiagnosticsLog.traceReconnect(
+                    "discover-selection kind=scan id=\(found.peripheral.identifier.uuidString)"
+                )
                 return found.peripheral
             }
         }
@@ -3328,6 +3379,13 @@ final class Libre3DirectManager: ObservableObject {
             withIdentifiers: [peripheral.identifier]
         ).first ?? peripheral
         let currentState = currentPeripheral.state
+        let waitStartedAt = Date()
+        connectWaitStartedAt = waitStartedAt
+        defer {
+            if connectWaitStartedAt == waitStartedAt {
+                connectWaitStartedAt = nil
+            }
+        }
 
         if currentState == .connected {
             return currentPeripheral

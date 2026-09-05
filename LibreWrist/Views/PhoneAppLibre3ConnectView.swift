@@ -26,6 +26,10 @@ struct PhoneAppLibre3ConnectView: View {
     @State private var expandedStuckSnapshotIDs: Set<UUID> = []
     @State private var livePacketRecords: [Libre3LivePacketRecord] = []
     @State private var expandedLivePacketRecordIDs: Set<Int> = []
+    @AppStorage(DefaultsKey.libre3WatchDiagnosticsLog.rawValue, store: UserDefaults.group)
+    private var watchDiagnosticsLog = ""
+    @AppStorage(DefaultsKey.libre3WatchDiagnosticsCapturedAt.rawValue, store: UserDefaults.group)
+    private var watchDiagnosticsCapturedAtInterval: Double = 0
     // These mirrors make the pure readiness getter reactive without advancing
     // or resending a provisioning revision from SwiftUI rendering.
     @AppStorage(DefaultsKey.libre3ProvisioningCurrentRevision.rawValue, store: UserDefaults.group)
@@ -95,7 +99,6 @@ struct PhoneAppLibre3ConnectView: View {
 
     var body: some View {
         Form {
-            directToWatchReadinessSection
             switch coordinator.state {
             case .paired(let serial, let bleAddress, let firmware):
                 pairedSection(serial: serial, bleAddress: bleAddress, firmware: firmware)
@@ -105,8 +108,10 @@ struct PhoneAppLibre3ConnectView: View {
             if developerModeEnabled {
                 developerNotableEventsSection
                 developerLogSection
+                developerWatchLogSection
                 developerStuckEvidenceSection
                 developerLivePacketSection
+                developerTestButtonsSection
             }
         }
         .navigationTitle("Libre 3 (Bluetooth)")
@@ -186,61 +191,58 @@ struct PhoneAppLibre3ConnectView: View {
 
     private var directToWatchReadinessSection: some View {
         Section {
-            LabeledContent {
-                switch directToWatchReadiness {
-                case .ready:
-                    Label {
-                        Text(
-                            "Ready for direct sensor",
-                            comment: "iPhone status confirming the paired Apple Watch has the current Libre 3 direct-sensor setup."
-                        )
-                    } icon: {
-                        Image(systemName: "checkmark.circle.fill")
-                    }
-                    .foregroundStyle(.green)
-                case .waitingForSensorSetup:
-                    Label {
-                        Text(
-                            "Waiting for sensor setup from iPhone",
-                            comment: "iPhone status shown until Libre 3 pairing and cached authorization are ready to provision to Apple Watch."
-                        )
-                    } icon: {
-                        Image(systemName: "hourglass.circle")
-                    }
-                    .foregroundStyle(.secondary)
-                case .outdated:
-                    Label {
-                        Text(
-                            "Sensor setup is outdated",
-                            comment: "iPhone status warning that Apple Watch has not acknowledged the current Libre 3 direct-sensor setup."
-                        )
-                    } icon: {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                    }
-                    .foregroundStyle(.orange)
+            // Use the full row so longer or localized status text does not get
+            // squeezed into the trailing column of `LabeledContent`.
+            switch directToWatchReadiness {
+            case .ready:
+                Label {
+                    Text(
+                        "Ready for direct sensor",
+                        comment: "iPhone status confirming the paired Apple Watch has the current Libre 3 direct-sensor setup."
+                    )
+                } icon: {
+                    Image(systemName: "checkmark.circle.fill")
                 }
-            } label: {
-                Text(
-                    "Apple Watch",
-                    comment: "Label for Libre 3 direct-to-watch provisioning readiness on the iPhone connect screen."
-                )
+                .foregroundStyle(.green)
+            case .waitingForSensorSetup:
+                Label {
+                    Text(
+                        "Waiting for sensor setup from iPhone",
+                        comment: "iPhone status shown until Libre 3 pairing and cached authorization are ready to provision to Apple Watch."
+                    )
+                } icon: {
+                    Image(systemName: "hourglass.circle")
+                }
+                .foregroundStyle(.secondary)
+            case .outdated:
+                Label {
+                    Text(
+                        "Sensor setup is outdated",
+                        comment: "iPhone status warning that Apple Watch has not acknowledged the current Libre 3 direct-sensor setup."
+                    )
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                }
+                .foregroundStyle(.orange)
             }
 
-            LabeledContent {
-                if provisioningAcknowledgedRevisionMirror > 0 {
-                    Text(verbatim: String(provisioningAcknowledgedRevisionMirror))
-                        .monospacedDigit()
-                } else {
+            if developerModeEnabled {
+                LabeledContent {
+                    if provisioningAcknowledgedRevisionMirror > 0 {
+                        Text(verbatim: String(provisioningAcknowledgedRevisionMirror))
+                            .monospacedDigit()
+                    } else {
+                        Text(
+                            "Not installed",
+                            comment: "Value shown when Apple Watch has not acknowledged any Libre 3 provisioning revision."
+                        )
+                    }
+                } label: {
                     Text(
-                        "Not installed",
-                        comment: "Value shown when Apple Watch has not acknowledged any Libre 3 provisioning revision."
+                        "Watch revision",
+                        comment: "Label for the Libre 3 provisioning revision acknowledged as installed on Apple Watch."
                     )
                 }
-            } label: {
-                Text(
-                    "Watch revision",
-                    comment: "Label for the Libre 3 provisioning revision acknowledged as installed on Apple Watch."
-                )
             }
         } header: {
             Text(
@@ -593,6 +595,8 @@ struct PhoneAppLibre3ConnectView: View {
         } footer: {
             Text("Forgets this sensor and its stored credentials. You'll need to scan again to re-pair.")
         }
+
+        directToWatchReadinessSection
     }
 
     // MARK: - Live connection (Phase 3)
@@ -761,13 +765,6 @@ struct PhoneAppLibre3ConnectView: View {
                 .buttonStyle(.borderless)
             }
 
-            Button {
-                directManager.developerForgetPeripheralAndRediscoverByScan()
-            } label: {
-                Text(verbatim: "Forget Bluetooth peripheral and rediscover by scan")
-            }
-            .buttonStyle(.borderless)
-
             ScrollView(.vertical) {
                 Text(
                     logEntries.isEmpty
@@ -781,6 +778,65 @@ struct PhoneAppLibre3ConnectView: View {
             .frame(height: 300)
         } header: {
             Text("Developer log")
+        }
+    }
+
+    private var developerWatchLogSection: some View {
+        Section {
+            HStack {
+                Button {
+                    WatchConnectivityManager.shared.requestWatchDiagnosticsLog()
+                } label: {
+                    Text(verbatim: "Fetch")
+                }
+                .buttonStyle(.borderless)
+
+                Spacer()
+
+                Button(role: .destructive) {
+                    SharedData.libre3WatchDiagnosticsLog = ""
+                    SharedData.libre3WatchDiagnosticsCapturedAt = nil
+                } label: {
+                    Text(verbatim: "Clear")
+                }
+                .buttonStyle(.borderless)
+                .disabled(watchDiagnosticsLog.isEmpty && watchDiagnosticsCapturedAtInterval == 0)
+
+                Button {
+                    UIPasteboard.general.string = watchDiagnosticsLog
+                } label: {
+                    Text(verbatim: "Copy all")
+                }
+                .buttonStyle(.borderless)
+                .disabled(watchDiagnosticsLog.isEmpty)
+            }
+
+            if watchDiagnosticsCapturedAtInterval > 0 {
+                let capturedAt = Date(timeIntervalSince1970: watchDiagnosticsCapturedAtInterval)
+                Text(
+                    verbatim: "Captured: \(capturedAt.formatted(date: .abbreviated, time: .standard))"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            } else {
+                Text(verbatim: "Not fetched yet.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            ScrollView(.vertical) {
+                Text(
+                    verbatim: watchDiagnosticsLog.isEmpty
+                        ? "No watch diagnostics fetched."
+                        : watchDiagnosticsLog
+                )
+                .font(.system(.caption, design: .monospaced))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
+            }
+            .frame(height: 300)
+        } header: {
+            Text(verbatim: "Watch log")
         }
     }
 
@@ -932,6 +988,18 @@ struct PhoneAppLibre3ConnectView: View {
             Text("Live packet capture")
         } footer: {
             Text("Session-only and memory-only. Off after every app launch. Captures up to 300 decrypted and decoded packets from channels FLwatch already uses; nothing is persisted or added to a support email.")
+        }
+    }
+
+    private var developerTestButtonsSection: some View {
+        Section {
+            Button {
+                directManager.developerForgetPeripheralAndRediscoverByScan()
+            } label: {
+                Text(verbatim: "Forget Bluetooth peripheral and rediscover by scan")
+            }
+        } header: {
+            Text(verbatim: "Test buttons")
         }
     }
 

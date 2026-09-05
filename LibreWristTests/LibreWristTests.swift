@@ -855,6 +855,79 @@ final class LibreWristTests: XCTestCase {
         XCTAssertFalse(watch.usesBackfill)
     }
 
+    // MARK: - Libre 3 persisted history seed
+
+    func testPersistedHistorySeedDropsOnlyInjectedLatestMinute() {
+        let anchor = Date(timeIntervalSince1970: 1_786_313_000)
+        let injected = directBLENightscoutReading(
+            lifeCount: 100,
+            date: anchor.addingTimeInterval(100 * 60),
+            value: 110
+        )
+        let historical = [95, 90, 85].map { lifeCount in
+            directBLENightscoutReading(
+                lifeCount: lifeCount,
+                date: anchor.addingTimeInterval(Double(lifeCount * 60)),
+                value: 100 + lifeCount % 10
+            )
+        }
+
+        let seeded = Libre3PersistedHistorySeedPolicy.historicalPoints(
+            fullHistory: [injected] + historical,
+            minuteHistory: [injected]
+        )
+
+        XCTAssertEqual(seeded, historical)
+    }
+
+    func testPersistedHistorySeedPreservesHistoricalPointsWhoseIDsAppearInMinuteOverlay() {
+        let anchor = Date(timeIntervalSince1970: 1_786_313_000)
+        let historical = [95, 90, 85].map { lifeCount in
+            directBLENightscoutReading(
+                lifeCount: lifeCount,
+                date: anchor.addingTimeInterval(Double(lifeCount * 60)),
+                value: 110
+            )
+        }
+        let minute = (85...100).reversed().map { lifeCount in
+            directBLENightscoutReading(
+                lifeCount: lifeCount,
+                date: anchor.addingTimeInterval(Double(lifeCount * 60)),
+                value: 120
+            )
+        }
+
+        let seeded = Libre3PersistedHistorySeedPolicy.historicalPoints(
+            fullHistory: historical,
+            minuteHistory: minute
+        )
+
+        XCTAssertEqual(seeded, historical)
+    }
+
+    func testPersistedHistorySeedLeavesHistoryWithoutInjectedMinuteUnchanged() {
+        let anchor = Date(timeIntervalSince1970: 1_786_313_000)
+        let historical = [95, 90].map { lifeCount in
+            directBLENightscoutReading(
+                lifeCount: lifeCount,
+                date: anchor.addingTimeInterval(Double(lifeCount * 60)),
+                value: 110
+            )
+        }
+        let newestMinute = directBLENightscoutReading(
+            lifeCount: 100,
+            date: anchor.addingTimeInterval(100 * 60),
+            value: 110
+        )
+
+        let seeded = Libre3PersistedHistorySeedPolicy.historicalPoints(
+            fullHistory: historical,
+            minuteHistory: [newestMinute]
+        )
+
+        XCTAssertEqual(seeded, historical)
+    }
+
     // MARK: - Libre 3 backfill bounds
 
     func testHistoricalBackfillStartLifeCountBoundsAndAligns() {
@@ -1986,6 +2059,36 @@ final class LibreWristTests: XCTestCase {
             Libre3CCCDSkipLog.handshakeSkipTraceLine(
                 for: "discoverAndSubscribe: complete in 812ms (all notify subs already on)"
             )
+        )
+    }
+
+    // MARK: - Watch diagnostics export
+
+    func testWatchDiagnosticsExportLeavesPayloadBelowUTF8LimitAndMarksTruncation() {
+        let text = "header\nnewest 😀\nsecond-newest\n" + String(repeating: "oldest 古", count: 20)
+        let limit = 45
+
+        let result = Libre3DiagnosticsLog.truncatingNewestFirstExport(
+            text,
+            maxUTF8ByteCount: limit
+        )
+
+        XCTAssertLessThanOrEqual(result.utf8.count, limit)
+        XCTAssertTrue(result.hasPrefix("header\nnewest 😀"))
+        XCTAssertTrue(result.hasSuffix("…truncated"))
+        XCTAssertFalse(result.contains("oldest"))
+        XCTAssertFalse(result.contains("�"))
+    }
+
+    func testWatchDiagnosticsExportIsUnchangedWhenItFits() {
+        let text = "header\nnewest\noldest"
+
+        XCTAssertEqual(
+            Libre3DiagnosticsLog.truncatingNewestFirstExport(
+                text,
+                maxUTF8ByteCount: text.utf8.count
+            ),
+            text
         )
     }
 

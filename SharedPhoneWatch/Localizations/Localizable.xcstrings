@@ -2734,9 +2734,6 @@
         }
       }
     },
-    "Apple Watch" : {
-      "comment" : "Label for Libre 3 direct-to-watch provisioning readiness on the iPhone connect screen."
-    },
     "Apple Watch could not take ownership of the Libre 3 sensor." : {
       "comment" : "Workout start failure when the direct-sensor ownership claim is rejected."
     },

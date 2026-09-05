@@ -479,6 +479,10 @@ enum DefaultsKey: String {
     case libre3DiagnosticEvents = "libre3DiagnosticEventsKey"
     case libre3ReconnectTrace = "libre3ReconnectTraceKey"
     case libre3NotableEvents = "libre3NotableEventsKey"
+    // Phone-local copy of the most recently fetched watch diagnostics. App
+    // groups do not cross devices, so WatchConnectivity populates these keys.
+    case libre3WatchDiagnosticsLog = "libre3WatchDiagnosticsLogKey"
+    case libre3WatchDiagnosticsCapturedAt = "libre3WatchDiagnosticsCapturedAtKey"
     /// Compact stuck-glucose evidence snapshots. Read/written only by
     /// `Libre3DiagnosticsLog`, which owns the record type — hence a
     /// key here but no `SharedData` accessor. Reuses the former stream-ring key
@@ -1504,6 +1508,35 @@ enum SharedData {
     static var libre3NotableEvents: [String] {
         get { store.getStringArray(.libre3NotableEvents) }
         set { store.setStringArray(newValue, forKey: .libre3NotableEvents) }
+    }
+
+    static var libre3WatchDiagnosticsLog: String {
+        get { store.getString(.libre3WatchDiagnosticsLog, defaultValue: "") }
+        set {
+            if newValue.isEmpty {
+                store.removeObject(forKey: DefaultsKey.libre3WatchDiagnosticsLog.rawValue)
+            } else {
+                store.setString(newValue, forKey: .libre3WatchDiagnosticsLog)
+            }
+        }
+    }
+
+    static var libre3WatchDiagnosticsCapturedAt: Date? {
+        get {
+            guard store.object(
+                forKey: DefaultsKey.libre3WatchDiagnosticsCapturedAt.rawValue
+            ) != nil else { return nil }
+            return store.getDate(.libre3WatchDiagnosticsCapturedAt)
+        }
+        set {
+            if let newValue {
+                store.setDate(newValue, forKey: .libre3WatchDiagnosticsCapturedAt)
+            } else {
+                store.removeObject(
+                    forKey: DefaultsKey.libre3WatchDiagnosticsCapturedAt.rawValue
+                )
+            }
+        }
     }
 
     static var libre3GlucoseOnlyDeathCount: Int {

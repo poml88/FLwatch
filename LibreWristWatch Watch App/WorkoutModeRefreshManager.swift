@@ -8,7 +8,8 @@ import OSLog
 import UserNotifications
 
 /// Keeps cloud-backed glucose current while HealthKit grants workout runtime.
-/// Direct BLE is push-driven and is deliberately never kicked from here.
+/// Direct BLE remains push-driven; its only work here is sampling an already
+/// pending connect for developer diagnostics without adding another wakeup.
 @MainActor
 final class WorkoutModeRefreshManager {
     static let shared = WorkoutModeRefreshManager()
@@ -49,7 +50,9 @@ final class WorkoutModeRefreshManager {
     func refreshNow(trigger: String) async {
         guard WorkoutModeStore.shared.isActive else { return }
 
-        if !WorkoutModeStore.shared.providerKind.isDirectBLE {
+        if WorkoutModeStore.shared.providerKind.isDirectBLE {
+            Libre3DirectManager.shared.traceConnectWaitIfNeeded()
+        } else {
             logger.debug("Running cloud workout refresh [\(trigger, privacy: .public)]")
             _ = await LibreLinkUpService.shared.requestReloadIfNeeded(maxAgeMinutes: 1)
             await WorkoutAlertNotificationManager.shared.evaluateCurrentReading()

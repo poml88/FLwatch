@@ -34,6 +34,9 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     private static let libre3ProvisioningAcknowledgementContent = "libre3ProvisioningAcknowledgement"
     private static let libre3ProvisioningAcknowledgementDataKey = "libre3ProvisioningAcknowledgementData"
     private static let requestLibre3ProvisioningContent = "requestLibre3Provisioning"
+    private static let requestWatchDiagnosticsLogContent = "requestWatchDiagnosticsLog"
+    private static let watchDiagnosticsLogContent = "watchDiagnosticsLog"
+    private static let watchDiagnosticsLogDataKey = "watchDiagnosticsLogData"
     private static let libre3WorkoutOwnershipContent = "libre3WorkoutOwnership"
     private static let libre3WorkoutOwnershipDataKey = "libre3WorkoutOwnershipData"
     private static let libre3WorkoutOwnershipAcknowledgementContent = "libre3WorkoutOwnershipAcknowledgement"
@@ -144,6 +147,11 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         let revision: Int64
         let digest: String
         let installedAt: Date
+    }
+
+    private struct WatchDiagnosticsLogPayload: Codable, Sendable {
+        let text: String
+        let capturedAt: Date
     }
 
     private struct Libre3WorkoutOwnershipAcknowledgement: Codable, Sendable {
@@ -418,6 +426,39 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             // local package is absent or suspect; do not trust an old ack from
             // a replaced/reinstalled watch to suppress this transfer.
             sendLibre3ProvisioningPackageToWatch(force: true)
+#endif
+        }
+
+        if message["content"] as? String == Self.requestWatchDiagnosticsLogContent {
+#if os(watchOS)
+            // Diagnostics are available regardless of workout ownership. The
+            // request is an explicit developer action, not part of BLE control.
+            Task { @MainActor in
+                self.sendWatchDiagnosticsLogToPhone()
+            }
+#endif
+        }
+
+        if message["content"] as? String == Self.watchDiagnosticsLogContent {
+#if os(iOS)
+            guard let logData = message[Self.watchDiagnosticsLogDataKey] as? Data else {
+                Logger.connectivity.error("Missing watch diagnostics log data in message")
+                return
+            }
+            do {
+                let payload = try JSONDecoder().decode(
+                    WatchDiagnosticsLogPayload.self,
+                    from: logData
+                )
+                Task { @MainActor in
+                    SharedData.libre3WatchDiagnosticsLog = payload.text
+                    SharedData.libre3WatchDiagnosticsCapturedAt = payload.capturedAt
+                }
+            } catch {
+                Logger.connectivity.error(
+                    "Failed to decode watch diagnostics log: \(error.localizedDescription)"
+                )
+            }
 #endif
         }
 
@@ -1484,6 +1525,14 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         ]
         sendMessageToPairedDevice(messageToWatch)
     }
+
+    func requestWatchDiagnosticsLog() {
+        let message: [String: Any] = [
+            "content": Self.requestWatchDiagnosticsLogContent,
+            "useApplicationContext": false
+        ]
+        sendMessageToPairedDevice(message)
+    }
 #endif
 
     private static func libre3ProvisioningDigest(
@@ -1604,6 +1653,28 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             sendMessageToPairedDevice(message)
         } catch {
             Logger.connectivity.error("Failed to encode Libre 3 provisioning acknowledgement: \(error.localizedDescription)")
+        }
+    }
+
+    @MainActor
+    private func sendWatchDiagnosticsLogToPhone() {
+        let capturedAt = Date()
+        let payload = WatchDiagnosticsLogPayload(
+            text: Libre3DiagnosticsLog.watchConnectivityExportText(),
+            capturedAt: capturedAt
+        )
+        do {
+            let data = try JSONEncoder().encode(payload)
+            let message: [String: Any] = [
+                "content": Self.watchDiagnosticsLogContent,
+                Self.watchDiagnosticsLogDataKey: data,
+                "useApplicationContext": false
+            ]
+            sendMessageToPairedDevice(message)
+        } catch {
+            Logger.connectivity.error(
+                "Failed to encode watch diagnostics log: \(error.localizedDescription)"
+            )
         }
     }
 

@@ -54,6 +54,8 @@ enum Libre3DiagnosticsLog {
     private static let reconnectTraceSupportCharacterLimit = 1_200
     private static let notableEventStorageEntryLimit = 50
     private static let stuckSnapshotStorageLimit = 10
+    static let watchConnectivityExportByteLimit = 30 * 1_024
+    nonisolated private static let truncationMarker = "…truncated"
 
     /// Entries stay in UTC internally so persisted rings retain one sortable format.
     private static let storageTimestampFormatter: ISO8601DateFormatter = {
@@ -212,6 +214,60 @@ enum Libre3DiagnosticsLog {
             + ["", "Merged retained log:"]
             + (merged.isEmpty ? ["None"] : merged))
             .joined(separator: "\n")
+    }
+
+    /// WatchConnectivity diagnostics are intentionally bounded below its
+    /// practical payload ceiling. The export is ordered newest-first, so a
+    /// prefix keeps the most useful entries when the oldest tail is discarded.
+    static func watchConnectivityExportText() -> String {
+        truncatingNewestFirstExport(
+            fullExportText(),
+            maxUTF8ByteCount: watchConnectivityExportByteLimit
+        )
+    }
+
+    /// UTF-8-safe truncation kept nonisolated so the byte-boundary behavior can
+    /// be unit tested without involving the diagnostics store.
+    nonisolated static func truncatingNewestFirstExport(
+        _ text: String,
+        maxUTF8ByteCount: Int
+    ) -> String {
+        guard maxUTF8ByteCount > 0 else { return "" }
+        guard text.utf8.count > maxUTF8ByteCount else { return text }
+
+        let markedSuffix = "\n\(truncationMarker)"
+        guard markedSuffix.utf8.count <= maxUTF8ByteCount else {
+            return utf8Prefix(truncationMarker, maxByteCount: maxUTF8ByteCount)
+        }
+
+        let contentBudget = maxUTF8ByteCount - markedSuffix.utf8.count
+        let prefix = utf8Prefix(text, maxByteCount: contentBudget)
+        // Prefer dropping the partially retained oldest line. If the cap lands
+        // in the first line, keep its safe prefix rather than returning no text.
+        let retained: String
+        if let lastNewline = prefix.lastIndex(of: "\n") {
+            retained = String(prefix[..<lastNewline])
+        } else {
+            retained = prefix
+        }
+        return retained + markedSuffix
+    }
+
+    nonisolated private static func utf8Prefix(
+        _ text: String,
+        maxByteCount: Int
+    ) -> String {
+        guard maxByteCount > 0 else { return "" }
+        var result = ""
+        var byteCount = 0
+        for character in text {
+            let characterText = String(character)
+            let characterByteCount = characterText.utf8.count
+            guard byteCount + characterByteCount <= maxByteCount else { break }
+            result.append(character)
+            byteCount += characterByteCount
+        }
+        return result
     }
 
     /// Owns support-mail formatting. Both the count and character caps matter:
