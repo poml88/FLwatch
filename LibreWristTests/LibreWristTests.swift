@@ -850,6 +850,8 @@ final class LibreWristTests: XCTestCase {
         XCTAssertTrue(phone.usesBackfill)
         XCTAssertEqual(phone.postAuthRearmPerCharacteristicTimeout, 15)
         XCTAssertFalse(phone.acquiresByActiveScan)
+        XCTAssertFalse(phone.recreatesScannerBetweenWorkouts)
+        XCTAssertFalse(phone.usesSystemAutoReconnect)
         XCTAssertEqual(phone.burstConnectMode, .off)
 
         let watch = Libre3HostProfile.watchWorkout
@@ -858,7 +860,71 @@ final class LibreWristTests: XCTestCase {
         XCTAssertFalse(watch.usesBackfill)
         XCTAssertEqual(watch.postAuthRearmPerCharacteristicTimeout, 30)
         XCTAssertTrue(watch.acquiresByActiveScan)
-        XCTAssertNotEqual(watch.burstConnectMode, .off)
+        XCTAssertTrue(watch.recreatesScannerBetweenWorkouts)
+        XCTAssertFalse(watch.usesSystemAutoReconnect)
+        XCTAssertEqual(watch.burstConnectMode, .armOnDiscovery)
+    }
+
+    func testLibre3ScannerCreationWaitsForPendingRetirement() {
+        XCTAssertEqual(
+            Libre3ScannerLifetimePolicy.creationDecision(
+                hasScanner: true,
+                retirementPending: false
+            ),
+            .reuseCurrent
+        )
+        XCTAssertEqual(
+            Libre3ScannerLifetimePolicy.creationDecision(
+                hasScanner: false,
+                retirementPending: false
+            ),
+            .createNew
+        )
+        XCTAssertEqual(
+            Libre3ScannerLifetimePolicy.creationDecision(
+                hasScanner: true,
+                retirementPending: true
+            ),
+            .waitForRetirement
+        )
+        XCTAssertEqual(
+            Libre3ScannerLifetimePolicy.creationDecision(
+                hasScanner: false,
+                retirementPending: true
+            ),
+            .waitForRetirement
+        )
+    }
+
+    func testLibre3ScannerGenerationRejectsOldLifetimeWork() {
+        XCTAssertTrue(
+            Libre3ScannerLifetimePolicy.isCurrent(expected: 4, current: 4)
+        )
+        XCTAssertFalse(
+            Libre3ScannerLifetimePolicy.isCurrent(expected: 4, current: 5)
+        )
+        XCTAssertFalse(
+            Libre3ScannerLifetimePolicy.isCurrent(expected: 4, current: nil)
+        )
+    }
+
+    func testLibre3WorkoutHandoffRetiresOnlyAfterStandDownAndPreservesResult() {
+        let watchTimeout = Libre3WorkoutHandoffRetirementPolicy.plan(
+            recreatesScannerBetweenWorkouts: true,
+            result: .timedOut
+        )
+        XCTAssertEqual(
+            watchTimeout.steps,
+            [.finishStandDown, .retireScanner]
+        )
+        XCTAssertEqual(watchTimeout.result, .timedOut)
+
+        let phoneDisconnect = Libre3WorkoutHandoffRetirementPolicy.plan(
+            recreatesScannerBetweenWorkouts: false,
+            result: .confirmedDisconnect
+        )
+        XCTAssertEqual(phoneDisconnect.steps, [.finishStandDown])
+        XCTAssertEqual(phoneDisconnect.result, .confirmedDisconnect)
     }
 
     func testFailedConnectionStateStillCountsAsAcquiring() {

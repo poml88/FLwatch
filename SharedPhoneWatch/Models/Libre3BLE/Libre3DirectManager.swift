@@ -118,6 +118,17 @@ enum Libre3BurstConnectMode: Equatable {
     case armOnDiscovery
     /// As above, plus a fresh request `lead` seconds before the next predicted burst.
     case preArm(lead: TimeInterval)
+
+    var traceValue: String {
+        switch self {
+        case .off:
+            "off"
+        case .armOnDiscovery:
+            "arm-on-discovery"
+        case .preArm(let lead):
+            "pre-arm-\(lead)s"
+        }
+    }
 }
 
 @MainActor
@@ -140,6 +151,12 @@ struct Libre3HostProfile {
     /// while an app scan catches the next window every time. The saved UUID still
     /// filters the scan, so identity is unchanged.
     let acquiresByActiveScan: Bool
+    /// Retire the watch's scanner after workout ownership is released so the
+    /// next workout starts with fresh app-owned CoreBluetooth objects.
+    let recreatesScannerBetweenWorkouts: Bool
+    /// Opt into CoreBluetooth-owned recovery after an unexpected link loss.
+    /// Kept off until the auto-reconnect experiment is explicitly enabled.
+    let usesSystemAutoReconnect: Bool
     /// Controls watch-only connect timing. A standing watch intent caught roughly
     /// one in 100 windows, while a request issued on discovery connected in four
     /// of seven trials. Both active modes cancel only in the silence ten seconds
@@ -204,6 +221,8 @@ struct Libre3HostProfile {
         usesBackfill: false,
         allowsFullAuthorization: false,
         acquiresByActiveScan: true,
+        recreatesScannerBetweenWorkouts: true,
+        usesSystemAutoReconnect: false,
         burstConnectMode: .armOnDiscovery,
         postAuthRearmPerCharacteristicTimeout: 30
     )
@@ -312,6 +331,8 @@ extension Libre3HostProfile {
         usesBackfill: true,
         allowsFullAuthorization: true,
         acquiresByActiveScan: false,
+        recreatesScannerBetweenWorkouts: false,
+        usesSystemAutoReconnect: false,
         burstConnectMode: .off,
         postAuthRearmPerCharacteristicTimeout: 15
     )
@@ -691,6 +712,51 @@ enum Libre3WorkoutHandoffStandDownResult: Equatable, Sendable {
         case .timedOut:
             "timeout"
         }
+    }
+}
+
+enum Libre3ScannerCreationDecision: Equatable {
+    case reuseCurrent
+    case waitForRetirement
+    case createNew
+}
+
+struct Libre3ScannerLifetimePolicy {
+    static func creationDecision(
+        hasScanner: Bool,
+        retirementPending: Bool
+    ) -> Libre3ScannerCreationDecision {
+        if retirementPending {
+            return .waitForRetirement
+        }
+        return hasScanner ? .reuseCurrent : .createNew
+    }
+
+    static func isCurrent(expected: Int, current: Int?) -> Bool {
+        expected == current
+    }
+}
+
+enum Libre3WorkoutHandoffCompletionStep: Equatable {
+    case finishStandDown
+    case retireScanner
+}
+
+struct Libre3WorkoutHandoffRetirementPolicy {
+    struct Plan: Equatable {
+        let steps: [Libre3WorkoutHandoffCompletionStep]
+        let result: Libre3WorkoutHandoffStandDownResult
+    }
+
+    static func plan(
+        recreatesScannerBetweenWorkouts: Bool,
+        result: Libre3WorkoutHandoffStandDownResult
+    ) -> Plan {
+        var steps: [Libre3WorkoutHandoffCompletionStep] = [.finishStandDown]
+        if recreatesScannerBetweenWorkouts {
+            steps.append(.retireScanner)
+        }
+        return Plan(steps: steps, result: result)
     }
 }
 
@@ -1443,6 +1509,17 @@ final class Libre3DirectManager: ObservableObject {
     /// second restoring central. Mirrors the heartbeat manager, which likewise
     /// only builds its `CBCentralManager` once enabled.
     private var scanner: SensorScannerNG?
+    /// Monotonically increasing identity for each scanner allocated by this
+    /// manager. Asynchronous work must match both this value and `scanner`.
+    private var scannerGenerationCounter = 0
+    private var scannerGeneration: Int?
+    /// Set before a handoff wait starts, preventing a rapid new `start()` from
+    /// reusing the scanner which must be retired after acknowledgement/timeout.
+    private var scannerRetirementPendingGeneration: Int?
+    private var scannerRetirementTask: Task<Void, Never>?
+    private var scannerRetirementOperationID: UUID?
+    private var scannerRetirementGeneration: Int?
+    private var scannerRetirementReason: String?
     private var session: SensorSession?
     private var decoder: DataPlaneDecoder?
     private let assembler = DataPlaneNotificationAssembler()
@@ -1772,7 +1849,13 @@ final class Libre3DirectManager: ObservableObject {
             connectionState = .idle
             return
         }
+        let beginsWorkoutAcquisition = !shouldMaintainConnection
         shouldMaintainConnection = true
+        if beginsWorkoutAcquisition, hostProfile.device == .watchWorkout {
+            Libre3DiagnosticsLog.traceReconnect(
+                "workout-ble-config recreatesScannerBetweenWorkouts=\(hostProfile.recreatesScannerBetweenWorkouts) usesSystemAutoReconnect=\(hostProfile.usesSystemAutoReconnect) burstConnectMode=\(hostProfile.burstConnectMode.traceValue)"
+            )
+        }
         // Ask for notification authorization as soon as a paired sensor starts,
         // not at stream start: the sensor-not-responding alert fires precisely
         // when streaming never happens. The warm-up path asks too, but only for a
@@ -1796,7 +1879,7 @@ final class Libre3DirectManager: ObservableObject {
         if UserDefaults.group.connected != .connected {
             UserDefaults.group.connected = .connected
         }
-        ensureScanner()
+        guard ensureScanner() else { return }
         // Subscribe before the lifecycle creates any short-lived event waiter.
         // NG buffers restoration only until its first subscriber, so the long-
         // lived owner must always be that first subscriber.
@@ -1808,6 +1891,7 @@ final class Libre3DirectManager: ObservableObject {
     /// Tear down the connection and stop streaming (provider switched away, or
     /// the user disconnected the sensor).
     func stop() {
+        let stoppingScannerGeneration = scannerGeneration
         // Clear intent first: cancelling the CoreBluetooth request/session below
         // can synchronously enqueue a disconnect callback, and that callback must
         // not resurrect a provider the user just left.
@@ -1835,6 +1919,9 @@ final class Libre3DirectManager: ObservableObject {
         scannerEventTask?.cancel()
         scannerEventTask = nil
         session?.handleDisconnect(error: nil)
+        // Cancel from the app-resolved handle before watch retirement: a fresh
+        // scanner can adopt an already-connected peripheral that its own
+        // retention bookkeeping never saw through requestConnect.
         if let scanner,
            scanner.centralState == .poweredOn,
            let peripheral = peripheralToCancel {
@@ -1861,6 +1948,12 @@ final class Libre3DirectManager: ObservableObject {
         // standing sensor alert that would now be stale.
         Task { await hostProfile.sensorAlerts.retractTerminalAlert() }
         connectionState = .idle
+        if let stoppingScannerGeneration {
+            _ = beginScannerRetirement(
+                reason: "stop",
+                expectedGeneration: stoppingScannerGeneration
+            )
+        }
     }
 
     /// Stop maintaining this host's Libre 3 link so the peer can acquire it.
@@ -1869,6 +1962,7 @@ final class Libre3DirectManager: ObservableObject {
     /// the matching `.didDisconnect` arrives. Sensor-alert state is untouched:
     /// ownership is moving to the peer, not being removed from the user.
     func standDownForHandoff() async -> Libre3WorkoutHandoffStandDownResult {
+        let handoffScannerGeneration = markScannerRetirementPendingForHandoff()
         shouldMaintainConnection = false
         // This is the one phone alert that must be removed during ownership
         // transfer: leaving its OS deadline armed would produce a false signal-
@@ -1892,32 +1986,33 @@ final class Libre3DirectManager: ObservableObject {
         guard let scanner,
               scanner.centralState == .poweredOn,
               let peripheral else {
-            finishWorkoutHandoffStandDown()
-            Libre3DiagnosticsLog.traceReconnect(
-                "workout-handoff-stand-down result=confirmed-disconnect reason=no-active-peripheral"
+            return await completeWorkoutHandoffStandDown(
+                result: .confirmedDisconnect,
+                reason: "no-active-peripheral",
+                scannerGeneration: handoffScannerGeneration
             )
-            return .confirmedDisconnect
         }
 
         observeScannerEventsIfNeeded()
         guard peripheral.state != .disconnected else {
-            finishWorkoutHandoffStandDown()
-            Libre3DiagnosticsLog.traceReconnect(
-                "workout-handoff-stand-down result=confirmed-disconnect reason=already-disconnected"
+            return await completeWorkoutHandoffStandDown(
+                result: .confirmedDisconnect,
+                reason: "already-disconnected",
+                scannerGeneration: handoffScannerGeneration
             )
-            return .confirmedDisconnect
         }
 
         let startedAt = Date()
         let result = await waitForWorkoutHandoffDisconnect(
             peripheral: peripheral,
-            scanner: scanner
+            scanner: scanner,
+            scannerGeneration: handoffScannerGeneration
         )
-        finishWorkoutHandoffStandDown()
-        Libre3DiagnosticsLog.traceReconnect(
-            "workout-handoff-stand-down result=\(result.traceValue) elapsed=\(Self.elapsedDescription(from: startedAt, to: Date()))"
+        return await completeWorkoutHandoffStandDown(
+            result: result,
+            startedAt: startedAt,
+            scannerGeneration: handoffScannerGeneration
         )
-        return result
     }
 
     /// Resume Libre 3 on the host selected by the persisted ownership record.
@@ -1936,7 +2031,8 @@ final class Libre3DirectManager: ObservableObject {
 
     private func waitForWorkoutHandoffDisconnect(
         peripheral: CBPeripheral,
-        scanner: SensorScannerNG
+        scanner: SensorScannerNG,
+        scannerGeneration: Int?
     ) async -> Libre3WorkoutHandoffStandDownResult {
         let peripheralID = peripheral.identifier
         // Subscribe before cancelling so the terminal callback cannot beat the
@@ -1952,6 +2048,15 @@ final class Libre3DirectManager: ObservableObject {
             group.addTask {
                 for await event in events {
                     if Task.isCancelled { return .timedOut }
+                    if let scannerGeneration {
+                        let remainsCurrent = await MainActor.run {
+                            self.isCurrentScanner(
+                                scanner,
+                                generation: scannerGeneration
+                            )
+                        }
+                        if !remainsCurrent { return .timedOut }
+                    }
                     if case .didDisconnect(let disconnected, _) = event,
                        disconnected.identifier == peripheralID {
                         return .confirmedDisconnect
@@ -1967,6 +2072,42 @@ final class Libre3DirectManager: ObservableObject {
             group.cancelAll()
             return result
         }
+    }
+
+    private func completeWorkoutHandoffStandDown(
+        result: Libre3WorkoutHandoffStandDownResult,
+        reason: String? = nil,
+        startedAt: Date? = nil,
+        scannerGeneration: Int?
+    ) async -> Libre3WorkoutHandoffStandDownResult {
+        // Releasing engine state belongs to the completed handoff regardless of
+        // scanner lifetime. Only retirement is generation-qualified below.
+        let completionPlan = Libre3WorkoutHandoffRetirementPolicy.plan(
+            recreatesScannerBetweenWorkouts: hostProfile.recreatesScannerBetweenWorkouts,
+            result: result
+        )
+        for step in completionPlan.steps {
+            switch step {
+            case .finishStandDown:
+                finishWorkoutHandoffStandDown()
+            case .retireScanner:
+                guard let scannerGeneration else { continue }
+                await retireScanner(
+                    reason: "workout-handoff-\(reason ?? result.traceValue)",
+                    expectedGeneration: scannerGeneration
+                )
+            }
+        }
+
+        var trace = "workout-handoff-stand-down result=\(result.traceValue)"
+        if let reason {
+            trace += " reason=\(reason)"
+        }
+        if let startedAt {
+            trace += " elapsed=\(Self.elapsedDescription(from: startedAt, to: Date()))"
+        }
+        Libre3DiagnosticsLog.traceReconnect(trace)
+        return completionPlan.result
     }
 
     /// Release the remaining engine state only after physical disconnect was
@@ -2229,12 +2370,154 @@ final class Libre3DirectManager: ObservableObject {
 
     // MARK: - Connect → authorize → stream
 
-    private func ensureScanner() {
-        guard scanner == nil else { return }
-        installCCCDSkipTracing()
-        scanner = SensorScannerNG(
-            configuration: .background(restorationIdentifier: Self.restoreIdentifier)
+    @discardableResult
+    private func ensureScanner() -> Bool {
+        let retirementPending = scannerRetirementPendingGeneration != nil ||
+            scannerRetirementTask != nil
+        switch Libre3ScannerLifetimePolicy.creationDecision(
+            hasScanner: scanner != nil,
+            retirementPending: retirementPending
+        ) {
+        case .reuseCurrent:
+            return scannerGeneration != nil
+        case .waitForRetirement:
+            return false
+        case .createNew:
+            installCCCDSkipTracing()
+            scannerGenerationCounter &+= 1
+            let generation = scannerGenerationCounter
+            scanner = SensorScannerNG(
+                configuration: .background(restorationIdentifier: Self.restoreIdentifier),
+                enableAutoReconnect: hostProfile.usesSystemAutoReconnect
+            )
+            scannerGeneration = generation
+            Libre3DiagnosticsLog.traceReconnect(
+                "scanner-created lifetime=\(generation)"
+            )
+            return true
+        }
+    }
+
+    private func isCurrentScanner(
+        _ candidate: SensorScannerNG,
+        generation expectedGeneration: Int
+    ) -> Bool {
+        scanner === candidate && Libre3ScannerLifetimePolicy.isCurrent(
+            expected: expectedGeneration,
+            current: scannerGeneration
         )
+    }
+
+    private func isCurrentScannerGeneration(_ expectedGeneration: Int) -> Bool {
+        scanner != nil && Libre3ScannerLifetimePolicy.isCurrent(
+            expected: expectedGeneration,
+            current: scannerGeneration
+        )
+    }
+
+    private func checkCurrentScanner(
+        _ candidate: SensorScannerNG,
+        generation: Int
+    ) throws {
+        guard isCurrentScanner(candidate, generation: generation) else {
+            throw CancellationError()
+        }
+    }
+
+    private func markScannerRetirementPendingForHandoff() -> Int? {
+        guard hostProfile.recreatesScannerBetweenWorkouts else { return nil }
+        if let scannerRetirementGeneration {
+            return scannerRetirementGeneration
+        }
+        guard let scannerGeneration else { return nil }
+        scannerRetirementPendingGeneration = scannerGeneration
+        return scannerGeneration
+    }
+
+    private func invalidateScannerLifetimeWork() {
+        clearReconnectBackoff()
+        cancelDisconnectHandoffRecovery()
+        disconnectHandoffPolicy.reset()
+        lifecycleAttemptID = nil
+        lifecycleTask?.cancel()
+        lifecycleTask = nil
+        resetBurstConnectState()
+        silenceWatchdogTask?.cancel()
+        silenceWatchdogTask = nil
+        scannerEventTask?.cancel()
+        scannerEventTask = nil
+    }
+
+    private func beginScannerRetirement(
+        reason: String,
+        expectedGeneration: Int? = nil
+    ) -> (operationID: UUID, task: Task<Void, Never>)? {
+        guard hostProfile.recreatesScannerBetweenWorkouts else { return nil }
+        if let scannerRetirementTask,
+           let scannerRetirementOperationID,
+           expectedGeneration == nil || scannerRetirementGeneration == expectedGeneration {
+            return (scannerRetirementOperationID, scannerRetirementTask)
+        }
+        guard let retiringScanner = scanner,
+              let retiringGeneration = scannerGeneration,
+              expectedGeneration == nil || expectedGeneration == retiringGeneration else {
+            return nil
+        }
+
+        invalidateScannerLifetimeWork()
+        scanner = nil
+        scannerGeneration = nil
+        scannerRetirementPendingGeneration = retiringGeneration
+
+        let operationID = UUID()
+        let retirementTask = Task {
+            await retiringScanner.retire()
+        }
+        scannerRetirementOperationID = operationID
+        scannerRetirementGeneration = retiringGeneration
+        scannerRetirementReason = reason
+        scannerRetirementTask = retirementTask
+
+        Task { [weak self] in
+            await retirementTask.value
+            guard let self else { return }
+            self.completeScannerRetirement(operationID: operationID)
+        }
+        return (operationID, retirementTask)
+    }
+
+    private func retireScanner(
+        reason: String,
+        expectedGeneration: Int? = nil
+    ) async {
+        guard let retirement = beginScannerRetirement(
+            reason: reason,
+            expectedGeneration: expectedGeneration
+        ) else { return }
+        await retirement.task.value
+        completeScannerRetirement(operationID: retirement.operationID)
+    }
+
+    private func completeScannerRetirement(operationID: UUID) {
+        guard scannerRetirementOperationID == operationID,
+              let retiredGeneration = scannerRetirementGeneration else { return }
+        let reason = scannerRetirementReason ?? "unspecified"
+        scannerRetirementTask = nil
+        scannerRetirementOperationID = nil
+        scannerRetirementGeneration = nil
+        if scannerRetirementPendingGeneration == retiredGeneration {
+            scannerRetirementPendingGeneration = nil
+        }
+        scannerRetirementReason = nil
+        Libre3DiagnosticsLog.traceReconnect(
+            "scanner-retired lifetime=\(retiredGeneration) reason=\(reason)"
+        )
+
+        if shouldMaintainConnection,
+           isActiveProvider,
+           Libre3StateStore.isPaired {
+            start()
+        }
     }
 
     /// Record the one LibreCRKit event that separates the two causes of a silent
@@ -2265,18 +2548,33 @@ final class Libre3DirectManager: ObservableObject {
     /// disconnects into `SensorSession`: NG deliberately leaves session ownership
     /// and invalidation to its client.
     private func observeScannerEventsIfNeeded() {
-        guard scannerEventTask == nil, let scanner else { return }
+        guard scannerEventTask == nil,
+              let scanner,
+              let scannerGeneration else { return }
         let events = scanner.events()
         scannerEventTask = Task { [weak self] in
             for await event in events {
-                guard let self else { return }
-                self.handleScannerEvent(event)
                 if Task.isCancelled { break }
+                guard let self,
+                      self.isCurrentScanner(
+                          scanner,
+                          generation: scannerGeneration
+                      ) else { return }
+                self.handleScannerEvent(
+                    event,
+                    scanner: scanner,
+                    scannerGeneration: scannerGeneration
+                )
             }
         }
     }
 
-    private func handleScannerEvent(_ event: SensorScannerNG.Event) {
+    private func handleScannerEvent(
+        _ event: SensorScannerNG.Event,
+        scanner: SensorScannerNG,
+        scannerGeneration: Int
+    ) {
+        guard isCurrentScanner(scanner, generation: scannerGeneration) else { return }
         switch event {
         case .stateChanged(let state):
             Libre3DiagnosticsLog.traceReconnect("cb-state value=\(state.rawValue)")
@@ -2430,18 +2728,28 @@ final class Libre3DirectManager: ObservableObject {
         for peripheral: CBPeripheral,
         scanner: SensorScannerNG
     ) {
+        guard let scannerGeneration,
+              isCurrentScanner(scanner, generation: scannerGeneration) else { return }
         // Close the gate before cancellation so a late connect cannot win.
         let generation = disconnectHandoffPolicy.begin()
         disconnectHandoffStartedAt = Date()
         disconnectHandoffRetryCount = 0
-        armDisconnectHandoffRecovery(generation: generation)
+        armDisconnectHandoffRecovery(
+            generation: generation,
+            scanner: scanner,
+            scannerGeneration: scannerGeneration
+        )
         Libre3DiagnosticsLog.traceReconnect(
             "disconnect-before-rearm state=\(peripheral.state.rawValue)"
         )
         scanner.cancelConnection(peripheral)
     }
 
-    private func armDisconnectHandoffRecovery(generation: Int) {
+    private func armDisconnectHandoffRecovery(
+        generation: Int,
+        scanner: SensorScannerNG,
+        scannerGeneration: Int
+    ) {
         disconnectHandoffRecoveryTask?.cancel()
         disconnectHandoffRecoveryTask = Task { [weak self] in
             while !Task.isCancelled {
@@ -2454,6 +2762,10 @@ final class Libre3DirectManager: ObservableObject {
                 }
                 guard let self,
                       !Task.isCancelled,
+                      self.isCurrentScanner(
+                          scanner,
+                          generation: scannerGeneration
+                      ),
                       self.disconnectHandoffPolicy.isCurrent(generation) else {
                     return
                 }
@@ -2593,6 +2905,8 @@ final class Libre3DirectManager: ObservableObject {
               lifecycleTask == nil,
               !waitingForDisconnectBeforeRearm,
               let scanner,
+              let scannerGeneration,
+              isCurrentScanner(scanner, generation: scannerGeneration),
               scanner.centralState == .poweredOn else { return }
 
         if let deadline = reconnectBackoffDeadline {
@@ -2613,7 +2927,12 @@ final class Libre3DirectManager: ObservableObject {
                     } catch {
                         return
                     }
-                    guard let self, !Task.isCancelled else { return }
+                    guard let self,
+                          !Task.isCancelled,
+                          self.isCurrentScanner(
+                              scanner,
+                              generation: scannerGeneration
+                          ) else { return }
                     self.backoffRearmTask = nil
                     self.ensureLifecycleAttempt(reason: "backoff-elapsed")
                 }
@@ -2631,18 +2950,36 @@ final class Libre3DirectManager: ObservableObject {
         lifecycleTask = Task { [weak self] in
             guard let self else { return }
             do {
-                try await self.connectAuthorizeAndStream()
-                self.completeLifecycleAttempt(id: attemptID, error: nil)
+                try await self.connectAuthorizeAndStream(
+                    scanner: scanner,
+                    scannerGeneration: scannerGeneration
+                )
+                self.completeLifecycleAttempt(
+                    id: attemptID,
+                    scannerGeneration: scannerGeneration,
+                    error: nil
+                )
             } catch is CancellationError {
-                self.completeCancelledLifecycleAttempt(id: attemptID)
+                self.completeCancelledLifecycleAttempt(
+                    id: attemptID,
+                    scannerGeneration: scannerGeneration
+                )
             } catch {
-                self.completeLifecycleAttempt(id: attemptID, error: error)
+                self.completeLifecycleAttempt(
+                    id: attemptID,
+                    scannerGeneration: scannerGeneration,
+                    error: error
+                )
             }
         }
     }
 
-    private func completeCancelledLifecycleAttempt(id: UUID) {
-        guard lifecycleAttemptID == id else { return }
+    private func completeCancelledLifecycleAttempt(
+        id: UUID,
+        scannerGeneration: Int
+    ) {
+        guard lifecycleAttemptID == id,
+              isCurrentScannerGeneration(scannerGeneration) else { return }
         lifecycleAttemptID = nil
         lifecycleTask = nil
         // Intentional stop and Bluetooth-unavailable teardown clear or defer
@@ -2650,8 +2987,13 @@ final class Libre3DirectManager: ObservableObject {
         ensureLifecycleAttempt(reason: "cancelled-attempt")
     }
 
-    private func completeLifecycleAttempt(id: UUID, error: Error?) {
-        guard lifecycleAttemptID == id else { return }
+    private func completeLifecycleAttempt(
+        id: UUID,
+        scannerGeneration: Int,
+        error: Error?
+    ) {
+        guard lifecycleAttemptID == id,
+              isCurrentScannerGeneration(scannerGeneration) else { return }
         lifecycleAttemptID = nil
         lifecycleTask = nil
 
@@ -2876,7 +3218,11 @@ final class Libre3DirectManager: ObservableObject {
         ensureLifecycleAttempt(reason: "attempt-ended")
     }
 
-    private func connectAuthorizeAndStream() async throws {
+    private func connectAuthorizeAndStream(
+        scanner: SensorScannerNG,
+        scannerGeneration: Int
+    ) async throws {
+        try checkCurrentScanner(scanner, generation: scannerGeneration)
         lastAttemptStage = "connect"
         attemptReachedDidConnect = false
         attemptEndRecorded = false
@@ -2894,15 +3240,22 @@ final class Libre3DirectManager: ObservableObject {
         peripheralBindingTracker.reset()
         Libre3DiagnosticsLog.traceReconnect("connect-start")
 
-        guard let scanner else { throw Libre3DirectError.notStarted }
         guard let sensorState = Libre3StateStore.loadState() else {
             throw Libre3DirectError.notPaired
         }
 
-        try await waitUntilScannerReady(scanner)
+        try await waitUntilScannerReady(
+            scanner,
+            scannerGeneration: scannerGeneration
+        )
+        try checkCurrentScanner(scanner, generation: scannerGeneration)
 
         connectionState = .scanning
-        let peripheral = try await discoverPeripheral(scanner: scanner)
+        let peripheral = try await discoverPeripheral(
+            scanner: scanner,
+            scannerGeneration: scannerGeneration
+        )
+        try checkCurrentScanner(scanner, generation: scannerGeneration)
         lifecyclePeripheral = peripheral
         // Discovery alone is not identity proof; remember this only as a candidate.
         peripheralBindingTracker.recordCandidate(peripheral.identifier)
@@ -2910,8 +3263,10 @@ final class Libre3DirectManager: ObservableObject {
         connectionState = .connecting
         let session = try await connectAndBuildSession(
             scanner: scanner,
+            scannerGeneration: scannerGeneration,
             peripheral: peripheral
         )
+        try checkCurrentScanner(scanner, generation: scannerGeneration)
         // On the phone, ask CoreBluetooth to wake us when it next sees this
         // peripheral after a background range loss. LibreCRKit makes this a
         // no-op on watchOS, where the workout session supplies runtime instead.
@@ -2928,6 +3283,7 @@ final class Libre3DirectManager: ObservableObject {
         lastAttemptStage = "auth"
         connectionState = .authorizing
         let sessionMaterial = try await authorize(session: session, sensorState: sensorState)
+        try checkCurrentScanner(scanner, generation: scannerGeneration)
         let completedAt = Date()
         phase6CompletedAt = completedAt
         // Phase 6 proves that this candidate owns the saved sensor credentials.
@@ -3006,6 +3362,7 @@ final class Libre3DirectManager: ObservableObject {
         // All seven CCCDs must be ready before the session is exposed as streaming.
         lastAttemptStage = "rearm"
         try await rearmDataPlaneNotifications(session: session)
+        try checkCurrentScanner(scanner, generation: scannerGeneration)
 
         // Stamp the sensor model now that we're authorized (mirrors how the
         // Dexcom/LLU providers set the type on connect).
@@ -3029,7 +3386,11 @@ final class Libre3DirectManager: ObservableObject {
         lastAttemptStage = "streaming"
         connectionState = .streaming
         Libre3DiagnosticsLog.traceReconnect("stream-start")
-        startSilenceWatchdog(session: session)
+        startSilenceWatchdog(
+            session: session,
+            scanner: scanner,
+            scannerGeneration: scannerGeneration
+        )
         // Give a newly authorized stream a full recovery window; subsequent
         // liveness advances come only from actual glucose-channel fragments.
         let streamingStartedAt = Date()
@@ -3040,8 +3401,10 @@ final class Libre3DirectManager: ObservableObject {
         // Overall connection health still waits for usable glucose. Credential
         // advice was already cleared by successful Phase 6 above.
         await hostProfile.sensorAlerts.requestAuthorizationIfNeeded()
+        try checkCurrentScanner(scanner, generation: scannerGeneration)
         if !sensorNeedsReplacement {
             await hostProfile.sensorAlerts.retractTerminalAlert()
+            try checkCurrentScanner(scanner, generation: scannerGeneration)
         }
         refreshExpiryReminders()
 
@@ -3056,10 +3419,17 @@ final class Libre3DirectManager: ObservableObject {
         backgroundActivity?.end()
 
         defer {
-            flushPendingClinicalPush()
-            flushBackfillOutcome()
+            if isCurrentScanner(scanner, generation: scannerGeneration) {
+                flushPendingClinicalPush()
+                flushBackfillOutcome()
+            }
         }
-        try await consumeNotifications(session: session)
+        try await consumeNotifications(
+            session: session,
+            scanner: scanner,
+            scannerGeneration: scannerGeneration
+        )
+        try checkCurrentScanner(scanner, generation: scannerGeneration)
         finishConnectedAttempt(traceStreamEnd: true)
     }
 
@@ -3103,7 +3473,11 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
-    private func startSilenceWatchdog(session: SensorSession) {
+    private func startSilenceWatchdog(
+        session: SensorSession,
+        scanner: SensorScannerNG,
+        scannerGeneration: Int
+    ) {
         silenceWatchdogTask?.cancel()
         lastPatchStatusAt = Date()
         patchStatusQuietEpisodeStartedAt = nil
@@ -3112,7 +3486,13 @@ final class Libre3DirectManager: ObservableObject {
         silenceWatchdogTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 20_000_000_000)
-                guard let self, !Task.isCancelled, self.session === session else { return }
+                guard let self,
+                      !Task.isCancelled,
+                      self.isCurrentScanner(
+                          scanner,
+                          generation: scannerGeneration
+                      ),
+                      self.session === session else { return }
                 let now = Date()
                 let lastPatchStatusAt = self.lastPatchStatusAt ?? .distantPast
                 let psQuiet = now.timeIntervalSince(lastPatchStatusAt)
@@ -3139,14 +3519,20 @@ final class Libre3DirectManager: ObservableObject {
                         Libre3DiagnosticsLog.traceReconnect(
                             "glucose-quiet-rearm-failed error=\(Self.compactErrorName(for: error))"
                         )
-                        guard self.session === session else { return }
+                        guard self.isCurrentScanner(
+                            scanner,
+                            generation: scannerGeneration
+                        ), self.session === session else { return }
                         // A failed targeted repair gets a fresh connection and discovery.
-                        if let scanner = self.scanner, scanner.centralState == .poweredOn {
+                        if scanner.centralState == .poweredOn {
                             scanner.cancelConnection(session.peripheral)
                         }
                         return
                     }
-                    guard self.session === session else { return }
+                    guard self.isCurrentScanner(
+                        scanner,
+                        generation: scannerGeneration
+                    ), self.session === session else { return }
                 }
 
                 guard psQuiet >= 60 else { continue }
@@ -3168,7 +3554,10 @@ final class Libre3DirectManager: ObservableObject {
                         characteristics: [LibreSensorGATT.Char.patchStatus],
                         forceReArm: [LibreSensorGATT.Char.patchStatus]
                     )
-                    guard self.session === session else { return }
+                    guard self.isCurrentScanner(
+                        scanner,
+                        generation: scannerGeneration
+                    ), self.session === session else { return }
                 }
                 // Vendor-parity direct read: no CCCD churn; result returns via
                 // notifications() and is handled like any patchStatus frame.
@@ -3180,7 +3569,10 @@ final class Libre3DirectManager: ObservableObject {
                     self.patchStatusReadResponsePending = false
                     Logger.libre3.info("Libre3 BLE readPatchStatus failed: \(String(describing: error), privacy: .public)")
                 }
-                guard self.session === session else { return }
+                guard self.isCurrentScanner(
+                    scanner,
+                    generation: scannerGeneration
+                ), self.session === session else { return }
                 self.lastPatchStatusAt = Date()
             }
         }
@@ -3375,8 +3767,10 @@ final class Libre3DirectManager: ObservableObject {
     /// handles, retains the saved-UUID filter, and leaves its scan running for
     /// `connectAndBuildSession` to stop after the connection attempt.
     private func discoverPeripheral(
-        scanner: SensorScannerNG
+        scanner: SensorScannerNG,
+        scannerGeneration: Int
     ) async throws -> CBPeripheral {
+        try checkCurrentScanner(scanner, generation: scannerGeneration)
         let savedUUID = SharedData.libre3PeripheralUUID
         let savedID = UUID(uuidString: savedUUID)
 
@@ -3417,12 +3811,14 @@ final class Libre3DirectManager: ObservableObject {
         var handedScanToConnection = false
         defer {
             if !handedScanToConnection,
+               isCurrentScanner(scanner, generation: scannerGeneration),
                scanner.centralState == .poweredOn {
                 scanner.stopScan()
             }
         }
         for await event in events {
             try Task.checkCancellation()
+            try checkCurrentScanner(scanner, generation: scannerGeneration)
             if case .didDiscover(let found) = event,
                Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
                    found.peripheral.identifier,
@@ -3445,7 +3841,10 @@ final class Libre3DirectManager: ObservableObject {
     /// Wait for CoreBluetooth to become usable using NG's replayed state event.
     /// `.unknown` and `.resetting` are transitional; terminal radio/permission
     /// states throw the same public scanner errors as the old async wrapper.
-    private func waitUntilScannerReady(_ scanner: SensorScannerNG) async throws {
+    private func waitUntilScannerReady(
+        _ scanner: SensorScannerNG,
+        scannerGeneration: Int
+    ) async throws {
         func readyResult(for state: CBManagerState) -> Result<Void, Error>? {
             switch state {
             case .poweredOn:
@@ -3463,12 +3862,14 @@ final class Libre3DirectManager: ObservableObject {
             }
         }
 
+        try checkCurrentScanner(scanner, generation: scannerGeneration)
         if let result = readyResult(for: scanner.centralState) {
             return try result.get()
         }
 
         for await event in scanner.events() {
             try Task.checkCancellation()
+            try checkCurrentScanner(scanner, generation: scannerGeneration)
             guard case .stateChanged(let state) = event,
                   let result = readyResult(for: state) else { continue }
             return try result.get()
@@ -3482,18 +3883,23 @@ final class Libre3DirectManager: ObservableObject {
     /// active through this attempt; the phone's scan has already stopped.
     private func connectAndBuildSession(
         scanner: SensorScannerNG,
+        scannerGeneration: Int,
         peripheral: CBPeripheral
     ) async throws -> SensorSession {
-        try await withTaskCancellationHandler {
+        try checkCurrentScanner(scanner, generation: scannerGeneration)
+        return try await withTaskCancellationHandler {
             defer {
-                if scanner.centralState == .poweredOn {
+                if isCurrentScanner(scanner, generation: scannerGeneration),
+                   scanner.centralState == .poweredOn {
                     scanner.stopScan()
                 }
             }
             let connected = try await awaitConnectedPeripheral(
                 scanner: scanner,
+                scannerGeneration: scannerGeneration,
                 peripheral: peripheral
             )
+            try checkCurrentScanner(scanner, generation: scannerGeneration)
             if scanner.centralState == .poweredOn {
                 scanner.stopScan()
             }
@@ -3510,6 +3916,7 @@ final class Libre3DirectManager: ObservableObject {
             // able to fail discovery/notify continuations if the link drops.
             session = newSession
             try await newSession.discoverAndSubscribe()
+            try checkCurrentScanner(scanner, generation: scannerGeneration)
             return newSession
         } onCancel: {
             // Power-loss teardown intentionally avoids issuing CoreBluetooth
@@ -3527,10 +3934,12 @@ final class Libre3DirectManager: ObservableObject {
         peripheralID: UUID,
         anchor: Date
     ) {
-        guard hostProfile.burstConnectMode != .off else { return }
+        guard hostProfile.burstConnectMode != .off,
+              let scannerGeneration,
+              isCurrentScanner(scanner, generation: scannerGeneration) else { return }
 
         burstCycleGeneration &+= 1
-        let generation = burstCycleGeneration
+        let burstGeneration = burstCycleGeneration
         burstSettleTask?.cancel()
         burstSettleTask = Task { [weak self] in
             let delay = max(
@@ -3548,7 +3957,11 @@ final class Libre3DirectManager: ObservableObject {
 
             guard let self,
                   !Task.isCancelled,
-                  self.burstCycleGeneration == generation,
+                  self.isCurrentScanner(
+                      scanner,
+                      generation: scannerGeneration
+                  ),
+                  self.burstCycleGeneration == burstGeneration,
                   scanner.centralState == .poweredOn else { return }
 
             self.burstCycleGeneration &+= 1
@@ -3602,6 +4015,8 @@ final class Libre3DirectManager: ObservableObject {
         peripheralID: UUID
     ) {
         guard case .preArm(let lead) = hostProfile.burstConnectMode,
+              let scannerGeneration,
+              isCurrentScanner(scanner, generation: scannerGeneration),
               let lastBurstDiscoveryAt,
               let preArmDate = Libre3BurstPreArmPolicy.nextPreArmDate(
                   lastBurstAt: lastBurstDiscoveryAt,
@@ -3609,7 +4024,7 @@ final class Libre3DirectManager: ObservableObject {
                   now: Date()
               ) else { return }
 
-        let generation = burstCycleGeneration
+        let burstGeneration = burstCycleGeneration
         burstPreArmTask?.cancel()
         burstPreArmTask = Task { [weak self] in
             let delay = max(0, preArmDate.timeIntervalSinceNow)
@@ -3623,7 +4038,11 @@ final class Libre3DirectManager: ObservableObject {
 
             guard let self,
                   !Task.isCancelled,
-                  self.burstCycleGeneration == generation,
+                  self.isCurrentScanner(
+                      scanner,
+                      generation: scannerGeneration
+                  ),
+                  self.burstCycleGeneration == burstGeneration,
                   scanner.centralState == .poweredOn,
                   let refreshed = scanner.retrievePeripherals(
                       withIdentifiers: [peripheralID]
@@ -3655,8 +4074,10 @@ final class Libre3DirectManager: ObservableObject {
     /// nothing to catch and was observed succeeding only about once in 100 windows.
     private func awaitConnectedPeripheral(
         scanner: SensorScannerNG,
+        scannerGeneration: Int,
         peripheral: CBPeripheral
     ) async throws -> CBPeripheral {
+        try checkCurrentScanner(scanner, generation: scannerGeneration)
         // Queue the subscriber first, then use retrievePeripherals as a central-
         // queue barrier before inspecting state. If an existing `.connecting`
         // intent completed just before subscription, the refreshed handle is
@@ -3670,11 +4091,16 @@ final class Libre3DirectManager: ObservableObject {
         let waitStartedAt = Date()
         connectWaitStartedAt = waitStartedAt
         defer {
-            if connectWaitStartedAt == waitStartedAt {
-                connectWaitStartedAt = nil
-            }
-            if hostProfile.burstConnectMode != .off {
-                resetBurstConnectState()
+            if isCurrentScanner(
+                scanner,
+                generation: scannerGeneration
+            ) {
+                if connectWaitStartedAt == waitStartedAt {
+                    connectWaitStartedAt = nil
+                }
+                if hostProfile.burstConnectMode != .off {
+                    resetBurstConnectState()
+                }
             }
         }
 
@@ -3707,6 +4133,7 @@ final class Libre3DirectManager: ObservableObject {
 
         for await event in events {
             try Task.checkCancellation()
+            try checkCurrentScanner(scanner, generation: scannerGeneration)
             switch event {
             case .didConnect(let connected)
                 where connected.identifier == currentPeripheral.identifier:
@@ -3917,9 +4344,14 @@ final class Libre3DirectManager: ObservableObject {
     /// LibreCRKit's BLE queue onto main; assembling + decrypting one ~35-byte
     /// frame per minute is trivially cheap, so it rides main race-free (PLAN §6).
     /// Returns when the stream finishes (the session disconnected).
-    private func consumeNotifications(session: SensorSession) async throws {
+    private func consumeNotifications(
+        session: SensorSession,
+        scanner: SensorScannerNG,
+        scannerGeneration: Int
+    ) async throws {
         for await event in session.notifications() {
             try Task.checkCancellation()
+            try checkCurrentScanner(scanner, generation: scannerGeneration)
             guard let channel = DataPlaneChannel(uuidString: event.characteristic.uuidString) else {
                 continue
             }
