@@ -927,6 +927,300 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(phoneDisconnect.result, .confirmedDisconnect)
     }
 
+    func testLibre3SystemReconnectOwnsUnexpectedAutomaticRecoveryWithoutAppConnect() {
+        let peripheralID = UUID()
+        var state = Libre3SystemReconnectState()
+
+        XCTAssertEqual(
+            state.handleDisconnect(
+                autoReconnectEnabled: true,
+                shouldMaintainConnection: true,
+                matchesSavedPeripheral: true,
+                isIntentional: false,
+                scannerGeneration: 7,
+                peripheralID: peripheralID,
+                isReconnecting: true
+            ),
+            .beganSystemRecovery
+        )
+        XCTAssertEqual(
+            Libre3SystemReconnectState.connectionAction(
+                systemOwnsRecovery: true,
+                peripheralState: .disconnected
+            ),
+            .waitForSystem
+        )
+        XCTAssertEqual(
+            Libre3SystemReconnectState.failedAttemptCleanupAction(
+                systemOwnsRecovery: true
+            ),
+            .preserveSystemRecovery
+        )
+        XCTAssertTrue(
+            Libre3SystemReconnectState.handoffNeedsCancellation(
+                peripheralState: .disconnected,
+                systemRecoveryWasPending: true
+            )
+        )
+        XCTAssertFalse(
+            Libre3SystemReconnectState.handoffNeedsCancellation(
+                peripheralState: .disconnected,
+                systemRecoveryWasPending: false
+            )
+        )
+        XCTAssertTrue(
+            state.owns(scannerGeneration: 7, peripheralID: peripheralID)
+        )
+    }
+
+    func testLibre3SystemReconnectAdoptsFastConnectionExactlyOnce() {
+        let peripheralID = UUID()
+        var state = Libre3SystemReconnectState()
+        _ = state.handleDisconnect(
+            autoReconnectEnabled: true,
+            shouldMaintainConnection: true,
+            matchesSavedPeripheral: true,
+            isIntentional: false,
+            scannerGeneration: 8,
+            peripheralID: peripheralID,
+            isReconnecting: true,
+            disconnectTimestamp: 100
+        )
+
+        XCTAssertTrue(
+            state.recordConnected(
+                scannerGeneration: 8,
+                peripheralID: peripheralID
+            )
+        )
+        XCTAssertFalse(
+            state.recordConnected(
+                scannerGeneration: 8,
+                peripheralID: peripheralID
+            )
+        )
+        XCTAssertEqual(
+            state.handleDisconnect(
+                autoReconnectEnabled: true,
+                shouldMaintainConnection: true,
+                matchesSavedPeripheral: true,
+                isIntentional: false,
+                scannerGeneration: 8,
+                peripheralID: peripheralID,
+                isReconnecting: true,
+                disconnectTimestamp: 100
+            ),
+            .continuedSystemRecovery
+        )
+        XCTAssertEqual(state.target?.phase, .connected)
+        XCTAssertEqual(
+            Libre3SystemReconnectState.connectionAction(
+                systemOwnsRecovery: true,
+                peripheralState: .connected
+            ),
+            .adoptConnected
+        )
+        XCTAssertTrue(
+            state.finishAdoption(
+                scannerGeneration: 8,
+                peripheralID: peripheralID
+            )
+        )
+        XCTAssertFalse(
+            state.finishAdoption(
+                scannerGeneration: 8,
+                peripheralID: peripheralID
+            )
+        )
+    }
+
+    func testLibre3SystemReconnectDoesNotAdoptStaleDisconnectedHandle() {
+        XCTAssertEqual(
+            Libre3SystemReconnectState.connectionAction(
+                systemOwnsRecovery: true,
+                peripheralState: .disconnected
+            ),
+            .waitForSystem
+        )
+        XCTAssertEqual(
+            Libre3SystemReconnectState.connectionAction(
+                systemOwnsRecovery: false,
+                peripheralState: .disconnected
+            ),
+            .requestAppConnect
+        )
+    }
+
+    func testLibre3SystemReconnectDisconnectRacePreventsStaleAdoption() {
+        let peripheralID = UUID()
+        var state = Libre3SystemReconnectState()
+        _ = state.handleDisconnect(
+            autoReconnectEnabled: true,
+            shouldMaintainConnection: true,
+            matchesSavedPeripheral: true,
+            isIntentional: false,
+            scannerGeneration: 9,
+            peripheralID: peripheralID,
+            isReconnecting: true,
+            disconnectTimestamp: 200
+        )
+        XCTAssertTrue(
+            state.recordConnected(
+                scannerGeneration: 9,
+                peripheralID: peripheralID
+            )
+        )
+        XCTAssertEqual(
+            state.handleDisconnect(
+                autoReconnectEnabled: true,
+                shouldMaintainConnection: true,
+                matchesSavedPeripheral: true,
+                isIntentional: false,
+                scannerGeneration: 9,
+                peripheralID: peripheralID,
+                isReconnecting: true,
+                disconnectTimestamp: 201
+            ),
+            .continuedSystemRecovery
+        )
+        XCTAssertFalse(
+            state.finishAdoption(
+                scannerGeneration: 9,
+                peripheralID: peripheralID
+            )
+        )
+        XCTAssertEqual(state.target?.phase, .pending)
+    }
+
+    func testLibre3SystemReconnectTerminalAndExplicitTransitionsLeaveOneOwner() {
+        let peripheralID = UUID()
+        var state = Libre3SystemReconnectState()
+        _ = state.handleDisconnect(
+            autoReconnectEnabled: true,
+            shouldMaintainConnection: true,
+            matchesSavedPeripheral: true,
+            isIntentional: false,
+            scannerGeneration: 9,
+            peripheralID: peripheralID,
+            isReconnecting: true
+        )
+        XCTAssertEqual(
+            state.handleDisconnect(
+                autoReconnectEnabled: true,
+                shouldMaintainConnection: true,
+                matchesSavedPeripheral: true,
+                isIntentional: false,
+                scannerGeneration: 9,
+                peripheralID: peripheralID,
+                isReconnecting: false
+            ),
+            .endedSystemRecovery
+        )
+        XCTAssertNil(state.target)
+
+        _ = state.handleDisconnect(
+            autoReconnectEnabled: true,
+            shouldMaintainConnection: true,
+            matchesSavedPeripheral: true,
+            isIntentional: false,
+            scannerGeneration: 9,
+            peripheralID: peripheralID,
+            isReconnecting: true
+        )
+        XCTAssertNotNil(state.end()) // Bluetooth unavailable.
+        XCTAssertNil(state.target)
+
+        _ = state.handleDisconnect(
+            autoReconnectEnabled: true,
+            shouldMaintainConnection: true,
+            matchesSavedPeripheral: true,
+            isIntentional: false,
+            scannerGeneration: 9,
+            peripheralID: peripheralID,
+            isReconnecting: true
+        )
+        XCTAssertNotNil(state.end()) // Explicit stop or workout handoff.
+        XCTAssertNil(state.target)
+        XCTAssertEqual(
+            state.handleDisconnect(
+                autoReconnectEnabled: true,
+                shouldMaintainConnection: true,
+                matchesSavedPeripheral: true,
+                isIntentional: true,
+                scannerGeneration: 9,
+                peripheralID: peripheralID,
+                isReconnecting: true
+            ),
+            .ordinaryRecovery
+        )
+        XCTAssertNil(state.target)
+        XCTAssertEqual(
+            Libre3SystemReconnectState.failedAttemptCleanupAction(
+                systemOwnsRecovery: false
+            ),
+            .ordinaryCleanup
+        )
+    }
+
+    func testLibre3SystemReconnectCanBeginAgainAfterDisconnectDuringAuthorization() {
+        let peripheralID = UUID()
+        var state = Libre3SystemReconnectState()
+        _ = state.handleDisconnect(
+            autoReconnectEnabled: true,
+            shouldMaintainConnection: true,
+            matchesSavedPeripheral: true,
+            isIntentional: false,
+            scannerGeneration: 10,
+            peripheralID: peripheralID,
+            isReconnecting: true
+        )
+        XCTAssertTrue(
+            state.recordConnected(
+                scannerGeneration: 10,
+                peripheralID: peripheralID
+            )
+        )
+        XCTAssertTrue(
+            state.finishAdoption(
+                scannerGeneration: 10,
+                peripheralID: peripheralID
+            )
+        )
+
+        XCTAssertEqual(
+            state.handleDisconnect(
+                autoReconnectEnabled: true,
+                shouldMaintainConnection: true,
+                matchesSavedPeripheral: true,
+                isIntentional: false,
+                scannerGeneration: 10,
+                peripheralID: peripheralID,
+                isReconnecting: true
+            ),
+            .beganSystemRecovery
+        )
+        XCTAssertTrue(
+            state.owns(scannerGeneration: 10, peripheralID: peripheralID)
+        )
+    }
+
+    func testLibre3SystemReconnectFlagOffLeavesOrdinaryRecoveryUnchanged() {
+        var state = Libre3SystemReconnectState()
+        XCTAssertEqual(
+            state.handleDisconnect(
+                autoReconnectEnabled: false,
+                shouldMaintainConnection: true,
+                matchesSavedPeripheral: true,
+                isIntentional: false,
+                scannerGeneration: 11,
+                peripheralID: UUID(),
+                isReconnecting: true
+            ),
+            .ordinaryRecovery
+        )
+        XCTAssertNil(state.target)
+    }
+
     func testFailedConnectionStateStillCountsAsAcquiring() {
         // The manager keeps a CoreBluetooth intent standing through a failure and
         // retries, so the watch workout screen must keep offering sensor-placement

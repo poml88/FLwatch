@@ -760,6 +760,145 @@ struct Libre3WorkoutHandoffRetirementPolicy {
     }
 }
 
+enum Libre3SystemReconnectDisconnectDisposition: Equatable {
+    case ordinaryRecovery
+    case beganSystemRecovery
+    case continuedSystemRecovery
+    case endedSystemRecovery
+}
+
+enum Libre3SystemReconnectConnectionAction: Equatable {
+    case adoptConnected
+    case waitForSystem
+    case requestAppConnect
+    case waitForExistingIntent
+}
+
+enum Libre3SystemReconnectCleanupAction: Equatable {
+    case preserveSystemRecovery
+    case ordinaryCleanup
+}
+
+struct Libre3SystemReconnectState: Equatable {
+    enum Phase: Equatable {
+        case pending
+        case connected
+    }
+
+    struct Target: Equatable {
+        let scannerGeneration: Int
+        let peripheralID: UUID
+        let disconnectTimestamp: CFAbsoluteTime
+        var phase: Phase
+    }
+
+    private(set) var target: Target?
+
+    func owns(scannerGeneration: Int, peripheralID: UUID) -> Bool {
+        target?.scannerGeneration == scannerGeneration &&
+            target?.peripheralID == peripheralID
+    }
+
+    mutating func handleDisconnect(
+        autoReconnectEnabled: Bool,
+        shouldMaintainConnection: Bool,
+        matchesSavedPeripheral: Bool,
+        isIntentional: Bool,
+        scannerGeneration: Int,
+        peripheralID: UUID,
+        isReconnecting: Bool,
+        disconnectTimestamp: CFAbsoluteTime = 0
+    ) -> Libre3SystemReconnectDisconnectDisposition {
+        let alreadyOwns = owns(
+            scannerGeneration: scannerGeneration,
+            peripheralID: peripheralID
+        )
+        if autoReconnectEnabled,
+           shouldMaintainConnection,
+           matchesSavedPeripheral,
+           !isIntentional,
+           isReconnecting {
+            // The long-lived observer and connection waiter both receive the
+            // same contextual event. Preserve progress for that duplicate, but
+            // return to pending for a genuinely newer disconnect.
+            if alreadyOwns,
+               target?.disconnectTimestamp == disconnectTimestamp {
+                return .continuedSystemRecovery
+            }
+            target = Target(
+                scannerGeneration: scannerGeneration,
+                peripheralID: peripheralID,
+                disconnectTimestamp: disconnectTimestamp,
+                phase: .pending
+            )
+            return alreadyOwns ? .continuedSystemRecovery : .beganSystemRecovery
+        }
+        if alreadyOwns {
+            target = nil
+            return .endedSystemRecovery
+        }
+        return .ordinaryRecovery
+    }
+
+    mutating func recordConnected(
+        scannerGeneration: Int,
+        peripheralID: UUID
+    ) -> Bool {
+        guard owns(
+            scannerGeneration: scannerGeneration,
+            peripheralID: peripheralID
+        ), target?.phase == .pending else { return false }
+        target?.phase = .connected
+        return true
+    }
+
+    mutating func finishAdoption(
+        scannerGeneration: Int,
+        peripheralID: UUID
+    ) -> Bool {
+        guard owns(
+            scannerGeneration: scannerGeneration,
+            peripheralID: peripheralID
+        ), target?.phase == .connected else { return false }
+        target = nil
+        return true
+    }
+
+    mutating func end() -> Target? {
+        defer { target = nil }
+        return target
+    }
+
+    static func connectionAction(
+        systemOwnsRecovery: Bool,
+        peripheralState: CBPeripheralState
+    ) -> Libre3SystemReconnectConnectionAction {
+        switch peripheralState {
+        case .connected:
+            return .adoptConnected
+        case .disconnected:
+            return systemOwnsRecovery ? .waitForSystem : .requestAppConnect
+        case .connecting, .disconnecting:
+            return systemOwnsRecovery ? .waitForSystem : .waitForExistingIntent
+        @unknown default:
+            return systemOwnsRecovery ? .waitForSystem : .waitForExistingIntent
+        }
+    }
+
+    static func failedAttemptCleanupAction(
+        systemOwnsRecovery: Bool
+    ) -> Libre3SystemReconnectCleanupAction {
+        systemOwnsRecovery ? .preserveSystemRecovery : .ordinaryCleanup
+    }
+
+    static func handoffNeedsCancellation(
+        peripheralState: CBPeripheralState,
+        systemRecoveryWasPending: Bool
+    ) -> Bool {
+        peripheralState != .disconnected || systemRecoveryWasPending
+    }
+}
+
 /// Keeps connected callbacks from reopening a link while its intentional
 /// cancellation is still waiting for CoreBluetooth's disconnect completion.
 struct Libre3DisconnectHandoffPolicy: Equatable {
@@ -1520,6 +1659,11 @@ final class Libre3DirectManager: ObservableObject {
     private var scannerRetirementOperationID: UUID?
     private var scannerRetirementGeneration: Int?
     private var scannerRetirementReason: String?
+    /// CoreBluetooth owns reconnection only while this target matches the
+    /// current scanner lifetime and saved peripheral. The peripheral reference
+    /// survives old-session cleanup until a replacement session adopts it.
+    private var systemReconnectState = Libre3SystemReconnectState()
+    private var systemReconnectPeripheral: CBPeripheral?
     private var session: SensorSession?
     private var decoder: DataPlaneDecoder?
     private let assembler = DataPlaneNotificationAssembler()
@@ -1892,10 +2036,12 @@ final class Libre3DirectManager: ObservableObject {
     /// the user disconnected the sensor).
     func stop() {
         let stoppingScannerGeneration = scannerGeneration
+        let pendingSystemReconnectPeripheral = systemReconnectPeripheral
         // Clear intent first: cancelling the CoreBluetooth request/session below
         // can synchronously enqueue a disconnect callback, and that callback must
         // not resurrect a provider the user just left.
         shouldMaintainConnection = false
+        endSystemReconnect(reason: "stop")
         clinicalPushTask?.cancel()
         clinicalPushTask = nil
         clinicalBackfillBurst = Libre3ClinicalBackfillBurst()
@@ -1915,6 +2061,7 @@ final class Libre3DirectManager: ObservableObject {
         lastGlucoseRecoveryAttemptAt = nil
         let peripheralToCancel = session?.peripheral
             ?? lifecyclePeripheral
+            ?? pendingSystemReconnectPeripheral
             ?? savedPeripheralID.flatMap { scanner?.retrievePeripherals(withIdentifiers: [$0]).first }
         scannerEventTask?.cancel()
         scannerEventTask = nil
@@ -1925,6 +2072,11 @@ final class Libre3DirectManager: ObservableObject {
         if let scanner,
            scanner.centralState == .poweredOn,
            let peripheral = peripheralToCancel {
+            if hostProfile.usesSystemAutoReconnect {
+                Libre3DiagnosticsLog.traceReconnect(
+                    "explicit-cancel reason=stop peripheral=\(peripheral.identifier.uuidString) scanner=\(stoppingScannerGeneration.map { String($0) } ?? "none")"
+                )
+            }
             scanner.cancelConnection(peripheral)
         }
         session = nil
@@ -1963,7 +2115,10 @@ final class Libre3DirectManager: ObservableObject {
     /// ownership is moving to the peer, not being removed from the user.
     func standDownForHandoff() async -> Libre3WorkoutHandoffStandDownResult {
         let handoffScannerGeneration = markScannerRetirementPendingForHandoff()
+        let pendingSystemReconnectPeripheral = systemReconnectPeripheral
+        let wasSystemReconnectPending = systemReconnectState.target != nil
         shouldMaintainConnection = false
+        endSystemReconnect(reason: "workout-handoff")
         // This is the one phone alert that must be removed during ownership
         // transfer: leaving its OS deadline armed would produce a false signal-
         // loss alarm even while the watch is receiving readings normally.
@@ -1980,6 +2135,7 @@ final class Libre3DirectManager: ObservableObject {
 
         let peripheral = session?.peripheral
             ?? lifecyclePeripheral
+            ?? pendingSystemReconnectPeripheral
             ?? savedPeripheralID.flatMap {
                 scanner?.retrievePeripherals(withIdentifiers: [$0]).first
             }
@@ -1994,7 +2150,10 @@ final class Libre3DirectManager: ObservableObject {
         }
 
         observeScannerEventsIfNeeded()
-        guard peripheral.state != .disconnected else {
+        guard Libre3SystemReconnectState.handoffNeedsCancellation(
+            peripheralState: peripheral.state,
+            systemRecoveryWasPending: wasSystemReconnectPending
+        ) else {
             return await completeWorkoutHandoffStandDown(
                 result: .confirmedDisconnect,
                 reason: "already-disconnected",
@@ -2040,6 +2199,11 @@ final class Libre3DirectManager: ObservableObject {
         // active and continues to own session invalidation.
         let events = scanner.events()
         let timeoutNanoseconds = Self.workoutHandoffTimeoutNanoseconds
+        if hostProfile.usesSystemAutoReconnect {
+            Libre3DiagnosticsLog.traceReconnect(
+                "explicit-cancel reason=workout-handoff peripheral=\(peripheralID.uuidString) scanner=\(scannerGeneration.map { String($0) } ?? "none")"
+            )
+        }
         scanner.cancelConnection(peripheral)
 
         return await withTaskGroup(
@@ -2148,6 +2312,11 @@ final class Libre3DirectManager: ObservableObject {
         // has arrived yet — e.g. right after a fresh activation, before the BLE
         // session exists — instead of leaving the seeded value frozen.
         applyFallbackLifecycleIfUnclassified()
+        if let scannerGeneration,
+           systemReconnectTarget(scannerGeneration: scannerGeneration) != nil {
+            ensureLifecycleAttempt(reason: "reload-system-recovery")
+            return
+        }
         // Preserve the old reload-kick behavior when the lifecycle has dropped:
         // `start()` creates the scanner and begins a fresh connection attempt.
         guard lifecycleTask != nil else {
@@ -2228,6 +2397,7 @@ final class Libre3DirectManager: ObservableObject {
         Libre3DiagnosticsLog.traceReconnect(
             "developer-forget-peripheral action=rediscover-by-scan"
         )
+        endSystemReconnect(reason: "developer-rediscovery")
         SharedData.libre3PeripheralUUID = ""
 
         guard let scanner,
@@ -2424,6 +2594,116 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
+    private func systemReconnectTarget(
+        scannerGeneration: Int
+    ) -> Libre3SystemReconnectState.Target? {
+        guard let target = systemReconnectState.target,
+              target.scannerGeneration == scannerGeneration else { return nil }
+        return target
+    }
+
+    private func systemReconnectCandidate(
+        scanner: SensorScannerNG,
+        scannerGeneration: Int
+    ) -> CBPeripheral? {
+        guard let target = systemReconnectTarget(
+            scannerGeneration: scannerGeneration
+        ) else { return nil }
+        if let systemReconnectPeripheral,
+           systemReconnectPeripheral.identifier == target.peripheralID {
+            return systemReconnectPeripheral
+        }
+        let retrieved = scanner.retrievePeripherals(
+            withIdentifiers: [target.peripheralID]
+        ).first
+        systemReconnectPeripheral = retrieved
+        return retrieved
+    }
+
+    @discardableResult
+    private func handleSystemReconnectDisconnect(
+        peripheral: CBPeripheral,
+        metadata: SensorScannerNG.DisconnectMetadata,
+        scanner: SensorScannerNG,
+        scannerGeneration: Int
+    ) -> Libre3SystemReconnectDisconnectDisposition {
+        let isIntentional = !shouldMaintainConnection ||
+            waitingForDisconnectBeforeRearm ||
+            expectedSelfCancelDisconnectPeripheralID == peripheral.identifier
+        let disposition = systemReconnectState.handleDisconnect(
+            autoReconnectEnabled: hostProfile.usesSystemAutoReconnect,
+            shouldMaintainConnection: shouldMaintainConnection,
+            matchesSavedPeripheral: matchesSavedPeripheral(peripheral),
+            isIntentional: isIntentional,
+            scannerGeneration: scannerGeneration,
+            peripheralID: peripheral.identifier,
+            isReconnecting: metadata.isReconnecting,
+            disconnectTimestamp: metadata.timestamp
+        )
+
+        switch disposition {
+        case .beganSystemRecovery:
+            systemReconnectPeripheral = peripheral
+            clearReconnectBackoff()
+            cancelDisconnectHandoffRecovery()
+            disconnectHandoffPolicy.reset()
+            resetBurstConnectState()
+            scanner.stopScan()
+            Libre3DiagnosticsLog.traceReconnect(
+                "system-recovery-pending peripheral=\(peripheral.identifier.uuidString) scanner=\(scannerGeneration)"
+            )
+        case .continuedSystemRecovery:
+            systemReconnectPeripheral = peripheral
+        case .endedSystemRecovery:
+            systemReconnectPeripheral = nil
+            Libre3DiagnosticsLog.traceReconnect(
+                "system-recovery-ended reason=terminal-disconnect peripheral=\(peripheral.identifier.uuidString) scanner=\(scannerGeneration)"
+            )
+        case .ordinaryRecovery:
+            break
+        }
+        return disposition
+    }
+
+    private func recordSystemReconnectConnected(
+        peripheral: CBPeripheral,
+        scannerGeneration: Int
+    ) {
+        guard systemReconnectState.recordConnected(
+            scannerGeneration: scannerGeneration,
+            peripheralID: peripheral.identifier
+        ) else { return }
+        systemReconnectPeripheral = peripheral
+        Libre3DiagnosticsLog.traceReconnect(
+            "system-recovery-connected peripheral=\(peripheral.identifier.uuidString) scanner=\(scannerGeneration)"
+        )
+    }
+
+    private func finishSystemReconnectAdoption(
+        peripheral: CBPeripheral,
+        scannerGeneration: Int
+    ) {
+        guard systemReconnectState.finishAdoption(
+            scannerGeneration: scannerGeneration,
+            peripheralID: peripheral.identifier
+        ) else { return }
+        systemReconnectPeripheral = nil
+        Libre3DiagnosticsLog.traceReconnect(
+            "system-recovery-adopted peripheral=\(peripheral.identifier.uuidString) scanner=\(scannerGeneration)"
+        )
+    }
+
+    private func endSystemReconnect(reason: String) {
+        guard let target = systemReconnectState.end() else {
+            systemReconnectPeripheral = nil
+            return
+        }
+        systemReconnectPeripheral = nil
+        Libre3DiagnosticsLog.traceReconnect(
+            "system-recovery-ended reason=\(reason) peripheral=\(target.peripheralID.uuidString) scanner=\(target.scannerGeneration)"
+        )
+    }
+
     private func markScannerRetirementPendingForHandoff() -> Int? {
         guard hostProfile.recreatesScannerBetweenWorkouts else { return nil }
         if let scannerRetirementGeneration {
@@ -2435,6 +2715,7 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     private func invalidateScannerLifetimeWork() {
+        endSystemReconnect(reason: "scanner-retirement")
         clearReconnectBackoff()
         cancelDisconnectHandoffRecovery()
         disconnectHandoffPolicy.reset()
@@ -2551,9 +2832,9 @@ final class Libre3DirectManager: ObservableObject {
         guard scannerEventTask == nil,
               let scanner,
               let scannerGeneration else { return }
-        let events = scanner.events()
+        let events = scanner.eventsWithContext()
         scannerEventTask = Task { [weak self] in
-            for await event in events {
+            for await contextualEvent in events {
                 if Task.isCancelled { break }
                 guard let self,
                       self.isCurrentScanner(
@@ -2561,7 +2842,7 @@ final class Libre3DirectManager: ObservableObject {
                           generation: scannerGeneration
                       ) else { return }
                 self.handleScannerEvent(
-                    event,
+                    contextualEvent,
                     scanner: scanner,
                     scannerGeneration: scannerGeneration
                 )
@@ -2570,11 +2851,12 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     private func handleScannerEvent(
-        _ event: SensorScannerNG.Event,
+        _ contextualEvent: SensorScannerNG.ContextualEvent,
         scanner: SensorScannerNG,
         scannerGeneration: Int
     ) {
         guard isCurrentScanner(scanner, generation: scannerGeneration) else { return }
+        let event = contextualEvent.event
         switch event {
         case .stateChanged(let state):
             Libre3DiagnosticsLog.traceReconnect("cb-state value=\(state.rawValue)")
@@ -2587,6 +2869,7 @@ final class Libre3DirectManager: ObservableObject {
                     start()
                 }
             case .poweredOff, .unauthorized, .unsupported, .resetting:
+                endSystemReconnect(reason: "bluetooth-unavailable")
                 if shouldMaintainConnection || lifecycleTask != nil {
                     Logger.libre3.info("Libre3 BLE: Bluetooth unavailable (\(String(describing: state), privacy: .public)) — tearing down session")
                     teardownForReconnect()
@@ -2608,15 +2891,29 @@ final class Libre3DirectManager: ObservableObject {
             if expectedSelfCancelDisconnectPeripheralID == peripheral.identifier {
                 expectedSelfCancelDisconnectPeripheralID = nil
             }
+            recordSystemReconnectConnected(
+                peripheral: peripheral,
+                scannerGeneration: scannerGeneration
+            )
             Libre3DiagnosticsLog.traceReconnect(
                 "cb-did-connect peripheral=\(peripheral.identifier.uuidString)"
             )
             Logger.libre3.info("Libre3 BLE didConnect: \(peripheral.identifier.uuidString, privacy: .private(mask: .hash))")
             if isSavedPeripheral(peripheral), lifecycleTask == nil {
-                adoptConnectedPeripheral(peripheral, reason: "did-connect")
+                adoptConnectedPeripheral(
+                    peripheral,
+                    scannerGeneration: scannerGeneration,
+                    reason: "did-connect"
+                )
             }
 
         case .didFailToConnect(let peripheral, let error):
+            if systemReconnectState.owns(
+                scannerGeneration: scannerGeneration,
+                peripheralID: peripheral.identifier
+            ) {
+                endSystemReconnect(reason: "connect-failed")
+            }
             let errorName = error.map { Self.compactErrorName(for: $0) } ?? "nil"
             Libre3DiagnosticsLog.traceReconnect(
                 "cb-connect-failed peripheral=\(peripheral.identifier.uuidString) \(Self.coreBluetoothErrorDescription(error))"
@@ -2627,13 +2924,39 @@ final class Libre3DirectManager: ObservableObject {
             }
 
         case .didDisconnect(let peripheral, let error):
+            let receivedAt = Date()
+            let systemDisposition: Libre3SystemReconnectDisconnectDisposition
+            if let metadata = contextualEvent.disconnectMetadata {
+                systemDisposition = handleSystemReconnectDisconnect(
+                    peripheral: peripheral,
+                    metadata: metadata,
+                    scanner: scanner,
+                    scannerGeneration: scannerGeneration
+                )
+            } else {
+                // SensorScannerNG's sole disconnect delegate always supplies
+                // metadata. Preserve ordinary recovery if that invariant changes.
+                Libre3DiagnosticsLog.traceReconnect(
+                    "cb-did-disconnect metadata=missing recovery=ordinary"
+                )
+                systemDisposition = .ordinaryRecovery
+            }
             if expectedSelfCancelDisconnectPeripheralID != peripheral.identifier {
                 let details = matchesSavedPeripheral(peripheral)
-                    ? disconnectAttemptDescription(error: error, at: Date())
+                    ? disconnectAttemptDescription(error: error, at: receivedAt)
                     : Self.coreBluetoothErrorDescription(error)
-                Libre3DiagnosticsLog.traceReconnect(
-                    "cb-did-disconnect peripheral=\(peripheral.identifier.uuidString) \(details)"
-                )
+                if hostProfile.usesSystemAutoReconnect,
+                   let metadata = contextualEvent.disconnectMetadata {
+                    let receiptDelay = receivedAt.timeIntervalSinceReferenceDate -
+                        metadata.timestamp
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "cb-did-disconnect peripheral=\(peripheral.identifier.uuidString) timestampRaw=\(String(format: "%.6f", metadata.timestamp)) delay=\(Self.reconnectDelay(seconds: receiptDelay)) isReconnecting=\(metadata.isReconnecting) \(details)"
+                    )
+                } else {
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "cb-did-disconnect peripheral=\(peripheral.identifier.uuidString) \(details)"
+                    )
+                }
             }
             if session?.peripheral.identifier == peripheral.identifier {
                 session?.handleDisconnect(error: error)
@@ -2641,7 +2964,10 @@ final class Libre3DirectManager: ObservableObject {
             completeDisconnectHandoffIfMatching(peripheral)
             // Starting remains separately guarded so duplicate callbacks cannot
             // create two lifecycle tasks after the handoff is released.
-            if isSavedPeripheral(peripheral), lifecycleTask == nil {
+            if systemDisposition == .beganSystemRecovery ||
+                systemDisposition == .continuedSystemRecovery {
+                ensureLifecycleAttempt(reason: "system-recovery-disconnect")
+            } else if isSavedPeripheral(peripheral), lifecycleTask == nil {
                 ensureLifecycleAttempt(reason: "did-disconnect")
             }
 
@@ -2662,9 +2988,17 @@ final class Libre3DirectManager: ObservableObject {
             )
             switch connectionEvent {
             case .peerConnected:
+                recordSystemReconnectConnected(
+                    peripheral: peripheral,
+                    scannerGeneration: scannerGeneration
+                )
                 guard isSavedPeripheral(peripheral), lifecycleTask == nil else { return }
                 Logger.libre3.info("Libre3 BLE: peripheral connected event — adopting")
-                adoptConnectedPeripheral(peripheral, reason: "peer-connected")
+                adoptConnectedPeripheral(
+                    peripheral,
+                    scannerGeneration: scannerGeneration,
+                    reason: "peer-connected"
+                )
             case .peerDisconnected:
                 completeDisconnectHandoffIfMatching(peripheral)
                 // Release the matching handoff before checking whether a new
@@ -2686,7 +3020,21 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
-    private func adoptConnectedPeripheral(_ peripheral: CBPeripheral, reason: String) {
+    private func adoptConnectedPeripheral(
+        _ peripheral: CBPeripheral,
+        scannerGeneration: Int,
+        reason: String
+    ) {
+        if systemReconnectState.owns(
+            scannerGeneration: scannerGeneration,
+            peripheralID: peripheral.identifier
+        ) {
+            systemReconnectPeripheral = peripheral
+            lifecyclePeripheral = peripheral
+            clearReconnectBackoff()
+            ensureLifecycleAttempt(reason: "system-recovery-\(reason)")
+            return
+        }
         // A late connected callback may race the cancellation requested by
         // prepareForNextAttempt; only the matching disconnect may reopen this gate.
         guard disconnectHandoffPolicy.connectedAdoptionDecision == .adopt else {
@@ -2852,6 +3200,7 @@ final class Libre3DirectManager: ObservableObject {
     /// `stop()` it keeps the unified scanner event observer alive so we can come
     /// back automatically.
     private func teardownForReconnect() {
+        endSystemReconnect(reason: "bluetooth-unavailable")
         // Deliberately do NOT cancel signal loss here. Bluetooth-off means hypo
         // protection is genuinely offline, so the OS-scheduled alert must remain
         // armed while this process may be suspended.
@@ -2908,6 +3257,10 @@ final class Libre3DirectManager: ObservableObject {
               let scannerGeneration,
               isCurrentScanner(scanner, generation: scannerGeneration),
               scanner.centralState == .poweredOn else { return }
+
+        if systemReconnectTarget(scannerGeneration: scannerGeneration) != nil {
+            clearReconnectBackoff()
+        }
 
         if let deadline = reconnectBackoffDeadline {
             let remaining = deadline.timeIntervalSinceNow
@@ -3048,14 +3401,18 @@ final class Libre3DirectManager: ObservableObject {
         // CoreBluetooth does report a failed connection, pace that completed
         // failure too so marginal links cannot spin before `didConnect`.
         if shouldMaintainConnection, !sessionProducedGlucose {
-            armReconnectBackoff(
-                Self.reconnectBackoff(failures: reconnectFailureTracker.overallFailures)
-            )
+            if systemReconnectTarget(scannerGeneration: scannerGeneration) != nil {
+                clearReconnectBackoff()
+            } else {
+                armReconnectBackoff(
+                    Self.reconnectBackoff(failures: reconnectFailureTracker.overallFailures)
+                )
+            }
         } else {
             clearReconnectBackoff()
         }
 
-        prepareForNextAttempt()
+        prepareForNextAttempt(scannerGeneration: scannerGeneration)
     }
 
     /// Extends or starts the persisted sensor-silence run, and raises the hint
@@ -3141,6 +3498,8 @@ final class Libre3DirectManager: ObservableObject {
               isActiveProvider,
               Libre3StateStore.isPaired,
               let scanner,
+              let scannerGeneration,
+              systemReconnectTarget(scannerGeneration: scannerGeneration) == nil,
               scanner.centralState == .poweredOn,
               let savedPeripheralID,
               let peripheral = scanner.retrievePeripherals(withIdentifiers: [savedPeripheralID]).first,
@@ -3173,7 +3532,7 @@ final class Libre3DirectManager: ObservableObject {
     /// Tear down a failed authorized/connected session. Established links wait
     /// for disconnect completion with a bounded callback fallback. A pending
     /// connect remains the background wake source.
-    private func prepareForNextAttempt() {
+    private func prepareForNextAttempt(scannerGeneration: Int) {
         resetBurstConnectState()
         silenceWatchdogTask?.cancel()
         silenceWatchdogTask = nil
@@ -3188,6 +3547,21 @@ final class Libre3DirectManager: ObservableObject {
         lastAcceptedRealtime = nil
         backfillFailuresThisSession = 0
         assembler.reset()
+
+        // The same CBPeripheral may already represent the system's successor
+        // link. Clear only app-session state until that recovery is adopted.
+        let cleanupAction = Libre3SystemReconnectState.failedAttemptCleanupAction(
+            systemOwnsRecovery: systemReconnectTarget(
+                scannerGeneration: scannerGeneration
+            ) != nil
+        )
+        if cleanupAction == .preserveSystemRecovery {
+            guard shouldMaintainConnection,
+                  isActiveProvider,
+                  Libre3StateStore.isPaired else { return }
+            ensureLifecycleAttempt(reason: "system-recovery-attempt-ended")
+            return
+        }
 
         if let scanner,
            scanner.centralState == .poweredOn,
@@ -3250,11 +3624,25 @@ final class Libre3DirectManager: ObservableObject {
         )
         try checkCurrentScanner(scanner, generation: scannerGeneration)
 
-        connectionState = .scanning
-        let peripheral = try await discoverPeripheral(
-            scanner: scanner,
-            scannerGeneration: scannerGeneration
-        )
+        let peripheral: CBPeripheral
+        // System recovery already owns the connect intent. Reuse its retained
+        // handle directly; scanning here would create a competing acquisition.
+        if systemReconnectTarget(scannerGeneration: scannerGeneration) != nil {
+            guard let candidate = systemReconnectCandidate(
+                scanner: scanner,
+                scannerGeneration: scannerGeneration
+            ) else {
+                endSystemReconnect(reason: "target-unavailable")
+                throw Libre3DirectError.sensorNotFound
+            }
+            peripheral = candidate
+        } else {
+            connectionState = .scanning
+            peripheral = try await discoverPeripheral(
+                scanner: scanner,
+                scannerGeneration: scannerGeneration
+            )
+        }
         try checkCurrentScanner(scanner, generation: scannerGeneration)
         lifecyclePeripheral = peripheral
         // Discovery alone is not identity proof; remember this only as a candidate.
@@ -3522,7 +3910,10 @@ final class Libre3DirectManager: ObservableObject {
                         guard self.isCurrentScanner(
                             scanner,
                             generation: scannerGeneration
-                        ), self.session === session else { return }
+                        ), self.session === session,
+                           self.systemReconnectTarget(
+                               scannerGeneration: scannerGeneration
+                           ) == nil else { return }
                         // A failed targeted repair gets a fresh connection and discovery.
                         if scanner.centralState == .poweredOn {
                             scanner.cancelConnection(session.peripheral)
@@ -3915,13 +4306,18 @@ final class Libre3DirectManager: ObservableObject {
             // Publish before discovery: the long-lived NG event owner must be
             // able to fail discovery/notify continuations if the link drops.
             session = newSession
+            finishSystemReconnectAdoption(
+                peripheral: connected,
+                scannerGeneration: scannerGeneration
+            )
             try await newSession.discoverAndSubscribe()
             try checkCurrentScanner(scanner, generation: scannerGeneration)
             return newSession
         } onCancel: {
             // Power-loss teardown intentionally avoids issuing CoreBluetooth
             // commands while the central is unavailable. Ordinary stop/cancel
-            // still tears down an indefinite pending request immediately.
+            // still tears down an indefinite pending request immediately. Every
+            // manager path that cancels this task clears system recovery first.
             if scanner.centralState == .poweredOn {
                 scanner.stopScan()
                 scanner.cancelConnection(peripheral)
@@ -3936,6 +4332,7 @@ final class Libre3DirectManager: ObservableObject {
     ) {
         guard hostProfile.burstConnectMode != .off,
               let scannerGeneration,
+              systemReconnectTarget(scannerGeneration: scannerGeneration) == nil,
               isCurrentScanner(scanner, generation: scannerGeneration) else { return }
 
         burstCycleGeneration &+= 1
@@ -3961,6 +4358,9 @@ final class Libre3DirectManager: ObservableObject {
                       scanner,
                       generation: scannerGeneration
                   ),
+                  self.systemReconnectTarget(
+                      scannerGeneration: scannerGeneration
+                  ) == nil,
                   self.burstCycleGeneration == burstGeneration,
                   scanner.centralState == .poweredOn else { return }
 
@@ -4016,6 +4416,7 @@ final class Libre3DirectManager: ObservableObject {
     ) {
         guard case .preArm(let lead) = hostProfile.burstConnectMode,
               let scannerGeneration,
+              systemReconnectTarget(scannerGeneration: scannerGeneration) == nil,
               isCurrentScanner(scanner, generation: scannerGeneration),
               let lastBurstDiscoveryAt,
               let preArmDate = Libre3BurstPreArmPolicy.nextPreArmDate(
@@ -4042,6 +4443,9 @@ final class Libre3DirectManager: ObservableObject {
                       scanner,
                       generation: scannerGeneration
                   ),
+                  self.systemReconnectTarget(
+                      scannerGeneration: scannerGeneration
+                  ) == nil,
                   self.burstCycleGeneration == burstGeneration,
                   scanner.centralState == .poweredOn,
                   let refreshed = scanner.retrievePeripherals(
@@ -4083,11 +4487,19 @@ final class Libre3DirectManager: ObservableObject {
         // intent completed just before subscription, the refreshed handle is
         // already `.connected`; otherwise the installed waiter receives its
         // terminal callback.
-        let events = scanner.events()
+        let events = scanner.eventsWithContext()
         let currentPeripheral = scanner.retrievePeripherals(
             withIdentifiers: [peripheral.identifier]
         ).first ?? peripheral
         let currentState = currentPeripheral.state
+        let systemOwnsRecovery = systemReconnectState.owns(
+            scannerGeneration: scannerGeneration,
+            peripheralID: currentPeripheral.identifier
+        )
+        let connectionAction = Libre3SystemReconnectState.connectionAction(
+            systemOwnsRecovery: systemOwnsRecovery,
+            peripheralState: currentState
+        )
         let waitStartedAt = Date()
         connectWaitStartedAt = waitStartedAt
         defer {
@@ -4104,11 +4516,9 @@ final class Libre3DirectManager: ObservableObject {
             }
         }
 
-        if currentState == .connected {
-            return currentPeripheral
-        }
-
-        if hostProfile.burstConnectMode != .off {
+        if connectionAction != .waitForSystem,
+           connectionAction != .adoptConnected,
+           hostProfile.burstConnectMode != .off {
             let initialDiscoveryAt = Date()
             lastBurstDiscoveryAt = initialDiscoveryAt
             scheduleBurstSettle(
@@ -4118,31 +4528,51 @@ final class Libre3DirectManager: ObservableObject {
             )
         }
 
-        if Libre3ConnectIntentPolicy.shouldRequestConnect(for: currentState) {
+        switch connectionAction {
+        case .requestAppConnect:
             Libre3DiagnosticsLog.traceReconnect(
                 "connect-intent-armed state=\(currentState.rawValue)"
             )
             scanner.requestConnect(currentPeripheral)
-        } else {
+        case .waitForExistingIntent:
             // `.connecting` already carries the desired wake intent;
             // `.disconnecting` must reach didDisconnect before a fresh request.
             Libre3DiagnosticsLog.traceReconnect(
                 "connect-intent-waiting state=\(currentState.rawValue)"
             )
+        case .waitForSystem:
+            break
+        case .adoptConnected:
+            recordSystemReconnectConnected(
+                peripheral: currentPeripheral,
+                scannerGeneration: scannerGeneration
+            )
+            return currentPeripheral
         }
 
-        for await event in events {
+        for await contextualEvent in events {
             try Task.checkCancellation()
             try checkCurrentScanner(scanner, generation: scannerGeneration)
+            let event = contextualEvent.event
             switch event {
             case .didConnect(let connected)
                 where connected.identifier == currentPeripheral.identifier:
+                recordSystemReconnectConnected(
+                    peripheral: connected,
+                    scannerGeneration: scannerGeneration
+                )
                 burstSettleTask?.cancel()
                 burstPreArmTask?.cancel()
                 expectedSelfCancelDisconnectPeripheralID = nil
                 return connected
             case .didFailToConnect(let failed, let error)
                 where failed.identifier == currentPeripheral.identifier:
+                if systemReconnectState.owns(
+                    scannerGeneration: scannerGeneration,
+                    peripheralID: failed.identifier
+                ) {
+                    endSystemReconnect(reason: "connect-failed")
+                }
                 throw SensorScannerError.connectionFailed(
                     error?.localizedDescription ?? "unknown"
                 )
@@ -4151,11 +4581,31 @@ final class Libre3DirectManager: ObservableObject {
                 if expectedSelfCancelDisconnectPeripheralID == disconnected.identifier {
                     continue
                 }
+                if let metadata = contextualEvent.disconnectMetadata {
+                    let disposition = handleSystemReconnectDisconnect(
+                        peripheral: disconnected,
+                        metadata: metadata,
+                        scanner: scanner,
+                        scannerGeneration: scannerGeneration
+                    )
+                    if disposition == .beganSystemRecovery ||
+                        disposition == .continuedSystemRecovery {
+                        continue
+                    }
+                } else {
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "cb-did-disconnect metadata=missing waiter=ordinary"
+                    )
+                }
                 throw SensorScannerError.connectionFailed(
                     error?.localizedDescription ?? "disconnected"
                 )
             case .didDiscover(let found)
                 where hostProfile.burstConnectMode != .off &&
+                    !systemReconnectState.owns(
+                        scannerGeneration: scannerGeneration,
+                        peripheralID: currentPeripheral.identifier
+                    ) &&
                     found.peripheral.identifier == currentPeripheral.identifier:
                 let now = Date()
                 lastBurstDiscoveryAt = now
@@ -4181,10 +4631,13 @@ final class Libre3DirectManager: ObservableObject {
                     )
                 }
             case .stateChanged(.poweredOff):
+                endSystemReconnect(reason: "bluetooth-unavailable")
                 throw SensorScannerError.bluetoothPoweredOff
             case .stateChanged(.unauthorized):
+                endSystemReconnect(reason: "bluetooth-unavailable")
                 throw SensorScannerError.bluetoothUnauthorized
             case .stateChanged(.unsupported):
+                endSystemReconnect(reason: "bluetooth-unavailable")
                 throw SensorScannerError.bluetoothUnavailable
             default:
                 continue
