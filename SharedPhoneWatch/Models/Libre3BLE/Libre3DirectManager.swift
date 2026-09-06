@@ -111,6 +111,15 @@ enum Libre3HostDevice: Equatable, Sendable {
     case watchWorkout
 }
 
+enum Libre3BurstConnectMode: Equatable {
+    /// Phone: the standing intent catches the first window on its own.
+    case off
+    /// Arm on each burst's first discovery; settle-cancel ten seconds later.
+    case armOnDiscovery
+    /// As above, plus a fresh request `lead` seconds before the next predicted burst.
+    case preArm(lead: TimeInterval)
+}
+
 @MainActor
 struct Libre3HostProfile {
     let device: Libre3HostDevice
@@ -131,6 +140,11 @@ struct Libre3HostProfile {
     /// while an app scan catches the next window every time. The saved UUID still
     /// filters the scan, so identity is unchanged.
     let acquiresByActiveScan: Bool
+    /// Controls watch-only connect timing. A standing watch intent caught roughly
+    /// one in 100 windows, while a request issued on discovery connected in four
+    /// of seven trials. Both active modes cancel only in the silence ten seconds
+    /// after a burst; the phone keeps its proven standing intent unchanged.
+    let burstConnectMode: Libre3BurstConnectMode
     /// Per-characteristic ceiling for the seven-CCCD post-auth re-arm. LibreCRKit's
     /// 15 s default was calibrated against the phone's ~1.56 s serial ACK cadence
     /// (seventh ACK at ~8.85 s); observed phone re-arms take 7.7-10.8 s, so that
@@ -190,6 +204,7 @@ struct Libre3HostProfile {
         usesBackfill: false,
         allowsFullAuthorization: false,
         acquiresByActiveScan: true,
+        burstConnectMode: .armOnDiscovery,
         postAuthRearmPerCharacteristicTimeout: 30
     )
 
@@ -297,6 +312,7 @@ extension Libre3HostProfile {
         usesBackfill: true,
         allowsFullAuthorization: true,
         acquiresByActiveScan: false,
+        burstConnectMode: .off,
         postAuthRearmPerCharacteristicTimeout: 15
     )
 }
@@ -728,6 +744,49 @@ struct Libre3ConnectIntentPolicy {
         for peripheralState: CBPeripheralState
     ) -> Bool {
         peripheralState == .disconnected
+    }
+}
+
+enum Libre3BurstSettleAction: Equatable {
+    case cancelAndRescan
+    case none
+}
+
+struct Libre3BurstSettlePolicy {
+    /// Long enough for any burst and its connection establishment to finish,
+    /// while leaving roughly 50 seconds before the next expected burst.
+    static let settleInterval: TimeInterval = 10
+
+    static func action(
+        for peripheralState: CBPeripheralState,
+        anchoredAt: Date,
+        now: Date
+    ) -> Libre3BurstSettleAction {
+        guard now.timeIntervalSince(anchoredAt) >= settleInterval,
+              peripheralState == .connecting else { return .none }
+        return .cancelAndRescan
+    }
+}
+
+struct Libre3BurstPreArmPolicy {
+    static let cadence: TimeInterval = 60
+    static let maxAnchorAge: TimeInterval = 10 * 60
+
+    /// Returns the first phase-locked pre-arm strictly after `now`. An old
+    /// discovery anchor is discarded because its phase can no longer be trusted.
+    static func nextPreArmDate(
+        lastBurstAt: Date,
+        lead: TimeInterval,
+        now: Date
+    ) -> Date? {
+        guard now.timeIntervalSince(lastBurstAt) <= maxAnchorAge else { return nil }
+
+        let elapsedToPreArm = now.timeIntervalSince(lastBurstAt) + lead
+        let elapsedCadences = floor(elapsedToPreArm / cadence)
+        let cadenceCount = max(1, Int(elapsedCadences) + 1)
+        return lastBurstAt.addingTimeInterval(
+            TimeInterval(cadenceCount) * cadence - lead
+        )
     }
 }
 
@@ -1448,6 +1507,15 @@ final class Libre3DirectManager: ObservableObject {
     /// Unified CoreBluetooth event consumer. `SensorScannerNG` broadcasts every
     /// central callback through this one stream, including state restoration.
     private var scannerEventTask: Task<Void, Never>?
+    private var burstSettleTask: Task<Void, Never>?
+    private var burstPreArmTask: Task<Void, Never>?
+    /// Bumped on every arm and settle so an older cycle cannot act on a newer one.
+    private var burstCycleGeneration = 0
+    /// Latest discovery of the saved peripheral during the active connect wait.
+    private var lastBurstDiscoveryAt: Date?
+    /// Identifies the watchOS disconnect emitted by our own settle cancel. It
+    /// remains set until connect/teardown so both event streams can suppress it.
+    private var expectedSelfCancelDisconnectPeripheralID: UUID?
 
     /// Overall failures pace retries; qualifying authentication failures drive NFC advice.
     private var reconnectFailureTracker = Libre3ReconnectFailureTracker()
@@ -1757,6 +1825,7 @@ final class Libre3DirectManager: ObservableObject {
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
+        resetBurstConnectState()
         silenceWatchdogTask?.cancel()
         silenceWatchdogTask = nil
         lastGlucoseRecoveryAttemptAt = nil
@@ -1903,6 +1972,7 @@ final class Libre3DirectManager: ObservableObject {
     /// Release the remaining engine state only after physical disconnect was
     /// confirmed or the bounded wait expired.
     private func finishWorkoutHandoffStandDown() {
+        resetBurstConnectState()
         clinicalPushTask?.cancel()
         clinicalPushTask = nil
         clinicalBackfillBurst = Libre3ClinicalBackfillBurst()
@@ -1930,7 +2000,9 @@ final class Libre3DirectManager: ObservableObject {
     /// is carried by the event-driven owner + CoreBluetooth.
     func recoverIfStale() {
         guard isActiveProvider, ownershipPermitsConnection else { return }
-        traceConnectWaitIfNeeded()
+        if hostProfile.device == .phone {
+            traceConnectWaitIfNeeded()
+        }
         // Keeps the anchor-derived warm-up countdown moving while no patch status
         // has arrived yet — e.g. right after a fresh activation, before the BLE
         // session exists — instead of leaving the seeded value frozen.
@@ -2235,6 +2307,9 @@ final class Libre3DirectManager: ObservableObject {
             break
 
         case .didConnect(let peripheral):
+            if expectedSelfCancelDisconnectPeripheralID == peripheral.identifier {
+                expectedSelfCancelDisconnectPeripheralID = nil
+            }
             Libre3DiagnosticsLog.traceReconnect(
                 "cb-did-connect peripheral=\(peripheral.identifier.uuidString)"
             )
@@ -2254,12 +2329,14 @@ final class Libre3DirectManager: ObservableObject {
             }
 
         case .didDisconnect(let peripheral, let error):
-            let details = matchesSavedPeripheral(peripheral)
-                ? disconnectAttemptDescription(error: error, at: Date())
-                : Self.coreBluetoothErrorDescription(error)
-            Libre3DiagnosticsLog.traceReconnect(
-                "cb-did-disconnect peripheral=\(peripheral.identifier.uuidString) \(details)"
-            )
+            if expectedSelfCancelDisconnectPeripheralID != peripheral.identifier {
+                let details = matchesSavedPeripheral(peripheral)
+                    ? disconnectAttemptDescription(error: error, at: Date())
+                    : Self.coreBluetoothErrorDescription(error)
+                Libre3DiagnosticsLog.traceReconnect(
+                    "cb-did-disconnect peripheral=\(peripheral.identifier.uuidString) \(details)"
+                )
+            }
             if session?.peripheral.identifier == peripheral.identifier {
                 session?.handleDisconnect(error: error)
             }
@@ -2474,6 +2551,7 @@ final class Libre3DirectManager: ObservableObject {
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
+        resetBurstConnectState()
         silenceWatchdogTask?.cancel()
         silenceWatchdogTask = nil
         cancelDisconnectHandoffRecovery()
@@ -2739,10 +2817,22 @@ final class Libre3DirectManager: ObservableObject {
         backoffRearmTask = nil
     }
 
+    private func resetBurstConnectState() {
+        guard hostProfile.burstConnectMode != .off else { return }
+        burstSettleTask?.cancel()
+        burstSettleTask = nil
+        burstPreArmTask?.cancel()
+        burstPreArmTask = nil
+        burstCycleGeneration &+= 1
+        lastBurstDiscoveryAt = nil
+        expectedSelfCancelDisconnectPeripheralID = nil
+    }
+
     /// Tear down a failed authorized/connected session. Established links wait
     /// for disconnect completion with a bounded callback fallback. A pending
     /// connect remains the background wake source.
     private func prepareForNextAttempt() {
+        resetBurstConnectState()
         silenceWatchdogTask?.cancel()
         silenceWatchdogTask = nil
 
@@ -3432,6 +3522,137 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
+    private func scheduleBurstSettle(
+        scanner: SensorScannerNG,
+        peripheralID: UUID,
+        anchor: Date
+    ) {
+        guard hostProfile.burstConnectMode != .off else { return }
+
+        burstCycleGeneration &+= 1
+        let generation = burstCycleGeneration
+        burstSettleTask?.cancel()
+        burstSettleTask = Task { [weak self] in
+            let delay = max(
+                0,
+                anchor.addingTimeInterval(Libre3BurstSettlePolicy.settleInterval)
+                    .timeIntervalSinceNow
+            )
+            do {
+                try await Task.sleep(
+                    nanoseconds: UInt64(delay * 1_000_000_000)
+                )
+            } catch {
+                return
+            }
+
+            guard let self,
+                  !Task.isCancelled,
+                  self.burstCycleGeneration == generation,
+                  scanner.centralState == .poweredOn else { return }
+
+            self.burstCycleGeneration &+= 1
+            self.burstSettleTask = nil
+            guard let refreshed = scanner.retrievePeripherals(
+                withIdentifiers: [peripheralID]
+            ).first else {
+                // Duplicate discovery is disabled, so only a fresh scan session
+                // can report this peripheral at the next advertising burst.
+                scanner.stopScan()
+                scanner.startScan()
+                Libre3DiagnosticsLog.traceReconnect(
+                    "burst-settle action=rescan state=missing"
+                )
+                return
+            }
+
+            let action = Libre3BurstSettlePolicy.action(
+                for: refreshed.state,
+                anchoredAt: anchor,
+                now: Date()
+            )
+            guard refreshed.state != .connected else { return }
+
+            if action == .cancelAndRescan {
+                self.expectedSelfCancelDisconnectPeripheralID = peripheralID
+                scanner.cancelConnectionIfStillConnecting(refreshed)
+            }
+            // Reset discovery even when CoreBluetooth already dropped the intent.
+            scanner.stopScan()
+            scanner.startScan()
+            switch action {
+            case .cancelAndRescan:
+                Libre3DiagnosticsLog.traceReconnect(
+                    "burst-settle action=cancel-and-rescan"
+                )
+                self.scheduleBurstPreArm(
+                    scanner: scanner,
+                    peripheralID: peripheralID
+                )
+            case .none:
+                Libre3DiagnosticsLog.traceReconnect(
+                    "burst-settle action=rescan state=\(refreshed.state.rawValue)"
+                )
+            }
+        }
+    }
+
+    private func scheduleBurstPreArm(
+        scanner: SensorScannerNG,
+        peripheralID: UUID
+    ) {
+        guard case .preArm(let lead) = hostProfile.burstConnectMode,
+              let lastBurstDiscoveryAt,
+              let preArmDate = Libre3BurstPreArmPolicy.nextPreArmDate(
+                  lastBurstAt: lastBurstDiscoveryAt,
+                  lead: lead,
+                  now: Date()
+              ) else { return }
+
+        let generation = burstCycleGeneration
+        burstPreArmTask?.cancel()
+        burstPreArmTask = Task { [weak self] in
+            let delay = max(0, preArmDate.timeIntervalSinceNow)
+            do {
+                try await Task.sleep(
+                    nanoseconds: UInt64(delay * 1_000_000_000)
+                )
+            } catch {
+                return
+            }
+
+            guard let self,
+                  !Task.isCancelled,
+                  self.burstCycleGeneration == generation,
+                  scanner.centralState == .poweredOn,
+                  let refreshed = scanner.retrievePeripherals(
+                      withIdentifiers: [peripheralID]
+                  ).first,
+                  Libre3ConnectIntentPolicy.shouldRequestConnect(
+                      for: refreshed.state
+                  ) else { return }
+
+            scanner.requestConnect(refreshed)
+            let leadDescription = lead.rounded() == lead
+                ? String(Int(lead))
+                : String(lead)
+            Libre3DiagnosticsLog.traceReconnect(
+                "burst-prearm lead=\(leadDescription)s"
+            )
+            self.scheduleBurstSettle(
+                scanner: scanner,
+                peripheralID: peripheralID,
+                anchor: preArmDate.addingTimeInterval(lead)
+            )
+        }
+    }
+
+    /// Wait for a connection using the host's burst policy. Mode A arms on each
+    /// discovery; mode B also pre-arms before the next phase-locked burst. Their
+    /// ten-second settle begins only after an observed or predicted advertisement,
+    /// when the burst has ended. Unlike the removed first-window timeout, it never
+    /// bounds a retrieved-handle wait; between bursts the pending watch intent has
+    /// nothing to catch and was observed succeeding only about once in 100 windows.
     private func awaitConnectedPeripheral(
         scanner: SensorScannerNG,
         peripheral: CBPeripheral
@@ -3452,10 +3673,23 @@ final class Libre3DirectManager: ObservableObject {
             if connectWaitStartedAt == waitStartedAt {
                 connectWaitStartedAt = nil
             }
+            if hostProfile.burstConnectMode != .off {
+                resetBurstConnectState()
+            }
         }
 
         if currentState == .connected {
             return currentPeripheral
+        }
+
+        if hostProfile.burstConnectMode != .off {
+            let initialDiscoveryAt = Date()
+            lastBurstDiscoveryAt = initialDiscoveryAt
+            scheduleBurstSettle(
+                scanner: scanner,
+                peripheralID: currentPeripheral.identifier,
+                anchor: initialDiscoveryAt
+            )
         }
 
         if Libre3ConnectIntentPolicy.shouldRequestConnect(for: currentState) {
@@ -3476,6 +3710,9 @@ final class Libre3DirectManager: ObservableObject {
             switch event {
             case .didConnect(let connected)
                 where connected.identifier == currentPeripheral.identifier:
+                burstSettleTask?.cancel()
+                burstPreArmTask?.cancel()
+                expectedSelfCancelDisconnectPeripheralID = nil
                 return connected
             case .didFailToConnect(let failed, let error)
                 where failed.identifier == currentPeripheral.identifier:
@@ -3484,9 +3721,38 @@ final class Libre3DirectManager: ObservableObject {
                 )
             case .didDisconnect(let disconnected, let error)
                 where disconnected.identifier == currentPeripheral.identifier:
+                if expectedSelfCancelDisconnectPeripheralID == disconnected.identifier {
+                    continue
+                }
                 throw SensorScannerError.connectionFailed(
                     error?.localizedDescription ?? "disconnected"
                 )
+            case .didDiscover(let found)
+                where hostProfile.burstConnectMode != .off &&
+                    found.peripheral.identifier == currentPeripheral.identifier:
+                let now = Date()
+                lastBurstDiscoveryAt = now
+                scheduleBurstSettle(
+                    scanner: scanner,
+                    peripheralID: currentPeripheral.identifier,
+                    anchor: now
+                )
+                let refreshed = scanner.retrievePeripherals(
+                    withIdentifiers: [currentPeripheral.identifier]
+                ).first ?? found.peripheral
+                if Libre3ConnectIntentPolicy.shouldRequestConnect(
+                    for: refreshed.state
+                ) {
+                    scanner.requestConnect(refreshed)
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "burst-connect-armed rssi=\(found.rssi)"
+                    )
+                } else if case .preArm = hostProfile.burstConnectMode,
+                          refreshed.state == .connecting {
+                    Libre3DiagnosticsLog.traceReconnect(
+                        "burst-seen rssi=\(found.rssi) state=\(refreshed.state.rawValue)"
+                    )
+                }
             case .stateChanged(.poweredOff):
                 throw SensorScannerError.bluetoothPoweredOff
             case .stateChanged(.unauthorized):

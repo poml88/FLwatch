@@ -850,6 +850,7 @@ final class LibreWristTests: XCTestCase {
         XCTAssertTrue(phone.usesBackfill)
         XCTAssertEqual(phone.postAuthRearmPerCharacteristicTimeout, 15)
         XCTAssertFalse(phone.acquiresByActiveScan)
+        XCTAssertEqual(phone.burstConnectMode, .off)
 
         let watch = Libre3HostProfile.watchWorkout
         XCTAssertFalse(watch.lowGlucoseAlerts.isEnabled)
@@ -857,6 +858,7 @@ final class LibreWristTests: XCTestCase {
         XCTAssertFalse(watch.usesBackfill)
         XCTAssertEqual(watch.postAuthRearmPerCharacteristicTimeout, 30)
         XCTAssertTrue(watch.acquiresByActiveScan)
+        XCTAssertNotEqual(watch.burstConnectMode, .off)
     }
 
     func testFailedConnectionStateStillCountsAsAcquiring() {
@@ -1727,6 +1729,79 @@ final class LibreWristTests: XCTestCase {
         )
         XCTAssertFalse(
             Libre3ConnectIntentPolicy.shouldRequestConnect(for: .disconnecting)
+        )
+    }
+
+    func testBurstSettlePolicyCancelsConnectingIntentOnlyAfterInterval() {
+        let anchor = Date(timeIntervalSince1970: 1_800_000_000)
+
+        XCTAssertEqual(
+            Libre3BurstSettlePolicy.action(
+                for: .connecting,
+                anchoredAt: anchor,
+                now: anchor.addingTimeInterval(9)
+            ),
+            .none
+        )
+        XCTAssertEqual(
+            Libre3BurstSettlePolicy.action(
+                for: .connecting,
+                anchoredAt: anchor,
+                now: anchor.addingTimeInterval(10)
+            ),
+            .cancelAndRescan
+        )
+        XCTAssertEqual(
+            Libre3BurstSettlePolicy.action(
+                for: .connected,
+                anchoredAt: anchor,
+                now: anchor.addingTimeInterval(30)
+            ),
+            .none
+        )
+        XCTAssertEqual(
+            Libre3BurstSettlePolicy.action(
+                for: .disconnected,
+                anchoredAt: anchor,
+                now: anchor.addingTimeInterval(30)
+            ),
+            .none
+        )
+    }
+
+    func testBurstPreArmPolicyKeepsPredictedDatesStrictlyInTheFuture() {
+        let anchor = Date(timeIntervalSince1970: 1_800_000_030)
+
+        XCTAssertEqual(
+            Libre3BurstPreArmPolicy.nextPreArmDate(
+                lastBurstAt: anchor,
+                lead: 3,
+                now: anchor.addingTimeInterval(10)
+            ),
+            anchor.addingTimeInterval(57)
+        )
+        XCTAssertEqual(
+            Libre3BurstPreArmPolicy.nextPreArmDate(
+                lastBurstAt: anchor,
+                lead: 3,
+                now: anchor.addingTimeInterval(58)
+            ),
+            anchor.addingTimeInterval(117)
+        )
+        XCTAssertNil(
+            Libre3BurstPreArmPolicy.nextPreArmDate(
+                lastBurstAt: anchor,
+                lead: 3,
+                now: anchor.addingTimeInterval(11 * 60)
+            )
+        )
+        XCTAssertEqual(
+            Libre3BurstPreArmPolicy.nextPreArmDate(
+                lastBurstAt: anchor,
+                lead: 10,
+                now: anchor.addingTimeInterval(50)
+            ),
+            anchor.addingTimeInterval(110)
         )
     }
 
