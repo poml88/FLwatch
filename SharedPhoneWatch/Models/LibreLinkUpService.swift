@@ -37,6 +37,12 @@ extension Notification.Name {
     /// Posted after either retained Libre 3 diagnostics ring changes so an open
     /// developer-log view can refresh without polling.
     static let libre3DiagnosticsDidChange = Notification.Name("Libre3DiagnosticsDidChange")
+
+    /// Posted on iOS after the watch acknowledges that its retained Libre 3
+    /// diagnostics were cleared.
+    static let libre3WatchDiagnosticsLogDidClear = Notification.Name(
+        "Libre3WatchDiagnosticsLogDidClear"
+    )
 }
 
 enum LibreWristUpdateNotifier {

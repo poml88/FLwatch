@@ -30,6 +30,7 @@ struct PhoneAppLibre3ConnectView: View {
     private var watchDiagnosticsLog = ""
     @AppStorage(DefaultsKey.libre3WatchDiagnosticsCapturedAt.rawValue, store: UserDefaults.group)
     private var watchDiagnosticsCapturedAtInterval: Double = 0
+    @State private var watchDiagnosticsClearRequestedAt: Date?
     // These mirrors make the pure readiness getter reactive without advancing
     // or resending a provisioning revision from SwiftUI rendering.
     @AppStorage(DefaultsKey.libre3ProvisioningCurrentRevision.rawValue, store: UserDefaults.group)
@@ -131,6 +132,11 @@ struct PhoneAppLibre3ConnectView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .libre3DiagnosticsDidChange)) { _ in
             reloadDiagnosticsLog()
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(for: .libre3WatchDiagnosticsLogDidClear)
+        ) { _ in
+            watchDiagnosticsClearRequestedAt = nil
         }
         .onReceive(clockTick) { tick in
             now = tick
@@ -801,13 +807,12 @@ struct PhoneAppLibre3ConnectView: View {
                 Spacer()
 
                 Button(role: .destructive) {
-                    SharedData.libre3WatchDiagnosticsLog = ""
-                    SharedData.libre3WatchDiagnosticsCapturedAt = nil
+                    watchDiagnosticsClearRequestedAt = Date()
+                    WatchConnectivityManager.shared.clearWatchDiagnosticsLog()
                 } label: {
                     Text(verbatim: "Clear")
                 }
                 .buttonStyle(.borderless)
-                .disabled(watchDiagnosticsLog.isEmpty && watchDiagnosticsCapturedAtInterval == 0)
 
                 Button {
                     UIPasteboard.general.string = watchDiagnosticsLog
@@ -816,6 +821,13 @@ struct PhoneAppLibre3ConnectView: View {
                 }
                 .buttonStyle(.borderless)
                 .disabled(watchDiagnosticsLog.isEmpty)
+            }
+            
+            if let requestedAt = watchDiagnosticsClearRequestedAt,
+               now.timeIntervalSince(requestedAt) < 300 {
+                Text(verbatim: "Clear requested — waiting for watch")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             if watchDiagnosticsCapturedAtInterval > 0 {

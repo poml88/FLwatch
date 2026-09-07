@@ -35,6 +35,8 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     private static let libre3ProvisioningAcknowledgementDataKey = "libre3ProvisioningAcknowledgementData"
     private static let requestLibre3ProvisioningContent = "requestLibre3Provisioning"
     private static let requestWatchDiagnosticsLogContent = "requestWatchDiagnosticsLog"
+    private static let clearWatchDiagnosticsLogContent = "clearWatchDiagnosticsLog"
+    private static let watchDiagnosticsLogClearedContent = "watchDiagnosticsLogCleared"
     private static let watchDiagnosticsLogContent = "watchDiagnosticsLog"
     private static let watchDiagnosticsLogDataKey = "watchDiagnosticsLogData"
     private static let libre3WorkoutOwnershipContent = "libre3WorkoutOwnership"
@@ -435,6 +437,25 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             // request is an explicit developer action, not part of BLE control.
             Task { @MainActor in
                 self.sendWatchDiagnosticsLogToPhone()
+            }
+#endif
+        }
+
+        if message["content"] as? String == Self.clearWatchDiagnosticsLogContent {
+#if os(watchOS)
+            // WatchConnectivity callbacks are not main-actor isolated, while the
+            // diagnostics store deliberately is.
+            Task { @MainActor in
+                Libre3DiagnosticsLog.clearAllLogs()
+                self.sendWatchDiagnosticsLogClearedToPhone()
+            }
+#endif
+        }
+
+        if message["content"] as? String == Self.watchDiagnosticsLogClearedContent {
+#if os(iOS)
+            Task { @MainActor in
+                Self.applyWatchDiagnosticsLogClearedAcknowledgement()
             }
 #endif
         }
@@ -1533,6 +1554,28 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         ]
         sendMessageToPairedDevice(message)
     }
+
+    func clearWatchDiagnosticsLog() {
+        // This one-shot command must fall back to queued user info. Application
+        // context can be replaced by a later context update before delivery.
+        let message: [String: Any] = [
+            "content": Self.clearWatchDiagnosticsLogContent,
+            "useApplicationContext": false
+        ]
+        sendMessageToPairedDevice(message)
+    }
+
+    /// Keep the last fetched evidence visible until the watch confirms its
+    /// retained logs were cleared.
+    @MainActor
+    static func applyWatchDiagnosticsLogClearedAcknowledgement() {
+        SharedData.libre3WatchDiagnosticsLog = ""
+        SharedData.libre3WatchDiagnosticsCapturedAt = nil
+        NotificationCenter.default.post(
+            name: .libre3WatchDiagnosticsLogDidClear,
+            object: nil
+        )
+    }
 #endif
 
     private static func libre3ProvisioningDigest(
@@ -1676,6 +1719,14 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
                 "Failed to encode watch diagnostics log: \(error.localizedDescription)"
             )
         }
+    }
+
+    private func sendWatchDiagnosticsLogClearedToPhone() {
+        let message: [String: Any] = [
+            "content": Self.watchDiagnosticsLogClearedContent,
+            "useApplicationContext": false
+        ]
+        sendMessageToPairedDevice(message)
     }
 
     @MainActor

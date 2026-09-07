@@ -49,12 +49,12 @@ enum Libre3DiagnosticsLog {
     private static let storageEntryLimit = 100
     private static let supportEntryLimit = 20
     private static let supportCharacterLimit = 1_500
-    private static let reconnectTraceStorageEntryLimit = 120
+    static let reconnectTraceStorageEntryLimit = 300
     private static let reconnectTraceSupportEntryLimit = 12
     private static let reconnectTraceSupportCharacterLimit = 1_200
     private static let notableEventStorageEntryLimit = 50
     private static let stuckSnapshotStorageLimit = 10
-    static let watchConnectivityExportByteLimit = 30 * 1_024
+    static let watchConnectivityExportByteLimit = 48 * 1_024
     nonisolated private static let truncationMarker = "…truncated"
 
     /// Entries stay in UTC internally so persisted rings retain one sortable format.

@@ -2544,6 +2544,44 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
+    @MainActor
+    func testReconnectTraceRetainsTheNewestEntriesUpToItsLimit() {
+        let previousTrace = SharedData.libre3ReconnectTrace
+        defer { SharedData.libre3ReconnectTrace = previousTrace }
+        SharedData.libre3ReconnectTrace = []
+        let limit = Libre3DiagnosticsLog.reconnectTraceStorageEntryLimit
+
+        for index in 0...limit {
+            Libre3DiagnosticsLog.traceReconnect("trace-\(index)")
+        }
+
+        XCTAssertEqual(SharedData.libre3ReconnectTrace.count, limit)
+        XCTAssertTrue(SharedData.libre3ReconnectTrace.first?.hasSuffix("trace-1") == true)
+        XCTAssertTrue(SharedData.libre3ReconnectTrace.last?.hasSuffix("trace-\(limit)") == true)
+    }
+
+    @MainActor
+    func testWatchDiagnosticsClearAcknowledgementClearsCachedLogAndCaptureDate() {
+        let acknowledgement = expectation(
+            forNotification: .libre3WatchDiagnosticsLogDidClear,
+            object: nil
+        )
+        let previousLog = SharedData.libre3WatchDiagnosticsLog
+        let previousCapturedAt = SharedData.libre3WatchDiagnosticsCapturedAt
+        defer {
+            SharedData.libre3WatchDiagnosticsLog = previousLog
+            SharedData.libre3WatchDiagnosticsCapturedAt = previousCapturedAt
+        }
+        SharedData.libre3WatchDiagnosticsLog = "watch diagnostics"
+        SharedData.libre3WatchDiagnosticsCapturedAt = Date(timeIntervalSince1970: 1_700_000_000)
+
+        WatchConnectivityManager.applyWatchDiagnosticsLogClearedAcknowledgement()
+
+        wait(for: [acknowledgement], timeout: 0.1)
+        XCTAssertEqual(SharedData.libre3WatchDiagnosticsLog, "")
+        XCTAssertNil(SharedData.libre3WatchDiagnosticsCapturedAt)
+    }
+
     // MARK: - Libre 3 peripheral discovery
 
     func testKnownPeripheralUsesRetrievedPathAfterManyNoStreamAttempts() throws {
