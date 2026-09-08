@@ -209,6 +209,11 @@ struct WatchAppWorkoutView: View {
                     .id(WorkoutScrollAnchor.top)
                     .padding(.horizontal, 7)
                 }
+                .contentMargins(
+                    .top,
+                    workoutModeStore.isActive ? 0 : nil,
+                    for: .scrollContent
+                )
                 .onChange(of: workoutModeStore.isActive) { _, _ in
                     scrollProxy.scrollTo(WorkoutScrollAnchor.top, anchor: .top)
                 }
@@ -475,6 +480,8 @@ private enum WorkoutScrollAnchor {
     static let top = "workout-top"
 }
 
+private let showsActiveWorkoutLayoutBorders = false
+
 private struct WorkoutConnectionDisplay {
     let text: String
     let isFailure: Bool
@@ -517,18 +524,33 @@ private struct ActiveWorkoutContent<GraphContent: View>: View {
     }
 
     var body: some View {
-        VStack(spacing: 8) {
-            workoutTitleRow
+        VStack(spacing: 4) {
             workoutMetricsRow
+                .border(
+                    showsActiveWorkoutLayoutBorders ? Color.red : Color.clear,
+                    width: 0.5
+                )
             glucoseBlock
+                .border(
+                    showsActiveWorkoutLayoutBorders ? Color.red : Color.clear,
+                    width: 0.5
+                )
 
             if values.showsGraph {
                 graph
                     .frame(height: 105)
+                    .border(
+                        showsActiveWorkoutLayoutBorders ? Color.red : Color.clear,
+                        width: 0.5
+                    )
             }
 
             if let connectionStatus = values.connectionStatus {
                 connectionView(connectionStatus)
+                    .border(
+                        showsActiveWorkoutLayoutBorders ? Color.red : Color.clear,
+                        width: 0.5
+                    )
             }
 
             Button(role: .destructive, action: onEndWorkout) {
@@ -540,26 +562,45 @@ private struct ActiveWorkoutContent<GraphContent: View>: View {
             }
             .buttonStyle(.bordered)
             .disabled(values.isBusy)
+            .border(
+                showsActiveWorkoutLayoutBorders ? Color.red : Color.clear,
+                width: 0.5
+            )
+        }
+        .padding(.top, -6)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                workoutTitleRow
+            }
         }
     }
 
     private var workoutTitleRow: some View {
-        HStack(spacing: 4) {
+        VStack(alignment: .leading, spacing: 0) {
             Text(verbatim: values.workoutName)
-                .font(.caption)
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
+                .border(
+                    showsActiveWorkoutLayoutBorders ? Color.red : Color.clear,
+                    width: 0.5
+                )
 
-            Spacer(minLength: 4)
-            if let sensorConnectionIndicatorColor = values.sensorConnectionIndicatorColor {
-                Image(systemName: "circle.fill")
-                    .font(.system(size: 6))
-                    .foregroundStyle(sensorConnectionIndicatorColor)
-                    // The detailed, accessible connection status remains below.
-                    .accessibilityHidden(true)
+            HStack(spacing: 4) {
+                if let sensorConnectionIndicatorColor = values.sensorConnectionIndicatorColor {
+                    Image(systemName: "circle.fill")
+                        .font(.system(size: 6))
+                        .foregroundStyle(sensorConnectionIndicatorColor)
+                        // The detailed, accessible connection status remains below.
+                        .accessibilityHidden(true)
+                }
+                batteryIndicator
             }
-            batteryIndicator
+            .border(
+                showsActiveWorkoutLayoutBorders ? Color.red : Color.clear,
+                width: 0.5
+            )
         }
     }
 
@@ -622,6 +663,8 @@ private struct ActiveWorkoutContent<GraphContent: View>: View {
             }
         } else {
             glucoseRow(fiveMinuteDeltaText: nil)
+                .padding(.top, -6)
+                .padding(.bottom, -6)
         }
     }
 
@@ -926,34 +969,37 @@ private struct WorkoutGraphPreview: View {
 }
 
 #Preview("Active Outdoor") {
-    ScrollView {
-        ActiveWorkoutContent(
-            values: ActiveWorkoutDisplayValues(
-                glucoseText: "142",
-                trendText: "→",
-                readingColor: .green,
-                isReadingStale: true,
-                iobText: "1.2 U",
-                workoutName: "Running",
-                outdoorLocationText: "Outdoor",
-                elapsedText: "24:18",
-                batteryLevel: 0.72,
-                sensorConnectionIndicatorColor: .green,
-                fiveMinuteDeltaText: nil,
-                heartRateText: "138",
-                distanceText: "3.2 km",
-                connectionStatus: WorkoutConnectionDisplay(
-                    text: "Streaming",
-                    isFailure: false,
-                    showsPlacementHint: false
-                ),
-                showsGraph: true,
-                isEnding: false,
-                isBusy: false
-            )
-        ) {
-            WorkoutGraphPreview()
-        } onEndWorkout: {}
-        .padding(.horizontal, 7)
+    NavigationStack {
+        ScrollView {
+            ActiveWorkoutContent(
+                values: ActiveWorkoutDisplayValues(
+                    glucoseText: "142",
+                    trendText: "→",
+                    readingColor: .green,
+                    isReadingStale: true,
+                    iobText: "1.2 U",
+                    workoutName: "Running",
+                    outdoorLocationText: "Outdoor",
+                    elapsedText: "24:18",
+                    batteryLevel: 0.72,
+                    sensorConnectionIndicatorColor: .green,
+                    fiveMinuteDeltaText: nil,
+                    heartRateText: "138",
+                    distanceText: "3.2 km",
+                    connectionStatus: WorkoutConnectionDisplay(
+                        text: "Streaming",
+                        isFailure: false,
+                        showsPlacementHint: false
+                    ),
+                    showsGraph: true,
+                    isEnding: false,
+                    isBusy: false
+                )
+            ) {
+                WorkoutGraphPreview()
+            } onEndWorkout: {}
+            .padding(.horizontal, 7)
+        }
+        .contentMargins(.top, 0, for: .scrollContent)
     }
 }
