@@ -155,7 +155,7 @@ struct Libre3HostProfile {
     /// next workout starts with fresh app-owned CoreBluetooth objects.
     let recreatesScannerBetweenWorkouts: Bool
     /// Opt into CoreBluetooth-owned recovery after an unexpected link loss.
-    /// Kept off until the auto-reconnect experiment is explicitly enabled.
+    /// Enabled for watch workouts while the AutoReconnect experiment runs.
     let usesSystemAutoReconnect: Bool
     /// Controls watch-only connect timing. A standing watch intent caught roughly
     /// one in 100 windows, while a request issued on discovery connected in four
@@ -1588,6 +1588,139 @@ struct Libre3PeripheralDiscoveryPolicy {
     }
 }
 
+/// Last-wins diagnostic path. On the watch, `scan` means the initial acquisition
+/// scan supplied the candidate and no later matching callback arrived before the
+/// attempt ended; `burst` means at least one later callback arrived while the
+/// connection wait remained pending.
+enum Libre3AttemptAcquisitionPath: String, Equatable {
+    /// A saved handle supplied the candidate.
+    case retrieved
+    /// CoreBluetooth already reported the saved peripheral as connected.
+    case connected
+    /// The initial acquisition scan supplied the candidate.
+    case scan
+    /// Last-wins over `scan`: at least one later matching discovery callback
+    /// arrived while the connection wait was still pending.
+    case burst
+    /// CoreBluetooth AutoReconnect owned recovery and supplied the candidate.
+    case system
+}
+
+enum Libre3AttemptOutcome: String, Equatable {
+    /// The notification stream ended without throwing; recovery still follows.
+    case ended
+    case failed
+    case cancelled
+}
+
+/// In-memory measurements for one connection lifecycle. Advertisement callback
+/// counts are deliberately labelled as callbacks: scans disallow duplicates, so
+/// CoreBluetooth may coalesce multiple over-the-air advertisements into one.
+struct Libre3AttemptDiagnostics: Equatable {
+    private(set) var startedAt: Date?
+    private(set) var path: Libre3AttemptAcquisitionPath?
+    private(set) var advertisementCallbackCount: Int?
+    private(set) var bestRSSI: Int?
+    private(set) var lastRSSI: Int?
+    private(set) var firstAdvertisementAt: Date?
+    private(set) var lastAdvertisementAt: Date?
+    private(set) var connectedAt: Date?
+    private(set) var firstUsableGlucoseAt: Date?
+
+    mutating func begin(at date: Date, observesAdvertisements: Bool) {
+        reset()
+        startedAt = date
+        advertisementCallbackCount = observesAdvertisements ? 0 : nil
+    }
+
+    mutating func setPath(
+        _ path: Libre3AttemptAcquisitionPath,
+        observesAdvertisements: Bool? = nil
+    ) {
+        guard startedAt != nil else { return }
+        self.path = path
+        guard let observesAdvertisements else { return }
+        if observesAdvertisements {
+            advertisementCallbackCount = advertisementCallbackCount ?? 0
+        } else {
+            advertisementCallbackCount = nil
+            bestRSSI = nil
+            lastRSSI = nil
+            firstAdvertisementAt = nil
+            lastAdvertisementAt = nil
+        }
+    }
+
+    mutating func recordAdvertisement(rssi: Int, at date: Date) {
+        guard let advertisementCallbackCount else { return }
+        self.advertisementCallbackCount = advertisementCallbackCount + 1
+        bestRSSI = max(bestRSSI ?? rssi, rssi)
+        lastRSSI = rssi
+        firstAdvertisementAt = firstAdvertisementAt ?? date
+        lastAdvertisementAt = date
+    }
+
+    mutating func recordConnected(at date: Date) {
+        guard startedAt != nil else { return }
+        connectedAt = date
+    }
+
+    mutating func recordFirstUsableGlucose(at date: Date) {
+        guard startedAt != nil, firstUsableGlucoseAt == nil else { return }
+        firstUsableGlucoseAt = date
+    }
+
+    func lastAdvertisementAge(at date: Date) -> String {
+        Self.durationDescription(from: lastAdvertisementAt, to: date)
+    }
+
+    func summary(
+        scannerGeneration: Int?,
+        usesSystemAutoReconnect: Bool,
+        outcome: Libre3AttemptOutcome
+    ) -> String {
+        let callbackCount = advertisementCallbackCount.map(String.init) ?? "n/a"
+        let rssi: String
+        if let bestRSSI, let lastRSSI {
+            rssi = "\(bestRSSI)/\(lastRSSI)"
+        } else {
+            rssi = "n/a"
+        }
+        return "attempt-summary path=\(path?.rawValue ?? "n/a") " +
+            "outcome=\(outcome.rawValue) " +
+            "ar=\(usesSystemAutoReconnect ? 1 : 0) " +
+            "scanner=\(scannerGeneration.map(String.init) ?? "n/a") " +
+            "adv-callbacks=\(callbackCount) rssi=\(rssi) " +
+            "adv-span=\(Self.durationDescription(from: firstAdvertisementAt, to: lastAdvertisementAt)) " +
+            "t-connect=\(Self.durationDescription(from: startedAt, to: connectedAt)) " +
+            "t-glucose=\(Self.durationDescription(from: startedAt, to: firstUsableGlucoseAt)) " +
+            "gap=n/a batt=n/a hk=n/a"
+    }
+
+    mutating func reset() {
+        startedAt = nil
+        path = nil
+        advertisementCallbackCount = nil
+        bestRSSI = nil
+        lastRSSI = nil
+        firstAdvertisementAt = nil
+        lastAdvertisementAt = nil
+        connectedAt = nil
+        firstUsableGlucoseAt = nil
+    }
+
+    /// Attempt summaries use compact units so long scan spans stay readable.
+    /// Existing reconnect fields intentionally retain their seconds-only format.
+    private static func durationDescription(from start: Date?, to end: Date?) -> String {
+        guard let start, let end else { return "n/a" }
+        let seconds = max(0, end.timeIntervalSince(start))
+        if seconds >= 60 {
+            return String(format: "%.1fm", seconds / 60)
+        }
+        return String(format: "%.1fs", seconds)
+    }
+}
+
 @MainActor
 final class Libre3DirectManager: ObservableObject {
 
@@ -1760,6 +1893,14 @@ final class Libre3DirectManager: ObservableObject {
     private var rearmCompletedAt: Date?
     private var firstAnyPacketAt: Date?
     private var firstGlucoseFragmentAt: Date?
+    /// Latest successfully decoded realtime life count in this attempt. It is
+    /// retained regardless of whether quality gating accepts the reading.
+    private var lastDecodedLifeCount: UInt16?
+    private var attemptDiagnostics = Libre3AttemptDiagnostics()
+    private var attemptSummaryRecorded = false
+    /// Phase A3 feeds the eventual per-workout tally with every positive gap,
+    /// including ordinary gaps below the notable-event threshold.
+    private var workoutAccumulatedGlucoseGap: TimeInterval = 0
     /// Setup success is not proof of health; only usable glucose resets this.
     private var noStreamCycleTracker = Libre3NoStreamCycleTracker()
     /// A discovered handle is persisted only after that same sensor authenticates.
@@ -1998,6 +2139,7 @@ final class Libre3DirectManager: ObservableObject {
         let beginsWorkoutAcquisition = !shouldMaintainConnection
         shouldMaintainConnection = true
         if beginsWorkoutAcquisition, hostProfile.device == .watchWorkout {
+            workoutAccumulatedGlucoseGap = 0
             Libre3DiagnosticsLog.traceReconnect(
                 "workout-ble-config recreatesScannerBetweenWorkouts=\(hostProfile.recreatesScannerBetweenWorkouts) usesSystemAutoReconnect=\(hostProfile.usesSystemAutoReconnect) burstConnectMode=\(hostProfile.burstConnectMode.traceValue)"
             )
@@ -2054,6 +2196,7 @@ final class Libre3DirectManager: ObservableObject {
         cancelDisconnectHandoffRecovery()
         disconnectHandoffPolicy.reset()
         setSignalLossState(deadline: nil)
+        finishAttemptSummary(outcome: .cancelled)
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
@@ -2128,6 +2271,7 @@ final class Libre3DirectManager: ObservableObject {
         clearReconnectBackoff()
         cancelDisconnectHandoffRecovery()
         disconnectHandoffPolicy.reset()
+        finishAttemptSummary(outcome: .cancelled)
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
@@ -2721,6 +2865,7 @@ final class Libre3DirectManager: ObservableObject {
         clearReconnectBackoff()
         cancelDisconnectHandoffRecovery()
         disconnectHandoffPolicy.reset()
+        finishAttemptSummary(outcome: .cancelled)
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
@@ -2884,7 +3029,13 @@ final class Libre3DirectManager: ObservableObject {
                 break
             }
 
-        case .didDiscover:
+        case .didDiscover(let found):
+            if matchesSavedPeripheral(found.peripheral) {
+                attemptDiagnostics.recordAdvertisement(
+                    rssi: found.rssi,
+                    at: Date()
+                )
+            }
             // A short-lived discovery waiter consumes the matching event. Avoid
             // filling the bounded reconnect trace with unrelated advertisements.
             break
@@ -3219,7 +3370,11 @@ final class Libre3DirectManager: ObservableObject {
         silenceWatchdogTask = nil
         cancelDisconnectHandoffRecovery()
         disconnectHandoffPolicy.reset()
-        finishConnectedAttempt(traceStreamEnd: lastAttemptStage == "streaming")
+        finishConnectedAttempt(
+            traceStreamEnd: lastAttemptStage == "streaming",
+            outcome: .cancelled
+        )
+        finishAttemptSummary(outcome: .cancelled)
         // NG clients own session invalidation. Power-off does not reliably emit
         // didDisconnect, so fail outstanding GATT work explicitly before dropping
         // the session reference.
@@ -3335,6 +3490,7 @@ final class Libre3DirectManager: ObservableObject {
     ) {
         guard lifecycleAttemptID == id,
               isCurrentScannerGeneration(scannerGeneration) else { return }
+        finishAttemptSummary(outcome: .cancelled)
         lifecycleAttemptID = nil
         lifecycleTask = nil
         // Intentional stop and Bluetooth-unavailable teardown clear or defer
@@ -3366,7 +3522,12 @@ final class Libre3DirectManager: ObservableObject {
         // Runs before `finishConnectedAttempt` so the no-stream warning it may
         // emit can report what this attempt actually triggered.
         updateSensorNotRespondingEvidence(stage: endedStage, error: error)
-        finishConnectedAttempt(traceStreamEnd: endedStage == "streaming")
+        let outcome: Libre3AttemptOutcome = error == nil ? .ended : .failed
+        finishConnectedAttempt(
+            traceStreamEnd: endedStage == "streaming",
+            outcome: outcome
+        )
+        finishAttemptSummary(outcome: outcome)
 
         let shouldEscalateAuthentication = !sessionProducedGlucose
             ? reconnectFailureTracker.recordFailure(failureCategory)
@@ -3538,6 +3699,8 @@ final class Libre3DirectManager: ObservableObject {
         resetBurstConnectState()
         silenceWatchdogTask?.cancel()
         silenceWatchdogTask = nil
+        attemptDiagnostics.reset()
+        attemptSummaryRecorded = false
 
         let peripheral = session?.peripheral ?? lifecyclePeripheral
         session?.handleDisconnect(error: nil)
@@ -3599,6 +3762,12 @@ final class Libre3DirectManager: ObservableObject {
         scannerGeneration: Int
     ) async throws {
         try checkCurrentScanner(scanner, generation: scannerGeneration)
+        let attemptStartedAt = Date()
+        attemptDiagnostics.begin(
+            at: attemptStartedAt,
+            observesAdvertisements: Libre3DiagnosticsLog.extendedTracing
+        )
+        attemptSummaryRecorded = false
         lastAttemptStage = "connect"
         attemptReachedDidConnect = false
         attemptEndRecorded = false
@@ -3610,6 +3779,8 @@ final class Libre3DirectManager: ObservableObject {
         rearmCompletedAt = nil
         firstAnyPacketAt = nil
         firstGlucoseFragmentAt = nil
+        lastAnyChannelAt = nil
+        lastDecodedLifeCount = nil
         silenceWatchdogTask?.cancel()
         silenceWatchdogTask = nil
         lastGlucoseRecoveryAttemptAt = nil
@@ -3630,6 +3801,11 @@ final class Libre3DirectManager: ObservableObject {
         // System recovery already owns the connect intent. Reuse its retained
         // handle directly; scanning here would create a competing acquisition.
         if systemReconnectTarget(scannerGeneration: scannerGeneration) != nil {
+            attemptDiagnostics.setPath(
+                .system,
+                observesAdvertisements: Libre3DiagnosticsLog
+                    .observeAdvertisingDuringSystemRecovery
+            )
             guard let candidate = systemReconnectCandidate(
                 scanner: scanner,
                 scannerGeneration: scannerGeneration
@@ -3820,7 +3996,7 @@ final class Libre3DirectManager: ObservableObject {
             scannerGeneration: scannerGeneration
         )
         try checkCurrentScanner(scanner, generation: scannerGeneration)
-        finishConnectedAttempt(traceStreamEnd: true)
+        finishConnectedAttempt(traceStreamEnd: true, outcome: .ended)
     }
 
     private func rearmDataPlaneNotifications(session: SensorSession) async throws {
@@ -4184,17 +4360,20 @@ final class Libre3DirectManager: ObservableObject {
 
         switch selection {
         case .retrieved(let peripheral):
+            attemptDiagnostics.setPath(.retrieved)
             Libre3DiagnosticsLog.traceReconnect(
                 "discover-selection kind=retrieved id=\(peripheral.identifier.uuidString)"
             )
             return peripheral
         case .alreadyConnected(let peripheral):
+            attemptDiagnostics.setPath(.connected)
             Libre3DiagnosticsLog.traceReconnect(
                 "discover-selection kind=connected id=\(peripheral.identifier.uuidString)"
             )
             Libre3DiagnosticsLog.traceReconnect("reconnect-recovered-connected")
             return peripheral
         case .scan:
+            attemptDiagnostics.setPath(.scan)
             break
         }
 
@@ -4299,7 +4478,14 @@ final class Libre3DirectManager: ObservableObject {
             attemptReachedDidConnect = true
             let connectedAt = Date()
             attemptConnectedAt = connectedAt
-            Libre3DiagnosticsLog.traceReconnect("did-connect")
+            attemptDiagnostics.recordConnected(at: connectedAt)
+            if Libre3DiagnosticsLog.extendedTracing {
+                Libre3DiagnosticsLog.traceReconnect(
+                    "did-connect last-adv-age=\(attemptDiagnostics.lastAdvertisementAge(at: connectedAt))"
+                )
+            } else {
+                Libre3DiagnosticsLog.traceReconnect("did-connect")
+            }
 
             let newSession = SensorSession(
                 peripheral: connected,
@@ -4609,6 +4795,7 @@ final class Libre3DirectManager: ObservableObject {
                         peripheralID: currentPeripheral.identifier
                     ) &&
                     found.peripheral.identifier == currentPeripheral.identifier:
+                attemptDiagnostics.setPath(.burst)
                 let now = Date()
                 lastBurstDiscoveryAt = now
                 scheduleBurstSettle(
@@ -4929,6 +5116,7 @@ final class Libre3DirectManager: ObservableObject {
             updateSensorAttention(state.latestSensorAttention)
             switch update {
             case .realtimeGlucose(let reading, let recordedAssessment):
+                lastDecodedLifeCount = reading.lifeCount
                 // Re-assess with the fallback lifecycle when patch status hasn't
                 // landed yet (record()'s assessment then lacks warm-up/expiry).
                 let assessment = state.latestLifecycle != nil
@@ -5084,10 +5272,14 @@ final class Libre3DirectManager: ObservableObject {
 
         if !sessionProducedGlucose {
             sessionProducedGlucose = true
+            attemptDiagnostics.recordFirstUsableGlucose(at: acceptedAt)
             // Recovery is the one-shot point where a persisted receipt time can
             // expose a gap that suspension may have erased from the trace ring.
             if let lastGlucoseAt = SharedData.libre3LastGlucoseAt {
                 let gap = acceptedAt.timeIntervalSince(lastGlucoseAt)
+                if Libre3DiagnosticsLog.extendedTracing, gap > 0 {
+                    workoutAccumulatedGlucoseGap += gap
+                }
                 if gap > Self.glucoseGapNotableThreshold {
                     Libre3DiagnosticsLog.recordNotable(
                         "EVENT glucose-gap seconds=\(Int(gap.rounded())) minutes=\(Int((gap / 60).rounded())) recovered",
@@ -5855,7 +6047,10 @@ final class Libre3DirectManager: ObservableObject {
         minuteByLifeCount = minuteByLifeCount.filter { $0.value.glucose.date > minuteCutoff }
     }
 
-    private func finishConnectedAttempt(traceStreamEnd: Bool) {
+    private func finishConnectedAttempt(
+        traceStreamEnd: Bool,
+        outcome: Libre3AttemptOutcome
+    ) {
         guard attemptReachedDidConnect, !attemptEndRecorded else { return }
         attemptEndRecorded = true
         let endedAt = Date()
@@ -5871,10 +6066,12 @@ final class Libre3DirectManager: ObservableObject {
         }
 
         if traceStreamEnd {
+            let packetDetails = extendedPacketDescription(at: endedAt)
             Libre3DiagnosticsLog.traceReconnect(
-                "stream-ended stage=\(lastAttemptStage) duration=\(Self.elapsedDescription(from: attemptConnectedAt, to: endedAt)) streamed=\(sessionProducedGlucose) any-packet=\(firstAnyPacketAt != nil) glucose-fragment=\(firstGlucoseFragmentAt != nil) no-stream-cycles=\(noStreamCycleTracker.cycles)"
+                "stream-ended stage=\(lastAttemptStage) duration=\(Self.elapsedDescription(from: attemptConnectedAt, to: endedAt)) streamed=\(sessionProducedGlucose) any-packet=\(firstAnyPacketAt != nil) glucose-fragment=\(firstGlucoseFragmentAt != nil) no-stream-cycles=\(noStreamCycleTracker.cycles)\(packetDetails.map { " \($0)" } ?? "")"
             )
         }
+        finishAttemptSummary(outcome: outcome)
     }
 
     // MARK: - Helpers
@@ -5891,14 +6088,40 @@ final class Libre3DirectManager: ObservableObject {
         start.map { reconnectDelay(from: $0, to: end) } ?? "n/a"
     }
 
+    private func finishAttemptSummary(outcome: Libre3AttemptOutcome) {
+        guard Libre3DiagnosticsLog.extendedTracing,
+              !attemptSummaryRecorded,
+              attemptDiagnostics.startedAt != nil else { return }
+        attemptSummaryRecorded = true
+        Libre3DiagnosticsLog.traceReconnect(
+            attemptDiagnostics.summary(
+                scannerGeneration: scannerGeneration,
+                usesSystemAutoReconnect: hostProfile.usesSystemAutoReconnect,
+                outcome: outcome
+            )
+        )
+    }
+
+    private func extendedPacketDescription(at date: Date) -> String? {
+        guard Libre3DiagnosticsLog.extendedTracing else { return nil }
+        // `lastAnyChannelAt` is seeded to stream start, then advanced only by a
+        // channel receipt. A small age can therefore mean "since stream start"
+        // even when no packet arrived; `any-packet` disambiguates that case.
+        let lifeCount = lastDecodedLifeCount.map(String.init) ?? "n/a"
+        return "since-last-packet=\(Self.elapsedDescription(from: lastAnyChannelAt, to: date)) " +
+            "last-decoded-lc=\(lifeCount)"
+    }
+
     private func disconnectAttemptDescription(error: Error?, at date: Date) -> String {
         let stage = lastAttemptStage.isEmpty ? "none" : lastAttemptStage
+        let packetDetails = extendedPacketDescription(at: date)
         return "stage=\(stage) since-connect=\(Self.elapsedDescription(from: attemptConnectedAt, to: date)) " +
             "since-phase6=\(Self.elapsedDescription(from: phase6CompletedAt, to: date)) " +
             "since-rearm=\(Self.elapsedDescription(from: rearmCompletedAt, to: date)) " +
             "any-packet=\(firstAnyPacketAt != nil) " +
             "glucose-fragment=\(firstGlucoseFragmentAt != nil) " +
             "usable-glucose=\(sessionProducedGlucose) " +
+            (packetDetails.map { "\($0) " } ?? "") +
             Self.coreBluetoothErrorDescription(error)
     }
 

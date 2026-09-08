@@ -46,6 +46,13 @@ struct Libre3StuckEvidenceSnapshot: Codable, Identifiable, Equatable {
 
 @MainActor
 enum Libre3DiagnosticsLog {
+    // Development-only reconnect experiment scaffolding. `extendedTracing`
+    // owns Phase A and `observeAdvertisingDuringSystemRecovery` owns Phase B.
+    // Remove both and their guarded diagnostics after the investigation. If
+    // write buffering is ever trialled (Phase A8), give it a separate flag.
+    static let extendedTracing = true
+    static let observeAdvertisingDuringSystemRecovery = false
+
     private static let storageEntryLimit = 100
     private static let supportEntryLimit = 20
     private static let supportCharacterLimit = 1_500

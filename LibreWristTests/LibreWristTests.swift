@@ -2570,6 +2570,89 @@ final class LibreWristTests: XCTestCase {
         XCTAssertTrue(SharedData.libre3ReconnectTrace.last?.hasSuffix("trace-\(limit)") == true)
     }
 
+    func testAttemptDiagnosticsFormatsMeasuredAdvertisementAndTimingValues() {
+        let startedAt = Date(timeIntervalSinceReferenceDate: 1_000)
+        var diagnostics = Libre3AttemptDiagnostics()
+        diagnostics.begin(at: startedAt, observesAdvertisements: true)
+        diagnostics.setPath(.burst)
+        diagnostics.recordAdvertisement(
+            rssi: -79,
+            at: startedAt.addingTimeInterval(0.2)
+        )
+        diagnostics.recordAdvertisement(
+            rssi: -71,
+            at: startedAt.addingTimeInterval(0.4)
+        )
+        diagnostics.recordAdvertisement(
+            rssi: -75,
+            at: startedAt.addingTimeInterval(0.7)
+        )
+        diagnostics.recordConnected(at: startedAt.addingTimeInterval(0.8))
+        diagnostics.recordFirstUsableGlucose(at: startedAt.addingTimeInterval(6.2))
+
+        XCTAssertEqual(
+            diagnostics.lastAdvertisementAge(at: startedAt.addingTimeInterval(0.8)),
+            "0.1s"
+        )
+        XCTAssertEqual(
+            diagnostics.summary(
+                scannerGeneration: 7,
+                usesSystemAutoReconnect: true,
+                outcome: .ended
+            ),
+            "attempt-summary path=burst outcome=ended ar=1 scanner=7 adv-callbacks=3 rssi=-71/-75 adv-span=0.5s t-connect=0.8s t-glucose=6.2s gap=n/a batt=n/a hk=n/a"
+        )
+    }
+
+    func testAttemptDiagnosticsDistinguishesDisabledObservationFromMeasuredZero() {
+        let startedAt = Date(timeIntervalSinceReferenceDate: 1_000)
+        var disabled = Libre3AttemptDiagnostics()
+        disabled.begin(at: startedAt, observesAdvertisements: false)
+        disabled.setPath(.retrieved)
+        disabled.recordAdvertisement(rssi: -70, at: startedAt)
+
+        XCTAssertEqual(disabled.lastAdvertisementAge(at: startedAt), "n/a")
+        XCTAssertEqual(
+            disabled.summary(
+                scannerGeneration: nil,
+                usesSystemAutoReconnect: false,
+                outcome: .failed
+            ),
+            "attempt-summary path=retrieved outcome=failed ar=0 scanner=n/a adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a gap=n/a batt=n/a hk=n/a"
+        )
+
+        var measured = Libre3AttemptDiagnostics()
+        measured.begin(at: startedAt, observesAdvertisements: true)
+        measured.setPath(.scan)
+
+        XCTAssertTrue(
+            measured.summary(
+                scannerGeneration: 2,
+                usesSystemAutoReconnect: false,
+                outcome: .cancelled
+            ).contains("adv-callbacks=0")
+        )
+    }
+
+    func testSystemAttemptReportsAdvertisementObservationAsUnavailableWhenDisabled() {
+        let startedAt = Date(timeIntervalSinceReferenceDate: 1_000)
+        var diagnostics = Libre3AttemptDiagnostics()
+        diagnostics.begin(at: startedAt, observesAdvertisements: true)
+        diagnostics.recordAdvertisement(rssi: -68, at: startedAt)
+
+        diagnostics.setPath(.system, observesAdvertisements: false)
+
+        XCTAssertEqual(diagnostics.lastAdvertisementAge(at: startedAt), "n/a")
+        XCTAssertEqual(
+            diagnostics.summary(
+                scannerGeneration: 7,
+                usesSystemAutoReconnect: true,
+                outcome: .cancelled
+            ),
+            "attempt-summary path=system outcome=cancelled ar=1 scanner=7 adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a gap=n/a batt=n/a hk=n/a"
+        )
+    }
+
     @MainActor
     func testWatchDiagnosticsClearAcknowledgementClearsCachedLogAndCaptureDate() {
         let acknowledgement = expectation(
