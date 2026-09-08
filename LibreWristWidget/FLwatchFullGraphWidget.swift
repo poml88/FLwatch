@@ -209,6 +209,13 @@ private struct FullGraphWidgetChart: View {
         let value: Double
     }
 
+    private var chartTimeLabel: LocalizedStringResource {
+        LocalizedStringResource(
+            "Time",
+            comment: "Chart data label for the timestamp of glucose readings, insulin deliveries, insulin-on-board values, and activity values."
+        )
+    }
+
     let entry: FullGraphGlucoseMeasurementIOBEntry
     let showsAxes: Bool
     let style: FullGraphWidgetChartStyle
@@ -364,7 +371,7 @@ private struct FullGraphWidgetChart: View {
             // points while rendering each collection as a single plot.
             LinePlot(
                 glucosePlotPoints,
-                x: .value("Time", \.timestamp),
+                x: .value(chartTimeLabel, \.timestamp),
                 y: .value("Glucose", \.value),
                 series: .value("Curve", "Glucose")
             )
@@ -374,7 +381,7 @@ private struct FullGraphWidgetChart: View {
 
             PointPlot(
                 glucosePlotPoints,
-                x: .value("Time", \.timestamp),
+                x: .value(chartTimeLabel, \.timestamp),
                 y: .value("Glucose", \.value)
             )
             // Keep vectorized key-path modifiers before modifiers that return
@@ -384,7 +391,7 @@ private struct FullGraphWidgetChart: View {
 
             PointPlot(
                 glucosePlotPoints,
-                x: .value("Time", \.timestamp),
+                x: .value(chartTimeLabel, \.timestamp),
                 y: .value("Glucose", \.value)
             )
             .foregroundStyle(\.color)
@@ -392,7 +399,7 @@ private struct FullGraphWidgetChart: View {
 
             PointPlot(
                 minutePlotPoints,
-                x: .value("Time", \.timestamp),
+                x: .value(chartTimeLabel, \.timestamp),
                 y: .value("Glucose", \.value)
             )
             .foregroundStyle(minuteStrokeColor)
@@ -400,7 +407,7 @@ private struct FullGraphWidgetChart: View {
 
             PointPlot(
                 minutePlotPoints,
-                x: .value("Time", \.timestamp),
+                x: .value(chartTimeLabel, \.timestamp),
                 y: .value("Glucose", \.value)
             )
             .foregroundStyle(minuteGlucoseColor)
@@ -409,7 +416,7 @@ private struct FullGraphWidgetChart: View {
             if entry.showIOBCurve, !entry.iobPoints.isEmpty {
                 LinePlot(
                     iobPlotPoints,
-                    x: .value("Time", \.timestamp),
+                    x: .value(chartTimeLabel, \.timestamp),
                     y: .value("Insulin", \.value),
                     series: .value("Curve", "Insulin")
                 )
@@ -423,7 +430,7 @@ private struct FullGraphWidgetChart: View {
 
                 ForEach(entry.insulinMarkers) { marker in
                     PointMark(
-                        x: .value("Time", marker.timestamp),
+                        x: .value(chartTimeLabel, marker.timestamp),
                         y: .value("Insulin", markerYPosition(for: marker))
                     )
                     .symbol {
@@ -441,7 +448,7 @@ private struct FullGraphWidgetChart: View {
             if entry.showActivityCurve, !entry.activityPoints.isEmpty {
                 LinePlot(
                     activityPlotPoints,
-                    x: .value("Time", \.timestamp),
+                    x: .value(chartTimeLabel, \.timestamp),
                     y: .value("Activity", \.value),
                     series: .value("Curve", "Activity")
                 )

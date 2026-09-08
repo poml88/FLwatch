@@ -3,8 +3,8 @@
 //  FLwatch
 //
 //  Lifecycle of the direct-BLE link owned by `Libre3DirectManager`. The phone
-//  exposes it through `Libre3DirectProvider`; Workout Mode will expose the same
-//  engine state directly on the watch.
+//  exposes it through `Libre3DirectProvider`; the watch workout reads a compact
+//  app-group mirror so showing the tab does not instantiate the BLE engine.
 //
 
 import Foundation
@@ -38,6 +38,15 @@ enum Libre3DirectConnectionState: Equatable {
         switch self {
         case .scanning, .connecting, .authorizing, .failed: return true
         case .idle, .streaming:                             return false
+        }
+    }
+
+    /// The sensor has been found and the BLE link is connecting or authorizing.
+    /// This is distinct from scanning, where moving the sensor closer can help.
+    var isLinking: Bool {
+        switch self {
+        case .connecting, .authorizing: return true
+        case .idle, .scanning, .streaming, .failed: return false
         }
     }
 

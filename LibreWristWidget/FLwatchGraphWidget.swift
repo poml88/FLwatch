@@ -17,6 +17,13 @@ struct FLwatchGraphWidgetEntryView : View {
     @Environment(\.colorScheme) var colorScheme
     
     private let staleThreshold: TimeInterval = 5 * 60
+
+    private var chartTimeLabel: LocalizedStringResource {
+        LocalizedStringResource(
+            "Time",
+            comment: "Chart data label for the timestamp of glucose readings, insulin deliveries, insulin-on-board values, and activity values."
+        )
+    }
     
     var isStaleGlucose: Bool {
         Date().timeIntervalSince(entry.date) > staleThreshold && !(entry.lastGlucoseMeasurement.glucose.value <= 0)
@@ -232,7 +239,7 @@ struct FLwatchGraphWidgetEntryView : View {
                     //                        .foregroundStyle(item.color.color)
                     //                        .symbolSize(12)
                     let itemValue = item.glucose.value.displayedGlucoseValue(glucoseUnitValue: entry.uom)
-                    LineMark(x: .value("Time", item.glucose.date),
+                    LineMark(x: .value(chartTimeLabel, item.glucose.date),
                              y: .value("Glucose", itemValue),
                              series: .value("Curve", "Glucose")
                     )

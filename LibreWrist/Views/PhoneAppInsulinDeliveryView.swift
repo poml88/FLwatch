@@ -155,7 +155,12 @@ struct PhoneAppInsulinDeliveryView: View {
                             }
                             .pickerStyle(.menu)
                             
-                            DatePicker(selection: $pickerTimeStamp) { Text("Time: ") }
+                            DatePicker(selection: $pickerTimeStamp) {
+                                Text(
+                                    "Time: ",
+                                    comment: "Label for selecting the date and time of an insulin delivery."
+                                )
+                            }
                             
                             Button {
                                 isShowingDifferenceTimePickerSheet = true

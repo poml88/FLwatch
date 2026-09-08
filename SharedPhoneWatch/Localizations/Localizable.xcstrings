@@ -3996,7 +3996,7 @@
       }
     },
     "Bring the sensor close to the watch." : {
-      "comment" : "Advice shown on Apple Watch when a Libre 3 sensor has taken a long time to connect during a workout. Moving the sensor nearer is the only thing the user can do to help."
+      "comment" : "Advice shown on Apple Watch while Libre 3 is acquiring the sensor during a workout. Moving the sensor nearer is the only thing the user can do to help."
     },
     "Buy the developer quality coffee beans!\n🤝☕️" : {
       "localizations" : {
@@ -8624,6 +8624,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "驳回"
+          }
+        }
+      }
+    },
+    "Distance" : {
+      "comment" : "Label for distance covered during an outdoor Apple Watch workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strecke"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Distancia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Distance"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Distanza"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "距離"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afstand"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dystans"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расстояние"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "距离"
           }
         }
       }
@@ -22280,6 +22339,65 @@
         }
       }
     },
+    "Select workout" : {
+      "comment" : "Label for the Apple Watch control used to choose a workout activity.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Training auswählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccionar entrenamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir un exercice"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleziona allenamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウトを選択"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies work-out"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz trening"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать тренировку"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择体能训练"
+          }
+        }
+      }
+    },
     "Selected device: %@" : {
       "localizations" : {
         "de" : {
@@ -27736,6 +27854,7 @@
       }
     },
     "Time" : {
+      "comment" : "Chart data label for the timestamp of glucose readings, insulin deliveries, insulin-on-board values, and activity values.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -27794,6 +27913,7 @@
       }
     },
     "Time: " : {
+      "comment" : "Label for selecting the date and time of an insulin delivery.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -28330,6 +28450,65 @@
     },
     "U" : {
 
+    },
+    "Unavailable" : {
+      "comment" : "Accessibility value when the Apple Watch battery percentage is temporarily unavailable.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No disponible"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indisponible"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non disponibile"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "利用不可"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet beschikbaar"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niedostępne"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недоступно"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不可用"
+          }
+        }
+      }
     },
     "Understood" : {
       "localizations" : {
@@ -30394,16 +30573,69 @@
       }
     },
     "Workout" : {
-      "comment" : "Label for the Apple Watch workout activity picker."
+      "comment" : "Heading of the Apple Watch workout start screen.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Training"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrenamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exercice"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allenamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウト"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work-out"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trening"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тренировка"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "体能训练"
+          }
+        }
+      }
     },
     "Workout alerts" : {
       "comment" : "Navigation link from the Apple Watch workout start screen to workout alert settings.\nNavigation title for Apple Watch workout alert settings."
     },
     "Workout low" : {
       "comment" : "Label for the glucose threshold used by workout alerts on Apple Watch."
-    },
-    "Workout Mode" : {
-      "comment" : "Heading of the Apple Watch workout start screen."
     },
     "Workout permission was not granted." : {
       "comment" : "Workout start failure when HealthKit permission cannot be obtained."
@@ -30413,6 +30645,72 @@
     },
     "Workout started." : {
       "comment" : "Confirmation after an Apple Watch workout starts."
+    },
+    "workout.duration-label" : {
+      "comment" : "Short label for the elapsed duration shown during an active Apple Watch workout.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dauer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Time"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durata"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "時間"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duur"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "时长"
+          }
+        }
+      }
     },
     "Wrong password for the Dexcom account." : {
       "comment" : "Error message when the user enters an incorrect password.",

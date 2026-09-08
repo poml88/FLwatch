@@ -1234,6 +1234,16 @@ final class LibreWristTests: XCTestCase {
         XCTAssertFalse(Libre3DirectConnectionState.idle.isAcquiring)
     }
 
+    func testOnlyFoundSensorStatesCountAsLinking() {
+        XCTAssertTrue(Libre3DirectConnectionState.connecting.isLinking)
+        XCTAssertTrue(Libre3DirectConnectionState.authorizing.isLinking)
+
+        XCTAssertFalse(Libre3DirectConnectionState.idle.isLinking)
+        XCTAssertFalse(Libre3DirectConnectionState.scanning.isLinking)
+        XCTAssertFalse(Libre3DirectConnectionState.streaming.isLinking)
+        XCTAssertFalse(Libre3DirectConnectionState.failed("dropped").isLinking)
+    }
+
     // MARK: - Libre 3 persisted history seed
 
     func testPersistedHistorySeedDropsOnlyInjectedLatestMinute() {

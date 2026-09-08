@@ -76,6 +76,7 @@ final class WorkoutHealthKitManager: NSObject {
     private(set) var operationState: OperationState = .idle
     private(set) var bluetoothAuthorization: CBManagerAuthorization = CBManager.authorization
     private(set) var currentHeartRate: Double?
+    private(set) var currentDistanceMeters: Double?
 
     var isBusy: Bool {
         operationState == .starting || operationState == .recovering || operationState == .ending
@@ -137,6 +138,8 @@ final class WorkoutHealthKitManager: NSObject {
 
         operationState = .starting
         startupFailed = false
+        currentHeartRate = nil
+        currentDistanceMeters = nil
         let providerKind = SharedData.cgmProviderKind
 
         if providerKind == .libre3BLE,
@@ -416,7 +419,9 @@ final class WorkoutHealthKitManager: NSObject {
 
         let readTypes: Set<HKObjectType> = Set([
             HKObjectType.quantityType(forIdentifier: .heartRate),
-            HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)
+            HKObjectType.quantityType(forIdentifier: .activeEnergyBurned),
+            HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning),
+            HKObjectType.quantityType(forIdentifier: .distanceCycling)
         ].compactMap { $0 })
         let shareTypes: Set<HKSampleType> = [HKObjectType.workoutType()]
 
@@ -453,7 +458,53 @@ final class WorkoutHealthKitManager: NSObject {
         if let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate) {
             dataSource.enableCollection(for: heartRate, predicate: nil)
         }
+        if configuration.locationType == .outdoor,
+           let workoutDistanceType = distanceType(for: configuration.activityType) {
+            dataSource.enableCollection(for: workoutDistanceType, predicate: nil)
+        }
         builder.dataSource = dataSource
+        seedCurrentStatistics(from: builder, configuration: configuration)
+    }
+
+    /// HealthKit reports walking/running distance for every supported outdoor
+    /// activity except cycling, which has its own quantity type.
+    private func distanceType(
+        for activityType: HKWorkoutActivityType
+    ) -> HKQuantityType? {
+        let identifier: HKQuantityTypeIdentifier
+        switch activityType {
+        case .hiking, .walking, .running:
+            identifier = .distanceWalkingRunning
+        case .cycling:
+            identifier = .distanceCycling
+        default:
+            return nil
+        }
+        return HKObjectType.quantityType(forIdentifier: identifier)
+    }
+
+    /// A recovered builder can already contain live statistics before its next
+    /// delegate callback. Seed the UI immediately; a new builder simply yields nil.
+    private func seedCurrentStatistics(
+        from builder: HKLiveWorkoutBuilder,
+        configuration: HKWorkoutConfiguration
+    ) {
+        if let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate),
+           let quantity = builder.statistics(for: heartRate)?.mostRecentQuantity() {
+            currentHeartRate = quantity.doubleValue(
+                for: HKUnit.count().unitDivided(by: .minute())
+            )
+        } else {
+            currentHeartRate = nil
+        }
+
+        if configuration.locationType == .outdoor,
+           let workoutDistanceType = distanceType(for: configuration.activityType),
+           let quantity = builder.statistics(for: workoutDistanceType)?.sumQuantity() {
+            currentDistanceMeters = quantity.doubleValue(for: .meter())
+        } else {
+            currentDistanceMeters = nil
+        }
     }
 
     private func defaultWorkoutThreshold(for providerKind: CGMProviderKind) -> Int {
@@ -518,6 +569,7 @@ final class WorkoutHealthKitManager: NSObject {
             builder = nil
         }
         currentHeartRate = nil
+        currentDistanceMeters = nil
         resolvePendingStart(
             for: workoutSession,
             result: .failure(NSError(
@@ -552,6 +604,7 @@ final class WorkoutHealthKitManager: NSObject {
         session = nil
         builder = nil
         currentHeartRate = nil
+        currentDistanceMeters = nil
         _ = WorkoutModeStore.shared.deactivate(at: date)
         explicitEndInProgress = false
         startupFailed = false
@@ -717,18 +770,35 @@ extension WorkoutHealthKitManager: HKLiveWorkoutBuilderDelegate {
         _ workoutBuilder: HKLiveWorkoutBuilder,
         didCollectDataOf collectedTypes: Set<HKSampleType>
     ) {
-        guard let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate),
-              collectedTypes.contains(heartRate),
-              let quantity = workoutBuilder.statistics(for: heartRate)?.mostRecentQuantity()
-        else { return }
+        // Reduce HealthKit objects to Sendable scalar values on the builder's
+        // delegate queue; no HealthKit object crosses into the main actor.
+        let beatsPerMinute: Double? = if
+            let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate),
+            collectedTypes.contains(heartRate),
+            let quantity = workoutBuilder.statistics(for: heartRate)?.mostRecentQuantity()
+        {
+            quantity.doubleValue(for: HKUnit.count().unitDivided(by: .minute()))
+        } else {
+            nil
+        }
 
-        // Reduce the HealthKit sample to a value on the builder's delegate queue;
-        // no HealthKit object crosses into the main actor.
-        let beatsPerMinute = quantity.doubleValue(
-            for: HKUnit.count().unitDivided(by: .minute())
-        )
+        let distanceMeters = [
+            HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning),
+            HKObjectType.quantityType(forIdentifier: .distanceCycling)
+        ]
+        .compactMap { $0 }
+        .first { collectedTypes.contains($0) }
+        .flatMap { workoutBuilder.statistics(for: $0)?.sumQuantity() }
+        .map { $0.doubleValue(for: .meter()) }
+
+        guard beatsPerMinute != nil || distanceMeters != nil else { return }
         Task { @MainActor in
-            self.currentHeartRate = beatsPerMinute
+            if let beatsPerMinute {
+                self.currentHeartRate = beatsPerMinute
+            }
+            if let distanceMeters {
+                self.currentDistanceMeters = distanceMeters
+            }
         }
     }
 

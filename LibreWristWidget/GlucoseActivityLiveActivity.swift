@@ -968,6 +968,13 @@ private struct GlucoseLiveActivityChart: View {
 
         var id: FLWatchAttributes.InsulinMarker.ID { marker.id }
     }
+
+    private var chartTimeLabel: LocalizedStringResource {
+        LocalizedStringResource(
+            "Time",
+            comment: "Chart data label for the timestamp of glucose readings, insulin deliveries, insulin-on-board values, and activity values."
+        )
+    }
     
     let contentState: FLWatchAttributes.ContentState
     let showsAxes: Bool
@@ -1104,7 +1111,7 @@ private struct GlucoseLiveActivityChart: View {
             // Temporarily NOT killed the blue line to save cpu / battery
             LinePlot(
                 glucosePlotPoints,
-                x: .value("Time", \.timestamp),
+                x: .value(chartTimeLabel, \.timestamp),
                 y: .value("Glucose", \.value),
                 series: .value("Curve", "Glucose")
             )
@@ -1113,7 +1120,7 @@ private struct GlucoseLiveActivityChart: View {
             
             PointPlot(
                 glucosePlotPoints,
-                x: .value("Time", \.timestamp),
+                x: .value(chartTimeLabel, \.timestamp),
                 y: .value("Glucose", \.value)
             )
             // Keep vectorized key-path modifiers before modifiers that return
@@ -1126,7 +1133,7 @@ private struct GlucoseLiveActivityChart: View {
             
             PointPlot(
                 minutePlotPoints,
-                x: .value("Time", \.timestamp),
+                x: .value(chartTimeLabel, \.timestamp),
                 y: .value("Glucose", \.value)
             )
             .foregroundStyle(minuteGlucoseColor)
@@ -1135,7 +1142,7 @@ private struct GlucoseLiveActivityChart: View {
             if contentState.showIOBCurve, !contentState.iobPoints.isEmpty {
                 LinePlot(
                     iobPlotPoints,
-                    x: .value("Time", \.timestamp),
+                    x: .value(chartTimeLabel, \.timestamp),
                     y: .value("Insulin", \.value),
                     series: .value("Curve", "Insulin")
                 )
@@ -1145,7 +1152,7 @@ private struct GlucoseLiveActivityChart: View {
             if contentState.showInsulinDeliveryMarks, !insulinMarkerPlotPoints.isEmpty {
                 ForEach(insulinMarkerPlotPoints) { plotPoint in
                     PointMark(
-                        x: .value("Time", plotPoint.marker.timestamp),
+                        x: .value(chartTimeLabel, plotPoint.marker.timestamp),
                         y: .value("Insulin", plotPoint.yPosition)
                     )
                     .symbol {
@@ -1163,7 +1170,7 @@ private struct GlucoseLiveActivityChart: View {
             if contentState.showActivityCurve, !contentState.activityPoints.isEmpty {
                 LinePlot(
                     activityPlotPoints,
-                    x: .value("Time", \.timestamp),
+                    x: .value(chartTimeLabel, \.timestamp),
                     y: .value("Activity", \.value),
                     series: .value("Curve", "Activity")
                 )

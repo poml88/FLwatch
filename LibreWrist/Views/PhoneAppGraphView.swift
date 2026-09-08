@@ -30,6 +30,13 @@ struct PhoneAppGraphView: View {
         let insulinUnits: Double
         let alignment: Alignment
     }
+
+    private var chartTimeLabel: LocalizedStringResource {
+        LocalizedStringResource(
+            "Time",
+            comment: "Chart data label for the timestamp of glucose readings, insulin deliveries, insulin-on-board values, and activity values."
+        )
+    }
     
     /// Right-hand edge of the chart window, minute-rounded by the parent (see
     /// `Date.chartWindowEnd`). Every time value below derives from it, so the whole
@@ -236,7 +243,7 @@ struct PhoneAppGraphView: View {
             // points while rendering each collection as a single plot.
             LinePlot(
                 glucoseChartPoints,
-                x: .value("Time", \.timestamp),
+                x: .value(chartTimeLabel, \.timestamp),
                 y: .value("Glucose", \.value),
                 series: .value("Curve", "Glucose")
             )
@@ -246,7 +253,7 @@ struct PhoneAppGraphView: View {
 
             PointPlot(
                 glucoseChartPoints,
-                x: .value("Time", \.timestamp),
+                x: .value(chartTimeLabel, \.timestamp),
                 y: .value("Glucose", \.value)
             )
             // Keep vectorized key-path modifiers before modifiers that return
@@ -260,7 +267,7 @@ struct PhoneAppGraphView: View {
 //MARK: Selected point
             // Only one rule is ever drawn, so it lives outside the glucose plot.
             if let selectedlibreLinkHistoryPoint, selectedlibreLinkHistoryPoint.glucose.date > dateSixHoursTenAgo {
-                RuleMark(x: .value("Time", selectedlibreLinkHistoryPoint.glucose.date))
+                RuleMark(x: .value(chartTimeLabel, selectedlibreLinkHistoryPoint.glucose.date))
                     // Without the overflow resolution the detail box is clipped by
                     // the chart edge for readings near the start or end of the window.
                     .annotation(position: .top,
@@ -283,7 +290,7 @@ struct PhoneAppGraphView: View {
 //MARK: Minute Glucose Trend
             PointPlot(
                 minuteGlucoseChartPoints,
-                x: .value("Time", \.timestamp),
+                x: .value(chartTimeLabel, \.timestamp),
                 y: .value("Glucose", \.value)
             )
             .foregroundStyle(minuteGlucoseColor)
@@ -293,7 +300,7 @@ struct PhoneAppGraphView: View {
             if showIOBCurvePhone, !iobChartPoints.isEmpty {
                 LinePlot(
                     iobChartPoints,
-                    x: .value("Time", \.timestamp),
+                    x: .value(chartTimeLabel, \.timestamp),
                     y: .value("Insulin", \.value),
                     series: .value("Curve", "Insulin")
                 )
@@ -304,7 +311,7 @@ struct PhoneAppGraphView: View {
                 if showInsulinDeliveryMarksPhone == true {
                     if !insulinMarkerPoints.isEmpty {
                         ForEach(insulinMarkerPoints) { item in
-                                PointMark(x: .value("Time", item.date),
+                                PointMark(x: .value(chartTimeLabel, item.date),
                                           y: .value("Insulin", item.value)
                                 )
                                 .symbol {
@@ -325,7 +332,7 @@ struct PhoneAppGraphView: View {
             if showActivityCurvePhone, !activityChartPoints.isEmpty {
                 LinePlot(
                     activityChartPoints,
-                    x: .value("Time", \.timestamp),
+                    x: .value(chartTimeLabel, \.timestamp),
                     y: .value("Activity", \.value),
                     series: .value("Curve", "Activity")
                 )

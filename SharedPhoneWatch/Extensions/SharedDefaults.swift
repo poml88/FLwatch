@@ -466,11 +466,13 @@ enum DefaultsKey: String {
     case libre3Generation = "libre3GenerationKey"
     case libre3ProductType = "libre3ProductTypeKey"
     // BLE engine status, published by `Libre3DirectManager` on the active host
-    // and read by the shared provider. The provider stays decoupled because
-    // widgets omit the engine and the watch workout owns its lifetime.
+    // and read by the shared provider and watch workout UI. They stay decoupled
+    // because widgets omit the engine and the watch workout owns its lifetime.
     case libre3EngineDidFail = "libre3EngineDidFailKey"
     case libre3EngineStatusMessage = "libre3EngineStatusMessageKey"
     case libre3EngineIsAcquiring = "libre3EngineIsAcquiringKey"
+    case libre3EngineIsLinking = "libre3EngineIsLinkingKey"
+    case libre3EngineIsStreaming = "libre3EngineIsStreamingKey"
     case libre3SensorNeedsReplacement = "libre3SensorNeedsReplacementKey"
     case libre3ConnectionRequiresUserAction = "libre3ConnectionRequiresUserActionKey"
     case libre3SensorNotResponding = "libre3SensorNotRespondingKey"
@@ -1442,6 +1444,20 @@ enum SharedData {
     static var libre3EngineIsAcquiring: Bool {
         get { store.getBool(.libre3EngineIsAcquiring) }
         set { store.setBool(newValue, forKey: .libre3EngineIsAcquiring) }
+    }
+
+    /// Whether the engine has found the sensor and is connecting or authorizing.
+    /// The workout screen uses this for its amber glance indicator.
+    static var libre3EngineIsLinking: Bool {
+        get { store.getBool(.libre3EngineIsLinking) }
+        set { store.setBool(newValue, forKey: .libre3EngineIsLinking) }
+    }
+
+    /// Whether the engine has an authorized sensor stream. Mirrored so the
+    /// workout screen can show it without instantiating or observing the engine.
+    static var libre3EngineIsStreaming: Bool {
+        get { store.getBool(.libre3EngineIsStreaming) }
+        set { store.setBool(newValue, forKey: .libre3EngineIsStreaming) }
     }
 
     /// Phone-only persisted echo of a terminal sensor attention state. This seeds

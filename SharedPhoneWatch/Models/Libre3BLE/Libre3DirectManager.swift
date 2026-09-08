@@ -222,7 +222,7 @@ struct Libre3HostProfile {
         allowsFullAuthorization: false,
         acquiresByActiveScan: true,
         recreatesScannerBetweenWorkouts: true,
-        usesSystemAutoReconnect: false,
+        usesSystemAutoReconnect: true,
         burstConnectMode: .armOnDiscovery,
         postAuthRearmPerCharacteristicTimeout: 30
     )
@@ -1921,12 +1921,14 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     /// Mirror the engine's current status into the app group so the shared
-    /// `Libre3DirectProvider` can surface it without a compile-time dependency
-    /// on this type.
+    /// provider and watch workout UI can surface it without instantiating or
+    /// observing this type.
     private func publishStatusToAppGroup() {
         SharedData.libre3EngineDidFail = connectionState.isError
         SharedData.libre3EngineStatusMessage = connectionState.message
         SharedData.libre3EngineIsAcquiring = connectionState.isAcquiring
+        SharedData.libre3EngineIsLinking = connectionState.isLinking
+        SharedData.libre3EngineIsStreaming = connectionState == .streaming
     }
 
     // MARK: - Provider gating

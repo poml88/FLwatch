@@ -34,6 +34,13 @@ struct WatchAppGraphView: View {
         let insulinUnits: Double
         let alignment: Alignment
     }
+
+    private var chartTimeLabel: LocalizedStringResource {
+        LocalizedStringResource(
+            "Time",
+            comment: "Chart data label for the timestamp of glucose readings, insulin deliveries, insulin-on-board values, and activity values."
+        )
+    }
     
     /// Right-hand edge of the chart window, minute-rounded by the parent (see
     /// `Date.chartWindowEnd`). Every time value below derives from it, so the whole
@@ -45,13 +52,18 @@ struct WatchAppGraphView: View {
     /// Defaults to the existing home-screen window. Workout Mode supplies a
     /// shorter duration without maintaining a second chart implementation.
     let windowDuration: TimeInterval
+    /// The home screen intentionally pulls the chart upward. Callers with
+    /// content directly above the chart can opt out to avoid overlap.
+    let topPadding: CGFloat
 
     init(
         windowEnd: Date,
-        windowDuration: TimeInterval = 6 * 60 * 60 + 10 * 60
+        windowDuration: TimeInterval = 6 * 60 * 60 + 10 * 60,
+        topPadding: CGFloat = -20
     ) {
         self.windowEnd = windowEnd
         self.windowDuration = windowDuration
+        self.topPadding = topPadding
     }
 
     @AppStorage(DefaultsKey.showInsulinDeliveryMarksWatch.rawValue, store: UserDefaults.group) private var showInsulinDeliveryMarksWatch: Bool = false
@@ -219,7 +231,7 @@ struct WatchAppGraphView: View {
                     // colored points while rendering each as a single plot.
                     LinePlot(
                         glucoseChartPoints,
-                        x: .value("Time", \.timestamp),
+                        x: .value(chartTimeLabel, \.timestamp),
                         y: .value("Glucose", \.value),
                         series: .value("Curve", "Glucose")
                     )
@@ -228,7 +240,7 @@ struct WatchAppGraphView: View {
 
                     PointPlot(
                         glucoseChartPoints,
-                        x: .value("Time", \.timestamp),
+                        x: .value(chartTimeLabel, \.timestamp),
                         y: .value("Glucose", \.value)
                     )
                     // Keep vectorized key-path modifiers before modifiers that
@@ -242,7 +254,7 @@ struct WatchAppGraphView: View {
 //MARK: Minute Glucose Trend
                     PointPlot(
                         minuteGlucoseChartPoints,
-                        x: .value("Time", \.timestamp),
+                        x: .value(chartTimeLabel, \.timestamp),
                         y: .value("Glucose", \.value)
                     )
                     .foregroundStyle(minuteGlucoseColor)
@@ -252,7 +264,7 @@ struct WatchAppGraphView: View {
                     if showIOBCurveWatch, !iobChartPoints.isEmpty {
                         LinePlot(
                             iobChartPoints,
-                            x: .value("Time", \.timestamp),
+                            x: .value(chartTimeLabel, \.timestamp),
                             y: .value("Insulin", \.value),
                             series: .value("Curve", "Insulin")
                         )
@@ -268,7 +280,7 @@ struct WatchAppGraphView: View {
                     if showActivityCurveWatch, !activityChartPoints.isEmpty {
                         LinePlot(
                             activityChartPoints,
-                            x: .value("Time", \.timestamp),
+                            x: .value(chartTimeLabel, \.timestamp),
                             y: .value("Activity", \.value),
                             series: .value("Curve", "Activity")
                         )
@@ -291,7 +303,7 @@ struct WatchAppGraphView: View {
 
 //MARK: Glucose Graph
                     ForEach(glucoseChartPoints) { item in
-                        LineMark(x: .value("Time", item.timestamp),
+                        LineMark(x: .value(chartTimeLabel, item.timestamp),
                                  y: .value("Glucose", item.value),
                                  series: .value("Curve", "Glucose")
                         )
@@ -306,7 +318,7 @@ struct WatchAppGraphView: View {
 
 //MARK: Minute Glucose Trend
                     ForEach(minuteGlucoseChartPoints) { item in
-                        PointMark(x: .value("Time", item.timestamp),
+                        PointMark(x: .value(chartTimeLabel, item.timestamp),
                                   y: .value("Glucose", item.value)
                         )
                         .foregroundStyle(minuteGlucoseColor)
@@ -316,7 +328,7 @@ struct WatchAppGraphView: View {
 //MARK: IOB Curve
                     if showIOBCurveWatch, !iobChartPoints.isEmpty {
                         ForEach(iobChartPoints) { item in
-                            LineMark(x: .value("Time", item.timestamp),
+                            LineMark(x: .value(chartTimeLabel, item.timestamp),
                                      y: .value("Insulin", item.value),
                                      series: .value("Curve", "Insulin")
                             )
@@ -332,7 +344,7 @@ struct WatchAppGraphView: View {
 //MARK: Insulin activity graph
                     if showActivityCurveWatch, !activityChartPoints.isEmpty {
                         ForEach(activityChartPoints) { item in
-                            LineMark(x: .value("Time", item.timestamp),
+                            LineMark(x: .value(chartTimeLabel, item.timestamp),
                                      y: .value("Activity", item.value),
                                      series: .value("Curve", "Activity")
                             )
@@ -406,7 +418,8 @@ struct WatchAppGraphView: View {
         //                        }
         //                    )
         //            }
-        .padding(.top, -20)    }
+        .padding(.top, topPadding)
+    }
 
     // Content that is identical on both paths. Each returns a single mark, so no
     // result builder is involved and both watchOS generations accept them.
@@ -429,7 +442,7 @@ struct WatchAppGraphView: View {
 
     private func insulinMarkers(_ points: [InsulinMarkerPoint]) -> some ChartContent {
         ForEach(points) { item in
-            PointMark(x: .value("Time", item.date),
+            PointMark(x: .value(chartTimeLabel, item.date),
                       y: .value("Insulin", item.value)
             )
             .symbol {
