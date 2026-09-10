@@ -2683,12 +2683,12 @@ final class LibreWristTests: XCTestCase {
     }
 
     func testAdvertisementFingerprintReportsShapeAndChanges() {
-        let manufacturerKey = CBAdvertisementDataManufacturerDataKey
+        let serviceDataKey = CBAdvertisementDataServiceDataKey
         let connectableKey = CBAdvertisementDataIsConnectable
         let txPowerKey = CBAdvertisementDataTxPowerLevelKey
         let first = Libre3AdvertisementFingerprint(
             advertisementData: [
-                manufacturerKey: "<00112233>",
+                serviceDataKey: "[FDE3: <00112233>]",
                 connectableKey: "true",
                 txPowerKey: "Optional(-7)"
             ],
@@ -2698,13 +2698,13 @@ final class LibreWristTests: XCTestCase {
             advertisementData: [
                 txPowerKey: "Optional(-7)",
                 connectableKey: "true",
-                manufacturerKey: "<00112233>"
+                serviceDataKey: "[FDE3: <00112233>]"
             ],
             advertisedServiceUUIDs: ["FDE3"]
         )
         let payloadChanged = Libre3AdvertisementFingerprint(
             advertisementData: [
-                manufacturerKey: "<00112244>",
+                serviceDataKey: "[FDE3: <00112244>]",
                 connectableKey: "true",
                 txPowerKey: "Optional(-7)"
             ],
@@ -2712,42 +2712,52 @@ final class LibreWristTests: XCTestCase {
         )
         let serviceCountChanged = Libre3AdvertisementFingerprint(
             advertisementData: [
-                manufacturerKey: "<00112233>",
+                serviceDataKey: "[FDE3: <00112233>]",
                 connectableKey: "true",
                 txPowerKey: "Optional(-7)"
             ],
             advertisedServiceUUIDs: ["FDE3", "FDE4"]
         )
 
-        XCTAssertEqual(first.manufacturerDataLength, 4)
+        XCTAssertEqual(first.serviceDataLength, 4)
         XCTAssertEqual(
             Libre3AdvertisementFingerprint(
-                advertisementData: [manufacturerKey: "14 bytes"],
+                advertisementData: [serviceDataKey: "[FDE3: 14 bytes]"],
                 advertisedServiceUUIDs: []
-            ).manufacturerDataLength,
+            ).serviceDataLength,
+            14
+        )
+        XCTAssertEqual(
+            Libre3AdvertisementFingerprint(
+                advertisementData: [
+                    serviceDataKey: "[FDE3: {length = 14, bytes = 0x0102}]"
+                ],
+                advertisedServiceUUIDs: []
+            ).serviceDataLength,
             14
         )
         XCTAssertEqual(
             first.traceDescription(previous: nil),
-            "conn=1 tx=-7 keys=3 svc=1 mfg-len=4 changed=n/a"
+            "conn=1 tx=-7 keys=3 svc=1 svc-data-len=4 changed=n/a"
         )
         XCTAssertEqual(
             same.traceDescription(previous: first),
-            "conn=1 tx=-7 keys=3 svc=1 mfg-len=4 changed=0"
+            "conn=1 tx=-7 keys=3 svc=1 svc-data-len=4 changed=0"
         )
         XCTAssertEqual(
             payloadChanged.traceDescription(previous: first),
-            "conn=1 tx=-7 keys=3 svc=1 mfg-len=4 changed=0"
+            "conn=1 tx=-7 keys=3 svc=1 svc-data-len=4 changed=0"
         )
         XCTAssertEqual(
             serviceCountChanged.traceDescription(previous: first),
-            "conn=1 tx=-7 keys=3 svc=2 mfg-len=4 changed=1"
+            "conn=1 tx=-7 keys=3 svc=2 svc-data-len=4 changed=1"
         )
     }
 
-    func testWorkoutDiagnosticsTalliesAndFinishesOnlyOnce() {
+    func testWorkoutDiagnosticsTalliesOnlyExcessInWorkoutGapAndFinishesOnce() {
+        let startedAt = Date(timeIntervalSinceReferenceDate: 1_000)
         var diagnostics = Libre3WorkoutDiagnostics()
-        diagnostics.begin(enabled: true, batteryPercent: 80)
+        diagnostics.begin(enabled: true, at: startedAt, batteryPercent: 80)
         diagnostics.recordAttempt()
         diagnostics.recordAttempt()
         diagnostics.recordAdvertisementCallback()
@@ -2756,8 +2766,22 @@ final class LibreWristTests: XCTestCase {
         diagnostics.recordGlucose()
         diagnostics.recordGlucose()
         diagnostics.recordGlucose()
-        diagnostics.recordGap(30)
-        diagnostics.recordGap(90)
+        diagnostics.recordGlucoseInterval(
+            from: startedAt.addingTimeInterval(-300),
+            to: startedAt.addingTimeInterval(30)
+        )
+        diagnostics.recordGlucoseInterval(
+            from: startedAt.addingTimeInterval(30),
+            to: startedAt.addingTimeInterval(90)
+        )
+        diagnostics.recordGlucoseInterval(
+            from: startedAt.addingTimeInterval(100),
+            to: startedAt.addingTimeInterval(190)
+        )
+        diagnostics.recordGlucoseInterval(
+            from: startedAt.addingTimeInterval(200),
+            to: startedAt.addingTimeInterval(350)
+        )
 
         XCTAssertEqual(
             diagnostics.finish(batteryPercent: 76),

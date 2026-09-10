@@ -8,8 +8,8 @@ import OSLog
 import UserNotifications
 
 /// Keeps cloud-backed glucose current while HealthKit grants workout runtime.
-/// Direct BLE remains push-driven; its only work here is sampling an already
-/// pending connect for developer diagnostics without adding another wakeup.
+/// Direct BLE remains push-driven; its only work here is sampling an active
+/// discovery or connect wait for diagnostics without adding another wakeup.
 @MainActor
 final class WorkoutModeRefreshManager {
     static let shared = WorkoutModeRefreshManager()

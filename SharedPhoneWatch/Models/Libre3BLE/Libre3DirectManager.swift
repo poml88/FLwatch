@@ -1651,14 +1651,14 @@ enum Libre3BatteryDiagnostics {
     }
 }
 
-/// Stable advertisement shape. Volatile manufacturer payload bytes are excluded
-/// so a per-burst counter cannot make every traced observation look different.
+/// Stable advertisement shape. Volatile service payload bytes are excluded so a
+/// per-burst counter cannot make every traced observation look different.
 struct Libre3AdvertisementFingerprint: Equatable {
     let connectable: String
     let txPower: String
     let keyCount: Int
     let advertisedServiceCount: Int
-    let manufacturerDataLength: Int?
+    let serviceDataLength: Int?
 
     init(
         advertisementData: [String: String],
@@ -1672,17 +1672,17 @@ struct Libre3AdvertisementFingerprint: Equatable {
         )
         keyCount = advertisementData.count
         advertisedServiceCount = advertisedServiceUUIDs.count
-        manufacturerDataLength = Self.dataLength(
-            from: advertisementData[CBAdvertisementDataManufacturerDataKey]
+        serviceDataLength = Self.dataLength(
+            from: advertisementData[CBAdvertisementDataServiceDataKey]
         )
     }
 
     func traceDescription(previous: Self?) -> String {
         let changed = previous.map { $0 == self ? "0" : "1" } ?? "n/a"
-        let manufacturerLength = manufacturerDataLength.map(String.init) ?? "n/a"
+        let serviceLength = serviceDataLength.map(String.init) ?? "n/a"
         return "conn=\(connectable) tx=\(txPower) keys=\(keyCount) " +
             "svc=\(advertisedServiceCount) " +
-            "mfg-len=\(manufacturerLength) changed=\(changed)"
+            "svc-data-len=\(serviceLength) changed=\(changed)"
     }
 
     private static func compactBoolean(_ value: String?) -> String {
@@ -1704,15 +1704,18 @@ struct Libre3AdvertisementFingerprint: Equatable {
         return value.isEmpty ? "n/a" : value
     }
 
-    /// Handles Foundation's compact `N bytes`, bridged NSData `length = N`,
-    /// and angle-bracket hex descriptions. Unknown representations stay `n/a`.
+    /// Handles dictionary-wrapped Foundation `N bytes`, bridged NSData
+    /// `length = N`, and angle-bracket hex descriptions.
     private static func dataLength(from value: String?) -> Int? {
         guard let value else { return nil }
         let compactValue = compactScalar(value)
         let words = compactValue.split(whereSeparator: { $0.isWhitespace })
-        if let bytesIndex = words.firstIndex(where: { $0 == "bytes" }),
+        if let bytesIndex = words.firstIndex(where: {
+            String($0).trimmingCharacters(in: .punctuationCharacters) == "bytes"
+        }),
            bytesIndex > words.startIndex,
-           let count = Int(words[words.index(before: bytesIndex)]) {
+           let count = Int(String(words[words.index(before: bytesIndex)])
+            .trimmingCharacters(in: .punctuationCharacters)) {
             return count
         }
         if let lengthRange = compactValue.range(of: "length = ") {
@@ -1720,17 +1723,24 @@ struct Libre3AdvertisementFingerprint: Equatable {
             let digits = suffix.prefix(while: { $0.isNumber })
             if let count = Int(digits) { return count }
         }
-        guard compactValue.first == "<", compactValue.last == ">" else { return nil }
-        let hex = compactValue.dropFirst().dropLast().filter { !$0.isWhitespace }
-        guard !hex.isEmpty,
-              hex.count.isMultiple(of: 2),
-              hex.allSatisfy({ $0.isHexDigit }) else { return nil }
-        return hex.count / 2
+        for component in compactValue.split(separator: "<").dropFirst() {
+            guard let closingBracket = component.firstIndex(of: ">") else { continue }
+            let hex = component[..<closingBracket].filter { !$0.isWhitespace }
+            if !hex.isEmpty,
+               hex.count.isMultiple(of: 2),
+               hex.allSatisfy({ $0.isHexDigit }) {
+                return hex.count / 2
+            }
+        }
+        return nil
     }
 }
 
 struct Libre3WorkoutDiagnostics: Equatable {
+    private static let expectedGlucoseInterval: TimeInterval = 60
+
     private(set) var isActive = false
+    private var startedAt: Date?
     private var attempts = 0
     private var advertisementCallbacks = 0
     private var connects = 0
@@ -1738,10 +1748,11 @@ struct Libre3WorkoutDiagnostics: Equatable {
     private var summedGap: TimeInterval = 0
     private var batteryStartPercent: Int?
 
-    mutating func begin(enabled: Bool, batteryPercent: Int?) {
+    mutating func begin(enabled: Bool, at date: Date, batteryPercent: Int?) {
         self = Self()
         guard enabled else { return }
         isActive = true
+        startedAt = date
         batteryStartPercent = batteryPercent
     }
 
@@ -1765,9 +1776,13 @@ struct Libre3WorkoutDiagnostics: Equatable {
         glucoseReadings += 1
     }
 
-    mutating func recordGap(_ gap: TimeInterval) {
-        guard isActive, gap > 0 else { return }
-        summedGap += gap
+    mutating func recordGlucoseInterval(from previous: Date, to current: Date) {
+        guard isActive,
+              let startedAt,
+              previous >= startedAt else { return }
+        let excess = current.timeIntervalSince(previous) - Self.expectedGlucoseInterval
+        guard excess > 0 else { return }
+        summedGap += excess
     }
 
     mutating func finish(batteryPercent: Int?) -> String? {
@@ -2046,6 +2061,9 @@ final class Libre3DirectManager: ObservableObject {
     /// Set only while `awaitConnectedPeripheral` is suspended. Existing host
     /// cadences sample this wait without adding a diagnostic timer or wakeup.
     private var connectWaitStartedAt: Date?
+    /// Tracks this manager's scan intent; LibreCRKit deliberately exposes no
+    /// synchronous `isScanning` snapshot across its private central queue.
+    private var scanStartedAt: Date?
     /// A failed connected setup is cancelled before another attempt. A callback
     /// or the bounded recheck clears this gate once the link is down.
     private var disconnectHandoffPolicy = Libre3DisconnectHandoffPolicy()
@@ -2308,9 +2326,10 @@ final class Libre3DirectManager: ObservableObject {
 
     // MARK: - Lifecycle control
 
-    func beginWorkoutDiagnostics() {
+    func beginWorkoutDiagnostics(startedAt: Date = Date()) {
         workoutDiagnostics.begin(
             enabled: Libre3DiagnosticsLog.extendedTracing,
+            at: startedAt,
             batteryPercent: hostProfile.batteryPercentage()
         )
     }
@@ -2416,6 +2435,11 @@ final class Libre3DirectManager: ObservableObject {
         disconnectHandoffPolicy.reset()
         setSignalLossState(deadline: nil)
         finishAttemptSummary(outcome: .cancelled)
+        if let scanner, scanner.centralState == .poweredOn {
+            stopScan(scanner, reason: "stop")
+        } else {
+            finishScanTrace(reason: "stop")
+        }
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
@@ -2491,6 +2515,11 @@ final class Libre3DirectManager: ObservableObject {
         cancelDisconnectHandoffRecovery()
         disconnectHandoffPolicy.reset()
         finishAttemptSummary(outcome: .cancelled)
+        if let scanner, scanner.centralState == .poweredOn {
+            stopScan(scanner, reason: "workout-handoff")
+        } else {
+            finishScanTrace(reason: "workout-handoff")
+        }
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
@@ -2731,10 +2760,37 @@ final class Libre3DirectManager: ObservableObject {
         scanner.cancelConnection(session.peripheral)
     }
 
-    /// Samples an indefinite CoreBluetooth connect wait.
-    /// The active await timestamp prevents stale `.connecting` UI state from
-    /// being reported after the underlying wait has already ended.
+    private func startScan(_ scanner: SensorScannerNG, reason: String) {
+        scanner.startScan()
+        scanStartedAt = Date()
+        guard Libre3DiagnosticsLog.extendedTracing else { return }
+        Libre3DiagnosticsLog.traceReconnect("scan-started reason=\(reason)")
+    }
+
+    private func stopScan(_ scanner: SensorScannerNG, reason: String) {
+        scanner.stopScan()
+        finishScanTrace(reason: reason)
+    }
+
+    private func finishScanTrace(reason: String) {
+        guard scanStartedAt != nil else { return }
+        scanStartedAt = nil
+        guard Libre3DiagnosticsLog.extendedTracing else { return }
+        Libre3DiagnosticsLog.traceReconnect("scan-stopped reason=\(reason)")
+    }
+
+    /// Samples indefinite discovery and CoreBluetooth connect waits on an
+    /// existing host cadence, without adding another timer or wakeup.
     func traceConnectWaitIfNeeded(at date: Date = Date()) {
+        if connectionState == .scanning,
+           let scanStartedAt {
+            let elapsed = max(0, Int(date.timeIntervalSince(scanStartedAt)))
+            Libre3DiagnosticsLog.traceReconnect(
+                "discover-wait elapsed=\(elapsed)s " +
+                    "app=\(hostProfile.appVisibilityDescription() ?? "n/a") scan-intent=on"
+            )
+            return
+        }
         guard connectionState == .connecting,
               let connectWaitStartedAt,
               let scanner,
@@ -3014,7 +3070,7 @@ final class Libre3DirectManager: ObservableObject {
             cancelDisconnectHandoffRecovery()
             disconnectHandoffPolicy.reset()
             resetBurstConnectState()
-            scanner.stopScan()
+            stopScan(scanner, reason: "system-recovery")
             Libre3DiagnosticsLog.traceReconnect(
                 "system-recovery-pending peripheral=\(peripheral.identifier.uuidString) scanner=\(scannerGeneration)"
             )
@@ -3086,6 +3142,11 @@ final class Libre3DirectManager: ObservableObject {
         cancelDisconnectHandoffRecovery()
         disconnectHandoffPolicy.reset()
         finishAttemptSummary(outcome: .cancelled)
+        if let scanner, scanner.centralState == .poweredOn {
+            stopScan(scanner, reason: "scanner-retirement")
+        } else {
+            finishScanTrace(reason: "scanner-retirement")
+        }
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
@@ -3250,7 +3311,10 @@ final class Libre3DirectManager: ObservableObject {
             }
 
         case .didDiscover(let found):
-            if matchesSavedPeripheral(found.peripheral) {
+            if Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                found.peripheral.identifier,
+                savedID: savedPeripheralID
+            ) {
                 attemptDiagnostics.recordAdvertisement(
                     rssi: found.rssi,
                     at: Date()
@@ -3583,6 +3647,7 @@ final class Libre3DirectManager: ObservableObject {
         // silence follows is not evidence about the sensor. End the run; a hint
         // already raised stays until the sensor actually answers again.
         breakSensorSilenceRun()
+        finishScanTrace(reason: "bluetooth-unavailable")
         lifecycleAttemptID = nil
         lifecycleTask?.cancel()
         lifecycleTask = nil
@@ -3984,9 +4049,13 @@ final class Libre3DirectManager: ObservableObject {
     ) async throws {
         try checkCurrentScanner(scanner, generation: scannerGeneration)
         let attemptStartedAt = Date()
+        // Retrieved-only hosts do not observe advertisements during an attempt;
+        // preserve `n/a` instead of reporting a false measured zero.
+        let observesAdvertisements = Libre3DiagnosticsLog.extendedTracing &&
+            (hostProfile.acquiresByActiveScan || hostProfile.burstConnectMode != .off)
         attemptDiagnostics.begin(
             at: attemptStartedAt,
-            observesAdvertisements: Libre3DiagnosticsLog.extendedTracing,
+            observesAdvertisements: observesAdvertisements,
             batteryPercent: hostProfile.batteryPercentage()
         )
         workoutDiagnostics.recordAttempt()
@@ -4602,13 +4671,13 @@ final class Libre3DirectManager: ObservableObject {
 
         // Subscribe before starting the scan so discovery cannot beat the waiter.
         let events = scanner.events()
-        scanner.startScan()
+        startScan(scanner, reason: "discovery")
         var handedScanToConnection = false
         defer {
             if !handedScanToConnection,
                isCurrentScanner(scanner, generation: scannerGeneration),
                scanner.centralState == .poweredOn {
-                scanner.stopScan()
+                stopScan(scanner, reason: "discovery-ended")
             }
         }
         for await event in events {
@@ -4699,7 +4768,7 @@ final class Libre3DirectManager: ObservableObject {
             defer {
                 if isCurrentScanner(scanner, generation: scannerGeneration),
                    scanner.centralState == .poweredOn {
-                    scanner.stopScan()
+                    stopScan(scanner, reason: "connection-ended")
                 }
             }
             let connected = try await awaitConnectedPeripheral(
@@ -4709,7 +4778,7 @@ final class Libre3DirectManager: ObservableObject {
             )
             try checkCurrentScanner(scanner, generation: scannerGeneration)
             if scanner.centralState == .poweredOn {
-                scanner.stopScan()
+                stopScan(scanner, reason: "connected")
             }
             attemptReachedDidConnect = true
             let connectedAt = Date()
@@ -4745,6 +4814,9 @@ final class Libre3DirectManager: ObservableObject {
             // manager path that cancels this task clears system recovery first.
             if scanner.centralState == .poweredOn {
                 scanner.stopScan()
+                Task { @MainActor [weak self] in
+                    self?.finishScanTrace(reason: "connection-cancelled")
+                }
                 scanner.cancelConnection(peripheral)
             }
         }
@@ -4796,8 +4868,8 @@ final class Libre3DirectManager: ObservableObject {
             ).first else {
                 // Duplicate discovery is disabled, so only a fresh scan session
                 // can report this peripheral at the next advertising burst.
-                scanner.stopScan()
-                scanner.startScan()
+                self.stopScan(scanner, reason: "burst-rescan-missing")
+                self.startScan(scanner, reason: "burst-rescan-missing")
                 Libre3DiagnosticsLog.traceReconnect(
                     "burst-settle action=rescan state=missing"
                 )
@@ -4816,8 +4888,8 @@ final class Libre3DirectManager: ObservableObject {
                 scanner.cancelConnectionIfStillConnecting(refreshed)
             }
             // Reset discovery even when CoreBluetooth already dropped the intent.
-            scanner.stopScan()
-            scanner.startScan()
+            self.stopScan(scanner, reason: "burst-settle")
+            self.startScan(scanner, reason: "burst-settle")
             switch action {
             case .cancelAndRescan:
                 Libre3DiagnosticsLog.traceReconnect(
@@ -5511,14 +5583,23 @@ final class Libre3DirectManager: ObservableObject {
         if !sessionProducedGlucose {
             sessionProducedGlucose = true
             attemptDiagnostics.recordFirstUsableGlucose(at: acceptedAt)
-            // Recovery is the one-shot point where a persisted receipt time can
-            // expose a gap that suspension may have erased from the trace ring.
+            // On the phone, recovery is the one-shot point where a persisted
+            // receipt time can expose a gap that suspension erased from memory.
+            // On the watch that receipt may belong to the previous workout, so
+            // the tally accepts only intervals whose earlier endpoint is inside
+            // this workout and the notable event remains phone-only.
+            // This block runs once per connection: `gap-sum` measures only
+            // reconnect-boundary excess, not skipped minutes within one stream.
+            // Earlier builds included the raw cross-workout interval, so their
+            // tally values are intentionally not comparable.
             if let lastGlucoseAt = SharedData.libre3LastGlucoseAt {
                 let gap = acceptedAt.timeIntervalSince(lastGlucoseAt)
-                if Libre3DiagnosticsLog.extendedTracing, gap > 0 {
-                    workoutDiagnostics.recordGap(gap)
-                }
-                if gap > Self.glucoseGapNotableThreshold {
+                workoutDiagnostics.recordGlucoseInterval(
+                    from: lastGlucoseAt,
+                    to: acceptedAt
+                )
+                if hostProfile.device == .phone,
+                   gap > Self.glucoseGapNotableThreshold {
                     Libre3DiagnosticsLog.recordNotable(
                         "EVENT glucose-gap seconds=\(Int(gap.rounded())) minutes=\(Int((gap / 60).rounded())) recovered",
                         at: acceptedAt

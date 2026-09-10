@@ -234,7 +234,9 @@ final class WorkoutHealthKitManager: NSObject {
         }
 
         if providerKind == .libre3BLE {
-            Libre3DirectManager.shared.beginWorkoutDiagnostics()
+            Libre3DirectManager.shared.beginWorkoutDiagnostics(
+                startedAt: workoutSession.startDate ?? startedAt
+            )
             guard WatchConnectivityManager.shared.claimLibre3SensorForWorkout(
                 workoutSessionID: workoutSessionID
             ) else {
@@ -382,7 +384,7 @@ final class WorkoutHealthKitManager: NSObject {
         }
 
         if providerKind == .libre3BLE {
-            Libre3DirectManager.shared.beginWorkoutDiagnostics()
+            Libre3DirectManager.shared.beginWorkoutDiagnostics(startedAt: startedAt)
             // A terminal phone reclaim intentionally makes this return false;
             // the HealthKit workout remains active and the UI explains that the
             // sensor moved to the phone.
