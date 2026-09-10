@@ -35,6 +35,10 @@ import UIKit
 import UserNotifications
 #endif
 
+#if os(watchOS)
+import WatchKit
+#endif
+
 @MainActor
 final class Libre3BackgroundActivity {
     private var endAction: (@MainActor () -> Void)?
@@ -139,6 +143,11 @@ struct Libre3HostProfile {
     let phoneConnectivity: Libre3PhoneConnectivityHost
     let lowGlucoseAlerts: Libre3LowGlucoseAlertHost
     let liveActivity: Libre3LiveActivityHost
+    /// Host hooks keep watch-only diagnostic APIs out of the shared reconnect
+    /// engine's platform-neutral logic.
+    let batteryPercentage: @MainActor () -> Int?
+    let workoutStateDescription: @MainActor () -> String?
+    let appVisibilityDescription: @MainActor () -> String?
     /// Whether this host requests and consumes historical/clinical backfill.
     /// Workout mode is deliberately realtime-only, including unsolicited bursts.
     let usesBackfill: Bool
@@ -180,11 +189,25 @@ struct Libre3HostProfile {
             await WorkoutAlertNotificationManager.shared.evaluateCurrentReading()
         }
     )
+    private static let watchBatteryPercentage: @MainActor () -> Int? = {
+        // WatchKit reports -1 until its first sample after monitoring is enabled.
+        let level = WKInterfaceDevice.current().batteryLevel
+        return level >= 0 ? Int((level * 100).rounded()) : nil
+    }
+    private static let watchWorkoutStateDescription: @MainActor () -> String? = {
+        WorkoutHealthKitManager.shared.workoutSessionStateDescription
+    }
+    private static let watchAppVisibilityDescription: @MainActor () -> String? = {
+        WatchConnectivityManager.shared.watchAppVisibilityDescription
+    }
 #else
     private static let watchWorkoutLowGlucoseAlerts = Libre3LowGlucoseAlertHost(
         isEnabled: false,
         evaluateCurrentReading: {}
     )
+    private static let watchBatteryPercentage: @MainActor () -> Int? = { nil }
+    private static let watchWorkoutStateDescription: @MainActor () -> String? = { nil }
+    private static let watchAppVisibilityDescription: @MainActor () -> String? = { nil }
 #endif
 
     static let watchWorkout = Libre3HostProfile(
@@ -218,6 +241,9 @@ struct Libre3HostProfile {
             isEnabled: false,
             refreshFromCurrentHistory: { _, _ in }
         ),
+        batteryPercentage: watchBatteryPercentage,
+        workoutStateDescription: watchWorkoutStateDescription,
+        appVisibilityDescription: watchAppVisibilityDescription,
         usesBackfill: false,
         allowsFullAuthorization: false,
         acquiresByActiveScan: true,
@@ -328,6 +354,9 @@ extension Libre3HostProfile {
                 )
             }
         ),
+        batteryPercentage: { nil },
+        workoutStateDescription: { nil },
+        appVisibilityDescription: { nil },
         usesBackfill: true,
         allowsFullAuthorization: true,
         acquiresByActiveScan: false,
@@ -1613,6 +1642,155 @@ enum Libre3AttemptOutcome: String, Equatable {
     case cancelled
 }
 
+enum Libre3BatteryDiagnostics {
+    static func description(startPercent: Int?, currentPercent: Int?) -> String {
+        guard let currentPercent else { return "n/a" }
+        guard let startPercent else { return "\(currentPercent)%/n/a" }
+        let delta = currentPercent - startPercent
+        return "\(currentPercent)%/\(delta >= 0 ? "+" : "")\(delta)%"
+    }
+}
+
+/// Stable advertisement shape. Volatile manufacturer payload bytes are excluded
+/// so a per-burst counter cannot make every traced observation look different.
+struct Libre3AdvertisementFingerprint: Equatable {
+    let connectable: String
+    let txPower: String
+    let keyCount: Int
+    let advertisedServiceCount: Int
+    let manufacturerDataLength: Int?
+
+    init(
+        advertisementData: [String: String],
+        advertisedServiceUUIDs: [String]
+    ) {
+        connectable = Self.compactBoolean(
+            advertisementData[CBAdvertisementDataIsConnectable]
+        )
+        txPower = Self.compactScalar(
+            advertisementData[CBAdvertisementDataTxPowerLevelKey]
+        )
+        keyCount = advertisementData.count
+        advertisedServiceCount = advertisedServiceUUIDs.count
+        manufacturerDataLength = Self.dataLength(
+            from: advertisementData[CBAdvertisementDataManufacturerDataKey]
+        )
+    }
+
+    func traceDescription(previous: Self?) -> String {
+        let changed = previous.map { $0 == self ? "0" : "1" } ?? "n/a"
+        let manufacturerLength = manufacturerDataLength.map(String.init) ?? "n/a"
+        return "conn=\(connectable) tx=\(txPower) keys=\(keyCount) " +
+            "svc=\(advertisedServiceCount) " +
+            "mfg-len=\(manufacturerLength) changed=\(changed)"
+    }
+
+    private static func compactBoolean(_ value: String?) -> String {
+        switch compactScalar(value).lowercased() {
+        case "true", "yes", "1": return "1"
+        case "false", "no", "0": return "0"
+        case "n/a": return "n/a"
+        default: return compactScalar(value)
+        }
+    }
+
+    private static func compactScalar(_ value: String?) -> String {
+        guard var value else { return "n/a" }
+        value = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if value.hasPrefix("Optional("), value.hasSuffix(")") {
+            value.removeFirst("Optional(".count)
+            value.removeLast()
+        }
+        return value.isEmpty ? "n/a" : value
+    }
+
+    /// Handles Foundation's compact `N bytes`, bridged NSData `length = N`,
+    /// and angle-bracket hex descriptions. Unknown representations stay `n/a`.
+    private static func dataLength(from value: String?) -> Int? {
+        guard let value else { return nil }
+        let compactValue = compactScalar(value)
+        let words = compactValue.split(whereSeparator: { $0.isWhitespace })
+        if let bytesIndex = words.firstIndex(where: { $0 == "bytes" }),
+           bytesIndex > words.startIndex,
+           let count = Int(words[words.index(before: bytesIndex)]) {
+            return count
+        }
+        if let lengthRange = compactValue.range(of: "length = ") {
+            let suffix = compactValue[lengthRange.upperBound...]
+            let digits = suffix.prefix(while: { $0.isNumber })
+            if let count = Int(digits) { return count }
+        }
+        guard compactValue.first == "<", compactValue.last == ">" else { return nil }
+        let hex = compactValue.dropFirst().dropLast().filter { !$0.isWhitespace }
+        guard !hex.isEmpty,
+              hex.count.isMultiple(of: 2),
+              hex.allSatisfy({ $0.isHexDigit }) else { return nil }
+        return hex.count / 2
+    }
+}
+
+struct Libre3WorkoutDiagnostics: Equatable {
+    private(set) var isActive = false
+    private var attempts = 0
+    private var advertisementCallbacks = 0
+    private var connects = 0
+    private var glucoseReadings = 0
+    private var summedGap: TimeInterval = 0
+    private var batteryStartPercent: Int?
+
+    mutating func begin(enabled: Bool, batteryPercent: Int?) {
+        self = Self()
+        guard enabled else { return }
+        isActive = true
+        batteryStartPercent = batteryPercent
+    }
+
+    mutating func recordAttempt() {
+        guard isActive else { return }
+        attempts += 1
+    }
+
+    mutating func recordAdvertisementCallback() {
+        guard isActive else { return }
+        advertisementCallbacks += 1
+    }
+
+    mutating func recordConnect() {
+        guard isActive else { return }
+        connects += 1
+    }
+
+    mutating func recordGlucose() {
+        guard isActive else { return }
+        glucoseReadings += 1
+    }
+
+    mutating func recordGap(_ gap: TimeInterval) {
+        guard isActive, gap > 0 else { return }
+        summedGap += gap
+    }
+
+    mutating func finish(batteryPercent: Int?) -> String? {
+        guard isActive else { return nil }
+        isActive = false
+        return "workout-tally attempts=\(attempts) " +
+            "adv-callbacks=\(advertisementCallbacks) connects=\(connects) " +
+            "glucose=\(glucoseReadings) gap-sum=\(durationDescription(summedGap)) " +
+            "batt=\(Libre3BatteryDiagnostics.description(startPercent: batteryStartPercent, currentPercent: batteryPercent))"
+    }
+
+    mutating func discard() {
+        self = Self()
+    }
+
+    private func durationDescription(_ seconds: TimeInterval) -> String {
+        if seconds >= 60 {
+            return String(format: "%.1fm", seconds / 60)
+        }
+        return String(format: "%.1fs", seconds)
+    }
+}
+
 /// In-memory measurements for one connection lifecycle. Advertisement callback
 /// counts are deliberately labelled as callbacks: scans disallow duplicates, so
 /// CoreBluetooth may coalesce multiple over-the-air advertisements into one.
@@ -1626,11 +1804,17 @@ struct Libre3AttemptDiagnostics: Equatable {
     private(set) var lastAdvertisementAt: Date?
     private(set) var connectedAt: Date?
     private(set) var firstUsableGlucoseAt: Date?
+    private(set) var batteryStartPercent: Int?
 
-    mutating func begin(at date: Date, observesAdvertisements: Bool) {
+    mutating func begin(
+        at date: Date,
+        observesAdvertisements: Bool,
+        batteryPercent: Int?
+    ) {
         reset()
         startedAt = date
         advertisementCallbackCount = observesAdvertisements ? 0 : nil
+        batteryStartPercent = batteryPercent
     }
 
     mutating func setPath(
@@ -1677,7 +1861,10 @@ struct Libre3AttemptDiagnostics: Equatable {
     func summary(
         scannerGeneration: Int?,
         usesSystemAutoReconnect: Bool,
-        outcome: Libre3AttemptOutcome
+        outcome: Libre3AttemptOutcome,
+        batteryPercent: Int?,
+        workoutState: String?,
+        appVisibility: String?
     ) -> String {
         let callbackCount = advertisementCallbackCount.map(String.init) ?? "n/a"
         let rssi: String
@@ -1694,7 +1881,17 @@ struct Libre3AttemptDiagnostics: Equatable {
             "adv-span=\(Self.durationDescription(from: firstAdvertisementAt, to: lastAdvertisementAt)) " +
             "t-connect=\(Self.durationDescription(from: startedAt, to: connectedAt)) " +
             "t-glucose=\(Self.durationDescription(from: startedAt, to: firstUsableGlucoseAt)) " +
-            "gap=n/a batt=n/a hk=n/a"
+            "gap=n/a " +
+            "batt=\(batteryDescription(currentPercent: batteryPercent)) " +
+            "hk=\(workoutState ?? "n/a") " +
+            "app=\(appVisibility ?? "n/a")"
+    }
+
+    func batteryDescription(currentPercent: Int?) -> String {
+        Libre3BatteryDiagnostics.description(
+            startPercent: batteryStartPercent,
+            currentPercent: currentPercent
+        )
     }
 
     mutating func reset() {
@@ -1707,6 +1904,7 @@ struct Libre3AttemptDiagnostics: Equatable {
         lastAdvertisementAt = nil
         connectedAt = nil
         firstUsableGlucoseAt = nil
+        batteryStartPercent = nil
     }
 
     /// Attempt summaries use compact units so long scan spans stay readable.
@@ -1898,9 +2096,10 @@ final class Libre3DirectManager: ObservableObject {
     private var lastDecodedLifeCount: UInt16?
     private var attemptDiagnostics = Libre3AttemptDiagnostics()
     private var attemptSummaryRecorded = false
-    /// Phase A3 feeds the eventual per-workout tally with every positive gap,
-    /// including ordinary gaps below the notable-event threshold.
-    private var workoutAccumulatedGlucoseGap: TimeInterval = 0
+    private var workoutDiagnostics = Libre3WorkoutDiagnostics()
+    /// Survives attempt resets so `changed` compares adjacent traced observations
+    /// even when a disconnect/reconnect boundary falls between them.
+    private var previousAdvertisementFingerprint: Libre3AdvertisementFingerprint?
     /// Setup success is not proof of health; only usable glucose resets this.
     private var noStreamCycleTracker = Libre3NoStreamCycleTracker()
     /// A discovered handle is persisted only after that same sensor authenticates.
@@ -2109,6 +2308,24 @@ final class Libre3DirectManager: ObservableObject {
 
     // MARK: - Lifecycle control
 
+    func beginWorkoutDiagnostics() {
+        workoutDiagnostics.begin(
+            enabled: Libre3DiagnosticsLog.extendedTracing,
+            batteryPercent: hostProfile.batteryPercentage()
+        )
+    }
+
+    func discardWorkoutDiagnostics() {
+        workoutDiagnostics.discard()
+    }
+
+    func finishWorkoutDiagnostics() {
+        guard let summary = workoutDiagnostics.finish(
+            batteryPercent: hostProfile.batteryPercentage()
+        ) else { return }
+        Libre3DiagnosticsLog.traceReconnect(summary)
+    }
+
     /// Called at app launch. Starts streaming only when `.libre3BLE` is the
     /// active provider; otherwise stays fully idle (no central created), so
     /// CoreBluetooth state restoration only ever resurrects the right one.
@@ -2139,7 +2356,9 @@ final class Libre3DirectManager: ObservableObject {
         let beginsWorkoutAcquisition = !shouldMaintainConnection
         shouldMaintainConnection = true
         if beginsWorkoutAcquisition, hostProfile.device == .watchWorkout {
-            workoutAccumulatedGlucoseGap = 0
+            if !workoutDiagnostics.isActive {
+                beginWorkoutDiagnostics()
+            }
             Libre3DiagnosticsLog.traceReconnect(
                 "workout-ble-config recreatesScannerBetweenWorkouts=\(hostProfile.recreatesScannerBetweenWorkouts) usesSystemAutoReconnect=\(hostProfile.usesSystemAutoReconnect) burstConnectMode=\(hostProfile.burstConnectMode.traceValue)"
             )
@@ -2637,6 +2856,7 @@ final class Libre3DirectManager: ObservableObject {
         // see `updateStuckGlucoseEvidence`; a new sensor is a different question).
         stuckGlucoseTracker.reset()
         recentStuckEvidenceFrames.removeAll()
+        previousAdvertisementFingerprint = nil
         lastScheduledWarmupAnchor = nil
         lastScheduledExpiryAnchor = nil
         // A replacement sensor starts near lifeCount zero. Clear the old sensor's
@@ -3035,6 +3255,7 @@ final class Libre3DirectManager: ObservableObject {
                     rssi: found.rssi,
                     at: Date()
                 )
+                workoutDiagnostics.recordAdvertisementCallback()
             }
             // A short-lived discovery waiter consumes the matching event. Avoid
             // filling the bounded reconnect trace with unrelated advertisements.
@@ -3765,8 +3986,10 @@ final class Libre3DirectManager: ObservableObject {
         let attemptStartedAt = Date()
         attemptDiagnostics.begin(
             at: attemptStartedAt,
-            observesAdvertisements: Libre3DiagnosticsLog.extendedTracing
+            observesAdvertisements: Libre3DiagnosticsLog.extendedTracing,
+            batteryPercent: hostProfile.batteryPercentage()
         )
+        workoutDiagnostics.recordAttempt()
         attemptSummaryRecorded = false
         lastAttemptStage = "connect"
         attemptReachedDidConnect = false
@@ -4396,6 +4619,7 @@ final class Libre3DirectManager: ObservableObject {
                    found.peripheral.identifier,
                    savedID: savedID
                ) {
+                traceAdvertisementFingerprint(found)
                 Libre3DiagnosticsLog.traceReconnect(
                     "discover-selection kind=scan id=\(found.peripheral.identifier.uuidString) rssi=\(found.rssi)"
                 )
@@ -4408,6 +4632,18 @@ final class Libre3DirectManager: ObservableObject {
         }
         if Task.isCancelled { throw CancellationError() }
         throw Libre3DirectError.sensorNotFound
+    }
+
+    private func traceAdvertisementFingerprint(_ found: DiscoveredSensor) {
+        guard Libre3DiagnosticsLog.extendedTracing else { return }
+        let fingerprint = Libre3AdvertisementFingerprint(
+            advertisementData: found.advertisementData,
+            advertisedServiceUUIDs: found.advertisedServices.map(\.uuidString)
+        )
+        Libre3DiagnosticsLog.traceReconnect(
+            "adv-fingerprint \(fingerprint.traceDescription(previous: previousAdvertisementFingerprint))"
+        )
+        previousAdvertisementFingerprint = fingerprint
     }
 
     /// Wait for CoreBluetooth to become usable using NG's replayed state event.
@@ -4479,6 +4715,7 @@ final class Libre3DirectManager: ObservableObject {
             let connectedAt = Date()
             attemptConnectedAt = connectedAt
             attemptDiagnostics.recordConnected(at: connectedAt)
+            workoutDiagnostics.recordConnect()
             if Libre3DiagnosticsLog.extendedTracing {
                 Libre3DiagnosticsLog.traceReconnect(
                     "did-connect last-adv-age=\(attemptDiagnostics.lastAdvertisementAge(at: connectedAt))"
@@ -4796,6 +5033,7 @@ final class Libre3DirectManager: ObservableObject {
                     ) &&
                     found.peripheral.identifier == currentPeripheral.identifier:
                 attemptDiagnostics.setPath(.burst)
+                traceAdvertisementFingerprint(found)
                 let now = Date()
                 lastBurstDiscoveryAt = now
                 scheduleBurstSettle(
@@ -5278,7 +5516,7 @@ final class Libre3DirectManager: ObservableObject {
             if let lastGlucoseAt = SharedData.libre3LastGlucoseAt {
                 let gap = acceptedAt.timeIntervalSince(lastGlucoseAt)
                 if Libre3DiagnosticsLog.extendedTracing, gap > 0 {
-                    workoutAccumulatedGlucoseGap += gap
+                    workoutDiagnostics.recordGap(gap)
                 }
                 if gap > Self.glucoseGapNotableThreshold {
                     Libre3DiagnosticsLog.recordNotable(
@@ -5308,6 +5546,7 @@ final class Libre3DirectManager: ObservableObject {
         } else {
             minuteByLifeCount[mapped.glucose.id] = mapped
             storedReading = mapped
+            workoutDiagnostics.recordGlucose()
         }
         if lastAcceptedRealtime.map({ reading.lifeCount > $0.lifeCount }) ?? true {
             lastAcceptedRealtime = Libre3ClinicalBackfillPolicy.Boundary(
@@ -6097,7 +6336,10 @@ final class Libre3DirectManager: ObservableObject {
             attemptDiagnostics.summary(
                 scannerGeneration: scannerGeneration,
                 usesSystemAutoReconnect: hostProfile.usesSystemAutoReconnect,
-                outcome: outcome
+                outcome: outcome,
+                batteryPercent: hostProfile.batteryPercentage(),
+                workoutState: hostProfile.workoutStateDescription(),
+                appVisibility: hostProfile.appVisibilityDescription()
             )
         )
     }
@@ -6115,6 +6357,13 @@ final class Libre3DirectManager: ObservableObject {
     private func disconnectAttemptDescription(error: Error?, at date: Date) -> String {
         let stage = lastAttemptStage.isEmpty ? "none" : lastAttemptStage
         let packetDetails = extendedPacketDescription(at: date)
+        let hostDetails: String? = if Libre3DiagnosticsLog.extendedTracing {
+            "batt=\(attemptDiagnostics.batteryDescription(currentPercent: hostProfile.batteryPercentage())) " +
+                "hk=\(hostProfile.workoutStateDescription() ?? "n/a") " +
+                "app=\(hostProfile.appVisibilityDescription() ?? "n/a")"
+        } else {
+            nil
+        }
         return "stage=\(stage) since-connect=\(Self.elapsedDescription(from: attemptConnectedAt, to: date)) " +
             "since-phase6=\(Self.elapsedDescription(from: phase6CompletedAt, to: date)) " +
             "since-rearm=\(Self.elapsedDescription(from: rearmCompletedAt, to: date)) " +
@@ -6122,6 +6371,7 @@ final class Libre3DirectManager: ObservableObject {
             "glucose-fragment=\(firstGlucoseFragmentAt != nil) " +
             "usable-glucose=\(sessionProducedGlucose) " +
             (packetDetails.map { "\($0) " } ?? "") +
+            (hostDetails.map { "\($0) " } ?? "") +
             Self.coreBluetoothErrorDescription(error)
     }
 

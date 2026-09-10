@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import CoreBluetooth
 // Needed only to name `Libre3ReceiverID.Derivation` in the activating-app
 // mapping assertions; `@testable import FLwatch` does not re-export it.
 import LibreCRKit
@@ -2573,7 +2574,11 @@ final class LibreWristTests: XCTestCase {
     func testAttemptDiagnosticsFormatsMeasuredAdvertisementAndTimingValues() {
         let startedAt = Date(timeIntervalSinceReferenceDate: 1_000)
         var diagnostics = Libre3AttemptDiagnostics()
-        diagnostics.begin(at: startedAt, observesAdvertisements: true)
+        diagnostics.begin(
+            at: startedAt,
+            observesAdvertisements: true,
+            batteryPercent: 70
+        )
         diagnostics.setPath(.burst)
         diagnostics.recordAdvertisement(
             rssi: -79,
@@ -2598,16 +2603,23 @@ final class LibreWristTests: XCTestCase {
             diagnostics.summary(
                 scannerGeneration: 7,
                 usesSystemAutoReconnect: true,
-                outcome: .ended
+                outcome: .ended,
+                batteryPercent: 68,
+                workoutState: "running",
+                appVisibility: "background"
             ),
-            "attempt-summary path=burst outcome=ended ar=1 scanner=7 adv-callbacks=3 rssi=-71/-75 adv-span=0.5s t-connect=0.8s t-glucose=6.2s gap=n/a batt=n/a hk=n/a"
+            "attempt-summary path=burst outcome=ended ar=1 scanner=7 adv-callbacks=3 rssi=-71/-75 adv-span=0.5s t-connect=0.8s t-glucose=6.2s gap=n/a batt=68%/-2% hk=running app=background"
         )
     }
 
     func testAttemptDiagnosticsDistinguishesDisabledObservationFromMeasuredZero() {
         let startedAt = Date(timeIntervalSinceReferenceDate: 1_000)
         var disabled = Libre3AttemptDiagnostics()
-        disabled.begin(at: startedAt, observesAdvertisements: false)
+        disabled.begin(
+            at: startedAt,
+            observesAdvertisements: false,
+            batteryPercent: nil
+        )
         disabled.setPath(.retrieved)
         disabled.recordAdvertisement(rssi: -70, at: startedAt)
 
@@ -2616,20 +2628,30 @@ final class LibreWristTests: XCTestCase {
             disabled.summary(
                 scannerGeneration: nil,
                 usesSystemAutoReconnect: false,
-                outcome: .failed
+                outcome: .failed,
+                batteryPercent: nil,
+                workoutState: nil,
+                appVisibility: nil
             ),
-            "attempt-summary path=retrieved outcome=failed ar=0 scanner=n/a adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a gap=n/a batt=n/a hk=n/a"
+            "attempt-summary path=retrieved outcome=failed ar=0 scanner=n/a adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a gap=n/a batt=n/a hk=n/a app=n/a"
         )
 
         var measured = Libre3AttemptDiagnostics()
-        measured.begin(at: startedAt, observesAdvertisements: true)
+        measured.begin(
+            at: startedAt,
+            observesAdvertisements: true,
+            batteryPercent: nil
+        )
         measured.setPath(.scan)
 
         XCTAssertTrue(
             measured.summary(
                 scannerGeneration: 2,
                 usesSystemAutoReconnect: false,
-                outcome: .cancelled
+                outcome: .cancelled,
+                batteryPercent: nil,
+                workoutState: nil,
+                appVisibility: nil
             ).contains("adv-callbacks=0")
         )
     }
@@ -2637,7 +2659,11 @@ final class LibreWristTests: XCTestCase {
     func testSystemAttemptReportsAdvertisementObservationAsUnavailableWhenDisabled() {
         let startedAt = Date(timeIntervalSinceReferenceDate: 1_000)
         var diagnostics = Libre3AttemptDiagnostics()
-        diagnostics.begin(at: startedAt, observesAdvertisements: true)
+        diagnostics.begin(
+            at: startedAt,
+            observesAdvertisements: true,
+            batteryPercent: nil
+        )
         diagnostics.recordAdvertisement(rssi: -68, at: startedAt)
 
         diagnostics.setPath(.system, observesAdvertisements: false)
@@ -2647,9 +2673,109 @@ final class LibreWristTests: XCTestCase {
             diagnostics.summary(
                 scannerGeneration: 7,
                 usesSystemAutoReconnect: true,
-                outcome: .cancelled
+                outcome: .cancelled,
+                batteryPercent: nil,
+                workoutState: nil,
+                appVisibility: nil
             ),
-            "attempt-summary path=system outcome=cancelled ar=1 scanner=7 adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a gap=n/a batt=n/a hk=n/a"
+            "attempt-summary path=system outcome=cancelled ar=1 scanner=7 adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a gap=n/a batt=n/a hk=n/a app=n/a"
+        )
+    }
+
+    func testAdvertisementFingerprintReportsShapeAndChanges() {
+        let manufacturerKey = CBAdvertisementDataManufacturerDataKey
+        let connectableKey = CBAdvertisementDataIsConnectable
+        let txPowerKey = CBAdvertisementDataTxPowerLevelKey
+        let first = Libre3AdvertisementFingerprint(
+            advertisementData: [
+                manufacturerKey: "<00112233>",
+                connectableKey: "true",
+                txPowerKey: "Optional(-7)"
+            ],
+            advertisedServiceUUIDs: ["FDE3"]
+        )
+        let same = Libre3AdvertisementFingerprint(
+            advertisementData: [
+                txPowerKey: "Optional(-7)",
+                connectableKey: "true",
+                manufacturerKey: "<00112233>"
+            ],
+            advertisedServiceUUIDs: ["FDE3"]
+        )
+        let payloadChanged = Libre3AdvertisementFingerprint(
+            advertisementData: [
+                manufacturerKey: "<00112244>",
+                connectableKey: "true",
+                txPowerKey: "Optional(-7)"
+            ],
+            advertisedServiceUUIDs: ["FDE3"]
+        )
+        let serviceCountChanged = Libre3AdvertisementFingerprint(
+            advertisementData: [
+                manufacturerKey: "<00112233>",
+                connectableKey: "true",
+                txPowerKey: "Optional(-7)"
+            ],
+            advertisedServiceUUIDs: ["FDE3", "FDE4"]
+        )
+
+        XCTAssertEqual(first.manufacturerDataLength, 4)
+        XCTAssertEqual(
+            Libre3AdvertisementFingerprint(
+                advertisementData: [manufacturerKey: "14 bytes"],
+                advertisedServiceUUIDs: []
+            ).manufacturerDataLength,
+            14
+        )
+        XCTAssertEqual(
+            first.traceDescription(previous: nil),
+            "conn=1 tx=-7 keys=3 svc=1 mfg-len=4 changed=n/a"
+        )
+        XCTAssertEqual(
+            same.traceDescription(previous: first),
+            "conn=1 tx=-7 keys=3 svc=1 mfg-len=4 changed=0"
+        )
+        XCTAssertEqual(
+            payloadChanged.traceDescription(previous: first),
+            "conn=1 tx=-7 keys=3 svc=1 mfg-len=4 changed=0"
+        )
+        XCTAssertEqual(
+            serviceCountChanged.traceDescription(previous: first),
+            "conn=1 tx=-7 keys=3 svc=2 mfg-len=4 changed=1"
+        )
+    }
+
+    func testWorkoutDiagnosticsTalliesAndFinishesOnlyOnce() {
+        var diagnostics = Libre3WorkoutDiagnostics()
+        diagnostics.begin(enabled: true, batteryPercent: 80)
+        diagnostics.recordAttempt()
+        diagnostics.recordAttempt()
+        diagnostics.recordAdvertisementCallback()
+        diagnostics.recordAdvertisementCallback()
+        diagnostics.recordConnect()
+        diagnostics.recordGlucose()
+        diagnostics.recordGlucose()
+        diagnostics.recordGlucose()
+        diagnostics.recordGap(30)
+        diagnostics.recordGap(90)
+
+        XCTAssertEqual(
+            diagnostics.finish(batteryPercent: 76),
+            "workout-tally attempts=2 adv-callbacks=2 connects=1 glucose=3 gap-sum=2.0m batt=76%/-4%"
+        )
+        XCTAssertNil(diagnostics.finish(batteryPercent: 75))
+    }
+
+    func testLatestWorkoutTallyIsPromotedAboveLaterTeardownLines() {
+        let entries = [
+            "2026-09-10T10:00:03.000Z hk-state from=running to=ended",
+            "2026-09-10T10:00:02.000Z workout-tally attempts=2",
+            "2026-09-10T10:00:01.000Z attempt-summary outcome=cancelled"
+        ]
+
+        XCTAssertEqual(
+            Libre3DiagnosticsLog.prioritizingLatestWorkoutTally(entries),
+            [entries[1], entries[0], entries[2]]
         )
     }
 

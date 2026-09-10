@@ -11,6 +11,7 @@ import HealthKit
 import OSLog
 import Observation
 import WatchConnectivity
+import WatchKit
 
 private extension WorkoutTypeOption {
     var healthKitActivityType: HKWorkoutActivityType {
@@ -82,6 +83,10 @@ final class WorkoutHealthKitManager: NSObject {
         operationState == .starting || operationState == .recovering || operationState == .ending
     }
 
+    var workoutSessionStateDescription: String? {
+        session.map { Self.stateDescription($0.state) }
+    }
+
     private let healthStore = HKHealthStore()
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
@@ -102,6 +107,28 @@ final class WorkoutHealthKitManager: NSObject {
         subsystem: Bundle.main.bundleIdentifier ?? "LibreWrist",
         category: "WorkoutHealthKitManager"
     )
+
+    private static func stateDescription(_ state: HKWorkoutSessionState) -> String {
+        switch state {
+        case .notStarted: "not-started"
+        case .running: "running"
+        case .ended: "ended"
+        case .paused: "paused"
+        case .prepared: "prepared"
+        case .stopped: "stopped"
+        @unknown default: "unknown-\(state.rawValue)"
+        }
+    }
+
+    /// The workout lifecycle owns monitoring so navigating away from its view
+    /// cannot interrupt battery sampling while HealthKit keeps the session live.
+    private func beginBatteryMonitoring() {
+        WKInterfaceDevice.current().isBatteryMonitoringEnabled = true
+    }
+
+    private func endBatteryMonitoring() {
+        WKInterfaceDevice.current().isBatteryMonitoringEnabled = false
+    }
 
     private override init() {
         super.init()
@@ -177,6 +204,7 @@ final class WorkoutHealthKitManager: NSObject {
 
         session = workoutSession
         builder = workoutBuilder
+        beginBatteryMonitoring()
 
         let workoutSessionID = UUID()
         let startedAt = Date()
@@ -205,13 +233,16 @@ final class WorkoutHealthKitManager: NSObject {
             return .startFailed
         }
 
-        if providerKind == .libre3BLE,
-           !WatchConnectivityManager.shared.claimLibre3SensorForWorkout(
+        if providerKind == .libre3BLE {
+            Libre3DirectManager.shared.beginWorkoutDiagnostics()
+            guard WatchConnectivityManager.shared.claimLibre3SensorForWorkout(
                 workoutSessionID: workoutSessionID
-           ) {
-            logger.error("Libre 3 workout ownership claim was rejected locally")
-            rollbackUncommittedWorkout(workoutSession, builder: workoutBuilder)
-            return .ownershipClaimRejected
+            ) else {
+                Libre3DirectManager.shared.discardWorkoutDiagnostics()
+                logger.error("Libre 3 workout ownership claim was rejected locally")
+                rollbackUncommittedWorkout(workoutSession, builder: workoutBuilder)
+                return .ownershipClaimRejected
+            }
         }
 
         await WorkoutAlertNotificationManager.shared.startOrRecoverWorkout(
@@ -238,6 +269,9 @@ final class WorkoutHealthKitManager: NSObject {
             await WatchConnectivityManager.shared.releaseLibre3SensorAfterWorkout(
                 workoutSessionID: workoutSessionID
             )
+        }
+        if providerKind == .libre3BLE {
+            Libre3DirectManager.shared.finishWorkoutDiagnostics()
         }
 
         // Stop the activity before saving, but keep the session recoverable
@@ -278,6 +312,7 @@ final class WorkoutHealthKitManager: NSObject {
         configure(recoveredSession, builder: recoveredBuilder, configuration: configuration)
         session = recoveredSession
         builder = recoveredBuilder
+        beginBatteryMonitoring()
 
         let persistedWorkoutWasEnding = WorkoutModeStore.shared.isActive
             && WorkoutModeStore.shared.isEnding
@@ -306,6 +341,8 @@ final class WorkoutHealthKitManager: NSObject {
         if persistedWorkoutWasEnding {
             // markEnding persists the user's original end time. Reuse it so a
             // relaunch cannot extend the workout by the duration of the crash.
+            // Do not start a new tally for this teardown-only recovery: the
+            // original process may already have written the workout's result.
             let interruptedEndDate = WorkoutModeStore.shared.updatedAt
             explicitEndInProgress = true
             operationState = .ending
@@ -315,6 +352,7 @@ final class WorkoutHealthKitManager: NSObject {
                 await WatchConnectivityManager.shared.releaseLibre3SensorAfterWorkout(
                     workoutSessionID: workoutSessionID
                 )
+                Libre3DirectManager.shared.finishWorkoutDiagnostics()
             }
             recoveredSession.stopActivity(with: interruptedEndDate)
             await finishWorkout(builder: recoveredBuilder, endedAt: interruptedEndDate)
@@ -344,6 +382,7 @@ final class WorkoutHealthKitManager: NSObject {
         }
 
         if providerKind == .libre3BLE {
+            Libre3DirectManager.shared.beginWorkoutDiagnostics()
             // A terminal phone reclaim intentionally makes this return false;
             // the HealthKit workout remains active and the UI explains that the
             // sensor moved to the phone.
@@ -562,6 +601,7 @@ final class WorkoutHealthKitManager: NSObject {
         _ workoutSession: HKWorkoutSession,
         builder workoutBuilder: HKLiveWorkoutBuilder
     ) {
+        endBatteryMonitoring()
         workoutSession.end()
         workoutBuilder.discardWorkout()
         if session === workoutSession {
@@ -601,6 +641,7 @@ final class WorkoutHealthKitManager: NSObject {
     }
 
     private func clearCurrentWorkout(at date: Date) {
+        endBatteryMonitoring()
         session = nil
         builder = nil
         currentHeartRate = nil
@@ -627,6 +668,10 @@ final class WorkoutHealthKitManager: NSObject {
         let ownershipState = SharedData.libre3SessionOwner
         let workoutSessionID = WorkoutModeStore.shared.workoutSessionID
             ?? ownershipState.workoutSessionID
+        let claimMatchesWorkout = ownershipState.hasActiveWatchClaim
+            && ownershipState.workoutSessionID == workoutSessionID
+        let wasDirectWorkout = WorkoutModeStore.shared.providerKind == .libre3BLE
+            || claimMatchesWorkout
         if let workoutSessionID,
            WorkoutModeStore.shared.providerKind == .libre3BLE
             || (ownershipState.hasActiveWatchClaim
@@ -634,6 +679,9 @@ final class WorkoutHealthKitManager: NSObject {
             await WatchConnectivityManager.shared.releaseLibre3SensorAfterWorkout(
                 workoutSessionID: workoutSessionID
             )
+        }
+        if wasDirectWorkout {
+            Libre3DirectManager.shared.finishWorkoutDiagnostics()
         }
         workoutSession.end()
         await finishWorkout(builder: builder, endedAt: endedAt)
@@ -644,6 +692,8 @@ final class WorkoutHealthKitManager: NSObject {
         WorkoutModeRefreshManager.shared.stop()
         await WorkoutAlertNotificationManager.shared.stopWorkout()
         let ownershipState = SharedData.libre3SessionOwner
+        let wasDirectWorkout = WorkoutModeStore.shared.providerKind == .libre3BLE
+            || ownershipState.hasActiveWatchClaim
         let staleWorkoutSessionID = WorkoutModeStore.shared.workoutSessionID
             ?? ownershipState.workoutSessionID
         if let staleWorkoutSessionID,
@@ -653,6 +703,10 @@ final class WorkoutHealthKitManager: NSObject {
                 workoutSessionID: staleWorkoutSessionID
             )
         }
+        if wasDirectWorkout {
+            Libre3DirectManager.shared.finishWorkoutDiagnostics()
+        }
+        endBatteryMonitoring()
         let workoutStore = WorkoutModeStore.shared
         if workoutStore.isActive
             || workoutStore.isEnding
@@ -740,6 +794,16 @@ extension WorkoutHealthKitManager: HKWorkoutSessionDelegate {
         date: Date
     ) {
         Task { @MainActor in
+            let providerKind = WorkoutModeStore.shared.isActive
+                ? WorkoutModeStore.shared.providerKind
+                : SharedData.cgmProviderKind
+            if Libre3DiagnosticsLog.extendedTracing,
+               providerKind == .libre3BLE {
+                Libre3DiagnosticsLog.traceReconnect(
+                    "hk-state from=\(Self.stateDescription(fromState)) " +
+                        "to=\(Self.stateDescription(toState))"
+                )
+            }
             self.logger.info(
                 "Workout state changed from \(fromState.rawValue, privacy: .public) to \(toState.rawValue, privacy: .public)"
             )

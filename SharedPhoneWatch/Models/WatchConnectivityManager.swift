@@ -2115,7 +2115,7 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
     }
 
     /// Diagnostics only: whether the watch app is currently on screen.
-    /// Sampled by the Libre 3 connect-wait trace.
+    /// Sampled by Libre 3 connect-wait, disconnect, and attempt-summary traces.
     var watchAppVisibilityDescription: String {
         switch watchAppVisibilityState {
         case .active:

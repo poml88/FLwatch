@@ -194,11 +194,29 @@ enum Libre3DiagnosticsLog {
     }
 
     /// All retained rare events and reconnect-trace lines, newest first.
-    /// Both rings remain separate on the write side.
+    /// Both rings remain separate on the write side. The newest workout tally is
+    /// promoted above later teardown lines so the fetched watch log opens with
+    /// the workout-level result.
     static func mergedEntries() -> [String] {
-        (SharedData.libre3DiagnosticEvents + SharedData.libre3ReconnectTrace)
-            .sorted(by: >)
+        prioritizingLatestWorkoutTally(
+            (SharedData.libre3DiagnosticEvents + SharedData.libre3ReconnectTrace)
+                .sorted(by: >)
+        )
             .map { localizedEntry($0) }
+    }
+
+    nonisolated static func prioritizingLatestWorkoutTally(
+        _ newestFirstEntries: [String]
+    ) -> [String] {
+        guard let index = newestFirstEntries.firstIndex(where: {
+            $0.contains(" workout-tally ")
+        }), index != newestFirstEntries.startIndex else {
+            return newestFirstEntries
+        }
+        var entries = newestFirstEntries
+        let tally = entries.remove(at: index)
+        entries.insert(tally, at: 0)
+        return entries
     }
 
     /// Clipboard export of lifetime stats plus every entry still retained by the

@@ -220,7 +220,6 @@ struct WatchAppWorkoutView: View {
             }
         }
         .onAppear {
-            WKInterfaceDevice.current().isBatteryMonitoringEnabled = true
             selectedThreshold = workoutModeStore.lowGlucoseThreshold
             selectedWorkoutType = workoutModeStore.workoutType
             if !workoutModeStore.isActive,
@@ -232,9 +231,6 @@ struct WatchAppWorkoutView: View {
                 persistPreferences()
             }
             workoutManager.preflightBluetoothPermissionIfNeeded()
-        }
-        .onDisappear {
-            WKInterfaceDevice.current().isBatteryMonitoringEnabled = false
         }
         .onChange(of: providerKindRawValue) { _, newValue in
             guard !workoutModeStore.isActive else { return }
