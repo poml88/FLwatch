@@ -2732,7 +2732,7 @@ final class LibreWristTests: XCTestCase {
                 workoutState: "running",
                 appVisibility: "background"
             ),
-            "attempt-summary path=burst outcome=ended ar=1 scanner=7 adv-callbacks=3 rssi=-71/-75 adv-span=0.5s t-connect=0.8s t-glucose=6.2s gap=n/a batt=68%/-2% hk=running app=background"
+            "attempt-summary path=burst outcome=ended ar=1 scanner=7 adv-callbacks=3 rssi=-71/-75 adv-span=0.5s t-connect=0.8s t-glucose=6.2s rssi-reads=0/0 rssi-now=n/a rssi-min=n/a rssi-mean=n/a rssi-max=n/a gap=n/a batt=68%/-2% hk=running app=background"
         )
     }
 
@@ -2757,7 +2757,7 @@ final class LibreWristTests: XCTestCase {
                 workoutState: nil,
                 appVisibility: nil
             ),
-            "attempt-summary path=retrieved outcome=failed ar=0 scanner=n/a adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a gap=n/a batt=n/a hk=n/a app=n/a"
+            "attempt-summary path=retrieved outcome=failed ar=0 scanner=n/a adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a rssi-reads=0/0 rssi-now=n/a rssi-min=n/a rssi-mean=n/a rssi-max=n/a gap=n/a batt=n/a hk=n/a app=n/a"
         )
 
         var measured = Libre3AttemptDiagnostics()
@@ -2802,7 +2802,72 @@ final class LibreWristTests: XCTestCase {
                 workoutState: nil,
                 appVisibility: nil
             ),
-            "attempt-summary path=system outcome=cancelled ar=1 scanner=7 adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a gap=n/a batt=n/a hk=n/a app=n/a"
+            "attempt-summary path=system outcome=cancelled ar=1 scanner=7 adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a rssi-reads=0/0 rssi-now=n/a rssi-min=n/a rssi-mean=n/a rssi-max=n/a gap=n/a batt=n/a hk=n/a app=n/a"
+        )
+    }
+
+    func testConnectedRSSIDescriptionReportsUnavailableWithoutSamples() {
+        var diagnostics = Libre3AttemptDiagnostics()
+        diagnostics.begin(
+            at: Date(timeIntervalSinceReferenceDate: 1_000),
+            observesAdvertisements: false,
+            batteryPercent: nil
+        )
+
+        XCTAssertEqual(
+            diagnostics.connectedRSSIDescription(),
+            "rssi-reads=0/0 rssi-now=n/a rssi-min=n/a rssi-mean=n/a rssi-max=n/a"
+        )
+    }
+
+    func testConnectedRSSIDescriptionExposesAnUnsuccessfulRead() {
+        var diagnostics = Libre3AttemptDiagnostics()
+        diagnostics.begin(
+            at: Date(timeIntervalSinceReferenceDate: 1_000),
+            observesAdvertisements: false,
+            batteryPercent: nil
+        )
+        diagnostics.recordConnectedRSSIRequest()
+
+        XCTAssertEqual(
+            diagnostics.connectedRSSIDescription(),
+            "rssi-reads=0/1 rssi-now=n/a rssi-min=n/a rssi-mean=n/a rssi-max=n/a"
+        )
+    }
+
+    func testConnectedRSSIDescriptionRetainsLatestFiveSamples() {
+        var diagnostics = Libre3AttemptDiagnostics()
+        diagnostics.begin(
+            at: Date(timeIntervalSinceReferenceDate: 1_000),
+            observesAdvertisements: false,
+            batteryPercent: nil
+        )
+        for rssi in [-60, -70, -80, -90, -100, -50] {
+            diagnostics.recordConnectedRSSIRequest()
+            diagnostics.recordConnectedRSSI(rssi)
+        }
+
+        XCTAssertEqual(
+            diagnostics.connectedRSSIDescription(),
+            "rssi-reads=6/6 rssi-now=-50 rssi-min=-100 rssi-mean=-78 rssi-max=-50"
+        )
+    }
+
+    func testConnectedRSSIDescriptionRoundsArithmeticMeanInDBM() {
+        var diagnostics = Libre3AttemptDiagnostics()
+        diagnostics.begin(
+            at: Date(timeIntervalSinceReferenceDate: 1_000),
+            observesAdvertisements: false,
+            batteryPercent: nil
+        )
+        for rssi in [-70, -71] {
+            diagnostics.recordConnectedRSSIRequest()
+            diagnostics.recordConnectedRSSI(rssi)
+        }
+
+        XCTAssertEqual(
+            diagnostics.connectedRSSIDescription(),
+            "rssi-reads=2/2 rssi-now=-71 rssi-min=-71 rssi-mean=-71 rssi-max=-70"
         )
     }
 

@@ -1914,6 +1914,8 @@ struct Libre3WorkoutDiagnostics: Equatable {
 /// counts are deliberately labelled as callbacks: scans disallow duplicates, so
 /// CoreBluetooth may coalesce multiple over-the-air advertisements into one.
 struct Libre3AttemptDiagnostics: Equatable {
+    private static let connectedRSSISampleLimit = 5
+
     private(set) var startedAt: Date?
     private(set) var path: Libre3AttemptAcquisitionPath?
     private(set) var advertisementCallbackCount: Int?
@@ -1924,6 +1926,9 @@ struct Libre3AttemptDiagnostics: Equatable {
     private(set) var connectedAt: Date?
     private(set) var firstUsableGlucoseAt: Date?
     private(set) var batteryStartPercent: Int?
+    private var connectedRSSISamples: [Int] = []
+    private var connectedRSSIRequestCount = 0
+    private var connectedRSSISuccessCount = 0
 
     mutating func begin(
         at date: Date,
@@ -1973,6 +1978,26 @@ struct Libre3AttemptDiagnostics: Equatable {
         firstUsableGlucoseAt = date
     }
 
+    mutating func recordConnectedRSSIRequest() {
+        guard startedAt != nil else { return }
+        connectedRSSIRequestCount += 1
+    }
+
+    /// Libre 3 normally delivers one realtime reading per minute, so retaining
+    /// five samples exposes the signal trend without adding a timer or wakeup.
+    /// The mean is arithmetic in dBm: useful for trend comparison, but not a
+    /// physical average of received power (which requires linear conversion).
+    mutating func recordConnectedRSSI(_ rssi: Int) {
+        guard startedAt != nil else { return }
+        connectedRSSISuccessCount += 1
+        connectedRSSISamples.append(rssi)
+        if connectedRSSISamples.count > Self.connectedRSSISampleLimit {
+            connectedRSSISamples.removeFirst(
+                connectedRSSISamples.count - Self.connectedRSSISampleLimit
+            )
+        }
+    }
+
     func lastAdvertisementAge(at date: Date) -> String {
         Self.durationDescription(from: lastAdvertisementAt, to: date)
     }
@@ -2000,6 +2025,7 @@ struct Libre3AttemptDiagnostics: Equatable {
             "adv-span=\(Self.durationDescription(from: firstAdvertisementAt, to: lastAdvertisementAt)) " +
             "t-connect=\(Self.durationDescription(from: startedAt, to: connectedAt)) " +
             "t-glucose=\(Self.durationDescription(from: startedAt, to: firstUsableGlucoseAt)) " +
+            "\(connectedRSSIDescription()) " +
             "gap=n/a " +
             "batt=\(batteryDescription(currentPercent: batteryPercent)) " +
             "hk=\(workoutState ?? "n/a") " +
@@ -2013,6 +2039,21 @@ struct Libre3AttemptDiagnostics: Equatable {
         )
     }
 
+    func connectedRSSIDescription() -> String {
+        let readCount = "rssi-reads=\(connectedRSSISuccessCount)/\(connectedRSSIRequestCount)"
+        guard let current = connectedRSSISamples.last,
+              let minimum = connectedRSSISamples.min(),
+              let maximum = connectedRSSISamples.max() else {
+            return "\(readCount) rssi-now=n/a rssi-min=n/a rssi-mean=n/a rssi-max=n/a"
+        }
+        let mean = Int(
+            (Double(connectedRSSISamples.reduce(0, +)) /
+                Double(connectedRSSISamples.count)).rounded()
+        )
+        return "\(readCount) rssi-now=\(current) rssi-min=\(minimum) " +
+            "rssi-mean=\(mean) rssi-max=\(maximum)"
+    }
+
     mutating func reset() {
         startedAt = nil
         path = nil
@@ -2024,6 +2065,9 @@ struct Libre3AttemptDiagnostics: Equatable {
         connectedAt = nil
         firstUsableGlucoseAt = nil
         batteryStartPercent = nil
+        connectedRSSISamples.removeAll(keepingCapacity: true)
+        connectedRSSIRequestCount = 0
+        connectedRSSISuccessCount = 0
     }
 
     /// Attempt summaries use compact units so long scan spans stay readable.
@@ -5539,7 +5583,12 @@ final class Libre3DirectManager: ObservableObject {
                     didTracePatchStatusQuietEscalation = false
                 }
             }
-            handle(assembled: assembled, channel: channel, receivedAt: event.receivedAt)
+            handle(
+                assembled: assembled,
+                channel: channel,
+                receivedAt: event.receivedAt,
+                session: session
+            )
         }
     }
 
@@ -5592,7 +5641,12 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
-    private func handle(assembled: Data, channel: DataPlaneChannel, receivedAt: Date) {
+    private func handle(
+        assembled: Data,
+        channel: DataPlaneChannel,
+        receivedAt: Date,
+        session: SensorSession
+    ) {
         guard let decoder, var state = dataPlaneState else { return }
         do {
             let frame = try DataFrame.parse(assembled)
@@ -5609,6 +5663,7 @@ final class Libre3DirectManager: ObservableObject {
             switch update {
             case .realtimeGlucose(let reading, let recordedAssessment):
                 lastDecodedLifeCount = reading.lifeCount
+                sampleConnectedRSSI(for: session)
                 // Re-assess with the fallback lifecycle when patch status hasn't
                 // landed yet (record()'s assessment then lacks warm-up/expiry).
                 let assessment = state.latestLifecycle != nil
@@ -5633,6 +5688,33 @@ final class Libre3DirectManager: ObservableObject {
             }
         } catch {
             Logger.libre3.error("Libre3 BLE decode failed on \(channel.rawValue, privacy: .public): \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    /// Samples only on the sensor's existing realtime cadence. Failure is
+    /// diagnostic-only and must never disturb glucose processing or recovery.
+    private func sampleConnectedRSSI(for originatingSession: SensorSession) {
+        guard Libre3DiagnosticsLog.extendedTracing else { return }
+        attemptDiagnostics.recordConnectedRSSIRequest()
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                let rssi = try await originatingSession.readRSSI(timeout: 5)
+                guard self.session === originatingSession else { return }
+                self.attemptDiagnostics.recordConnectedRSSI(rssi)
+            } catch {
+                // The request was counted before launch, so failures and reads
+                // still pending at disconnect remain visible as an incomplete
+                // `rssi-reads=successful/requested` ratio.
+                guard self.session === originatingSession else { return }
+                if let sessionError = error as? SensorSessionError,
+                   case .disconnected = sessionError {
+                    return
+                }
+                Logger.libre3.debug(
+                    "Connected RSSI read failed: \(String(describing: error), privacy: .public)"
+                )
+            }
         }
     }
 
@@ -6620,6 +6702,9 @@ final class Libre3DirectManager: ObservableObject {
     private func disconnectAttemptDescription(error: Error?, at date: Date) -> String {
         let stage = lastAttemptStage.isEmpty ? "none" : lastAttemptStage
         let packetDetails = extendedPacketDescription(at: date)
+        let rssiDetails = Libre3DiagnosticsLog.extendedTracing
+            ? attemptDiagnostics.connectedRSSIDescription()
+            : nil
         let hostDetails: String? = if Libre3DiagnosticsLog.extendedTracing {
             "batt=\(attemptDiagnostics.batteryDescription(currentPercent: hostProfile.batteryPercentage())) " +
                 "hk=\(hostProfile.workoutStateDescription() ?? "n/a") " +
@@ -6634,6 +6719,7 @@ final class Libre3DirectManager: ObservableObject {
             "glucose-fragment=\(firstGlucoseFragmentAt != nil) " +
             "usable-glucose=\(sessionProducedGlucose) " +
             (packetDetails.map { "\($0) " } ?? "") +
+            (rssiDetails.map { "\($0) " } ?? "") +
             (hostDetails.map { "\($0) " } ?? "") +
             Self.coreBluetoothErrorDescription(error)
     }
