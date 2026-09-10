@@ -808,6 +808,76 @@ enum Libre3SystemReconnectCleanupAction: Equatable {
     case ordinaryCleanup
 }
 
+/// Observation-only scan measurements collected while CoreBluetooth owns an
+/// automatic reconnect. Advertisement counts are callbacks because duplicate
+/// delivery is disabled on the scanner; zero therefore means only that the app
+/// received no callbacks. The scan can itself alter BLE duty cycling, so compare
+/// observer-enabled and observer-disabled workouts before drawing conclusions.
+/// This `adv-callbacks` spans system recovery; attempt summaries span one
+/// lifecycle attempt, and the workout tally spans the workout. The first two
+/// windows overlap but do not necessarily coincide.
+struct Libre3SystemRecoveryObservation: Equatable {
+    let startedAt: Date
+    let isEnabled: Bool
+    private(set) var advertisementCallbackCount = 0
+    private(set) var connectableCallbackCount = 0
+    private(set) var unknownConnectabilityCount = 0
+    private(set) var bestRSSI: Int?
+    private(set) var firstAdvertisementAt: Date?
+    private(set) var lastAdvertisementAt: Date?
+
+    mutating func recordAdvertisement(
+        rssi: Int,
+        isConnectable: Bool?,
+        at date: Date
+    ) -> TimeInterval? {
+        guard isEnabled else { return nil }
+        advertisementCallbackCount += 1
+        if isConnectable == true {
+            connectableCallbackCount += 1
+        } else if isConnectable == nil {
+            unknownConnectabilityCount += 1
+        }
+        bestRSSI = max(bestRSSI ?? rssi, rssi)
+        firstAdvertisementAt = firstAdvertisementAt ?? date
+        lastAdvertisementAt = date
+        return max(0, date.timeIntervalSince(startedAt))
+    }
+
+    func connectedSummary(at connectedAt: Date) -> String {
+        let callbackCount = isEnabled ? String(advertisementCallbackCount) : "n/a"
+        let rssi = isEnabled ? (bestRSSI.map(String.init) ?? "n/a") : "n/a"
+        let lastAdvertisementAge = isEnabled
+            ? Self.intervalDescription(from: lastAdvertisementAt, to: connectedAt)
+            : "n/a"
+        return "elapsed=\(Self.durationDescription(connectedAt.timeIntervalSince(startedAt))) " +
+            "last-adv-age=\(lastAdvertisementAge) " +
+            "adv-callbacks=\(callbackCount) rssi-best=\(rssi)"
+    }
+
+    func endedSummary(at endedAt: Date) -> String {
+        let callbackCount = isEnabled ? String(advertisementCallbackCount) : "n/a"
+        let connectableCount = isEnabled ? String(connectableCallbackCount) : "n/a"
+        let unknownCount = isEnabled ? String(unknownConnectabilityCount) : "n/a"
+        let rssi = isEnabled ? (bestRSSI.map(String.init) ?? "n/a") : "n/a"
+        let firstObservedAdvertisement = isEnabled
+            ? Self.intervalDescription(from: startedAt, to: firstAdvertisementAt)
+            : "n/a"
+        return "elapsed=\(Self.durationDescription(endedAt.timeIntervalSince(startedAt))) " +
+            "adv-callbacks=\(callbackCount) connectable=\(connectableCount) unknown=\(unknownCount) " +
+            "rssi-best=\(rssi) first-observed-adv=\(firstObservedAdvertisement)"
+    }
+
+    static func durationDescription(_ seconds: TimeInterval) -> String {
+        String(format: "%.1fs", max(0, seconds))
+    }
+
+    private static func intervalDescription(from start: Date?, to end: Date?) -> String {
+        guard let start, let end else { return "n/a" }
+        return durationDescription(end.timeIntervalSince(start))
+    }
+}
+
 struct Libre3SystemReconnectState: Equatable {
     enum Phase: Equatable {
         case pending
@@ -819,6 +889,7 @@ struct Libre3SystemReconnectState: Equatable {
         let peripheralID: UUID
         let disconnectTimestamp: CFAbsoluteTime
         var phase: Phase
+        var observation: Libre3SystemRecoveryObservation
     }
 
     private(set) var target: Target?
@@ -836,7 +907,8 @@ struct Libre3SystemReconnectState: Equatable {
         scannerGeneration: Int,
         peripheralID: UUID,
         isReconnecting: Bool,
-        disconnectTimestamp: CFAbsoluteTime = 0
+        disconnectTimestamp: CFAbsoluteTime = 0,
+        observesAdvertisements: Bool = false
     ) -> Libre3SystemReconnectDisconnectDisposition {
         let alreadyOwns = owns(
             scannerGeneration: scannerGeneration,
@@ -858,7 +930,13 @@ struct Libre3SystemReconnectState: Equatable {
                 scannerGeneration: scannerGeneration,
                 peripheralID: peripheralID,
                 disconnectTimestamp: disconnectTimestamp,
-                phase: .pending
+                phase: .pending,
+                observation: Libre3SystemRecoveryObservation(
+                    startedAt: disconnectTimestamp == 0
+                        ? Date()
+                        : Date(timeIntervalSinceReferenceDate: disconnectTimestamp),
+                    isEnabled: observesAdvertisements
+                )
             )
             return alreadyOwns ? .continuedSystemRecovery : .beganSystemRecovery
         }
@@ -867,6 +945,24 @@ struct Libre3SystemReconnectState: Equatable {
             return .endedSystemRecovery
         }
         return .ordinaryRecovery
+    }
+
+    mutating func recordAdvertisement(
+        scannerGeneration: Int,
+        peripheralID: UUID,
+        rssi: Int,
+        isConnectable: Bool?,
+        at date: Date
+    ) -> TimeInterval? {
+        guard owns(
+            scannerGeneration: scannerGeneration,
+            peripheralID: peripheralID
+        ) else { return nil }
+        return target?.observation.recordAdvertisement(
+            rssi: rssi,
+            isConnectable: isConnectable,
+            at: date
+        )
     }
 
     mutating func recordConnected(
@@ -1685,6 +1781,14 @@ struct Libre3AdvertisementFingerprint: Equatable {
             "svc-data-len=\(serviceLength) changed=\(changed)"
     }
 
+    var isConnectable: Bool? {
+        switch connectable {
+        case "1": return true
+        case "0": return false
+        default: return nil
+        }
+    }
+
     private static func compactBoolean(_ value: String?) -> String {
         switch compactScalar(value).lowercased() {
         case "true", "yes", "1": return "1"
@@ -1944,6 +2048,7 @@ final class Libre3DirectManager: ObservableObject {
     /// Distinct from the heartbeat's (`…bluetoothHeartbeat`) so the two never
     /// collide; chosen in Phase 0.
     private static let restoreIdentifier = "de.poeml.philipp.LibreWrist.libre3Direct"
+    private static let systemRecoveryObserverScanReason = "system-recovery-observer"
 
     // MARK: - Published state
 
@@ -2064,6 +2169,9 @@ final class Libre3DirectManager: ObservableObject {
     /// Tracks this manager's scan intent; LibreCRKit deliberately exposes no
     /// synchronous `isScanning` snapshot across its private central queue.
     private var scanStartedAt: Date?
+    /// Identifies which manager path started the current scan so cleanup cannot
+    /// stop a scan owned by a different lifecycle operation.
+    private var scanStartedReason: String?
     /// A failed connected setup is cancelled before another attempt. A callback
     /// or the bounded recheck clears this gate once the link is down.
     private var disconnectHandoffPolicy = Libre3DisconnectHandoffPolicy()
@@ -2379,7 +2487,7 @@ final class Libre3DirectManager: ObservableObject {
                 beginWorkoutDiagnostics()
             }
             Libre3DiagnosticsLog.traceReconnect(
-                "workout-ble-config recreatesScannerBetweenWorkouts=\(hostProfile.recreatesScannerBetweenWorkouts) usesSystemAutoReconnect=\(hostProfile.usesSystemAutoReconnect) burstConnectMode=\(hostProfile.burstConnectMode.traceValue)"
+                "workout-ble-config recreatesScannerBetweenWorkouts=\(hostProfile.recreatesScannerBetweenWorkouts) usesSystemAutoReconnect=\(hostProfile.usesSystemAutoReconnect) observeAdvertisingDuringSystemRecovery=\(Libre3DiagnosticsLog.observeAdvertisingDuringSystemRecovery) burstConnectMode=\(hostProfile.burstConnectMode.traceValue)"
             )
         }
         // Ask for notification authorization as soon as a paired sensor starts,
@@ -2763,6 +2871,7 @@ final class Libre3DirectManager: ObservableObject {
     private func startScan(_ scanner: SensorScannerNG, reason: String) {
         scanner.startScan()
         scanStartedAt = Date()
+        scanStartedReason = reason
         guard Libre3DiagnosticsLog.extendedTracing else { return }
         Libre3DiagnosticsLog.traceReconnect("scan-started reason=\(reason)")
     }
@@ -2773,8 +2882,12 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     private func finishScanTrace(reason: String) {
-        guard scanStartedAt != nil else { return }
+        guard scanStartedAt != nil else {
+            scanStartedReason = nil
+            return
+        }
         scanStartedAt = nil
+        scanStartedReason = nil
         guard Libre3DiagnosticsLog.extendedTracing else { return }
         Libre3DiagnosticsLog.traceReconnect("scan-stopped reason=\(reason)")
     }
@@ -3052,6 +3165,7 @@ final class Libre3DirectManager: ObservableObject {
         let isIntentional = !shouldMaintainConnection ||
             waitingForDisconnectBeforeRearm ||
             expectedSelfCancelDisconnectPeripheralID == peripheral.identifier
+        let previousSystemReconnectTarget = systemReconnectState.target
         let disposition = systemReconnectState.handleDisconnect(
             autoReconnectEnabled: hostProfile.usesSystemAutoReconnect,
             shouldMaintainConnection: shouldMaintainConnection,
@@ -3060,7 +3174,9 @@ final class Libre3DirectManager: ObservableObject {
             scannerGeneration: scannerGeneration,
             peripheralID: peripheral.identifier,
             isReconnecting: metadata.isReconnecting,
-            disconnectTimestamp: metadata.timestamp
+            disconnectTimestamp: metadata.timestamp,
+            observesAdvertisements: Libre3DiagnosticsLog
+                .observeAdvertisingDuringSystemRecovery
         )
 
         switch disposition {
@@ -3070,17 +3186,38 @@ final class Libre3DirectManager: ObservableObject {
             cancelDisconnectHandoffRecovery()
             disconnectHandoffPolicy.reset()
             resetBurstConnectState()
-            stopScan(scanner, reason: "system-recovery")
+            if Libre3DiagnosticsLog.observeAdvertisingDuringSystemRecovery {
+                if scanStartedAt == nil {
+                    startScan(
+                        scanner,
+                        reason: Self.systemRecoveryObserverScanReason
+                    )
+                }
+            } else {
+                stopScan(scanner, reason: "system-recovery")
+            }
             Libre3DiagnosticsLog.traceReconnect(
                 "system-recovery-pending peripheral=\(peripheral.identifier.uuidString) scanner=\(scannerGeneration)"
             )
         case .continuedSystemRecovery:
             systemReconnectPeripheral = peripheral
+            // A newer disconnect can return ownership to the pending phase
+            // after the prior connection already stopped its observer scan.
+            if Libre3DiagnosticsLog.observeAdvertisingDuringSystemRecovery,
+               scanStartedAt == nil {
+                startScan(
+                    scanner,
+                    reason: Self.systemRecoveryObserverScanReason
+                )
+            }
         case .endedSystemRecovery:
             systemReconnectPeripheral = nil
-            Libre3DiagnosticsLog.traceReconnect(
-                "system-recovery-ended reason=terminal-disconnect peripheral=\(peripheral.identifier.uuidString) scanner=\(scannerGeneration)"
-            )
+            if let previousSystemReconnectTarget {
+                traceSystemReconnectEnded(
+                    target: previousSystemReconnectTarget,
+                    reason: "terminal-disconnect"
+                )
+            }
         case .ordinaryRecovery:
             break
         }
@@ -3091,13 +3228,15 @@ final class Libre3DirectManager: ObservableObject {
         peripheral: CBPeripheral,
         scannerGeneration: Int
     ) {
+        let connectedAt = Date()
         guard systemReconnectState.recordConnected(
             scannerGeneration: scannerGeneration,
             peripheralID: peripheral.identifier
-        ) else { return }
+        ), let target = systemReconnectState.target else { return }
         systemReconnectPeripheral = peripheral
+        let observation = target.observation.connectedSummary(at: connectedAt)
         Libre3DiagnosticsLog.traceReconnect(
-            "system-recovery-connected peripheral=\(peripheral.identifier.uuidString) scanner=\(scannerGeneration)"
+            "system-recovery-connected peripheral=\(peripheral.identifier.uuidString) scanner=\(scannerGeneration) \(observation)"
         )
     }
 
@@ -3105,14 +3244,15 @@ final class Libre3DirectManager: ObservableObject {
         peripheral: CBPeripheral,
         scannerGeneration: Int
     ) {
+        let target = systemReconnectState.target
         guard systemReconnectState.finishAdoption(
             scannerGeneration: scannerGeneration,
             peripheralID: peripheral.identifier
         ) else { return }
         systemReconnectPeripheral = nil
-        Libre3DiagnosticsLog.traceReconnect(
-            "system-recovery-adopted peripheral=\(peripheral.identifier.uuidString) scanner=\(scannerGeneration)"
-        )
+        if let target {
+            traceSystemReconnectEnded(target: target, reason: "adopted")
+        }
     }
 
     private func endSystemReconnect(reason: String) {
@@ -3121,8 +3261,27 @@ final class Libre3DirectManager: ObservableObject {
             return
         }
         systemReconnectPeripheral = nil
+        traceSystemReconnectEnded(target: target, reason: reason)
+    }
+
+    private func traceSystemReconnectEnded(
+        target: Libre3SystemReconnectState.Target,
+        reason: String,
+        at date: Date = Date()
+    ) {
+        if target.observation.isEnabled,
+           scanStartedReason == Self.systemRecoveryObserverScanReason {
+            if let scanner,
+               isCurrentScanner(scanner, generation: target.scannerGeneration),
+               scanner.centralState == .poweredOn {
+                stopScan(scanner, reason: "system-recovery-ended")
+            } else {
+                finishScanTrace(reason: "system-recovery-ended")
+            }
+        }
+        let observation = target.observation.endedSummary(at: date)
         Libre3DiagnosticsLog.traceReconnect(
-            "system-recovery-ended reason=\(reason) peripheral=\(target.peripheralID.uuidString) scanner=\(target.scannerGeneration)"
+            "system-recovery-ended reason=\(reason) peripheral=\(target.peripheralID.uuidString) scanner=\(target.scannerGeneration) \(observation)"
         )
     }
 
@@ -3315,9 +3474,32 @@ final class Libre3DirectManager: ObservableObject {
                 found.peripheral.identifier,
                 savedID: savedPeripheralID
             ) {
+                let observedAt = Date()
+                if Libre3DiagnosticsLog.observeAdvertisingDuringSystemRecovery,
+                   systemReconnectState.owns(
+                       scannerGeneration: scannerGeneration,
+                       peripheralID: found.peripheral.identifier
+                   ) {
+                    let fingerprint = Libre3AdvertisementFingerprint(
+                        advertisementData: found.advertisementData,
+                        advertisedServiceUUIDs: found.advertisedServices.map(\.uuidString)
+                    )
+                    let sinceDrop = systemReconnectState.recordAdvertisement(
+                        scannerGeneration: scannerGeneration,
+                        peripheralID: found.peripheral.identifier,
+                        rssi: found.rssi,
+                        isConnectable: fingerprint.isConnectable,
+                        at: observedAt
+                    )
+                    if let sinceDrop {
+                        Libre3DiagnosticsLog.traceReconnect(
+                            "system-recovery-adv rssi=\(found.rssi) conn=\(fingerprint.connectable) since-drop=\(Libre3SystemRecoveryObservation.durationDescription(sinceDrop))"
+                        )
+                    }
+                }
                 attemptDiagnostics.recordAdvertisement(
                     rssi: found.rssi,
-                    at: Date()
+                    at: observedAt
                 )
                 workoutDiagnostics.recordAdvertisementCallback()
             }

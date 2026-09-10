@@ -974,6 +974,130 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
+    func testLibre3SystemRecoveryObservationReportsFirstAdvertisementAndBestRSSI() {
+        let startedAt = Date(timeIntervalSinceReferenceDate: 100)
+        var observation = Libre3SystemRecoveryObservation(
+            startedAt: startedAt,
+            isEnabled: true
+        )
+
+        XCTAssertEqual(
+            observation.recordAdvertisement(
+                rssi: -72,
+                isConnectable: true,
+                at: startedAt.addingTimeInterval(4)
+            ),
+            4
+        )
+        _ = observation.recordAdvertisement(
+            rssi: -65,
+            isConnectable: nil,
+            at: startedAt.addingTimeInterval(64)
+        )
+        XCTAssertEqual(
+            observation.connectedSummary(at: startedAt.addingTimeInterval(64.5)),
+            "elapsed=64.5s last-adv-age=0.5s adv-callbacks=2 rssi-best=-65"
+        )
+        XCTAssertEqual(
+            observation.endedSummary(at: startedAt.addingTimeInterval(90)),
+            "elapsed=90.0s adv-callbacks=2 connectable=1 unknown=1 rssi-best=-65 first-observed-adv=4.0s"
+        )
+    }
+
+    func testLibre3SystemRecoveryObservationReportsMeasuredZeroWithoutCallbacks() {
+        let startedAt = Date(timeIntervalSinceReferenceDate: 200)
+        let observation = Libre3SystemRecoveryObservation(
+            startedAt: startedAt,
+            isEnabled: true
+        )
+
+        XCTAssertEqual(
+            observation.endedSummary(at: startedAt.addingTimeInterval(75)),
+            "elapsed=75.0s adv-callbacks=0 connectable=0 unknown=0 rssi-best=n/a first-observed-adv=n/a"
+        )
+    }
+
+    func testLibre3SystemRecoveryObservationUsesNAWhenDisabled() {
+        let startedAt = Date(timeIntervalSinceReferenceDate: 250)
+        let observation = Libre3SystemRecoveryObservation(
+            startedAt: startedAt,
+            isEnabled: false
+        )
+
+        XCTAssertEqual(
+            observation.connectedSummary(at: startedAt.addingTimeInterval(20)),
+            "elapsed=20.0s last-adv-age=n/a adv-callbacks=n/a rssi-best=n/a"
+        )
+        XCTAssertEqual(
+            observation.endedSummary(at: startedAt.addingTimeInterval(30)),
+            "elapsed=30.0s adv-callbacks=n/a connectable=n/a unknown=n/a rssi-best=n/a first-observed-adv=n/a"
+        )
+    }
+
+    func testLibre3SystemReconnectObservationCountsOnlyItsOwnedTarget() {
+        let peripheralID = UUID()
+        var state = Libre3SystemReconnectState()
+        _ = state.handleDisconnect(
+            autoReconnectEnabled: true,
+            shouldMaintainConnection: true,
+            matchesSavedPeripheral: true,
+            isIntentional: false,
+            scannerGeneration: 7,
+            peripheralID: peripheralID,
+            isReconnecting: true,
+            disconnectTimestamp: 300,
+            observesAdvertisements: true
+        )
+
+        XCTAssertNil(
+            state.recordAdvertisement(
+                scannerGeneration: 8,
+                peripheralID: peripheralID,
+                rssi: -50,
+                isConnectable: true,
+                at: Date(timeIntervalSinceReferenceDate: 302)
+            )
+        )
+        XCTAssertEqual(
+            state.recordAdvertisement(
+                scannerGeneration: 7,
+                peripheralID: peripheralID,
+                rssi: -70,
+                isConnectable: true,
+                at: Date(timeIntervalSinceReferenceDate: 305)
+            ),
+            5
+        )
+        let target = state.end()
+        XCTAssertEqual(
+            target?.observation.endedSummary(
+                at: Date(timeIntervalSinceReferenceDate: 320)
+            ),
+            "elapsed=20.0s adv-callbacks=1 connectable=1 unknown=0 rssi-best=-70 first-observed-adv=5.0s"
+        )
+        XCTAssertNil(state.target)
+    }
+
+    func testLibre3SystemReconnectZeroTimestampUsesCurrentDate() throws {
+        var state = Libre3SystemReconnectState()
+        let before = Date()
+        _ = state.handleDisconnect(
+            autoReconnectEnabled: true,
+            shouldMaintainConnection: true,
+            matchesSavedPeripheral: true,
+            isIntentional: false,
+            scannerGeneration: 7,
+            peripheralID: UUID(),
+            isReconnecting: true,
+            observesAdvertisements: true
+        )
+        let after = Date()
+
+        let startedAt = try XCTUnwrap(state.target?.observation.startedAt)
+        XCTAssertGreaterThanOrEqual(startedAt, before)
+        XCTAssertLessThanOrEqual(startedAt, after)
+    }
+
     func testLibre3SystemReconnectAdoptsFastConnectionExactlyOnce() {
         let peripheralID = UUID()
         var state = Libre3SystemReconnectState()

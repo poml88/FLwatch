@@ -51,7 +51,7 @@ enum Libre3DiagnosticsLog {
     // Remove both and their guarded diagnostics after the investigation. If
     // write buffering is ever trialled (Phase A8), give it a separate flag.
     static let extendedTracing = true
-    static let observeAdvertisingDuringSystemRecovery = false
+    static let observeAdvertisingDuringSystemRecovery = true
 
     private static let storageEntryLimit = 100
     private static let supportEntryLimit = 20
