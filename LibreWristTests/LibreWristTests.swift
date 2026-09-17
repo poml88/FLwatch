@@ -2910,6 +2910,10 @@ final class LibreWristTests: XCTestCase {
 
         XCTAssertEqual(first.serviceDataLength, 4)
         XCTAssertEqual(
+            first.keyNamesDescription,
+            [connectableKey, serviceDataKey, txPowerKey].sorted().joined(separator: ",")
+        )
+        XCTAssertEqual(
             Libre3AdvertisementFingerprint(
                 advertisementData: [serviceDataKey: "[FDE3: 14 bytes]"],
                 advertisedServiceUUIDs: []
@@ -2973,10 +2977,18 @@ final class LibreWristTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            diagnostics.finish(batteryPercent: 76),
-            "workout-tally attempts=2 adv-callbacks=2 connects=1 glucose=3 gap-sum=2.0m batt=76%/-4%"
+            diagnostics.finish(
+                batteryPercent: 76,
+                endedAt: startedAt.addingTimeInterval(13 * 60)
+            ),
+            "workout-tally attempts=2 adv-callbacks=2 connects=1 glucose=3 duration=13.0m gap-sum=2.0m batt=76%/-4%"
         )
-        XCTAssertNil(diagnostics.finish(batteryPercent: 75))
+        XCTAssertNil(
+            diagnostics.finish(
+                batteryPercent: 75,
+                endedAt: startedAt.addingTimeInterval(14 * 60)
+            )
+        )
     }
 
     func testLatestWorkoutTallyIsPromotedAboveLaterTeardownLines() {

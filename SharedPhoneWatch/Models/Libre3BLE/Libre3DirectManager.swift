@@ -1752,6 +1752,7 @@ enum Libre3BatteryDiagnostics {
 struct Libre3AdvertisementFingerprint: Equatable {
     let connectable: String
     let txPower: String
+    let keyNames: [String]
     let keyCount: Int
     let advertisedServiceCount: Int
     let serviceDataLength: Int?
@@ -1766,7 +1767,8 @@ struct Libre3AdvertisementFingerprint: Equatable {
         txPower = Self.compactScalar(
             advertisementData[CBAdvertisementDataTxPowerLevelKey]
         )
-        keyCount = advertisementData.count
+        keyNames = advertisementData.keys.sorted()
+        keyCount = keyNames.count
         advertisedServiceCount = advertisedServiceUUIDs.count
         serviceDataLength = Self.dataLength(
             from: advertisementData[CBAdvertisementDataServiceDataKey]
@@ -1787,6 +1789,10 @@ struct Libre3AdvertisementFingerprint: Equatable {
         case "0": return false
         default: return nil
         }
+    }
+
+    var keyNamesDescription: String {
+        keyNames.isEmpty ? "none" : keyNames.joined(separator: ",")
     }
 
     private static func compactBoolean(_ value: String?) -> String {
@@ -1889,12 +1895,19 @@ struct Libre3WorkoutDiagnostics: Equatable {
         summedGap += excess
     }
 
-    mutating func finish(batteryPercent: Int?) -> String? {
+    mutating func finish(
+        batteryPercent: Int?,
+        endedAt: Date = Date()
+    ) -> String? {
         guard isActive else { return nil }
         isActive = false
+        let workoutDuration = startedAt.map {
+            durationDescription(max(0, endedAt.timeIntervalSince($0)))
+        } ?? "n/a"
         return "workout-tally attempts=\(attempts) " +
             "adv-callbacks=\(advertisementCallbacks) connects=\(connects) " +
-            "glucose=\(glucoseReadings) gap-sum=\(durationDescription(summedGap)) " +
+            "glucose=\(glucoseReadings) duration=\(workoutDuration) " +
+            "gap-sum=\(durationDescription(summedGap)) " +
             "batt=\(Libre3BatteryDiagnostics.description(startPercent: batteryStartPercent, currentPercent: batteryPercent))"
     }
 
@@ -4935,6 +4948,13 @@ final class Libre3DirectManager: ObservableObject {
             advertisementData: found.advertisementData,
             advertisedServiceUUIDs: found.advertisedServices.map(\.uuidString)
         )
+        // Key names reveal the advertisement's shape without exposing payload
+        // values. Emit once, then only if that shape changes.
+        if previousAdvertisementFingerprint?.keyNames != fingerprint.keyNames {
+            Libre3DiagnosticsLog.traceReconnect(
+                "adv-keys names=\(fingerprint.keyNamesDescription)"
+            )
+        }
         Libre3DiagnosticsLog.traceReconnect(
             "adv-fingerprint \(fingerprint.traceDescription(previous: previousAdvertisementFingerprint))"
         )
@@ -5026,6 +5046,9 @@ final class Libre3DirectManager: ObservableObject {
             // Publish before discovery: the long-lived NG event owner must be
             // able to fail discovery/notify continuations if the link drops.
             session = newSession
+            // Establish one connected-RSSI baseline for every attempt, including
+            // attempts that fail discovery, authorization, or data-plane re-arm.
+            sampleConnectedRSSI(for: newSession)
             finishSystemReconnectAdoption(
                 peripheral: connected,
                 scannerGeneration: scannerGeneration
