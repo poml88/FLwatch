@@ -622,7 +622,7 @@ class LibreLinkUp  {
             // TEMP DEBUG: log full getPatientGraph() response
             Logger.libreLinkUp.debug("LibreLinkUp: response data: [...] log commented out because of size")
 //            Logger.libreLinkUp.debug("LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)")
-//            responseData = "LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)"
+            responseData = "LibreLinkUp: response data: \(data.string.trimmingCharacters(in: .newlines)), status: \(status)"
             
             if status == 401 {
                 Logger.general.error("LibreLinkUp: error: Invalid auth session")
@@ -670,6 +670,17 @@ class LibreLinkUp  {
                             SharedData.libreLinkUpToken = ""
                             throw LibreLinkUpError.followerNotConnectToPatient
                         }
+                    }
+                }
+
+                // Any other non-zero status (including an unrecognized status-4 message) must not
+                // fall through silently into the "data" parsing below, which would otherwise just
+                // return an empty history with sensorType still .unknown and no visible error.
+                if status != 0 {
+                    if status == 4 {
+                        throw LibreLinkUpError.unknownStatus4
+                    } else {
+                        throw LibreLinkUpError.unknownErrorGraph
                     }
                 }
             }
@@ -982,6 +993,10 @@ class LibreLinkUp  {
             Logger.libreLinkUp.error("LibreLinkUp: error: \(LibreLinkUpError.tooManyRequests.localizedDescription)")
             DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
             throw LibreLinkUpError.tooManyRequests
+        } catch LibreLinkUpError.unknownStatus4 {
+            Logger.libreLinkUp.error("LibreLinkUp: error: \(LibreLinkUpError.unknownStatus4.localizedDescription)")
+            DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
+            throw LibreLinkUpError.unknownStatus4
         } catch LibreLinkUpError.serverMaintenance {
             Logger.libreLinkUp.error("LibreLinkUp: error: \(LibreLinkUpError.serverMaintenance.localizedDescription)")
             DebugMessageSingleton.shared.libreLinkUpOverlayError = ""
