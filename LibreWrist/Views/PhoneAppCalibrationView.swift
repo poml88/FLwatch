@@ -21,7 +21,7 @@ struct Libre3CalibrationLogEntry: Identifiable, Codable, Equatable {
 struct PhoneAppCalibrationView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.libreLinkUpHistory) private var history
-    @AppStorage("developerModeEnabled") private var developerModeEnabled = false
+    @AppStorage(DefaultsKey.developerModeEnabled.rawValue) private var developerModeEnabled = false
 
     @State private var draftOffsetMgDL: Int
     @State private var entries: [Libre3CalibrationLogEntry]

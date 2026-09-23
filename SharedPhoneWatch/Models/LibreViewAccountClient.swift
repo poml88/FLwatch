@@ -2,11 +2,10 @@
 //  LibreViewAccountClient.swift
 //  LibreWrist
 //
-//  Fetches the LibreView **AccountId** for a set of FreeStyle LibreLink
-//  credentials, so the user doesn't have to know it by heart to take over a
-//  Libre 3 sensor. Its FNV-32a hash is the receiver ID the sensor was activated
-//  with (`Libre3StateStore.receiverID()`), so the AccountId must come from the
-//  account that activated the sensor in the FreeStyle Libre 3 app.
+//  Fetches the LibreView **AccountId** and country for a set of FreeStyle
+//  LibreLink credentials. The AccountId directly produces the receiver ID for
+//  FreeStyle Libre 3 and legacy Libre by Abbott, and selects the account-scoped
+//  receiver UUID for current Libre by Abbott.
 //
 //  This is the **LibreView / FreeStyle LibreLink** API (`nisperson/
 //  getauthentication`), NOT the LibreLinkUp *sharing* API in `LibreLinkUp.swift`
@@ -16,14 +15,14 @@
 //    1. GET the FSL3 assets manifest → `Configuration` (a config URL).
 //    2. GET that config → `newYuUrl` (API base) + `newYuApiKey`.
 //    3. POST `{newYuUrl}/api/nisperson/getauthentication` with the credentials
-//       → `result.AccountId`.
+//       → `result.AccountId` + `result.Country`.
 //
 
 import Foundation
 import OSLog
 import Security
 
-enum LibreViewAccountError: Error, LocalizedError {
+enum LibreViewAccountError: Error, LocalizedError, Sendable {
     case missingCredentials
     case configUnavailable
     case badResponse(Int)
@@ -51,9 +50,17 @@ enum LibreViewAccountError: Error, LocalizedError {
     }
 }
 
+struct LibreViewAccountLookup: Sendable, Equatable {
+    let accountID: String
+    /// ISO country code returned by `getauthentication`. It may be empty for an
+    /// older or malformed response; the Libre by Abbott client rejects that
+    /// rather than guessing a regional host.
+    let country: String
+}
+
 /// One-shot client for the LibreView `getauthentication` call. Stateless apart
 /// from the persisted device ID; safe to instantiate per request.
-struct LibreViewAccountClient {
+struct LibreViewAccountClient: Sendable {
 
     // Mirrors Juggluco's Libre 3 constants (`Libreview.java`).
     private static let assetsManifest =
@@ -67,7 +74,7 @@ struct LibreViewAccountClient {
 
     /// Fetch the AccountId for the given credentials. Runs the full config →
     /// getauthentication flow. Throws `LibreViewAccountError` on failure.
-    func fetchAccountID(email: String, password: String) async throws -> String {
+    func fetchAccountID(email: String, password: String) async throws -> LibreViewAccountLookup {
         let email = email.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !email.isEmpty, !password.isEmpty else {
             throw LibreViewAccountError.missingCredentials
@@ -83,8 +90,8 @@ struct LibreViewAccountClient {
                 config: config, email: email, password: password, setDevice: setDevice
             )
             switch result {
-            case .accountID(let id):
-                return id
+            case .account(let account):
+                return account
             case .retryWithSetDevice:
                 setDevice = true
             }
@@ -94,7 +101,7 @@ struct LibreViewAccountClient {
 
     // MARK: - Step 1 + 2: configuration
 
-    private struct LibreViewConfig {
+    private struct LibreViewConfig: Sendable {
         let baseURL: String
         let apiKey: String
     }
@@ -118,8 +125,8 @@ struct LibreViewAccountClient {
 
     // MARK: - Step 3: getauthentication
 
-    private enum AuthResult {
-        case accountID(String)
+    private enum AuthResult: Sendable {
+        case account(LibreViewAccountLookup)
         case retryWithSetDevice
     }
 
@@ -183,7 +190,9 @@ struct LibreViewAccountClient {
               let accountID = result["AccountId"] as? String, !accountID.isEmpty else {
             throw LibreViewAccountError.accountIdMissing
         }
-        return .accountID(accountID)
+        let country = (result["Country"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return .account(LibreViewAccountLookup(accountID: accountID, country: country))
     }
 
     // MARK: - Helpers
@@ -203,7 +212,7 @@ struct LibreViewAccountClient {
 
     /// `language-REGION` tag (e.g. `en-US`), matching the `Culture` /
     /// `Accept-Language` Juggluco derives from the device locale.
-    private static func languageTag() -> String {
+    fileprivate static func languageTag() -> String {
         let locale = Locale.current
         let language = locale.language.languageCode?.identifier ?? "en"
         let region = locale.region?.identifier ?? "US"
@@ -220,6 +229,292 @@ struct LibreViewAccountClient {
         }
         let generated = UUID().uuidString.lowercased()
         UserDefaults.group.set(generated, forKey: DefaultsKey.libre3LibreViewDeviceId.rawValue)
+        return generated
+    }
+}
+
+struct Libre1Login: Sendable, Equatable {
+    let receiverID: String
+    let activeSensorSerial: String?
+    let activeSensorReceiverID: UInt32?
+    /// True when code 20 required the single user-initiated `force=true` retry.
+    let forced: Bool
+}
+
+enum Libre1AccountError: Error, LocalizedError, Equatable, Sendable {
+    case deviceBound
+    case consentsRequired
+    case rateLimited
+    case countryMissing
+    case receiverIDMissing
+    case badResponse(status: Int, code: Int?)
+
+    var errorDescription: String? {
+        switch self {
+        case .deviceBound:
+            return String(
+                localized: "Libre by Abbott could not bind this FLwatch installation to the account.",
+                comment: "Error shown when the Libre by Abbott login still reports that the account belongs to another device after one forced retry."
+            )
+        case .consentsRequired:
+            return String(
+                localized: "Libre by Abbott requires account consent before it can return the receiver ID.",
+                comment: "Error shown when the Libre by Abbott login rejects the terms-of-use or privacy-policy consent sent by FLwatch."
+            )
+        case .rateLimited:
+            return String(
+                localized: "Too many Libre by Abbott login attempts. Try again later.",
+                comment: "Error shown when the Libre by Abbott login service rate-limits the user's sign-in attempts."
+            )
+        case .countryMissing:
+            return String(
+                localized: "LibreView returned no account country, so FLwatch could not choose the Libre by Abbott login server.",
+                comment: "Error shown when LibreView omits the country code needed to select the country-specific Libre by Abbott server."
+            )
+        case .receiverIDMissing:
+            return String(
+                localized: "Libre by Abbott login succeeded but returned no valid receiver ID.",
+                comment: "Error shown when the Libre by Abbott login response has no valid receiver UUID."
+            )
+        case .badResponse(let status, let code):
+            if let code {
+                return String(
+                    localized: "Libre by Abbott login failed (HTTP \(status), code \(code)).",
+                    comment: "Generic Libre by Abbott login error. The first value is an HTTP status and the second is the service's numeric error code."
+                )
+            }
+            return String(
+                localized: "Libre by Abbott login failed (HTTP \(status)).",
+                comment: "Generic Libre by Abbott login error when the service returned no numeric error code. The value is an HTTP status."
+            )
+        }
+    }
+}
+
+/// One-shot client for the plaintext Libre by Abbott (`libre1`) login. The
+/// account-scoped receiver UUID is cached by the caller, but tokens and personal
+/// fields are deliberately neither retained nor logged.
+struct Libre1AccountClient: Sendable {
+    private static let userAgent = "libre1;1.4.0.2058;iOS;26.6.1"
+    private static let sharingWebVersion = "1.6.38"
+
+    private struct Consent: Encodable, Sendable {
+        let id: String
+        let action: String
+    }
+
+    private struct LoginRequest: Encodable, Sendable {
+        let email: String
+        let password: String
+        let consents: [Consent]
+    }
+
+    private struct ErrorResponse: Decodable, Sendable {
+        let code: Int?
+    }
+
+    private struct SuccessResponse: Decodable, Sendable {
+        struct Include: Decodable, Sendable {
+            struct Patient: Decodable, Sendable {
+                let domainData: String?
+            }
+
+            let patient: Patient?
+        }
+
+        let receiverID: String?
+        let include: Include?
+    }
+
+    private struct DomainData: Decodable, Sendable {
+        struct ActiveSensor: Decodable, Sendable {
+            let serialNumber: String?
+            let receiverId: UInt32?
+        }
+
+        let activeSensor: ActiveSensor?
+    }
+
+    private enum AttemptResult: Sendable {
+        case success(Libre1Login)
+        case retryWithForce
+    }
+
+    func login(
+        email: String,
+        password: String,
+        country: String
+    ) async throws -> Libre1Login {
+        let country = country.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard country.unicodeScalars.count == 2,
+              country.unicodeScalars.allSatisfy({ $0.value >= 97 && $0.value <= 122 }) else {
+            throw Libre1AccountError.countryMissing
+        }
+        guard let url = URL(string: "https://libreapi-c-\(country).libreview.io/v1/login") else {
+            throw Libre1AccountError.countryMissing
+        }
+
+        Logger.libre3.info("Libre by Abbott login host: \(url.host ?? "missing", privacy: .public)")
+
+        let body = LoginRequest(
+            email: email.trimmingCharacters(in: .whitespacesAndNewlines),
+            password: password,
+            consents: [
+                Consent(id: "touLibre", action: "accept"),
+                Consent(id: "pp", action: "accept")
+            ]
+        )
+        // Reuse the exact bytes for the optional forced attempt.
+        let bodyData = try JSONEncoder().encode(body)
+
+        switch try await performLogin(url: url, body: bodyData, force: false) {
+        case .success(let login):
+            return login
+        case .retryWithForce:
+            switch try await performLogin(url: url, body: bodyData, force: true) {
+            case .success(let login):
+                return login
+            case .retryWithForce:
+                // `shouldRetry` never permits a second retry.
+                throw Libre1AccountError.deviceBound
+            }
+        }
+    }
+
+    private func performLogin(
+        url: URL,
+        body: Data,
+        force: Bool
+    ) async throws -> AttemptResult {
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        components?.queryItems = [URLQueryItem(name: "force", value: force ? "true" : "false")]
+        guard let requestURL = components?.url else {
+            throw Libre1AccountError.countryMissing
+        }
+
+        var request = URLRequest(url: requestURL)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 30
+        request.httpBody = body
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(Self.userAgent, forHTTPHeaderField: "X-User-Agent")
+        request.setValue(Self.sharingWebVersion, forHTTPHeaderField: "Sharing-Web-Version")
+        request.setValue("libre1", forHTTPHeaderField: "X-Bundle-ID")
+        request.setValue(Self.deviceID(), forHTTPHeaderField: "X-Device-ID")
+        request.setValue("", forHTTPHeaderField: "X-Integrity-Token")
+        request.setValue("application/json, text/plain, */*", forHTTPHeaderField: "Accept")
+        let languageTag = LibreViewAccountClient.languageTag()
+        let language = languageTag.split(separator: "-").first.map(String.init) ?? languageTag
+        request.setValue("\(languageTag),\(language);q=0.9", forHTTPHeaderField: "Accept-Language")
+        request.setValue("", forHTTPHeaderField: "X-Installation-ID")
+        request.setValue("https://libre1.libreview.io", forHTTPHeaderField: "Origin")
+        request.setValue("https://libre1.libreview.io/", forHTTPHeaderField: "Referer")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw Libre1AccountError.badResponse(status: -1, code: nil)
+        }
+
+        let bodyCode = Self.responseCode(from: data)
+        let willRetry = Self.shouldRetry(
+            statusCode: http.statusCode,
+            bodyCode: bodyCode,
+            force: force
+        )
+        if http.statusCode != 200 {
+            let codeDescription = bodyCode.map(String.init) ?? "missing"
+            if willRetry {
+                Logger.libre3.info(
+                    "Libre by Abbott login requires force=true retry: HTTP \(http.statusCode, privacy: .public), body code \(codeDescription, privacy: .public)"
+                )
+            } else {
+                Logger.libre3.error(
+                    "Libre by Abbott login failed: HTTP \(http.statusCode, privacy: .public), body code \(codeDescription, privacy: .public), force=\(force, privacy: .public)"
+                )
+            }
+        }
+        if http.statusCode == 429 {
+            Self.logRateLimitHeaders(http)
+        }
+        if willRetry {
+            return .retryWithForce
+        }
+
+        let login = try Self.parseResponse(
+            data: data,
+            statusCode: http.statusCode,
+            forced: force
+        )
+        Logger.libre3.info(
+            "Libre by Abbott login succeeded; receiver UUID \(login.receiverID, privacy: .private), force=\(force, privacy: .public)"
+        )
+        return .success(login)
+    }
+
+    static func shouldRetry(statusCode: Int, bodyCode: Int?, force: Bool) -> Bool {
+        statusCode == 401 && bodyCode == 20 && !force
+    }
+
+    static func parseResponse(
+        data: Data,
+        statusCode: Int,
+        forced: Bool
+    ) throws -> Libre1Login {
+        let code = responseCode(from: data)
+        guard statusCode == 200 else {
+            if statusCode == 429 { throw Libre1AccountError.rateLimited }
+            if code == 20 { throw Libre1AccountError.deviceBound }
+            if code == 4 { throw Libre1AccountError.consentsRequired }
+            throw Libre1AccountError.badResponse(status: statusCode, code: code)
+        }
+
+        guard let response = try? JSONDecoder().decode(SuccessResponse.self, from: data),
+              let receiverID = response.receiverID,
+              let uuid = UUID(uuidString: receiverID)
+        else {
+            throw Libre1AccountError.receiverIDMissing
+        }
+
+        var activeSensorSerial: String?
+        var activeSensorReceiverID: UInt32?
+        if let domainData = response.include?.patient?.domainData,
+           let data = domainData.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode(DomainData.self, from: data) {
+            activeSensorSerial = decoded.activeSensor?.serialNumber
+            activeSensorReceiverID = decoded.activeSensor?.receiverId
+        }
+
+        return Libre1Login(
+            receiverID: uuid.uuidString.lowercased(),
+            activeSensorSerial: activeSensorSerial,
+            activeSensorReceiverID: activeSensorReceiverID,
+            forced: forced
+        )
+    }
+
+    private static func responseCode(from data: Data) -> Int? {
+        (try? JSONDecoder().decode(ErrorResponse.self, from: data))?.code
+    }
+
+    private static func logRateLimitHeaders(_ response: HTTPURLResponse) {
+        let limit = response.value(forHTTPHeaderField: "X-Attempts-Limit") ?? "missing"
+        let remaining = response.value(forHTTPHeaderField: "X-Attempts-Remaining") ?? "missing"
+        let resetAfter = response.value(forHTTPHeaderField: "X-Attempts-Reset-After") ?? "missing"
+        let resetAt = response.value(forHTTPHeaderField: "X-Attempts-Reset-At") ?? "missing"
+        Logger.libre3.error(
+            "Libre by Abbott rate limit: limit=\(limit, privacy: .public), remaining=\(remaining, privacy: .public), reset-after=\(resetAfter, privacy: .public), reset-at=\(resetAt, privacy: .public)"
+        )
+    }
+
+    /// Stable per-install identity. Generating this only during an explicit
+    /// account lookup keeps device binding away from pairing and background work.
+    private static func deviceID() -> String {
+        let existing = SharedData.libre3Libre1DeviceId
+        if let uuid = UUID(uuidString: existing) {
+            return uuid.uuidString.lowercased()
+        }
+        let generated = UUID().uuidString.lowercased()
+        SharedData.libre3Libre1DeviceId = generated
         return generated
     }
 }

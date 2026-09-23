@@ -120,8 +120,68 @@
         }
       }
     },
+    "“Libre 3 app” here means whichever Abbott app you use: FreeStyle Libre 3 or Libre by Abbott." : {
+      "comment" : "Defines a shorthand the rest of this screen uses, so the other texts can say 'the Libre 3 app' without naming one of Abbott's two apps and misleading users of the other. Keep both product names untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Libre 3-App“ bezeichnet hier die von dir verwendete Abbott-App: FreeStyle Libre 3 oder Libre by Abbott."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aquí, «app Libre 3» se refiere a la app de Abbott que uses: FreeStyle Libre 3 o Libre by Abbott."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ici, « app Libre 3 » désigne l’app Abbott que vous utilisez : FreeStyle Libre 3 ou Libre by Abbott."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qui, “app Libre 3” indica l’app Abbott che utilizzi: FreeStyle Libre 3 o Libre by Abbott."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ここで「Libre 3アプリ」とは、使用しているAbbottのアプリ（FreeStyle Libre 3またはLibre by Abbott）を指します。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Met ‘Libre 3-app’ wordt hier de Abbott-app bedoeld die je gebruikt: FreeStyle Libre 3 of Libre by Abbott."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Określenie „aplikacja Libre 3” oznacza tutaj używaną aplikację firmy Abbott: FreeStyle Libre 3 lub Libre by Abbott."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Под «приложением Libre 3» здесь понимается используемое приложение Abbott: FreeStyle Libre 3 или Libre by Abbott."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此处的“Libre 3 App”是指你使用的 Abbott App：FreeStyle Libre 3 或 Libre by Abbott。"
+          }
+        }
+      }
+    },
     "“Libre 3 app” here means whichever Abbott app you use: FreeStyle Libre 3, or Libre by Abbott in the US." : {
       "comment" : "Defines a shorthand the rest of this screen uses, so the other texts can say 'the Libre 3 app' without naming one of Abbott's two apps and misleading users of the other. Keep both product names untranslated.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -178,6 +238,9 @@
           }
         }
       }
+    },
+    "(override)" : {
+      "comment" : "Marks that the displayed Libre 3 receiver ID comes from the developer override instead of the account lookup."
     },
     "[...]" : {
 
@@ -9871,6 +9934,7 @@
     },
     "Enter your LibreView Account ID above first — the selected app's receiver ID is derived from it." : {
       "comment" : "Shown under a disabled scan button when the LibreView Account ID field is empty but the chosen app needs it. The sensor's receiver ID is computed from that account ID.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -11606,6 +11670,7 @@
 
     },
     "Get Account ID" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -11721,6 +11786,65 @@
         }
       }
     },
+    "Get Receiver ID" : {
+      "comment" : "Button that signs in to retrieve the receiver ID used for Libre 3 sensor pairing.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receiver-ID abrufen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtener ID del receptor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtenir l’identifiant du récepteur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ottieni ID ricevitore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レシーバーIDを取得"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontvanger-ID ophalen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobierz identyfikator odbiornika"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Получить идентификатор приёмника"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "获取接收器 ID"
+          }
+        }
+      }
+    },
     "Get the current blood glucose." : {
       "localizations" : {
         "de" : {
@@ -11780,6 +11904,7 @@
       }
     },
     "Getting Account ID…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -11833,6 +11958,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在获取账户ID…"
+          }
+        }
+      }
+    },
+    "Getting Receiver ID…" : {
+      "comment" : "Button label shown while FLwatch signs in to retrieve the receiver ID used for Libre 3 sensor pairing.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receiver-ID wird abgerufen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obteniendo ID del receptor…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtention de l’identifiant du récepteur…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recupero ID ricevitore…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レシーバーIDを取得中…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontvanger-ID ophalen…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobieranie identyfikatora odbiornika…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Получение идентификатора приёмника…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在获取接收器 ID…"
           }
         }
       }
@@ -14749,7 +14933,7 @@
       }
     },
     "Libre by Abbott" : {
-      "comment" : "Picker option naming the app that started the sensor: Abbott's newer US app, called 'Libre by Abbott' in the App Store. Keep the product name untranslated.",
+      "comment" : "Product name used for the current Libre by Abbott app in the sensor-activation picker and in connection guidance. Keep the product name untranslated.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -14803,6 +14987,366 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Libre by Abbott"
+          }
+        }
+      }
+    },
+    "Libre by Abbott could not bind this FLwatch installation to the account." : {
+      "comment" : "Error shown when the Libre by Abbott login still reports that the account belongs to another device after one forced retry.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott konnte diese FLwatch-Installation nicht mit dem Konto verknüpfen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott no pudo vincular esta instalación de FLwatch con la cuenta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott n’a pas pu associer cette installation de FLwatch au compte."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott non ha potuto associare questa installazione di FLwatch all’account."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbottは、このFLwatchのインストールをアカウントに関連付けられませんでした。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott kon deze FLwatch-installatie niet aan het account koppelen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott nie mogła powiązać tej instalacji FLwatch z kontem."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott не удалось связать эту установку FLwatch с учётной записью."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott 无法将此 FLwatch 安装实例绑定到该账户。"
+          }
+        }
+      }
+    },
+    "Libre by Abbott login failed (HTTP %lld, code %lld)." : {
+      "comment" : "Generic Libre by Abbott login error. The first value is an HTTP status and the second is the service's numeric error code.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung bei Libre by Abbott fehlgeschlagen (HTTP %1$lld, Code %2$lld)."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Libre by Abbott login failed (HTTP %1$lld, code %2$lld)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error al iniciar sesión en Libre by Abbott (HTTP %1$lld, código %2$lld)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de la connexion à Libre by Abbott (HTTP %1$lld, code %2$lld)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accesso a Libre by Abbott non riuscito (HTTP %1$lld, codice %2$lld)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbottへのログインに失敗しました（HTTP %1$lld、コード %2$lld）。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aanmelden bij Libre by Abbott mislukt (HTTP %1$lld, code %2$lld)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logowanie do Libre by Abbott nie powiodło się (HTTP %1$lld, kod %2$lld)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось войти в Libre by Abbott (HTTP %1$lld, код %2$lld)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott 登录失败（HTTP %1$lld，代码 %2$lld）。"
+          }
+        }
+      }
+    },
+    "Libre by Abbott login failed (HTTP %lld)." : {
+      "comment" : "Generic Libre by Abbott login error when the service returned no numeric error code. The value is an HTTP status.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung bei Libre by Abbott fehlgeschlagen (HTTP %lld)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error al iniciar sesión en Libre by Abbott (HTTP %lld)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de la connexion à Libre by Abbott (HTTP %lld)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accesso a Libre by Abbott non riuscito (HTTP %lld)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbottへのログインに失敗しました（HTTP %lld）。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aanmelden bij Libre by Abbott mislukt (HTTP %lld)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logowanie do Libre by Abbott nie powiodło się (HTTP %lld)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось войти в Libre by Abbott (HTTP %lld)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott 登录失败（HTTP %lld）。"
+          }
+        }
+      }
+    },
+    "Libre by Abbott login succeeded but returned no valid receiver ID." : {
+      "comment" : "Error shown when the Libre by Abbott login response has no valid receiver UUID.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anmeldung bei Libre by Abbott war erfolgreich, gab aber keine gültige Receiver-ID zurück."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El inicio de sesión en Libre by Abbott se realizó correctamente, pero no devolvió un ID de receptor válido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La connexion à Libre by Abbott a réussi, mais aucun identifiant de récepteur valide n’a été renvoyé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’accesso a Libre by Abbott è riuscito, ma non è stato restituito un ID ricevitore valido."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbottへのログインには成功しましたが、有効なレシーバーIDが返されませんでした。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aanmelden bij Libre by Abbott is gelukt, maar er is geen geldige ontvanger-ID geretourneerd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logowanie do Libre by Abbott powiodło się, ale nie zwrócono prawidłowego identyfikatora odbiornika."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в Libre by Abbott выполнен, но действительный идентификатор приёмника не получен."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott 登录成功，但未返回有效的接收器 ID。"
+          }
+        }
+      }
+    },
+    "Libre by Abbott requires account consent before it can return the receiver ID." : {
+      "comment" : "Error shown when the Libre by Abbott login rejects the terms-of-use or privacy-policy consent sent by FLwatch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott benötigt die Zustimmung des Kontos, bevor die Receiver-ID zurückgegeben werden kann."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott requiere el consentimiento de la cuenta para poder devolver el ID del receptor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott nécessite le consentement du compte avant de pouvoir renvoyer l’identifiant du récepteur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott richiede il consenso dell’account prima di poter restituire l’ID ricevitore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by AbbottがレシーバーIDを返すには、アカウントでの同意が必要です。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott vereist toestemming voor het account voordat de ontvanger-ID kan worden geretourneerd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott wymaga zgody na koncie, zanim będzie mogła zwrócić identyfikator odbiornika."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы получить идентификатор приёмника в Libre by Abbott, необходимо предоставить согласие в учётной записи."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott 需要账户同意后才能返回接收器 ID。"
+          }
+        }
+      }
+    },
+    "Libre by Abbott V ≤ 1.3.0" : {
+      "comment" : "Picker option for a sensor started by Libre by Abbott version 1.3.0 or earlier. V means version; keep the product name untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott V ≤ 1.3.0"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott V ≤ 1.3.0"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott V ≤ 1.3.0"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott V ≤ 1.3.0"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott V ≤ 1.3.0"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott V ≤ 1.3.0"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott V ≤ 1.3.0"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott V ≤ 1.3.0"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott V ≤ 1.3.0"
           }
         }
       }
@@ -15095,6 +15639,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "LibreView密码"
+          }
+        }
+      }
+    },
+    "LibreView returned no account country, so FLwatch could not choose the Libre by Abbott login server." : {
+      "comment" : "Error shown when LibreView omits the country code needed to select the country-specific Libre by Abbott server.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreView hat kein Kontoland zurückgegeben, daher konnte FLwatch den Anmeldeserver für Libre by Abbott nicht auswählen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreView no devolvió el país de la cuenta, por lo que FLwatch no pudo elegir el servidor de inicio de sesión de Libre by Abbott."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreView n’a renvoyé aucun pays pour le compte. FLwatch n’a donc pas pu choisir le serveur de connexion à Libre by Abbott."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreView non ha restituito il paese dell’account, quindi FLwatch non ha potuto scegliere il server di accesso a Libre by Abbott."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreViewからアカウントの国が返されなかったため、FLwatchはLibre by Abbottのログインサーバーを選択できませんでした。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreView heeft geen accountland geretourneerd, waardoor FLwatch de aanmeldserver voor Libre by Abbott niet kon kiezen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreView nie zwrócił kraju konta, dlatego FLwatch nie mógł wybrać serwera logowania Libre by Abbott."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreView не вернул страну учётной записи, поэтому FLwatch не удалось выбрать сервер входа Libre by Abbott."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LibreView 未返回账户所在国家或地区，因此 FLwatch 无法选择 Libre by Abbott 登录服务器。"
           }
         }
       }
@@ -17401,6 +18004,65 @@
     "Not installed" : {
       "comment" : "Value shown when Apple Watch has not acknowledged any Libre 3 provisioning revision."
     },
+    "Not retrieved yet" : {
+      "comment" : "Value shown in the Receiver ID row before the user has retrieved an ID for the selected Libre 3 app.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch nicht abgerufen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no se ha obtenido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas encore récupéré"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non ancora recuperato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未取得"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nog niet opgehaald"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeszcze nie pobrano"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ещё не получен"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未获取"
+          }
+        }
+      }
+    },
     "Notable events" : {
 
     },
@@ -19447,8 +20109,68 @@
         }
       }
     },
+    "Pick the app and version this sensor was started with. FreeStyle Libre 3 and Libre by Abbott use different receiver IDs, and Libre by Abbott changed its method in version 1.4.0. The wrong choice is rejected (error 0xB1)." : {
+      "comment" : "Explains the app picker when pairing an already-running sensor. Libre by Abbott version 1.4.0 changed how its receiver ID is derived. 0xB1 is the sensor's own error code for a receiver-ID mismatch; keep it as-is. Keep the product names untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle die App und Version aus, mit der dieser Sensor gestartet wurde. FreeStyle Libre 3 und Libre by Abbott verwenden unterschiedliche Receiver-IDs, und Libre by Abbott hat die Methode in Version 1.4.0 geändert. Die falsche Auswahl wird abgelehnt (Fehler 0xB1)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige la app y la versión con las que se inició este sensor. FreeStyle Libre 3 y Libre by Abbott usan ID de receptor distintos, y Libre by Abbott cambió su método en la versión 1.4.0. La opción incorrecta se rechazará (error 0xB1)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez l’app et la version avec lesquelles ce capteur a été démarré. FreeStyle Libre 3 et Libre by Abbott utilisent des identifiants de récepteur différents, et Libre by Abbott a changé de méthode dans la version 1.4.0. Le mauvais choix est refusé (erreur 0xB1)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli l’app e la versione con cui è stato avviato questo sensore. FreeStyle Libre 3 e Libre by Abbott usano ID ricevitore diversi e Libre by Abbott ha cambiato metodo nella versione 1.4.0. La scelta errata viene rifiutata (errore 0xB1)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このセンサーを開始したアプリとバージョンを選択してください。FreeStyle Libre 3とLibre by AbbottではレシーバーIDが異なり、Libre by Abbottはバージョン1.4.0でその生成方法を変更しました。選択を間違えると拒否されます（エラー0xB1）。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies de app en versie waarmee deze sensor is gestart. FreeStyle Libre 3 en Libre by Abbott gebruiken verschillende ontvanger-ID’s en Libre by Abbott heeft de methode in versie 1.4.0 gewijzigd. De verkeerde keuze wordt geweigerd (fout 0xB1)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz aplikację i wersję, w której uruchomiono ten sensor. FreeStyle Libre 3 i Libre by Abbott używają różnych identyfikatorów odbiornika, a Libre by Abbott zmieniła metodę w wersji 1.4.0. Niewłaściwy wybór zostanie odrzucony (błąd 0xB1)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите приложение и его версию, в которых был запущен этот сенсор. FreeStyle Libre 3 и Libre by Abbott используют разные идентификаторы приёмника, а в версии 1.4.0 Libre by Abbott изменился способ его вычисления. Неверный выбор будет отклонён (ошибка 0xB1)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择启动此传感器时所用的 App 和版本。FreeStyle Libre 3 与 Libre by Abbott 使用不同的接收器 ID，而 Libre by Abbott 从 1.4.0 版开始更改了生成方法。选择错误时将被拒绝（错误 0xB1）。"
+          }
+        }
+      }
+    },
     "Pick the app this sensor was started in. Both apps derive the receiver ID from your LibreView account but compute it differently, so the wrong one is rejected (error 0xB1). Libre by Abbott is the newer US app; elsewhere it is FreeStyle Libre 3." : {
       "comment" : "Explains the app picker when pairing an already-running sensor. 0xB1 is the sensor's own error code for a receiver-ID mismatch; keep it as-is. Keep the product names untranslated.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -20281,6 +21003,9 @@
           }
         }
       }
+    },
+    "Receiver ID override" : {
+      "comment" : "Developer-only text field for overriding the receiver ID sent during Libre 3 pairing."
     },
     "Recent sensor readings look steady. This is usually a better time to compare, but the values may still differ." : {
       "comment" : "A message that appears in a view that calibrates a Libre 3 glucose meter.",
@@ -24301,6 +25026,65 @@
         }
       }
     },
+    "Sign in above and tap Get Receiver ID before scanning." : {
+      "comment" : "Shown under the disabled sensor-scan button when the selected vendor app's receiver ID has not been retrieved. 'Get Receiver ID' is the nearby button label.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melde dich oben an und tippe vor dem Scannen auf „Receiver-ID abrufen“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión arriba y toca «Obtener ID del receptor» antes de escanear."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connectez-vous ci-dessus et touchez « Obtenir l’identifiant du récepteur » avant de scanner."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accedi qui sopra e tocca “Ottieni ID ricevitore” prima della scansione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上でサインインし、スキャンする前に「レシーバーIDを取得」をタップしてください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meld je hierboven aan en tik vóór het scannen op ‘Ontvanger-ID ophalen’."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaloguj się powyżej i przed skanowaniem stuknij „Pobierz identyfikator odbiornika”."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войдите в учётную запись выше и перед сканированием нажмите «Получить идентификатор приёмника»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先在上方登录并轻点“获取接收器 ID”，然后再扫描。"
+          }
+        }
+      }
+    },
     "Sign in as the sensor wearer" : {
       "comment" : "A label displayed in a help section of a screen.",
       "isCommentAutoGenerated" : true,
@@ -24363,6 +25147,7 @@
     },
     "Sign in with the LibreView account used by the app above and tap Get Account ID to fill it in. The receiver ID is derived from it, so it has to be the account that sensor belongs to." : {
       "comment" : "Footer of the LibreView credentials section. “Get Account ID” is the button directly above — keep the two wordings consistent.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -24416,6 +25201,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用上方所选 App 使用的 LibreView 账户登录，然后轻点“获取账户ID”自动填入。接收器 ID 由此计算得出，因此必须使用此传感器所属的账户。"
+          }
+        }
+      }
+    },
+    "Sign in with the LibreView account used by the app above, then tap Get Receiver ID." : {
+      "comment" : "Footer of the LibreView credentials section. This wording applies both before starting a fresh sensor and when joining an active one. 'Get Receiver ID' is the button directly above; keep the wording consistent.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melde dich mit dem LibreView-Konto an, das von der oben ausgewählten App verwendet wird, und tippe dann auf „Receiver-ID abrufen“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión con la cuenta de LibreView que usa la app seleccionada arriba y toca «Obtener ID del receptor»."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connectez-vous avec le compte LibreView utilisé par l’app sélectionnée ci-dessus, puis touchez « Obtenir l’identifiant du récepteur »."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accedi con l’account LibreView usato dall’app selezionata sopra, quindi tocca “Ottieni ID ricevitore”."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上で選択したアプリで使用しているLibreViewアカウントにサインインし、「レシーバーIDを取得」をタップしてください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meld je aan met het LibreView-account dat door de hierboven gekozen app wordt gebruikt en tik op ‘Ontvanger-ID ophalen’."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaloguj się na konto LibreView używane przez wybraną powyżej aplikację, a następnie stuknij „Pobierz identyfikator odbiornika”."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войдите в учётную запись LibreView, используемую выбранным выше приложением, затем нажмите «Получить идентификатор приёмника»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用上方所选 App 使用的 LibreView 账户登录，然后轻点“获取接收器 ID”。"
           }
         }
       }
@@ -28271,6 +29115,65 @@
         }
       }
     },
+    "Too many Libre by Abbott login attempts. Try again later." : {
+      "comment" : "Error shown when the Libre by Abbott login service rate-limits the user's sign-in attempts.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu viele Anmeldeversuche bei Libre by Abbott. Versuche es später erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demasiados intentos de inicio de sesión en Libre by Abbott. Inténtalo de nuevo más tarde."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trop de tentatives de connexion à Libre by Abbott. Réessayez plus tard."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Troppi tentativi di accesso a Libre by Abbott. Riprova più tardi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbottへのログイン試行回数が多すぎます。後でもう一度お試しください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Te veel aanmeldpogingen bij Libre by Abbott. Probeer het later opnieuw."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zbyt wiele prób logowania do Libre by Abbott. Spróbuj ponownie później."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Слишком много попыток входа в Libre by Abbott. Повторите попытку позже."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott 登录尝试次数过多。请稍后再试。"
+          }
+        }
+      }
+    },
     "Too many network requests." : {
       "comment" : "Error message displayed when the app receives too many network requests in a short amount of time.",
       "isCommentAutoGenerated" : true,
@@ -29027,6 +29930,9 @@
           }
         }
       }
+    },
+    "Use 0x followed by 8 hex digits, or a decimal number." : {
+      "comment" : "Inline validation hint for the developer Receiver ID override field."
     },
     "Use average as offset" : {
       "localizations" : {

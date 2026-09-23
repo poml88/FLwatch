@@ -329,6 +329,9 @@ struct QuietHours: Equatable, Sendable {
 
 // MARK: - All keys in one place
 enum DefaultsKey: String {
+    // Stored in UserDefaults.standard, not the shared app-group defaults.
+    case developerModeEnabled = "developerModeEnabled"
+
     // SharedData keys
     case insulinSelected = "insulinSelectedKey"
     case showInsulinDeliveryMarksPhone = "showInsulinDeliveryMarksPhoneKey"
@@ -442,10 +445,12 @@ enum DefaultsKey: String {
     case libre3Serial = "libre3SerialKey"
     case libre3BleAddress = "libre3BleAddressKey"
     case libre3ReceiverIDHex = "libre3ReceiverIDHexKey"
+    case libre3ReceiverIDOverrideHex = "libre3ReceiverIDOverrideHexKey"
+    case libre3LegacyReceiverIDRescueCompleted = "libre3LegacyReceiverIDRescueCompletedKey"
     case libre3FirmwareVersion = "libre3FirmwareVersionKey"
     case libre3Mode = "libre3ModeKey"
-    // Which app activated the sensor, deciding how the Account ID folds into the
-    // receiver ID sent over NFC. Empty until seeded or chosen.
+    // Which app activated the sensor, deciding which account-specific input and
+    // fold produce the receiver ID sent over NFC. Empty until seeded or chosen.
     case libre3ActivatingApp = "libre3ActivatingAppKey"
     case libre3LibreViewPatientId = "libre3LibreViewPatientIdKey"
     // LibreView (FreeStyle LibreLink) account lookup, used to fetch the
@@ -453,6 +458,10 @@ enum DefaultsKey: String {
     // (`LibreViewPasswordKeychain`); only the email + device id live here.
     case libre3LibreViewEmail = "libre3LibreViewEmailKey"
     case libre3LibreViewDeviceId = "libre3LibreViewDeviceIdKey"
+    // Libre by Abbott 1.4+ receiver UUID and the LibreView account it belongs to.
+    case libre3Libre1ReceiverUUID = "libre3Libre1ReceiverUUIDKey"
+    case libre3Libre1ReceiverUUIDAccountId = "libre3Libre1ReceiverUUIDAccountIdKey"
+    case libre3Libre1DeviceId = "libre3Libre1DeviceIdKey"
     case libre3PeripheralUUID = "libre3PeripheralUUIDKey"
     case libre3SensorStartDate = "libre3SensorStartDateKey"
     case libre3LastLifeCount = "libre3LastLifeCountKey"
@@ -1273,11 +1282,30 @@ enum SharedData {
         }
     }
 
-    /// LibreView **patient UUID** that activated the sensor. Its FNV-32a hash is
-    /// the receiver ID sent in the NFC takeover/parallel command — the sensor
-    /// only accepts a receiver ID matching the account/patient that activated
-    /// it, else it returns NFC error `0xB1`. Required for takeover/parallel;
-    /// fresh activation can use an accountless ID instead.
+    /// Developer-only receiver ID override in little-endian wire order. It is
+    /// retained while developer mode is off, but normal resolution ignores it.
+    static var libre3ReceiverIDOverrideHex: String {
+        get { store.getString(.libre3ReceiverIDOverrideHex, defaultValue: "") }
+        set {
+            if newValue.isEmpty {
+                store.removeObject(forKey: DefaultsKey.libre3ReceiverIDOverrideHex.rawValue)
+            } else {
+                store.setString(newValue, forKey: .libre3ReceiverIDOverrideHex)
+            }
+        }
+    }
+
+    /// The pre-keychain receiver-ID rescue is a one-time migration. Once this
+    /// is true, later sensor receiver IDs must never become the installation ID.
+    static var libre3LegacyReceiverIDRescueCompleted: Bool {
+        get { store.getBool(.libre3LegacyReceiverIDRescueCompleted) }
+        set { store.setBool(newValue, forKey: .libre3LegacyReceiverIDRescueCompleted) }
+    }
+
+    /// LibreView Account ID that owns the sensor. FreeStyle Libre 3 and legacy
+    /// Libre by Abbott fold it directly; current Libre by Abbott uses it to
+    /// select the matching cached receiver UUID. Required for vendor-app modes;
+    /// FLwatch-only activation uses an accountless installation ID instead.
     static var libre3LibreViewPatientId: String {
         get { store.getString(.libre3LibreViewPatientId, defaultValue: "") }
         set {
@@ -1294,6 +1322,33 @@ enum SharedData {
         set {
             if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3LibreViewEmail.rawValue) }
             else { store.setString(newValue, forKey: .libre3LibreViewEmail) }
+        }
+    }
+
+    /// Account-scoped receiver UUID returned by the Libre by Abbott login API.
+    static var libre3Libre1ReceiverUUID: String {
+        get { store.getString(.libre3Libre1ReceiverUUID, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3Libre1ReceiverUUID.rawValue) }
+            else { store.setString(newValue, forKey: .libre3Libre1ReceiverUUID) }
+        }
+    }
+
+    /// LibreView Account ID for which `libre3Libre1ReceiverUUID` was fetched.
+    static var libre3Libre1ReceiverUUIDAccountId: String {
+        get { store.getString(.libre3Libre1ReceiverUUIDAccountId, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3Libre1ReceiverUUIDAccountId.rawValue) }
+            else { store.setString(newValue, forKey: .libre3Libre1ReceiverUUIDAccountId) }
+        }
+    }
+
+    /// Stable device identity sent only to the Libre by Abbott login API.
+    static var libre3Libre1DeviceId: String {
+        get { store.getString(.libre3Libre1DeviceId, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3Libre1DeviceId.rawValue) }
+            else { store.setString(newValue, forKey: .libre3Libre1DeviceId) }
         }
     }
 

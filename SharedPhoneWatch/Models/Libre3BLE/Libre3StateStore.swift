@@ -22,10 +22,11 @@ enum Libre3StateStoreError: Error {
     case installationReceiverIDNotPersisted
 
     /// A vendor app is selected, but no receiver ID could be derived for it:
-    /// either no Account ID is stored, or `usesLibreViewAccount` and `derivation`
-    /// disagree. Both are prevented upstream — by `scanBlockedReason` in the
-    /// connect view and by an invariant test respectively — so this exists to
-    /// stop the fall-through rather than to be reached. Pairing under FLwatch's
+    /// the Account ID or matching Libre by Abbott UUID is missing with no valid
+    /// developer override, or `usesLibreViewAccount` and `derivation` disagree.
+    /// These are prevented upstream by `scanBlockedReason` and an invariant
+    /// test, so this exists to stop the fall-through rather than to be reached.
+    /// Pairing under FLwatch's
     /// own installation identity when the user named a vendor app would write an
     /// ID that app can never reproduce, stranding the sensor for its whole wear.
     case invalidReceiverIDConfiguration
@@ -69,9 +70,14 @@ struct Libre3ProvisionedState: Codable, Equatable, Sendable {
     }
 }
 
-/// The LibreCRKit fold this app applies to a LibreView Account ID, or nil when it
-/// derives nothing from an account — `.flwatchOnly` presents the installation
-/// identity instead.
+struct Libre3ReceiverIDPreview: Equatable, Sendable {
+    let displayString: String
+    let usesOverride: Bool
+}
+
+/// The LibreCRKit fold this app applies to its account-specific input, or nil
+/// when it derives nothing from an account — `.flwatchOnly` presents the
+/// installation identity instead.
 ///
 /// Lives here rather than on the type itself: `Libre3ActivatingApp` also compiles
 /// into widget targets that do not link LibreCRKit and therefore cannot name
@@ -82,7 +88,7 @@ extension Libre3ActivatingApp {
         switch self {
         case .freeStyleLibre3:
             return .freeStyleLibre3
-        case .libreByAbbott:
+        case .libreByAbbottServerID, .libreByAbbott:
             return .libreByAbbott
         case .flwatchOnly:
             return nil
@@ -95,10 +101,10 @@ enum Libre3StateStore {
     /// Receiver ID sent in the NFC command.
     ///
     /// For **takeover / parallel join** of a sensor a vendor app activated, the
-    /// sensor only accepts the receiver ID that app stored, which is a fold of
-    /// the LibreView Account ID — which fold depends on which app
-    /// (`Libre3ActivatingApp`). A mismatched (e.g. random, or the other app's)
-    /// ID is rejected with NFC error `0xB1`.
+    /// sensor only accepts the receiver ID that app stored. FreeStyle Libre 3
+    /// and legacy Libre by Abbott fold the Account ID; current Libre by Abbott
+    /// folds a login-issued receiver UUID. A mismatched ID is rejected with NFC
+    /// error `0xB1`. Developer mode may explicitly override any vendor-app ID.
     ///
     /// For **fresh activation** with no vendor app, FLwatch becomes the receiver
     /// itself, so an accountless ID is fine — generate once and reuse.
@@ -115,16 +121,31 @@ enum Libre3StateStore {
             // Throws instead of falling through to the installation identity: a
             // vendor app was named, and pairing under FLwatch's own ID would
             // silently produce one that app could never reproduce. The empty
-            // account is already blocked by `scanBlockedReason` in the connect
-            // view, which says so in plain words — this is the backstop behind it.
-            guard !patientID.isEmpty,
-                  let derived = receiverID(forAccountID: patientID, activatingApp: activatingApp)
+            // required account data is already blocked by `scanBlockedReason`
+            // in the connect view — this is the backstop behind it.
+            guard let derived = receiverID(
+                forAccountID: patientID,
+                activatingApp: activatingApp
+            )
             else {
                 throw Libre3StateStoreError.invalidReceiverIDConfiguration
             }
+            if activeReceiverIDOverride(
+                for: activatingApp,
+                developerModeEnabled: receiverIDOverrideDeveloperModeEnabled,
+                receiverIDOverrideHex: SharedData.libre3ReceiverIDOverrideHex
+            ) != nil {
+                Logger.libre3.info(
+                    "Resolved receiver ID using developer override for activating-app case \(activatingApp.rawValue, privacy: .public)"
+                )
+            } else {
+                Logger.libre3.info("Resolved receiver ID using activating-app case \(activatingApp.rawValue, privacy: .public)")
+            }
             return derived
         }
-        return try installationReceiverID()
+        let receiverID = try installationReceiverID()
+        Logger.libre3.info("Resolved receiver ID using activating-app case \(Libre3ActivatingApp.flwatchOnly.rawValue, privacy: .public)")
+        return receiverID
     }
 
     /// This installation's own receiver ID, used for sensors FLwatch activates
@@ -157,9 +178,9 @@ enum Libre3StateStore {
         return try? Libre3ReceiverID(littleEndianHex: hex)
     }
 
-    /// Account ID → receiver ID under `activatingApp`, or nil when that app
-    /// derives none from an account. The single place this mapping happens, so
-    /// what the UI shows is exactly what the next scan puts on the wire.
+    /// Account data or an enabled developer override → receiver ID under
+    /// `activatingApp`, or nil when neither can resolve one. The single place
+    /// this mapping happens, so the UI matches the next scan.
     ///
     /// The folds themselves are LibreCRKit's, lowercasing included, so
     /// `.freeStyleLibre3` stays byte-identical to the FNV over the lowercased
@@ -168,57 +189,258 @@ enum Libre3StateStore {
         forAccountID accountID: String,
         activatingApp: Libre3ActivatingApp
     ) -> Libre3ReceiverID? {
-        activatingApp.derivation.map { Libre3ReceiverID(accountID: accountID, derivation: $0) }
+        receiverID(
+            forAccountID: accountID,
+            activatingApp: activatingApp,
+            developerModeEnabled: receiverIDOverrideDeveloperModeEnabled,
+            receiverIDOverrideHex: SharedData.libre3ReceiverIDOverrideHex,
+            libre1ReceiverUUID: SharedData.libre3Libre1ReceiverUUID,
+            libre1ReceiverUUIDAccountID: SharedData.libre3Libre1ReceiverUUIDAccountId
+        )
+    }
+
+    static func receiverID(
+        forAccountID accountID: String,
+        activatingApp: Libre3ActivatingApp,
+        developerModeEnabled: Bool,
+        receiverIDOverrideHex: String,
+        libre1ReceiverUUID: String?,
+        libre1ReceiverUUIDAccountID: String?
+    ) -> Libre3ReceiverID? {
+        if let override = activeReceiverIDOverride(
+            for: activatingApp,
+            developerModeEnabled: developerModeEnabled,
+            receiverIDOverrideHex: receiverIDOverrideHex
+        ) {
+            return override
+        }
+
+        let accountID = accountID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !accountID.isEmpty else { return nil }
+        return receiverID(
+            forAccountID: accountID,
+            activatingApp: activatingApp,
+            libre1ReceiverUUID: libre1ReceiverUUID,
+            libre1ReceiverUUIDAccountID: libre1ReceiverUUIDAccountID
+        )
+    }
+
+    /// Explicit-cache overload used by tests and by callers that have just
+    /// fetched the UUID but have not persisted it yet.
+    static func receiverID(
+        forAccountID accountID: String,
+        activatingApp: Libre3ActivatingApp,
+        libre1ReceiverUUID: String?,
+        libre1ReceiverUUIDAccountID: String?
+    ) -> Libre3ReceiverID? {
+        switch activatingApp {
+        case .libreByAbbottServerID:
+            let requestedAccountID = normalizedAccountID(accountID)
+            guard !requestedAccountID.isEmpty,
+                  requestedAccountID == normalizedAccountID(libre1ReceiverUUIDAccountID ?? ""),
+                  let receiverUUID = libre1ReceiverUUID,
+                  let uuid = UUID(uuidString: receiverUUID)
+            else { return nil }
+            return Libre3ReceiverID(
+                accountID: uuid.uuidString.lowercased(),
+                derivation: .libreByAbbott
+            )
+        case .freeStyleLibre3, .libreByAbbott:
+            return activatingApp.derivation.map {
+                Libre3ReceiverID(accountID: accountID, derivation: $0)
+            }
+        case .flwatchOnly:
+            return nil
+        }
+    }
+
+    private static func normalizedAccountID(_ accountID: String) -> String {
+        accountID.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    /// Parses the developer field's unambiguous display formats and returns the
+    /// canonical little-endian wire hex used in app-group storage.
+    static func receiverIDOverrideLittleEndianHex(from input: String) -> String? {
+        let input = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        if input.hasPrefix("0x") {
+            let digits = String(input.dropFirst(2))
+            guard digits.count == 8,
+                  digits.unicodeScalars.allSatisfy({
+                      (48...57).contains($0.value)
+                          || (65...70).contains($0.value)
+                          || (97...102).contains($0.value)
+                  }),
+                  let value = UInt32(digits, radix: 16)
+            else { return nil }
+            return Libre3ReceiverID(value).littleEndianHex
+        }
+
+        guard !input.isEmpty,
+              input.unicodeScalars.allSatisfy({ (48...57).contains($0.value) }),
+              let value = UInt32(input, radix: 10)
+        else { return nil }
+        return Libre3ReceiverID(value).littleEndianHex
+    }
+
+    static func receiverIDOverrideEditorText(storedLittleEndianHex: String) -> String {
+        guard let receiverID = try? Libre3ReceiverID(littleEndianHex: storedLittleEndianHex)
+        else { return "" }
+        return String(format: "0x%08x", receiverID.value)
+    }
+
+    private static var receiverIDOverrideDeveloperModeEnabled: Bool {
+        UserDefaults.standard.bool(forKey: DefaultsKey.developerModeEnabled.rawValue)
+    }
+
+    private static func activeReceiverIDOverride(
+        for activatingApp: Libre3ActivatingApp,
+        developerModeEnabled: Bool,
+        receiverIDOverrideHex: String
+    ) -> Libre3ReceiverID? {
+        guard developerModeEnabled, activatingApp.usesLibreViewAccount else { return nil }
+        return try? Libre3ReceiverID(littleEndianHex: receiverIDOverrideHex)
     }
 
     /// Formatted preview of the above, so the view layer needn't import
-    /// LibreCRKit. Nil when there's no account to derive from.
-    static func receiverIDPreview(
+    /// LibreCRKit. Nil when neither account data nor an override resolves an ID.
+    static func receiverIDPreviewDetails(
         forAccountID accountID: String,
-        activatingApp: Libre3ActivatingApp
-    ) -> String? {
+        activatingApp: Libre3ActivatingApp,
+        developerModeEnabled: Bool,
+        receiverIDOverrideHex: String
+    ) -> Libre3ReceiverIDPreview? {
         guard activatingApp.usesLibreViewAccount else {
             // FLwatch only presents its installation identity, whatever the
             // account rows happen to hold. A keychain failure shows nothing here;
             // the scan itself reports it properly.
-            return (try? installationReceiverID())?.displayString
+            return (try? installationReceiverID()).map {
+                Libre3ReceiverIDPreview(displayString: $0.displayString, usesOverride: false)
+            }
         }
-        let trimmed = accountID.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-        return receiverID(forAccountID: trimmed, activatingApp: activatingApp)?.displayString
+        guard let receiverID = receiverID(
+            forAccountID: accountID,
+            activatingApp: activatingApp,
+            developerModeEnabled: developerModeEnabled,
+            receiverIDOverrideHex: receiverIDOverrideHex,
+            libre1ReceiverUUID: SharedData.libre3Libre1ReceiverUUID,
+            libre1ReceiverUUIDAccountID: SharedData.libre3Libre1ReceiverUUIDAccountId
+        ) else { return nil }
+        return Libre3ReceiverIDPreview(
+            displayString: receiverID.displayString,
+            usesOverride: activeReceiverIDOverride(
+                for: activatingApp,
+                developerModeEnabled: developerModeEnabled,
+                receiverIDOverrideHex: receiverIDOverrideHex
+            ) != nil
+        )
     }
 
     /// Which app's fold produced the paired sensor's receiver ID, if it can be
     /// told.
     ///
-    /// Both folds are computed over the stored Account ID and compared against
-    /// what's on record. That is exact where it answers, and it's what carries
-    /// the build-201 testers across: their pick lived under a different defaults
-    /// key this branch removes, but the receiver ID it produced is still stored.
+    /// Every available vendor fold is computed from its stored account data and
+    /// compared against what's on record. That is exact where it answers, and it
+    /// carries the build-201 testers across: their pick lived under a different
+    /// defaults key this branch removes, but its receiver ID is still stored.
     ///
-    /// A paired sensor whose stored ID neither fold reproduces was activated by
+    /// A paired sensor whose stored ID no known fold reproduces was activated by
     /// FLwatch, since that path presents the installation ID rather than deriving
     /// one. Nil only when there's nothing paired to reason about.
     static func inferActivatingAppFromStoredReceiverID() -> Libre3ActivatingApp? {
-        let storedHex = SharedData.libre3ReceiverIDHex
-        guard !storedHex.isEmpty, SharedData.libre3SensorIsPaired else { return nil }
-        return accountFoldMatching(hex: storedHex) ?? .flwatchOnly
+        inferActivatingAppFromStoredReceiverID(
+            storedHex: SharedData.libre3ReceiverIDHex,
+            sensorIsPaired: SharedData.libre3SensorIsPaired,
+            accountID: SharedData.libre3LibreViewPatientId,
+            libre1ReceiverUUID: SharedData.libre3Libre1ReceiverUUID,
+            libre1ReceiverUUIDAccountID: SharedData.libre3Libre1ReceiverUUIDAccountId,
+            receiverIDOverrideHex: SharedData.libre3ReceiverIDOverrideHex
+        )
     }
 
-    /// Which vendor app's fold over the stored Account ID produces `hex`, if
-    /// either does. Nil means no account is stored, or the ID came from
+    static func inferActivatingAppFromStoredReceiverID(
+        storedHex: String,
+        sensorIsPaired: Bool,
+        accountID: String,
+        libre1ReceiverUUID: String,
+        libre1ReceiverUUIDAccountID: String,
+        receiverIDOverrideHex: String = ""
+    ) -> Libre3ActivatingApp? {
+        guard !storedHex.isEmpty, sensorIsPaired else { return nil }
+        guard !receiverIDMatchesStoredOverride(
+            storedHex: storedHex,
+            receiverIDOverrideHex: receiverIDOverrideHex
+        ) else { return nil }
+        return accountFoldMatching(
+            hex: storedHex,
+            accountID: accountID,
+            libre1ReceiverUUID: libre1ReceiverUUID,
+            libre1ReceiverUUIDAccountID: libre1ReceiverUUIDAccountID
+        ) ?? .flwatchOnly
+    }
+
+    /// Which vendor app's fold over its stored account data produces `hex`, if
+    /// one does. Nil means no account is stored, or the ID came from
     /// somewhere other than a fold — in practice, FLwatch generated it.
     ///
     /// Deliberately says nothing about whether a sensor is currently paired:
     /// callers that care apply that themselves, and the legacy rescue must work
     /// precisely when nothing is paired.
-    private static func accountFoldMatching(hex: String) -> Libre3ActivatingApp? {
-        let accountID = SharedData.libre3LibreViewPatientId
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+    static func accountFoldMatching(
+        hex: String,
+        accountID: String,
+        libre1ReceiverUUID: String,
+        libre1ReceiverUUIDAccountID: String
+    ) -> Libre3ActivatingApp? {
+        let accountID = accountID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !accountID.isEmpty else { return nil }
-        return [Libre3ActivatingApp.freeStyleLibre3, .libreByAbbott].first {
-            receiverID(forAccountID: accountID, activatingApp: $0)?.littleEndianHex == hex
+        return [
+            Libre3ActivatingApp.freeStyleLibre3,
+            .libreByAbbottServerID,
+            .libreByAbbott
+        ].first {
+            receiverID(
+                forAccountID: accountID,
+                activatingApp: $0,
+                libre1ReceiverUUID: libre1ReceiverUUID,
+                libre1ReceiverUUIDAccountID: libre1ReceiverUUIDAccountID
+            )?.littleEndianHex == hex
         }
+    }
+
+    /// Returns the parsed legacy ID only when neither the saved override nor a
+    /// known account fold claims it.
+    static func legacyInstallationReceiverIDToAdopt(
+        hex: String,
+        accountID: String,
+        libre1ReceiverUUID: String,
+        libre1ReceiverUUIDAccountID: String,
+        receiverIDOverrideHex: String = ""
+    ) -> Libre3ReceiverID? {
+        guard !hex.isEmpty,
+              let candidate = try? Libre3ReceiverID(littleEndianHex: hex)
+        else { return nil }
+        if let override = try? Libre3ReceiverID(littleEndianHex: receiverIDOverrideHex),
+           candidate == override {
+            return nil
+        }
+        guard accountFoldMatching(
+                hex: hex,
+                accountID: accountID,
+                libre1ReceiverUUID: libre1ReceiverUUID,
+                libre1ReceiverUUIDAccountID: libre1ReceiverUUIDAccountID
+              ) == nil
+        else { return nil }
+        return candidate
+    }
+
+    private static func receiverIDMatchesStoredOverride(
+        storedHex: String,
+        receiverIDOverrideHex: String
+    ) -> Bool {
+        guard let override = try? Libre3ReceiverID(littleEndianHex: receiverIDOverrideHex),
+              let stored = try? Libre3ReceiverID(littleEndianHex: storedHex)
+        else { return false }
+        return stored == override
     }
 
     /// Rescue an FLwatch-activated sensor that predates the keychain identity.
@@ -234,18 +456,31 @@ enum Libre3StateStore {
     /// is exactly the case that needs rescuing, and it has no serial on record.
     ///
     /// Only ever fills an empty keychain entry: once set, the installation ID is
-    /// permanent. Best-effort — a failure here strands nothing that wasn't
-    /// already stranded, so it logs and moves on.
+    /// permanent. Once there is nothing to migrate or a save succeeds, later
+    /// receiver IDs are never candidates. A keychain save failure stays pending
+    /// so the next launch can retry the same best-effort rescue.
     static func adoptLegacyInstallationReceiverIDIfNeeded() {
+        guard !SharedData.libre3LegacyReceiverIDRescueCompleted else { return }
+
         let storedHex = SharedData.libre3ReceiverIDHex
-        guard storedInstallationReceiverID() == nil,
-              !storedHex.isEmpty,
-              accountFoldMatching(hex: storedHex) == nil,
-              let legacy = try? Libre3ReceiverID(littleEndianHex: storedHex)
-        else { return }
+        guard storedInstallationReceiverID() == nil else {
+            SharedData.libre3LegacyReceiverIDRescueCompleted = true
+            return
+        }
+        guard let legacy = legacyInstallationReceiverIDToAdopt(
+            hex: storedHex,
+            accountID: SharedData.libre3LibreViewPatientId,
+            libre1ReceiverUUID: SharedData.libre3Libre1ReceiverUUID,
+            libre1ReceiverUUIDAccountID: SharedData.libre3Libre1ReceiverUUIDAccountId,
+            receiverIDOverrideHex: SharedData.libre3ReceiverIDOverrideHex
+        ) else {
+            SharedData.libre3LegacyReceiverIDRescueCompleted = true
+            return
+        }
 
         do {
             try Libre3PINStore.saveInstallationReceiverID(Data(legacy.littleEndianHex.utf8))
+            SharedData.libre3LegacyReceiverIDRescueCompleted = true
             Logger.libre3.info("Adopted the previously cached receiver ID as this installation's identity")
         } catch {
             Logger.libre3.error("Couldn't adopt the cached receiver ID as this installation's identity: \(String(describing: error), privacy: .public)")
@@ -286,9 +521,9 @@ enum Libre3StateStore {
             return
         }
 
-        // Storefront country, not device locale: "Libre by Abbott" is only
-        // distributed on the US store, so this reflects what the user can
-        // actually have installed. Nil (no App Store account) falls through.
+        // Preserve the existing storefront seed. Libre by Abbott is no longer
+        // US-only, but changing this guess would silently change established
+        // setup behaviour; the user can choose the current app explicitly.
         let countryCode = await Storefront.current?.countryCode
 
         // The picker stays live across that await, so the user may have chosen in

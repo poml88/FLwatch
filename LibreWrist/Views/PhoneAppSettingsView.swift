@@ -66,7 +66,7 @@ struct PhoneAppSettingsView: View {
     @AppStorage(DefaultsKey.highGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var highGlucoseNotificationsEnabled: Bool = false
     @AppStorage(DefaultsKey.libre3CalibrationOffsetMgDL.rawValue, store: UserDefaults.group) private var libre3CalibrationOffsetMgDL: Int = 0
     @AppStorage(DefaultsKey.nightscoutUploadEnabled.rawValue, store: UserDefaults.group) private var nightscoutUploadEnabled: Bool = false
-    @AppStorage("developerModeEnabled") private var developerModeEnabled: Bool = false
+    @AppStorage(DefaultsKey.developerModeEnabled.rawValue) private var developerModeEnabled: Bool = false
     
     
     @State private var isScreenAlwaysOn = false

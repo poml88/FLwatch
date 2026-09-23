@@ -3358,7 +3358,7 @@ final class LibreWristTests: XCTestCase {
     // MARK: - Libre 3 activating app
 
     /// `Libre3ActivatingApp.usesLibreViewAccount` and its phone-side `derivation`
-    /// answer the same question — does this app fold a LibreView Account ID into a
+    /// answer the same question — does this app fold account-specific data into a
     /// receiver ID — but can't be one property: the enum is shared code compiled
     /// into the watch and widget targets, which don't link LibreCRKit and so can't
     /// name `Libre3ReceiverID.Derivation`.
@@ -3367,10 +3367,17 @@ final class LibreWristTests: XCTestCase {
     /// `Libre3StateStore.receiverID()` throw `invalidReceiverIDConfiguration` for
     /// a perfectly valid app, blocking pairing. Comments drift; this doesn't.
     func testActivatingAppAccountUseMatchesDerivation() throws {
-        // Exact, not just present: a mapping that swapped the two vendor apps
-        // would satisfy the consistency loop below while sending each sensor the
-        // other app's receiver ID.
+        XCTAssertEqual(
+            Libre3ActivatingApp.allCases,
+            [.freeStyleLibre3, .libreByAbbottServerID, .libreByAbbott, .flwatchOnly]
+        )
+        XCTAssertEqual(Libre3ActivatingApp.libreByAbbottServerID.rawValue, "libreByAbbottServerID")
+        XCTAssertEqual(Libre3ActivatingApp.libreByAbbott.rawValue, "libreByAbbott")
+
+        // Exact, not just present: a mapping that swapped the derivations would
+        // satisfy the consistency loop below while sending the wrong receiver ID.
         XCTAssertEqual(Libre3ActivatingApp.freeStyleLibre3.derivation, .freeStyleLibre3)
+        XCTAssertEqual(Libre3ActivatingApp.libreByAbbottServerID.derivation, .libreByAbbott)
         XCTAssertEqual(Libre3ActivatingApp.libreByAbbott.derivation, .libreByAbbott)
         XCTAssertNil(Libre3ActivatingApp.flwatchOnly.derivation)
 
@@ -3393,18 +3400,26 @@ final class LibreWristTests: XCTestCase {
     /// accepts the ID it was activated with, so a drift here strands every
     /// already-paired sensor until its wear ends.
     ///
-    /// Goes through `receiverIDPreview` deliberately: it is what the connect
-    /// screen displays, so this pins the readout and the wire value together.
+    /// Goes through `receiverIDPreviewDetails` deliberately: it is what the
+    /// connect screen displays, so this pins the readout and wire value together.
     func testReceiverIDFoldsMatchTheShippedValues() throws {
         // Throwaway UUID in LibreView's format (lowercase, dashed, 36 chars).
         let accountID = "3f2b7c10-9a4d-4e21-8b56-0c1d2e3f4a5b"
+        let preview: (String, Libre3ActivatingApp) -> String? = { accountID, app in
+            Libre3StateStore.receiverIDPreviewDetails(
+                forAccountID: accountID,
+                activatingApp: app,
+                developerModeEnabled: false,
+                receiverIDOverrideHex: ""
+            )?.displayString
+        }
 
         XCTAssertEqual(
-            Libre3StateStore.receiverIDPreview(forAccountID: accountID, activatingApp: .freeStyleLibre3),
+            preview(accountID, .freeStyleLibre3),
             "0xb063dfc1 / c1df63b0"
         )
         XCTAssertEqual(
-            Libre3StateStore.receiverIDPreview(forAccountID: accountID, activatingApp: .libreByAbbott),
+            preview(accountID, .libreByAbbott),
             "0x27bff6bc / bcf6bf27"
         )
 
@@ -3412,12 +3427,252 @@ final class LibreWristTests: XCTestCase {
         // reaches the sensor as the same value. LibreView issues them lowercase;
         // this guards the normalization, not a case we expect to see.
         XCTAssertEqual(
-            Libre3StateStore.receiverIDPreview(forAccountID: accountID.uppercased(), activatingApp: .freeStyleLibre3),
+            preview(accountID.uppercased(), .freeStyleLibre3),
             "0xb063dfc1 / c1df63b0"
         )
         XCTAssertEqual(
-            Libre3StateStore.receiverIDPreview(forAccountID: accountID.uppercased(), activatingApp: .libreByAbbott),
+            preview(accountID.uppercased(), .libreByAbbott),
             "0x27bff6bc / bcf6bf27"
+        )
+    }
+
+    func testLibreByAbbottServerReceiverIDGoldenFoldAndResolution() throws {
+        let accountID = "account-for-current-user"
+        let receiverUUID = "01a0b31a-bc40-7878-87fc-b3aab0e66953"
+
+        let resolved = try XCTUnwrap(
+            Libre3StateStore.receiverID(
+                forAccountID: accountID,
+                activatingApp: .libreByAbbottServerID,
+                libre1ReceiverUUID: receiverUUID,
+                libre1ReceiverUUIDAccountID: "  ACCOUNT-FOR-CURRENT-USER  "
+            )
+        )
+        XCTAssertEqual(resolved.value, 0x592f_b92c)
+        XCTAssertEqual(resolved.littleEndianHex, "2cb92f59")
+
+        XCTAssertNil(
+            Libre3StateStore.receiverID(
+                forAccountID: accountID,
+                activatingApp: .libreByAbbottServerID,
+                libre1ReceiverUUID: receiverUUID,
+                libre1ReceiverUUIDAccountID: "another-account"
+            )
+        )
+        XCTAssertNil(
+            Libre3StateStore.receiverID(
+                forAccountID: accountID,
+                activatingApp: .libreByAbbottServerID,
+                libre1ReceiverUUID: nil,
+                libre1ReceiverUUIDAccountID: accountID
+            )
+        )
+
+        // The two existing paths must remain byte-identical.
+        XCTAssertEqual(
+            Libre3StateStore.receiverID(
+                forAccountID: "3f2b7c10-9a4d-4e21-8b56-0c1d2e3f4a5b",
+                activatingApp: .freeStyleLibre3,
+                libre1ReceiverUUID: receiverUUID,
+                libre1ReceiverUUIDAccountID: accountID
+            )?.value,
+            0xb063_dfc1
+        )
+        XCTAssertEqual(
+            Libre3StateStore.receiverID(
+                forAccountID: "3f2b7c10-9a4d-4e21-8b56-0c1d2e3f4a5b",
+                activatingApp: .libreByAbbott,
+                libre1ReceiverUUID: receiverUUID,
+                libre1ReceiverUUIDAccountID: accountID
+            )?.value,
+            0x27bf_f6bc
+        )
+    }
+
+    func testLibreByAbbottServerReceiverIDIsInferredAndNotAdopted() throws {
+        let accountID = "account-for-current-user"
+        let receiverUUID = "01a0b31a-bc40-7878-87fc-b3aab0e66953"
+        let receiverHex = "2cb92f59"
+
+        XCTAssertEqual(
+            Libre3StateStore.inferActivatingAppFromStoredReceiverID(
+                storedHex: receiverHex,
+                sensorIsPaired: true,
+                accountID: accountID,
+                libre1ReceiverUUID: receiverUUID,
+                libre1ReceiverUUIDAccountID: accountID
+            ),
+            .libreByAbbottServerID
+        )
+        XCTAssertNil(
+            Libre3StateStore.legacyInstallationReceiverIDToAdopt(
+                hex: receiverHex,
+                accountID: accountID,
+                libre1ReceiverUUID: receiverUUID,
+                libre1ReceiverUUIDAccountID: accountID
+            )
+        )
+    }
+
+    func testReceiverIDOverrideParsing() throws {
+        XCTAssertEqual(
+            Libre3StateStore.receiverIDOverrideLittleEndianHex(from: "0x592fb92c"),
+            "2cb92f59"
+        )
+        XCTAssertEqual(
+            Libre3StateStore.receiverIDOverrideLittleEndianHex(from: "1496299820"),
+            "2cb92f59"
+        )
+
+        // A bare hex value is deliberately not interpreted as either display
+        // order or little-endian wire order.
+        XCTAssertNil(Libre3StateStore.receiverIDOverrideLittleEndianHex(from: "592fb92c"))
+        XCTAssertNil(Libre3StateStore.receiverIDOverrideLittleEndianHex(from: "2cb92f59"))
+        XCTAssertNil(Libre3StateStore.receiverIDOverrideLittleEndianHex(from: "0x592fb92"))
+        XCTAssertNil(Libre3StateStore.receiverIDOverrideLittleEndianHex(from: "0x592fb92g"))
+        XCTAssertNil(Libre3StateStore.receiverIDOverrideLittleEndianHex(from: "-1"))
+        XCTAssertNil(Libre3StateStore.receiverIDOverrideLittleEndianHex(from: "4294967296"))
+    }
+
+    func testReceiverIDOverridePrecedesVendorResolutionOnlyInDeveloperMode() throws {
+        let accountID = "3f2b7c10-9a4d-4e21-8b56-0c1d2e3f4a5b"
+        let overrideHex = try XCTUnwrap(
+            Libre3StateStore.receiverIDOverrideLittleEndianHex(from: "0x592fb92c")
+        )
+
+        for app in [
+            Libre3ActivatingApp.freeStyleLibre3,
+            .libreByAbbottServerID,
+            .libreByAbbott
+        ] {
+            XCTAssertEqual(
+                Libre3StateStore.receiverID(
+                    forAccountID: accountID,
+                    activatingApp: app,
+                    developerModeEnabled: true,
+                    receiverIDOverrideHex: overrideHex,
+                    libre1ReceiverUUID: nil,
+                    libre1ReceiverUUIDAccountID: nil
+                )?.value,
+                0x592f_b92c
+            )
+        }
+
+        XCTAssertEqual(
+            Libre3StateStore.receiverID(
+                forAccountID: accountID,
+                activatingApp: .freeStyleLibre3,
+                developerModeEnabled: false,
+                receiverIDOverrideHex: overrideHex,
+                libre1ReceiverUUID: nil,
+                libre1ReceiverUUIDAccountID: nil
+            )?.value,
+            0xb063_dfc1
+        )
+        XCTAssertNil(
+            Libre3StateStore.receiverID(
+                forAccountID: accountID,
+                activatingApp: .flwatchOnly,
+                developerModeEnabled: true,
+                receiverIDOverrideHex: overrideHex,
+                libre1ReceiverUUID: nil,
+                libre1ReceiverUUIDAccountID: nil
+            )
+        )
+
+        let preview = try XCTUnwrap(
+            Libre3StateStore.receiverIDPreviewDetails(
+                forAccountID: accountID,
+                activatingApp: .freeStyleLibre3,
+                developerModeEnabled: true,
+                receiverIDOverrideHex: overrideHex
+            )
+        )
+        XCTAssertEqual(preview.displayString, "0x592fb92c / 2cb92f59")
+        XCTAssertTrue(preview.usesOverride)
+    }
+
+    func testReceiverIDOverrideIsKnownButDoesNotInferAnActivatingApp() throws {
+        let overrideHex = try XCTUnwrap(
+            Libre3StateStore.receiverIDOverrideLittleEndianHex(from: "0x592fb92c")
+        )
+
+        XCTAssertNil(
+            Libre3StateStore.inferActivatingAppFromStoredReceiverID(
+                storedHex: overrideHex,
+                sensorIsPaired: true,
+                accountID: "",
+                libre1ReceiverUUID: "",
+                libre1ReceiverUUIDAccountID: "",
+                receiverIDOverrideHex: overrideHex
+            )
+        )
+        XCTAssertNil(
+            Libre3StateStore.legacyInstallationReceiverIDToAdopt(
+                hex: overrideHex,
+                accountID: "",
+                libre1ReceiverUUID: "",
+                libre1ReceiverUUIDAccountID: "",
+                receiverIDOverrideHex: overrideHex
+            )
+        )
+    }
+
+    func testLibre1ResponseParser() throws {
+        let successJSON = #"""
+        {
+          "access_token": "not-retained",
+          "token_type": "Bearer",
+          "include": {
+            "patient": {
+              "domainData": "{\"version\":1,\"activeSensor\":{\"serialNumber\":\"0PK85AHK7\",\"receiverId\":1496299820,\"productType\":4}}"
+            }
+          },
+          "receiverID": "01A0B31A-BC40-7878-87FC-B3AAB0E66953"
+        }
+        """#
+        let login = try Libre1AccountClient.parseResponse(
+            data: try XCTUnwrap(successJSON.data(using: .utf8)),
+            statusCode: 200,
+            forced: true
+        )
+        XCTAssertEqual(login.receiverID, "01a0b31a-bc40-7878-87fc-b3aab0e66953")
+        XCTAssertEqual(login.activeSensorSerial, "0PK85AHK7")
+        XCTAssertEqual(login.activeSensorReceiverID, 1_496_299_820)
+        XCTAssertTrue(login.forced)
+
+        XCTAssertThrowsError(
+            try Libre1AccountClient.parseResponse(
+                data: Data(#"{"code":20}"#.utf8),
+                statusCode: 401,
+                forced: false
+            )
+        ) { error in
+            XCTAssertEqual(error as? Libre1AccountError, .deviceBound)
+        }
+        XCTAssertThrowsError(
+            try Libre1AccountClient.parseResponse(
+                data: Data(#"{"code":4,"details":"consents.isRequired"}"#.utf8),
+                statusCode: 400,
+                forced: false
+            )
+        ) { error in
+            XCTAssertEqual(error as? Libre1AccountError, .consentsRequired)
+        }
+    }
+
+    func testLibre1RetryDecisionOnlyRetriesInitialCode20() {
+        XCTAssertTrue(
+            Libre1AccountClient.shouldRetry(statusCode: 401, bodyCode: 20, force: false)
+        )
+        XCTAssertFalse(
+            Libre1AccountClient.shouldRetry(statusCode: 401, bodyCode: 20, force: true)
+        )
+        XCTAssertFalse(
+            Libre1AccountClient.shouldRetry(statusCode: 429, bodyCode: nil, force: false)
+        )
+        XCTAssertFalse(
+            Libre1AccountClient.shouldRetry(statusCode: 400, bodyCode: 4, force: false)
         )
     }
 
