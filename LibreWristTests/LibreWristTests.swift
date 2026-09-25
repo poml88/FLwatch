@@ -862,7 +862,7 @@ final class LibreWristTests: XCTestCase {
         XCTAssertEqual(watch.postAuthRearmPerCharacteristicTimeout, 30)
         XCTAssertTrue(watch.acquiresByActiveScan)
         XCTAssertTrue(watch.recreatesScannerBetweenWorkouts)
-        XCTAssertFalse(watch.usesSystemAutoReconnect)
+        XCTAssertTrue(watch.usesSystemAutoReconnect)
         XCTAssertEqual(watch.burstConnectMode, .armOnDiscovery)
     }
 
@@ -972,110 +972,9 @@ final class LibreWristTests: XCTestCase {
         XCTAssertTrue(
             state.owns(scannerGeneration: 7, peripheralID: peripheralID)
         )
-    }
-
-    func testLibre3SystemRecoveryObservationReportsFirstAdvertisementAndBestRSSI() {
-        let startedAt = Date(timeIntervalSinceReferenceDate: 100)
-        var observation = Libre3SystemRecoveryObservation(
-            startedAt: startedAt,
-            isEnabled: true
+        XCTAssertFalse(
+            state.owns(scannerGeneration: 8, peripheralID: peripheralID)
         )
-
-        XCTAssertEqual(
-            observation.recordAdvertisement(
-                rssi: -72,
-                isConnectable: true,
-                at: startedAt.addingTimeInterval(4)
-            ),
-            4
-        )
-        _ = observation.recordAdvertisement(
-            rssi: -65,
-            isConnectable: nil,
-            at: startedAt.addingTimeInterval(64)
-        )
-        XCTAssertEqual(
-            observation.connectedSummary(at: startedAt.addingTimeInterval(64.5)),
-            "elapsed=64.5s last-adv-age=0.5s adv-callbacks=2 rssi-best=-65"
-        )
-        XCTAssertEqual(
-            observation.endedSummary(at: startedAt.addingTimeInterval(90)),
-            "elapsed=90.0s adv-callbacks=2 connectable=1 unknown=1 rssi-best=-65 first-observed-adv=4.0s"
-        )
-    }
-
-    func testLibre3SystemRecoveryObservationReportsMeasuredZeroWithoutCallbacks() {
-        let startedAt = Date(timeIntervalSinceReferenceDate: 200)
-        let observation = Libre3SystemRecoveryObservation(
-            startedAt: startedAt,
-            isEnabled: true
-        )
-
-        XCTAssertEqual(
-            observation.endedSummary(at: startedAt.addingTimeInterval(75)),
-            "elapsed=75.0s adv-callbacks=0 connectable=0 unknown=0 rssi-best=n/a first-observed-adv=n/a"
-        )
-    }
-
-    func testLibre3SystemRecoveryObservationUsesNAWhenDisabled() {
-        let startedAt = Date(timeIntervalSinceReferenceDate: 250)
-        let observation = Libre3SystemRecoveryObservation(
-            startedAt: startedAt,
-            isEnabled: false
-        )
-
-        XCTAssertEqual(
-            observation.connectedSummary(at: startedAt.addingTimeInterval(20)),
-            "elapsed=20.0s last-adv-age=n/a adv-callbacks=n/a rssi-best=n/a"
-        )
-        XCTAssertEqual(
-            observation.endedSummary(at: startedAt.addingTimeInterval(30)),
-            "elapsed=30.0s adv-callbacks=n/a connectable=n/a unknown=n/a rssi-best=n/a first-observed-adv=n/a"
-        )
-    }
-
-    func testLibre3SystemReconnectObservationCountsOnlyItsOwnedTarget() {
-        let peripheralID = UUID()
-        var state = Libre3SystemReconnectState()
-        _ = state.handleDisconnect(
-            autoReconnectEnabled: true,
-            shouldMaintainConnection: true,
-            matchesSavedPeripheral: true,
-            isIntentional: false,
-            scannerGeneration: 7,
-            peripheralID: peripheralID,
-            isReconnecting: true,
-            disconnectTimestamp: 300,
-            observesAdvertisements: true
-        )
-
-        XCTAssertNil(
-            state.recordAdvertisement(
-                scannerGeneration: 8,
-                peripheralID: peripheralID,
-                rssi: -50,
-                isConnectable: true,
-                at: Date(timeIntervalSinceReferenceDate: 302)
-            )
-        )
-        XCTAssertEqual(
-            state.recordAdvertisement(
-                scannerGeneration: 7,
-                peripheralID: peripheralID,
-                rssi: -70,
-                isConnectable: true,
-                at: Date(timeIntervalSinceReferenceDate: 305)
-            ),
-            5
-        )
-        let target = state.end()
-        XCTAssertEqual(
-            target?.observation.endedSummary(
-                at: Date(timeIntervalSinceReferenceDate: 320)
-            ),
-            "elapsed=20.0s adv-callbacks=1 connectable=1 unknown=0 rssi-best=-70 first-observed-adv=5.0s"
-        )
-        XCTAssertNil(state.target)
     }
 
     func testLibre3SystemReconnectZeroTimestampUsesCurrentDate() throws {
@@ -1088,12 +987,11 @@ final class LibreWristTests: XCTestCase {
             isIntentional: false,
             scannerGeneration: 7,
             peripheralID: UUID(),
-            isReconnecting: true,
-            observesAdvertisements: true
+            isReconnecting: true
         )
         let after = Date()
 
-        let startedAt = try XCTUnwrap(state.target?.observation.startedAt)
+        let startedAt = try XCTUnwrap(state.target?.startedAt)
         XCTAssertGreaterThanOrEqual(startedAt, before)
         XCTAssertLessThanOrEqual(startedAt, after)
     }
@@ -2264,42 +2162,6 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
-    func testBurstPreArmPolicyKeepsPredictedDatesStrictlyInTheFuture() {
-        let anchor = Date(timeIntervalSince1970: 1_800_000_030)
-
-        XCTAssertEqual(
-            Libre3BurstPreArmPolicy.nextPreArmDate(
-                lastBurstAt: anchor,
-                lead: 3,
-                now: anchor.addingTimeInterval(10)
-            ),
-            anchor.addingTimeInterval(57)
-        )
-        XCTAssertEqual(
-            Libre3BurstPreArmPolicy.nextPreArmDate(
-                lastBurstAt: anchor,
-                lead: 3,
-                now: anchor.addingTimeInterval(58)
-            ),
-            anchor.addingTimeInterval(117)
-        )
-        XCTAssertNil(
-            Libre3BurstPreArmPolicy.nextPreArmDate(
-                lastBurstAt: anchor,
-                lead: 3,
-                now: anchor.addingTimeInterval(11 * 60)
-            )
-        )
-        XCTAssertEqual(
-            Libre3BurstPreArmPolicy.nextPreArmDate(
-                lastBurstAt: anchor,
-                lead: 10,
-                now: anchor.addingTimeInterval(50)
-            ),
-            anchor.addingTimeInterval(110)
-        )
-    }
-
     func testDisconnectHandoffRecoveryCompletesForMissingPeripheral() throws {
         XCTAssertEqual(
             Libre3DisconnectHandoffRecoveryPolicy.action(for: nil),
@@ -2732,7 +2594,7 @@ final class LibreWristTests: XCTestCase {
                 workoutState: "running",
                 appVisibility: "background"
             ),
-            "attempt-summary path=burst outcome=ended ar=1 scanner=7 adv-callbacks=3 rssi=-71/-75 adv-span=0.5s t-connect=0.8s t-glucose=6.2s rssi-reads=0/0 rssi-now=n/a rssi-min=n/a rssi-mean=n/a rssi-max=n/a gap=n/a batt=68%/-2% hk=running app=background"
+            "attempt-summary path=burst outcome=ended ar=1 scanner=7 adv-callbacks=3 rssi=-71/-75 adv-span=0.5s t-connect=0.8s t-glucose=6.2s gap=n/a batt=68%/-2% hk=running app=background"
         )
     }
 
@@ -2757,7 +2619,7 @@ final class LibreWristTests: XCTestCase {
                 workoutState: nil,
                 appVisibility: nil
             ),
-            "attempt-summary path=retrieved outcome=failed ar=0 scanner=n/a adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a rssi-reads=0/0 rssi-now=n/a rssi-min=n/a rssi-mean=n/a rssi-max=n/a gap=n/a batt=n/a hk=n/a app=n/a"
+            "attempt-summary path=retrieved outcome=failed ar=0 scanner=n/a adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a gap=n/a batt=n/a hk=n/a app=n/a"
         )
 
         var measured = Libre3AttemptDiagnostics()
@@ -2802,148 +2664,7 @@ final class LibreWristTests: XCTestCase {
                 workoutState: nil,
                 appVisibility: nil
             ),
-            "attempt-summary path=system outcome=cancelled ar=1 scanner=7 adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a rssi-reads=0/0 rssi-now=n/a rssi-min=n/a rssi-mean=n/a rssi-max=n/a gap=n/a batt=n/a hk=n/a app=n/a"
-        )
-    }
-
-    func testConnectedRSSIDescriptionReportsUnavailableWithoutSamples() {
-        var diagnostics = Libre3AttemptDiagnostics()
-        diagnostics.begin(
-            at: Date(timeIntervalSinceReferenceDate: 1_000),
-            observesAdvertisements: false,
-            batteryPercent: nil
-        )
-
-        XCTAssertEqual(
-            diagnostics.connectedRSSIDescription(),
-            "rssi-reads=0/0 rssi-now=n/a rssi-min=n/a rssi-mean=n/a rssi-max=n/a"
-        )
-    }
-
-    func testConnectedRSSIDescriptionExposesAnUnsuccessfulRead() {
-        var diagnostics = Libre3AttemptDiagnostics()
-        diagnostics.begin(
-            at: Date(timeIntervalSinceReferenceDate: 1_000),
-            observesAdvertisements: false,
-            batteryPercent: nil
-        )
-        diagnostics.recordConnectedRSSIRequest()
-
-        XCTAssertEqual(
-            diagnostics.connectedRSSIDescription(),
-            "rssi-reads=0/1 rssi-now=n/a rssi-min=n/a rssi-mean=n/a rssi-max=n/a"
-        )
-    }
-
-    func testConnectedRSSIDescriptionRetainsLatestFiveSamples() {
-        var diagnostics = Libre3AttemptDiagnostics()
-        diagnostics.begin(
-            at: Date(timeIntervalSinceReferenceDate: 1_000),
-            observesAdvertisements: false,
-            batteryPercent: nil
-        )
-        for rssi in [-60, -70, -80, -90, -100, -50] {
-            diagnostics.recordConnectedRSSIRequest()
-            diagnostics.recordConnectedRSSI(rssi)
-        }
-
-        XCTAssertEqual(
-            diagnostics.connectedRSSIDescription(),
-            "rssi-reads=6/6 rssi-now=-50 rssi-min=-100 rssi-mean=-78 rssi-max=-50"
-        )
-    }
-
-    func testConnectedRSSIDescriptionRoundsArithmeticMeanInDBM() {
-        var diagnostics = Libre3AttemptDiagnostics()
-        diagnostics.begin(
-            at: Date(timeIntervalSinceReferenceDate: 1_000),
-            observesAdvertisements: false,
-            batteryPercent: nil
-        )
-        for rssi in [-70, -71] {
-            diagnostics.recordConnectedRSSIRequest()
-            diagnostics.recordConnectedRSSI(rssi)
-        }
-
-        XCTAssertEqual(
-            diagnostics.connectedRSSIDescription(),
-            "rssi-reads=2/2 rssi-now=-71 rssi-min=-71 rssi-mean=-71 rssi-max=-70"
-        )
-    }
-
-    func testAdvertisementFingerprintReportsShapeAndChanges() {
-        let serviceDataKey = CBAdvertisementDataServiceDataKey
-        let connectableKey = CBAdvertisementDataIsConnectable
-        let txPowerKey = CBAdvertisementDataTxPowerLevelKey
-        let first = Libre3AdvertisementFingerprint(
-            advertisementData: [
-                serviceDataKey: "[FDE3: <00112233>]",
-                connectableKey: "true",
-                txPowerKey: "Optional(-7)"
-            ],
-            advertisedServiceUUIDs: ["FDE3"]
-        )
-        let same = Libre3AdvertisementFingerprint(
-            advertisementData: [
-                txPowerKey: "Optional(-7)",
-                connectableKey: "true",
-                serviceDataKey: "[FDE3: <00112233>]"
-            ],
-            advertisedServiceUUIDs: ["FDE3"]
-        )
-        let payloadChanged = Libre3AdvertisementFingerprint(
-            advertisementData: [
-                serviceDataKey: "[FDE3: <00112244>]",
-                connectableKey: "true",
-                txPowerKey: "Optional(-7)"
-            ],
-            advertisedServiceUUIDs: ["FDE3"]
-        )
-        let serviceCountChanged = Libre3AdvertisementFingerprint(
-            advertisementData: [
-                serviceDataKey: "[FDE3: <00112233>]",
-                connectableKey: "true",
-                txPowerKey: "Optional(-7)"
-            ],
-            advertisedServiceUUIDs: ["FDE3", "FDE4"]
-        )
-
-        XCTAssertEqual(first.serviceDataLength, 4)
-        XCTAssertEqual(
-            first.keyNamesDescription,
-            [connectableKey, serviceDataKey, txPowerKey].sorted().joined(separator: ",")
-        )
-        XCTAssertEqual(
-            Libre3AdvertisementFingerprint(
-                advertisementData: [serviceDataKey: "[FDE3: 14 bytes]"],
-                advertisedServiceUUIDs: []
-            ).serviceDataLength,
-            14
-        )
-        XCTAssertEqual(
-            Libre3AdvertisementFingerprint(
-                advertisementData: [
-                    serviceDataKey: "[FDE3: {length = 14, bytes = 0x0102}]"
-                ],
-                advertisedServiceUUIDs: []
-            ).serviceDataLength,
-            14
-        )
-        XCTAssertEqual(
-            first.traceDescription(previous: nil),
-            "conn=1 tx=-7 keys=3 svc=1 svc-data-len=4 changed=n/a"
-        )
-        XCTAssertEqual(
-            same.traceDescription(previous: first),
-            "conn=1 tx=-7 keys=3 svc=1 svc-data-len=4 changed=0"
-        )
-        XCTAssertEqual(
-            payloadChanged.traceDescription(previous: first),
-            "conn=1 tx=-7 keys=3 svc=1 svc-data-len=4 changed=0"
-        )
-        XCTAssertEqual(
-            serviceCountChanged.traceDescription(previous: first),
-            "conn=1 tx=-7 keys=3 svc=2 svc-data-len=4 changed=1"
+            "attempt-summary path=system outcome=cancelled ar=1 scanner=7 adv-callbacks=n/a rssi=n/a adv-span=n/a t-connect=n/a t-glucose=n/a gap=n/a batt=n/a hk=n/a app=n/a"
         )
     }
 
