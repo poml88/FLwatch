@@ -158,8 +158,11 @@ enum WorkoutStartResult: Equatable, Sendable {
 struct WorkoutAlertState: Codable, Equatable, Sendable {
     var activeGlucoseTier: GlucoseAlertTier?
     var lastGlucoseNotificationDate: Date?
+    // Optional fields keep workout snapshots from earlier builds decodable.
+    var lowSnoozedUntil: Date?
     var wasDroppingQuickly = false
     var lastRapidDropNotificationDate: Date?
+    var rapidDropSnoozedUntil: Date?
 
     static let empty = WorkoutAlertState()
 }

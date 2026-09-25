@@ -65,10 +65,18 @@ final class WorkoutModeRefreshManager {
 /// delegate. `WatchConnectivityManager` remains the single foreground router.
 @MainActor
 final class WorkoutAlertNotificationManager {
+    private enum NotificationFamily {
+        case glucose(GlucoseAlertTier)
+        case rapidDrop
+    }
+
     static let shared = WorkoutAlertNotificationManager()
 
     nonisolated private static let notificationIdentifierPrefix = "watch-workout-"
+    nonisolated static let notificationCategoryIdentifier = "WATCH_WORKOUT_ALERT"
+    nonisolated static let snoozeActionIdentifier = "WATCH_WORKOUT_ALERT_SNOOZE"
     private static let noReadingIdentifier = "watch-workout-no-reading"
+    private static let snoozeInterval: TimeInterval = 15 * 60
     /// Deliberately half the phone's 20-minute signal-loss dead-man. That one
     /// covers a phone left behind on a table, where the user is not relying on it
     /// minute to minute. A workout is the opposite: the watch is the only device
@@ -99,8 +107,82 @@ final class WorkoutAlertNotificationManager {
 
     private init() {}
 
+    nonisolated static var notificationCategory: UNNotificationCategory {
+        UNNotificationCategory(
+            identifier: notificationCategoryIdentifier,
+            actions: [
+                UNNotificationAction(
+                    identifier: snoozeActionIdentifier,
+                    title: String(
+                        localized: "Snooze 15 min",
+                        comment: "Notification action that snoozes a glucose alert for 15 minutes."
+                    )
+                )
+            ],
+            intentIdentifiers: [],
+            options: []
+        )
+    }
+
     nonisolated static func handlesNotificationIdentifier(_ identifier: String) -> Bool {
         identifier.hasPrefix(notificationIdentifierPrefix)
+    }
+
+    private static func notificationIdentifierPrefix(
+        for family: NotificationFamily
+    ) -> String {
+        switch family {
+        case .glucose(let tier):
+            "\(notificationIdentifierPrefix)\(tier.rawValue)-"
+        case .rapidDrop:
+            "\(notificationIdentifierPrefix)rapid-drop-"
+        }
+    }
+
+    func snooze(notificationIdentifier: String, now: Date = Date()) async {
+        let lowPrefixes = [GlucoseAlertTier.low, .criticalLow].map {
+            Self.notificationIdentifierPrefix(for: .glucose($0))
+        }
+        let rapidDropPrefix = Self.notificationIdentifierPrefix(for: .rapidDrop)
+        let prefixesToRemove: [String]
+
+        var alertState = WorkoutModeStore.shared.alertState
+        if lowPrefixes.contains(where: { notificationIdentifier.hasPrefix($0) }) {
+            alertState.lowSnoozedUntil = now.addingTimeInterval(Self.snoozeInterval)
+            prefixesToRemove = lowPrefixes
+        } else if notificationIdentifier.hasPrefix(rapidDropPrefix) {
+            alertState.rapidDropSnoozedUntil = now.addingTimeInterval(Self.snoozeInterval)
+            prefixesToRemove = [rapidDropPrefix]
+        } else {
+            return
+        }
+
+        guard WorkoutModeStore.shared.isActive,
+              !WorkoutModeStore.shared.isEnding else { return }
+        guard WorkoutModeStore.shared.updateAlertState(alertState, at: now) else {
+            logger.error("Failed to persist workout alert snooze")
+            return
+        }
+
+        let pendingRequests = await notificationCenter.pendingNotificationRequests()
+        let pendingIdentifiers = pendingRequests
+            .map(\.identifier)
+            .filter { identifier in
+                prefixesToRemove.contains { identifier.hasPrefix($0) }
+            }
+        if !pendingIdentifiers.isEmpty {
+            notificationCenter.removePendingNotificationRequests(withIdentifiers: pendingIdentifiers)
+        }
+
+        let deliveredNotifications = await notificationCenter.deliveredNotifications()
+        let deliveredIdentifiers = deliveredNotifications
+            .map(\.request.identifier)
+            .filter { identifier in
+                prefixesToRemove.contains { identifier.hasPrefix($0) }
+            }
+        if !deliveredIdentifiers.isEmpty {
+            notificationCenter.removeDeliveredNotifications(withIdentifiers: deliveredIdentifiers)
+        }
     }
 
     func startOrRecoverWorkout(isRecovery: Bool) async {
@@ -210,6 +292,12 @@ final class WorkoutAlertNotificationManager {
 
         let glucose = history.currentGlucose
         let criticalThreshold = SharedData.workoutCriticalLowThresholdMgDL
+        if glucose >= workoutStore.lowGlucoseThreshold {
+            // Match the phone: recovery above the workout low threshold ends the
+            // shared low/critical-low snooze. Stale readings return before here.
+            alertState.lowSnoozedUntil = nil
+        }
+        let lowIsSnoozed = alertState.lowSnoozedUntil.map { now < $0 } ?? false
         let triggeredTier: GlucoseAlertTier?
         if glucose < criticalThreshold {
             triggeredTier = .criticalLow
@@ -223,7 +311,8 @@ final class WorkoutAlertNotificationManager {
         case .criticalLow:
             let isNewCriticalDrop = alertState.activeGlucoseTier != .criticalLow
             var criticalAlertWasScheduled = false
-            if isNewCriticalDrop || isDue(alertState.lastGlucoseNotificationDate, now: now) {
+            if !lowIsSnoozed,
+               isNewCriticalDrop || isDue(alertState.lastGlucoseNotificationDate, now: now) {
                 if await scheduleGlucoseNotification(
                     tier: .criticalLow,
                     glucose: glucose,
@@ -246,7 +335,8 @@ final class WorkoutAlertNotificationManager {
         case .low:
             let isNewWorkoutLow = alertState.activeGlucoseTier == nil
             var workoutLowAlertWasScheduled = false
-            if isNewWorkoutLow || isDue(alertState.lastGlucoseNotificationDate, now: now) {
+            if !lowIsSnoozed,
+               isNewWorkoutLow || isDue(alertState.lastGlucoseNotificationDate, now: now) {
                 if await scheduleGlucoseNotification(
                     tier: .low,
                     glucose: glucose,
@@ -274,8 +364,10 @@ final class WorkoutAlertNotificationManager {
                 || latestTrend == .fallingVeryQuickly
             if isDroppingQuickly {
                 let isNewRapidDrop = !alertState.wasDroppingQuickly
+                let rapidDropIsSnoozed = alertState.rapidDropSnoozedUntil.map { now < $0 } ?? false
                 var rapidDropAlertWasScheduled = false
-                if isNewRapidDrop
+                if !rapidDropIsSnoozed,
+                   isNewRapidDrop
                     || isDue(alertState.lastRapidDropNotificationDate, now: now) {
                     if await scheduleRapidDropNotification(
                         glucose: glucose,
@@ -290,6 +382,8 @@ final class WorkoutAlertNotificationManager {
                     alertState.wasDroppingQuickly = true
                 }
             } else {
+                // Arrow recovery resets the edge latch, but the independent
+                // rapid-drop snooze deliberately runs for its full 15 minutes.
                 alertState.wasDroppingQuickly = false
             }
         } else {
@@ -307,13 +401,43 @@ final class WorkoutAlertNotificationManager {
             >= Self.minimumRepeatInterval - Self.repeatIntervalTolerance
     }
 
+    private func isSnoozed(notificationIdentifier: String, now: Date) -> Bool {
+        let alertState = WorkoutModeStore.shared.alertState
+        let isLowAlert = [GlucoseAlertTier.low, .criticalLow].contains { tier in
+            notificationIdentifier.hasPrefix(
+                Self.notificationIdentifierPrefix(for: .glucose(tier))
+            )
+        }
+        if isLowAlert {
+            return alertState.lowSnoozedUntil.map { now < $0 } ?? false
+        }
+        if notificationIdentifier.hasPrefix(
+            Self.notificationIdentifierPrefix(for: .rapidDrop)
+        ) {
+            return alertState.rapidDropSnoozedUntil.map { now < $0 } ?? false
+        }
+        return false
+    }
+
     private func persist(
-        _ alertState: WorkoutAlertState,
+        _ evaluatedState: WorkoutAlertState,
         ifChangedFrom originalState: WorkoutAlertState,
         at date: Date
     ) {
-        guard alertState != originalState else { return }
-        if !WorkoutModeStore.shared.updateAlertState(alertState, at: date) {
+        let workoutStore = WorkoutModeStore.shared
+        let currentState = workoutStore.alertState
+        var alertState = evaluatedState
+        // Scheduling awaits Notification Center. Preserve a snooze action that
+        // reached the main actor while this evaluation was suspended.
+        if currentState.lowSnoozedUntil != originalState.lowSnoozedUntil {
+            alertState.lowSnoozedUntil = currentState.lowSnoozedUntil
+        }
+        if currentState.rapidDropSnoozedUntil != originalState.rapidDropSnoozedUntil {
+            alertState.rapidDropSnoozedUntil = currentState.rapidDropSnoozedUntil
+        }
+
+        guard alertState != currentState else { return }
+        if !workoutStore.updateAlertState(alertState, at: date) {
             logger.error("Failed to persist workout alert state")
         }
     }
@@ -354,15 +478,16 @@ final class WorkoutAlertNotificationManager {
             localized: "Your workout alert level is \(thresholdValue).",
             comment: "Body of a low-glucose workout notification. The value is the user's workout alert threshold with its glucose unit."
         )
+        let identifierPrefix = Self.notificationIdentifierPrefix(for: .glucose(tier))
         return await scheduleImmediateNotification(
             content,
-            identifier: "\(Self.notificationIdentifierPrefix)\(tier.rawValue)-\(Int(now.timeIntervalSince1970))",
+            identifier: "\(identifierPrefix)\(Int(now.timeIntervalSince1970))",
             identifierFamiliesToRemove: tier == .criticalLow
                 ? [
-                    "\(Self.notificationIdentifierPrefix)\(GlucoseAlertTier.criticalLow.rawValue)-",
-                    "\(Self.notificationIdentifierPrefix)\(GlucoseAlertTier.low.rawValue)-"
+                    Self.notificationIdentifierPrefix(for: .glucose(.criticalLow)),
+                    Self.notificationIdentifierPrefix(for: .glucose(.low))
                 ]
-                : ["\(Self.notificationIdentifierPrefix)\(tier.rawValue)-"],
+                : [identifierPrefix],
             requestsCriticalDelivery: requestsCriticalDelivery
         )
     }
@@ -384,10 +509,11 @@ final class WorkoutAlertNotificationManager {
             localized: "Glucose is falling quickly during your workout.",
             comment: "Body of a rapid glucose-drop notification during an Apple Watch workout."
         )
+        let identifierPrefix = Self.notificationIdentifierPrefix(for: .rapidDrop)
         return await scheduleImmediateNotification(
             content,
-            identifier: "\(Self.notificationIdentifierPrefix)rapid-drop-\(Int(now.timeIntervalSince1970))",
-            identifierFamiliesToRemove: ["\(Self.notificationIdentifierPrefix)rapid-drop-"],
+            identifier: "\(identifierPrefix)\(Int(now.timeIntervalSince1970))",
+            identifierFamiliesToRemove: [identifierPrefix],
             requestsCriticalDelivery: SharedData.workoutRapidDropCriticalAlertsEnabled
         )
     }
@@ -402,6 +528,7 @@ final class WorkoutAlertNotificationManager {
               WorkoutModeStore.shared.isActive,
               !WorkoutModeStore.shared.isEnding,
               let settings = await enabledNotificationSettings() else { return false }
+        content.categoryIdentifier = Self.notificationCategoryIdentifier
         applyDelivery(
             to: content,
             requestsCriticalDelivery: requestsCriticalDelivery,
@@ -417,6 +544,11 @@ final class WorkoutAlertNotificationManager {
         if !matchingIdentifiers.isEmpty {
             notificationCenter.removePendingNotificationRequests(withIdentifiers: matchingIdentifiers)
         }
+        // The main actor can process a snooze while either Notification Center
+        // query is suspended. Do not arm an alert after that snooze was saved.
+        guard !isSnoozed(notificationIdentifier: identifier, now: Date()) else {
+            return false
+        }
 
         let request = UNNotificationRequest(
             identifier: identifier,
@@ -428,6 +560,12 @@ final class WorkoutAlertNotificationManager {
         )
         do {
             try await notificationCenter.add(request)
+            guard !isSnoozed(notificationIdentifier: identifier, now: Date()) else {
+                notificationCenter.removePendingNotificationRequests(
+                    withIdentifiers: [identifier]
+                )
+                return false
+            }
             guard isWorkoutAlertingActive,
                   WorkoutModeStore.shared.isActive,
                   !WorkoutModeStore.shared.isEnding else {

@@ -2129,6 +2129,9 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
 
     private func configureWatchNotifications() {
         watchNotificationCenter.delegate = self
+        watchNotificationCenter.setNotificationCategories([
+            WorkoutAlertNotificationManager.notificationCategory
+        ])
     }
 
     func requestWatchLowGlucoseNotificationAuthorization() {
@@ -2328,6 +2331,30 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
             return
         }
         completionHandler([.banner, .sound])
+    }
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        // WatchKit asserts that the completion handler runs on the main thread.
+        // The async variant of this method returns on a background executor and
+        // crashed the app on snooze, so complete synchronously on the delivering
+        // thread and save the snooze in a main-actor task. Workout alerts only
+        // fire while the workout session keeps the app running.
+        defer { completionHandler() }
+
+        let notificationIdentifier = response.notification.request.identifier
+        guard response.actionIdentifier == WorkoutAlertNotificationManager.snoozeActionIdentifier,
+              WorkoutAlertNotificationManager.handlesNotificationIdentifier(notificationIdentifier) else {
+            return
+        }
+        Task { @MainActor in
+            await WorkoutAlertNotificationManager.shared.snooze(
+                notificationIdentifier: notificationIdentifier
+            )
+        }
     }
 #endif
 }

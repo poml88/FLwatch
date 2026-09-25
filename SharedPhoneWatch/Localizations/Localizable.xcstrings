@@ -945,7 +945,63 @@
 
     },
     "5 min" : {
-      "comment" : "Label for glucose change over the previous five minutes on Apple Watch."
+      "comment" : "Label for glucose change over the previous five minutes on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 Min."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 min"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 min"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 min"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5分"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 min"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 min"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 мин"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 分钟"
+          }
+        }
+      }
     },
     "5.5" : {
       "localizations" : {
@@ -1676,7 +1732,63 @@
       }
     },
     "Acquiring sensor…" : {
-      "comment" : "Apple Watch workout status while discovering and authenticating directly with the Libre 3 sensor."
+      "comment" : "Apple Watch workout status while discovering and authenticating directly with the Libre 3 sensor.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor wird verbunden …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conectando con el sensor…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connexion au capteur…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connessione al sensore…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーに接続中…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinding maken met sensor…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Łączenie z sensorem…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключение к сенсору…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在连接传感器…"
+          }
+        }
+      }
     },
     "Actions" : {
       "localizations" : {
@@ -2382,10 +2494,122 @@
       }
     },
     "Alerts when the sensor trend arrow is pointing straight down." : {
-      "comment" : "Explanation of when rapid-drop workout alerts fire on Apple Watch."
+      "comment" : "Explanation of when rapid-drop workout alerts fire on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnt, wenn der Trendpfeil des Sensors senkrecht nach unten zeigt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avisa cuando la flecha de tendencia del sensor apunta verticalmente hacia abajo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerte lorsque la flèche de tendance du capteur pointe verticalement vers le bas."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisa quando la freccia di tendenza del sensore punta verticalmente verso il basso."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーのトレンド矢印が真下を向いているときに通知します。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geeft een melding wanneer de trendpijl van de sensor recht omlaag wijst."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostrzega, gdy strzałka trendu sensora wskazuje pionowo w dół."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предупреждает, когда стрелка тренда сенсора направлена вертикально вниз."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当传感器趋势箭头垂直向下时发出提醒。"
+          }
+        }
+      }
     },
     "Allow Bluetooth access to continue" : {
-      "comment" : "Apple Watch workout preflight status while its Bluetooth permission prompt awaits a choice."
+      "comment" : "Apple Watch workout preflight status while its Bluetooth permission prompt awaits a choice.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth-Zugriff erlauben, um fortzufahren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permite el acceso a Bluetooth para continuar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autorisez l’accès au Bluetooth pour continuer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consenti l’accesso al Bluetooth per continuare"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "続けるにはBluetoothへのアクセスを許可してください"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sta Bluetooth-toegang toe om door te gaan"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aby kontynuować, zezwól na dostęp do Bluetooth"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы продолжить, разрешите доступ к Bluetooth"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许访问蓝牙以继续"
+          }
+        }
+      }
     },
     "An alert below is switched on but won't be delivered: glucose alerts need the Bluetooth heartbeat, which is off. Turn it on in Settings, under “Bluetooth Heartbeat”, or switch the alert off here." : {
       "comment" : "Warning at the top of the Alerts tab, shown only for cloud CGM providers when a glucose alert is switched on while the Bluetooth heartbeat — the mechanism that evaluates those alerts — is off. Offers the user both ways out: enable the heartbeat in the Settings tab, or switch the alert off.",
@@ -3514,7 +3738,63 @@
       "isCommentAutoGenerated" : true
     },
     "Bluetooth access is off" : {
-      "comment" : "Apple Watch workout preflight status when Bluetooth permission is denied or restricted."
+      "comment" : "Apple Watch workout preflight status when Bluetooth permission is denied or restricted.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth-Zugriff ist deaktiviert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El acceso a Bluetooth está desactivado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’accès au Bluetooth est désactivé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’accesso al Bluetooth è disattivato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetoothへのアクセスがオフです"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth-toegang is uitgeschakeld"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dostęp do Bluetooth jest wyłączony"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ к Bluetooth отключён"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "蓝牙访问已关闭"
+          }
+        }
+      }
     },
     "Bluetooth access is required for direct sensor readings." : {
       "comment" : "Workout start failure when Apple Watch Bluetooth permission is denied or restricted."
@@ -3938,7 +4218,63 @@
       }
     },
     "Bluetooth ready" : {
-      "comment" : "Apple Watch workout preflight status when Bluetooth permission is granted."
+      "comment" : "Apple Watch workout preflight status when Bluetooth permission is granted.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth bereit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth listo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth prêt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth pronto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetoothの準備完了"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth gereed"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth gotowy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth готов"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "蓝牙已就绪"
+          }
+        }
+      }
     },
     "Bluetooth unavailable" : {
       "comment" : "A message indicating that the device's Bluetooth is unavailable.",
@@ -4059,7 +4395,63 @@
       }
     },
     "Bring the sensor close to the watch." : {
-      "comment" : "Advice shown on Apple Watch while Libre 3 is acquiring the sensor during a workout. Moving the sensor nearer is the only thing the user can do to help."
+      "comment" : "Advice shown on Apple Watch while Libre 3 is acquiring the sensor during a workout. Moving the sensor nearer is the only thing the user can do to help.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bringe den Sensor nahe an die Apple Watch."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca el sensor al Apple Watch."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapprochez le capteur de l’Apple Watch."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvicina il sensore all’Apple Watch."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーをApple Watchに近づけてください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd de sensor dicht bij de Apple Watch."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zbliż sensor do Apple Watch."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поднесите сенсор ближе к Apple Watch."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将传感器靠近 Apple Watch。"
+          }
+        }
+      }
     },
     "Buy the developer quality coffee beans!\n🤝☕️" : {
       "localizations" : {
@@ -6737,7 +7129,63 @@
       }
     },
     "Couldn’t Start Workout" : {
-      "comment" : "Title of an Apple Watch alert explaining why a workout could not start."
+      "comment" : "Title of an Apple Watch alert explaining why a workout could not start.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Training konnte nicht gestartet werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo iniciar el entrenamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de démarrer l’exercice"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile avviare l’allenamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウトを開始できませんでした"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work-out kon niet worden gestart"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się rozpocząć treningu"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось начать тренировку"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法开始体能训练"
+          }
+        }
+      }
     },
     "Credentials" : {
       "localizations" : {
@@ -6974,19 +7422,299 @@
       }
     },
     "Critical critically-low alerts" : {
-      "comment" : "Toggle that makes critically-low glucose notifications during workouts use critical delivery on Apple Watch."
+      "comment" : "Toggle that makes critically-low glucose notifications during workouts use critical delivery on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kritische Hinweise bei kritisch niedrigem Wert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertas críticas para niveles críticamente bajos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertes critiques en cas de glycémie très basse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisi critici per glucosio criticamente basso"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重度の低グルコースを重大な通知で通知"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kritieke meldingen bij kritiek lage glucose"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerty krytyczne przy krytycznie niskim poziomie"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Критические уведомления при критически низкой глюкозе"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "葡萄糖严重偏低时发送关键警报"
+          }
+        }
+      }
     },
     "Critical no-reading alerts" : {
-      "comment" : "Toggle that makes missing-glucose-reading notifications during workouts use critical delivery on Apple Watch."
+      "comment" : "Toggle that makes missing-glucose-reading notifications during workouts use critical delivery on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kritische Hinweise bei fehlenden Messwerten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertas críticas si no hay lecturas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertes critiques en l’absence de mesure"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisi critici in assenza di letture"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "測定値なしを重大な通知で通知"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kritieke meldingen bij ontbrekende metingen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerty krytyczne przy braku odczytów"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Критические уведомления при отсутствии показаний"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无读数时发送关键警报"
+          }
+        }
+      }
     },
     "Critical rapid-drop alerts" : {
-      "comment" : "Toggle that makes rapid glucose-drop notifications during workouts use critical delivery on Apple Watch."
+      "comment" : "Toggle that makes rapid glucose-drop notifications during workouts use critical delivery on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kritische Hinweise bei schnellem Abfall"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertas críticas de descenso rápido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertes critiques en cas de chute rapide"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisi critici per calo rapido"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "急降下を重大な通知で通知"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kritieke meldingen bij snelle daling"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerty krytyczne przy szybkim spadku"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Критические уведомления при быстром снижении"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速下降时发送关键警报"
+          }
+        }
+      }
     },
     "Critical workout-low alerts" : {
-      "comment" : "Toggle that makes workout-low glucose notifications use critical delivery on Apple Watch."
+      "comment" : "Toggle that makes workout-low glucose notifications use critical delivery on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kritische Hinweise bei niedrigem Trainingswert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertas críticas de glucosa baja durante el entrenamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertes critiques de glycémie basse pendant l’exercice"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisi critici per glucosio basso durante l’allenamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウト中の低グルコースを重大な通知で通知"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kritieke meldingen bij lage glucose tijdens work-out"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerty krytyczne przy niskim poziomie podczas treningu"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Критические уведомления о низкой глюкозе на тренировке"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "体能训练期间葡萄糖偏低时发送关键警报"
+          }
+        }
+      }
     },
     "Critically low" : {
-      "comment" : "Label for the critically-low glucose threshold used during Apple Watch workouts."
+      "comment" : "Label for the critically-low glucose threshold used during Apple Watch workouts.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kritisch niedrig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Críticamente baja"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Très basse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Criticamente basso"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非常に低い"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kritiek laag"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Krytycznie niski"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Критически низкий"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "严重偏低"
+          }
+        }
+      }
     },
     "Critically low glucose alerts" : {
       "comment" : "Toggle label for notifications when glucose is below the configured critically-low threshold.",
@@ -8396,7 +9124,63 @@
       }
     },
     "Direct to Apple Watch" : {
-      "comment" : "Section heading for Libre 3 sensor credentials provisioned from iPhone to Apple Watch."
+      "comment" : "Section heading for Libre 3 sensor credentials provisioned from iPhone to Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direkt zur Apple Watch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directamente al Apple Watch"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directement sur l’Apple Watch"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direttamente su Apple Watch"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watchに直接接続"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechtstreeks naar Apple Watch"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezpośrednio do Apple Watch"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напрямую на Apple Watch"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直连 Apple Watch"
+          }
+        }
+      }
     },
     "Disabled" : {
       "comment" : "Subtitle indicating that FLwatch Live Activities are disabled.",
@@ -9457,7 +10241,63 @@
       }
     },
     "End Workout" : {
-      "comment" : "Ends and saves the active Apple Watch workout."
+      "comment" : "Ends and saves the active Apple Watch workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Training beenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalizar entrenamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminer l’exercice"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Termina allenamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウトを終了"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work-out beëindigen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zakończ trening"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершить тренировку"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "结束体能训练"
+          }
+        }
+      }
     },
     "Ended" : {
       "localizations" : {
@@ -13296,7 +14136,63 @@
       }
     },
     "HR" : {
-      "comment" : "Abbreviation for heart rate on Apple Watch."
+      "comment" : "Abbreviation for heart rate on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HF"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FC"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FC"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FC"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "心拍数"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HF"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tętno"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ЧСС"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "心率"
+          }
+        }
+      }
     },
     "ICR" : {
 
@@ -16119,7 +17015,63 @@
       }
     },
     "Lower critically-low threshold" : {
-      "comment" : "Accessibility label for lowering the Apple Watch workout critically-low glucose threshold."
+      "comment" : "Accessibility label for lowering the Apple Watch workout critically-low glucose threshold.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schwelle für kritisch niedrigen Wert senken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bajar el umbral de nivel críticamente bajo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abaisser le seuil de glycémie très basse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abbassa la soglia criticamente bassa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非常に低いしきい値を下げる"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drempel voor kritiek laag verlagen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obniż próg krytycznie niskiego poziomu"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Понизить порог критически низкого уровня"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "降低严重偏低阈值"
+          }
+        }
+      }
     },
     "Lower limit" : {
       "localizations" : {
@@ -16168,7 +17120,63 @@
       }
     },
     "Lower workout threshold" : {
-      "comment" : "Accessibility label for lowering the Apple Watch workout glucose threshold."
+      "comment" : "Accessibility label for lowering the Apple Watch workout glucose threshold.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trainingsschwelle senken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bajar el umbral del entrenamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abaisser le seuil d’exercice"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abbassa la soglia allenamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウトしきい値を下げる"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work-outdrempel verlagen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obniż próg treningowy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Понизить порог для тренировки"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "降低体能训练阈值"
+          }
+        }
+      }
     },
     "Make FLwatch the sensor’s receiver. This invalidates the Libre 3 app’s current connection credentials. While using FLwatch, force-close the Libre 3 app and turn off Bluetooth access for it in iOS Settings.\n\nTo return to Libre 3, force-close FLwatch, re-enable Bluetooth access for Libre 3, and select “Start New Sensor.” The app may warn that this will end your current sensor. Scan the same sensor you are already wearing—the sensor will not be stopped. Libre 3 should recognize it as your current sensor and reconnect. You may also need to sign in to LibreView again before uploads resume." : {
       "comment" : "Explains the Take over pairing mode, which claims the sensor for FLwatch and cuts off the Libre 3 app until the user hands it back. “Start New Sensor” is a button in the Libre 3 app — use that app's own wording for it in this language.",
@@ -18533,7 +19541,63 @@
       }
     },
     "OK" : {
-      "comment" : "Dismisses a workout start failure alert."
+      "comment" : "Dismisses a workout start failure alert.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aceptar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ОК"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好"
+          }
+        }
+      }
     },
     "On supported versions of CarPlay, the Live Activity appears automatically." : {
       "comment" : "Explanation that CarPlay displays the FLwatch Live Activity automatically when supported.",
@@ -20405,10 +21469,122 @@
       }
     },
     "Raise critically-low threshold" : {
-      "comment" : "Accessibility label for raising the Apple Watch workout critically-low glucose threshold."
+      "comment" : "Accessibility label for raising the Apple Watch workout critically-low glucose threshold.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schwelle für kritisch niedrigen Wert erhöhen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subir el umbral de nivel críticamente bajo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Augmenter le seuil de glycémie très basse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alza la soglia criticamente bassa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非常に低いしきい値を上げる"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drempel voor kritiek laag verhogen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podnieś próg krytycznie niskiego poziomu"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повысить порог критически низкого уровня"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提高严重偏低阈值"
+          }
+        }
+      }
     },
     "Raise workout threshold" : {
-      "comment" : "Accessibility label for raising the Apple Watch workout glucose threshold."
+      "comment" : "Accessibility label for raising the Apple Watch workout glucose threshold.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trainingsschwelle erhöhen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subir el umbral del entrenamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Augmenter le seuil d’exercice"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alza la soglia allenamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウトしきい値を上げる"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work-outdrempel verhogen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podnieś próg treningowy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повысить порог для тренировки"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提高体能训练阈值"
+          }
+        }
+      }
     },
     "Rapid acting" : {
       "localizations" : {
@@ -20527,7 +21703,63 @@
       }
     },
     "Rapid-drop alerts" : {
-      "comment" : "Toggle that enables rapid glucose-drop notifications during Apple Watch workouts."
+      "comment" : "Toggle that enables rapid glucose-drop notifications during Apple Watch workouts.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnungen bei schnellem Abfall"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertas de descenso rápido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertes de chute rapide"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisi di calo rapido"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "急降下通知"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldingen bij snelle daling"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerty szybkiego spadku"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомления о быстром снижении"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速下降提醒"
+          }
+        }
+      }
     },
     "Raw" : {
       "localizations" : {
@@ -20883,7 +22115,63 @@
       }
     },
     "Ready for direct sensor" : {
-      "comment" : "iPhone status confirming the paired Apple Watch has the current Libre 3 direct-sensor setup."
+      "comment" : "iPhone status confirming the paired Apple Watch has the current Libre 3 direct-sensor setup.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereit für direkte Sensorverbindung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listo para conexión directa al sensor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prêt pour la connexion directe au capteur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pronto per la connessione diretta al sensore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーへの直接接続の準備完了"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gereed voor directe sensorverbinding"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gotowe do bezpośredniego połączenia z sensorem"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово к прямому подключению сенсора"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已准备好直连传感器"
+          }
+        }
+      }
     },
     "Ready to search" : {
       "comment" : "A status text that is shown when the user has selected a heartbeat device but the app is not currently scanning for devices.",
@@ -23954,7 +25242,63 @@
       }
     },
     "Sensor moved to iPhone" : {
-      "comment" : "Apple Watch workout status after the user took Libre 3 sensor readings back on the iPhone. The workout itself is still running."
+      "comment" : "Apple Watch workout status after the user took Libre 3 sensor readings back on the iPhone. The workout itself is still running.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor wurde zum iPhone übertragen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor transferido al iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capteur transféré vers l’iPhone"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensore trasferito su iPhone"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーをiPhoneに移しました"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor overgezet naar iPhone"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor przeniesiony na iPhone’a"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сенсор переведён на iPhone"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器已移至 iPhone"
+          }
+        }
+      }
     },
     "Sensor needs replacing — replace it and pair the new one." : {
       "comment" : "A warning that the sensor has reported a terminal replacement state.",
@@ -24312,7 +25656,63 @@
       }
     },
     "Sensor setup is outdated" : {
-      "comment" : "iPhone status warning that Apple Watch has not acknowledged the current Libre 3 direct-sensor setup."
+      "comment" : "iPhone status warning that Apple Watch has not acknowledged the current Libre 3 direct-sensor setup.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensoreinrichtung ist veraltet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuración del sensor está desactualizada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuration du capteur est obsolète"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configurazione del sensore non è aggiornata"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサー設定が古くなっています"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensorconfiguratie is verouderd"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfiguracja sensora jest nieaktualna"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки сенсора устарели"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器设置已过期"
+          }
+        }
+      }
     },
     "Sensor value" : {
       "localizations" : {
@@ -25499,6 +26899,7 @@
       }
     },
     "Snooze 15 min" : {
+      "comment" : "Notification action that snoozes a glucose alert for 15 minutes.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -30472,7 +31873,63 @@
       }
     },
     "Waiting for current sensor setup" : {
-      "comment" : "Apple Watch workout status while a rejected Libre 3 ownership claim waits for refreshed provisioning from iPhone."
+      "comment" : "Apple Watch workout status while a rejected Libre 3 ownership claim waits for refreshed provisioning from iPhone.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf die aktuelle Sensoreinrichtung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando la configuración actual del sensor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente de la configuration actuelle du capteur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa della configurazione attuale del sensore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在のセンサー設定を待機中"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachten op de huidige sensorconfiguratie"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oczekiwanie na aktualną konfigurację sensora"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ожидание текущих настроек сенсора"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待当前传感器设置"
+          }
+        }
+      }
     },
     "Waiting for next heartbeat" : {
       "comment" : "A status text that indicates that the app is ready to search for nearby heartbeat devices.",
@@ -30535,7 +31992,63 @@
       }
     },
     "Waiting for sensor setup from iPhone" : {
-      "comment" : "iPhone status shown until Libre 3 pairing and cached authorization are ready to provision to Apple Watch."
+      "comment" : "iPhone status shown until Libre 3 pairing and cached authorization are ready to provision to Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf Sensoreinrichtung vom iPhone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando la configuración del sensor desde el iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente de la configuration du capteur depuis l’iPhone"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa della configurazione del sensore da iPhone"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhoneからのセンサー設定を待機中"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachten op sensorconfiguratie van iPhone"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oczekiwanie na konfigurację sensora z iPhone’a"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ожидание настроек сенсора с iPhone"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待来自 iPhone 的传感器设置"
+          }
+        }
+      }
     },
     "Waiting for the first glucose upload." : {
       "comment" : "Nightscout status before the first glucose reading has uploaded successfully.",
@@ -30958,7 +32471,63 @@
       }
     },
     "Watch battery" : {
-      "comment" : "Accessibility label for the Apple Watch battery indicator during a workout."
+      "comment" : "Accessibility label for the Apple Watch battery indicator during a workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batterie der Apple Watch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batería del Apple Watch"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batterie de l’Apple Watch"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteria di Apple Watch"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watchのバッテリー"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batterij van Apple Watch"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bateria Apple Watch"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аккумулятор Apple Watch"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch 电池"
+          }
+        }
+      }
     },
     "Watch revision" : {
       "comment" : "Label for the Libre 3 provisioning revision acknowledged as installed on Apple Watch."
@@ -31196,10 +32765,122 @@
       }
     },
     "Wear the watch on the arm closest to the sensor. Otherwise the signal has to cross your body, and reconnecting can take much longer." : {
-      "comment" : "Placement advice on the Apple Watch workout start screen for direct Libre 3 sensor readings. Body tissue absorbs the 2.4 GHz signal, so a sensor on the opposite arm makes reconnecting slow."
+      "comment" : "Placement advice on the Apple Watch workout start screen for direct Libre 3 sensor readings. Body tissue absorbs the 2.4 GHz signal, so a sensor on the opposite arm makes reconnecting slow.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trage die Apple Watch an dem Arm, der dem Sensor am nächsten ist. Andernfalls muss das Signal deinen Körper durchqueren, und die Wiederverbindung kann deutlich länger dauern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lleva el Apple Watch en el brazo más cercano al sensor. De lo contrario, la señal tendrá que atravesar el cuerpo y la reconexión puede tardar mucho más."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Portez l’Apple Watch au bras le plus proche du capteur. Sinon, le signal doit traverser votre corps et la reconnexion peut prendre beaucoup plus de temps."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indossa Apple Watch sul braccio più vicino al sensore. Altrimenti il segnale deve attraversare il corpo e la riconnessione può richiedere molto più tempo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーに近い側の腕にApple Watchを装着してください。反対側では信号が体を横切るため、再接続に大幅に時間がかかることがあります。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draag de Apple Watch om de arm die het dichtst bij de sensor is. Anders moet het signaal door je lichaam en kan opnieuw verbinden veel langer duren."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noś Apple Watch na ręce najbliżej sensora. W przeciwnym razie sygnał musi przejść przez ciało, a ponowne połączenie może potrwać znacznie dłużej."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Носите Apple Watch на руке, ближайшей к сенсору. Иначе сигналу придётся проходить через тело, и повторное подключение может занять гораздо больше времени."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请将 Apple Watch 戴在最靠近传感器一侧的手臂上。否则信号需要穿过身体，重新连接可能需要更长时间。"
+          }
+        }
+      }
     },
     "Wear the watch on the arm closest to the sensor. Otherwise the signal has to cross your body, and reconnecting during a workout can take much longer." : {
-      "comment" : "Placement advice for direct Libre 3 readings on Apple Watch. Body tissue absorbs the 2.4 GHz signal, so a sensor on the opposite arm makes reconnecting slow."
+      "comment" : "Placement advice for direct Libre 3 readings on Apple Watch. Body tissue absorbs the 2.4 GHz signal, so a sensor on the opposite arm makes reconnecting slow.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trage die Apple Watch an dem Arm, der dem Sensor am nächsten ist. Andernfalls muss das Signal deinen Körper durchqueren, und die Wiederverbindung während eines Trainings kann deutlich länger dauern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lleva el Apple Watch en el brazo más cercano al sensor. De lo contrario, la señal tendrá que atravesar el cuerpo y la reconexión durante un entrenamiento puede tardar mucho más."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Portez l’Apple Watch au bras le plus proche du capteur. Sinon, le signal doit traverser votre corps et la reconnexion pendant un exercice peut prendre beaucoup plus de temps."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indossa Apple Watch sul braccio più vicino al sensore. Altrimenti il segnale deve attraversare il corpo e la riconnessione durante un allenamento può richiedere molto più tempo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーに近い側の腕にApple Watchを装着してください。反対側では信号が体を横切るため、ワークアウト中の再接続に大幅に時間がかかることがあります。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draag de Apple Watch om de arm die het dichtst bij de sensor is. Anders moet het signaal door je lichaam en kan opnieuw verbinden tijdens een work-out veel langer duren."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noś Apple Watch na ręce najbliżej sensora. W przeciwnym razie sygnał musi przejść przez ciało, a ponowne połączenie podczas treningu może potrwać znacznie dłużej."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Носите Apple Watch на руке, ближайшей к сенсору. Иначе сигналу придётся проходить через тело, и повторное подключение во время тренировки может занять гораздо больше времени."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请将 Apple Watch 戴在最靠近传感器一侧的手臂上。否则信号需要穿过身体，体能训练期间重新连接可能需要更长时间。"
+          }
+        }
+      }
     },
     "Weights" : {
       "comment" : "Short Apple Watch label for a traditional strength workout."
@@ -31538,10 +33219,122 @@
       }
     },
     "Workout alerts" : {
-      "comment" : "Navigation link from the Apple Watch workout start screen to workout alert settings.\nNavigation title for Apple Watch workout alert settings."
+      "comment" : "Navigation link from the Apple Watch workout start screen to workout alert settings.\nNavigation title for Apple Watch workout alert settings.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trainingswarnungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertas de entrenamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertes d’exercice"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisi allenamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウト通知"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work-outmeldingen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerty treningowe"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомления для тренировки"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "体能训练提醒"
+          }
+        }
+      }
     },
     "Workout low" : {
-      "comment" : "Label for the glucose threshold used by workout alerts on Apple Watch."
+      "comment" : "Label for the glucose threshold used by workout alerts on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niedrigwert im Training"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nivel bajo en entrenamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seuil bas d’exercice"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basso durante allenamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウト時の低値"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laag tijdens work-out"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niski podczas treningu"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Низкий уровень на тренировке"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "体能训练低值"
+          }
+        }
+      }
     },
     "Workout permission was not granted." : {
       "comment" : "Workout start failure when HealthKit permission cannot be obtained."

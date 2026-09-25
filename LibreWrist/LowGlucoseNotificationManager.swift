@@ -92,7 +92,10 @@ final class LowGlucoseNotificationManager: NSObject {
                 actions: [
                     UNNotificationAction(
                         identifier: LowGlucoseNotificationConfig.snoozeActionIdentifier,
-                        title: String(localized: "Snooze 15 min")
+                        title: String(
+                            localized: "Snooze 15 min",
+                            comment: "Notification action that snoozes a glucose alert for 15 minutes."
+                        )
                     )
                 ],
                 intentIdentifiers: [],
