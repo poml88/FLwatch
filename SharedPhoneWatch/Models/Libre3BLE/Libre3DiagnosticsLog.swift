@@ -5,12 +5,18 @@
 //  Content policy, in two tiers:
 //
 //  * Support-safe rings — the rare-event ring, notable-event ring, and reconnect
-//    trace contain no glucose values, sensor identifiers, credentials, or BLE
-//    payloads — durations, event names, and error codes only. The trace is a
-//    separate, bounded per-attempt timeline; it must never be written into either
-//    event ring. This is the same content policy as
-//    `Libre3DirectManager.supportSafeDescription(for:)`. These three are what the
-//    support-email blocks draw from.
+//    trace may carry event names, durations, counts, error names and codes
+//    (including CoreBluetooth's localized error text), signal strength, battery
+//    level, sensor life counts, host and workout state, the scanner generation,
+//    and GATT characteristic names or UUIDs. Characteristic UUIDs are protocol
+//    constants. They must never carry glucose values, identifiers (sensor serial,
+//    peripheral UUID, receiver ID, or account ID), credentials, keys or PINs, or
+//    BLE payloads. The support-email blocks draw on these rings, while the
+//    clipboard export and the watch log fetched over WatchConnectivity carry them
+//    whole. That is why this policy applies to every line, not just those in the
+//    email. The trace is a separate, bounded per-attempt timeline; it must never
+//    be written into either event ring. `Libre3DirectManager.supportSafeDescription(for:)`
+//    follows the same policy.
 //  * Local stuck-glucose evidence — a maximum of ten anomaly snapshots. Each
 //    contains only eight compact decoded realtime fingerprints; no decrypted
 //    plaintext, credentials, or sensor identifiers. It is written only when the

@@ -2355,7 +2355,7 @@ final class Libre3DirectManager: ObservableObject {
            let peripheral = peripheralToCancel {
             if hostProfile.usesSystemAutoReconnect {
                 Libre3DiagnosticsLog.traceReconnect(
-                    "explicit-cancel reason=stop peripheral=\(peripheral.identifier.uuidString) scanner=\(stoppingScannerGeneration.map { String($0) } ?? "none")"
+                    "explicit-cancel reason=stop scanner=\(stoppingScannerGeneration.map { String($0) } ?? "none")"
                 )
             }
             scanner.cancelConnection(peripheral)
@@ -2488,7 +2488,7 @@ final class Libre3DirectManager: ObservableObject {
         let timeoutNanoseconds = Self.workoutHandoffTimeoutNanoseconds
         if hostProfile.usesSystemAutoReconnect {
             Libre3DiagnosticsLog.traceReconnect(
-                "explicit-cancel reason=workout-handoff peripheral=\(peripheralID.uuidString) scanner=\(scannerGeneration.map { String($0) } ?? "none")"
+                "explicit-cancel reason=workout-handoff scanner=\(scannerGeneration.map { String($0) } ?? "none")"
             )
         }
         scanner.cancelConnection(peripheral)
@@ -2963,7 +2963,7 @@ final class Libre3DirectManager: ObservableObject {
             resetBurstConnectState()
             stopScan(scanner, reason: "system-recovery")
             Libre3DiagnosticsLog.traceReconnect(
-                "system-recovery-pending peripheral=\(peripheral.identifier.uuidString) scanner=\(scannerGeneration)"
+                "system-recovery-pending scanner=\(scannerGeneration)"
             )
         case .continuedSystemRecovery:
             systemReconnectPeripheral = peripheral
@@ -2993,7 +2993,7 @@ final class Libre3DirectManager: ObservableObject {
         systemReconnectPeripheral = peripheral
         let elapsed = Self.reconnectDelay(from: target.startedAt, to: connectedAt)
         Libre3DiagnosticsLog.traceReconnect(
-            "system-recovery-connected peripheral=\(peripheral.identifier.uuidString) scanner=\(scannerGeneration) elapsed=\(elapsed)"
+            "system-recovery-connected scanner=\(scannerGeneration) elapsed=\(elapsed)"
         )
     }
 
@@ -3028,7 +3028,7 @@ final class Libre3DirectManager: ObservableObject {
     ) {
         let elapsed = Self.reconnectDelay(from: target.startedAt, to: date)
         Libre3DiagnosticsLog.traceReconnect(
-            "system-recovery-ended reason=\(reason) peripheral=\(target.peripheralID.uuidString) scanner=\(target.scannerGeneration) elapsed=\(elapsed)"
+            "system-recovery-ended reason=\(reason) scanner=\(target.scannerGeneration) elapsed=\(elapsed)"
         )
     }
 
@@ -3241,7 +3241,7 @@ final class Libre3DirectManager: ObservableObject {
                 scannerGeneration: scannerGeneration
             )
             Libre3DiagnosticsLog.traceReconnect(
-                "cb-did-connect peripheral=\(peripheral.identifier.uuidString)"
+                "cb-did-connect"
             )
             Logger.libre3.info("Libre3 BLE didConnect: \(peripheral.identifier.uuidString, privacy: .private(mask: .hash))")
             if isSavedPeripheral(peripheral), lifecycleTask == nil {
@@ -3261,7 +3261,7 @@ final class Libre3DirectManager: ObservableObject {
             }
             let errorName = error.map { Self.compactErrorName(for: $0) } ?? "nil"
             Libre3DiagnosticsLog.traceReconnect(
-                "cb-connect-failed peripheral=\(peripheral.identifier.uuidString) \(Self.coreBluetoothErrorDescription(error))"
+                "cb-connect-failed \(Self.coreBluetoothErrorDescription(error))"
             )
             Logger.libre3.info("Libre3 BLE didFailToConnect: \(peripheral.identifier.uuidString, privacy: .private(mask: .hash)) error=\(errorName, privacy: .public)")
             if isSavedPeripheral(peripheral), lifecycleTask == nil {
@@ -3295,11 +3295,11 @@ final class Libre3DirectManager: ObservableObject {
                     let receiptDelay = receivedAt.timeIntervalSinceReferenceDate -
                         metadata.timestamp
                     Libre3DiagnosticsLog.traceReconnect(
-                        "cb-did-disconnect peripheral=\(peripheral.identifier.uuidString) timestampRaw=\(String(format: "%.6f", metadata.timestamp)) delay=\(Self.reconnectDelay(seconds: receiptDelay)) isReconnecting=\(metadata.isReconnecting) \(details)"
+                        "cb-did-disconnect timestampRaw=\(String(format: "%.6f", metadata.timestamp)) delay=\(Self.reconnectDelay(seconds: receiptDelay)) isReconnecting=\(metadata.isReconnecting) \(details)"
                     )
                 } else {
                     Libre3DiagnosticsLog.traceReconnect(
-                        "cb-did-disconnect peripheral=\(peripheral.identifier.uuidString) \(details)"
+                        "cb-did-disconnect \(details)"
                     )
                 }
             }
@@ -3329,7 +3329,7 @@ final class Libre3DirectManager: ObservableObject {
                 details = ""
             }
             Libre3DiagnosticsLog.traceReconnect(
-                "cb-connection-event peripheral=\(peripheral.identifier.uuidString) value=\(connectionEvent.rawValue)\(details)"
+                "cb-connection-event value=\(connectionEvent.rawValue)\(details)"
             )
             switch connectionEvent {
             case .peerConnected:
@@ -4554,13 +4554,13 @@ final class Libre3DirectManager: ObservableObject {
         case .retrieved(let peripheral):
             attemptDiagnostics.setPath(.retrieved)
             Libre3DiagnosticsLog.traceReconnect(
-                "discover-selection kind=retrieved id=\(peripheral.identifier.uuidString)"
+                "discover-selection kind=retrieved"
             )
             return peripheral
         case .alreadyConnected(let peripheral):
             attemptDiagnostics.setPath(.connected)
             Libre3DiagnosticsLog.traceReconnect(
-                "discover-selection kind=connected id=\(peripheral.identifier.uuidString)"
+                "discover-selection kind=connected"
             )
             Libre3DiagnosticsLog.traceReconnect("reconnect-recovered-connected")
             return peripheral
@@ -4589,7 +4589,7 @@ final class Libre3DirectManager: ObservableObject {
                    savedID: savedID
                ) {
                 Libre3DiagnosticsLog.traceReconnect(
-                    "discover-selection kind=scan id=\(found.peripheral.identifier.uuidString) rssi=\(found.rssi)"
+                    "discover-selection kind=scan rssi=\(found.rssi)"
                 )
                 if hostProfile.acquiresByActiveScan {
                     Libre3DiagnosticsLog.traceReconnect("scan-kept-running")
@@ -6340,8 +6340,8 @@ final class Libre3DirectManager: ObservableObject {
     /// Produces support-safe diagnostics while retaining error type/case names,
     /// ATT/CoreBluetooth codes, and characteristic UUIDs. Every associated
     /// `Data` value is represented only by its byte count; unknown error types
-    /// omit associated values. This is the same content policy intended for the
-    /// upcoming `Libre3DiagnosticsLog`.
+    /// omit associated values. This follows the content policy documented in
+    /// `Libre3DiagnosticsLog`'s header.
     private static func supportSafeDescription(for error: Error) -> String {
         switch error {
         case let error as Libre3AuthorizationError:
