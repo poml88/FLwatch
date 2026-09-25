@@ -160,11 +160,13 @@ struct Libre3HostProfile {
     /// next workout starts with fresh app-owned CoreBluetooth objects.
     let recreatesScannerBetweenWorkouts: Bool
     /// Opt into CoreBluetooth-owned recovery after an unexpected link loss.
-    /// Enabled for watch workouts while the AutoReconnect experiment runs.
+    /// During watch workouts, Apple's AutoReconnect reconnects after an
+    /// unexpected drop and the app takes over the restored link. The phone
+    /// keeps its ordinary recovery path.
     let usesSystemAutoReconnect: Bool
     /// Controls watch-only connect timing. A standing watch intent caught roughly
     /// one in 100 windows, while a request issued on discovery connected in four
-    /// of seven trials. Both active modes cancel only in the silence ten seconds
+    /// of seven trials. The active mode cancels only in the silence ten seconds
     /// after a burst; the phone keeps its proven standing intent unchanged.
     let burstConnectMode: Libre3BurstConnectMode
     /// Per-characteristic ceiling for the seven-CCCD post-auth re-arm. LibreCRKit's
@@ -1641,9 +1643,8 @@ struct Libre3WorkoutDiagnostics: Equatable {
     private var summedGap: TimeInterval = 0
     private var batteryStartPercent: Int?
 
-    mutating func begin(enabled: Bool, at date: Date, batteryPercent: Int?) {
+    mutating func begin(at date: Date, batteryPercent: Int?) {
         self = Self()
-        guard enabled else { return }
         isActive = true
         startedAt = date
         batteryStartPercent = batteryPercent
@@ -2221,7 +2222,6 @@ final class Libre3DirectManager: ObservableObject {
 
     func beginWorkoutDiagnostics(startedAt: Date = Date()) {
         workoutDiagnostics.begin(
-            enabled: Libre3DiagnosticsLog.extendedTracing,
             at: startedAt,
             batteryPercent: hostProfile.batteryPercentage()
         )
@@ -2656,7 +2656,6 @@ final class Libre3DirectManager: ObservableObject {
     private func startScan(_ scanner: SensorScannerNG, reason: String) {
         scanner.startScan()
         scanStartedAt = Date()
-        guard Libre3DiagnosticsLog.extendedTracing else { return }
         Libre3DiagnosticsLog.traceReconnect("scan-started reason=\(reason)")
     }
 
@@ -2668,7 +2667,6 @@ final class Libre3DirectManager: ObservableObject {
     private func finishScanTrace(reason: String) {
         guard scanStartedAt != nil else { return }
         scanStartedAt = nil
-        guard Libre3DiagnosticsLog.extendedTracing else { return }
         Libre3DiagnosticsLog.traceReconnect("scan-stopped reason=\(reason)")
     }
 
@@ -3957,8 +3955,8 @@ final class Libre3DirectManager: ObservableObject {
         let attemptStartedAt = Date()
         // Retrieved-only hosts do not observe advertisements during an attempt;
         // preserve `n/a` instead of reporting a false measured zero.
-        let observesAdvertisements = Libre3DiagnosticsLog.extendedTracing &&
-            (hostProfile.acquiresByActiveScan || hostProfile.burstConnectMode != .off)
+        let observesAdvertisements = hostProfile.acquiresByActiveScan ||
+            hostProfile.burstConnectMode != .off
         attemptDiagnostics.begin(
             at: attemptStartedAt,
             observesAdvertisements: observesAdvertisements,
@@ -4675,13 +4673,9 @@ final class Libre3DirectManager: ObservableObject {
             attemptConnectedAt = connectedAt
             attemptDiagnostics.recordConnected(at: connectedAt)
             workoutDiagnostics.recordConnect()
-            if Libre3DiagnosticsLog.extendedTracing {
-                Libre3DiagnosticsLog.traceReconnect(
-                    "did-connect last-adv-age=\(attemptDiagnostics.lastAdvertisementAge(at: connectedAt))"
-                )
-            } else {
-                Libre3DiagnosticsLog.traceReconnect("did-connect")
-            }
+            Libre3DiagnosticsLog.traceReconnect(
+                "did-connect last-adv-age=\(attemptDiagnostics.lastAdvertisementAge(at: connectedAt))"
+            )
 
             let newSession = SensorSession(
                 peripheral: connected,
@@ -6212,9 +6206,9 @@ final class Libre3DirectManager: ObservableObject {
         }
 
         if traceStreamEnd {
-            let packetDetails = extendedPacketDescription(at: endedAt)
+            let packetDetails = packetDescription(at: endedAt)
             Libre3DiagnosticsLog.traceReconnect(
-                "stream-ended stage=\(lastAttemptStage) duration=\(Self.elapsedDescription(from: attemptConnectedAt, to: endedAt)) streamed=\(sessionProducedGlucose) any-packet=\(firstAnyPacketAt != nil) glucose-fragment=\(firstGlucoseFragmentAt != nil) no-stream-cycles=\(noStreamCycleTracker.cycles)\(packetDetails.map { " \($0)" } ?? "")"
+                "stream-ended stage=\(lastAttemptStage) duration=\(Self.elapsedDescription(from: attemptConnectedAt, to: endedAt)) streamed=\(sessionProducedGlucose) any-packet=\(firstAnyPacketAt != nil) glucose-fragment=\(firstGlucoseFragmentAt != nil) no-stream-cycles=\(noStreamCycleTracker.cycles) \(packetDetails)"
             )
         }
         finishAttemptSummary(outcome: outcome)
@@ -6235,8 +6229,7 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     private func finishAttemptSummary(outcome: Libre3AttemptOutcome) {
-        guard Libre3DiagnosticsLog.extendedTracing,
-              !attemptSummaryRecorded,
+        guard !attemptSummaryRecorded,
               attemptDiagnostics.startedAt != nil else { return }
         attemptSummaryRecorded = true
         Libre3DiagnosticsLog.traceReconnect(
@@ -6251,8 +6244,7 @@ final class Libre3DirectManager: ObservableObject {
         )
     }
 
-    private func extendedPacketDescription(at date: Date) -> String? {
-        guard Libre3DiagnosticsLog.extendedTracing else { return nil }
+    private func packetDescription(at date: Date) -> String {
         // `lastAnyChannelAt` is seeded to stream start, then advanced only by a
         // channel receipt. A small age can therefore mean "since stream start"
         // even when no packet arrived; `any-packet` disambiguates that case.
@@ -6263,22 +6255,19 @@ final class Libre3DirectManager: ObservableObject {
 
     private func disconnectAttemptDescription(error: Error?, at date: Date) -> String {
         let stage = lastAttemptStage.isEmpty ? "none" : lastAttemptStage
-        let packetDetails = extendedPacketDescription(at: date)
-        let hostDetails: String? = if Libre3DiagnosticsLog.extendedTracing {
+        let packetDetails = packetDescription(at: date)
+        let hostDetails =
             "batt=\(attemptDiagnostics.batteryDescription(currentPercent: hostProfile.batteryPercentage())) " +
-                "hk=\(hostProfile.workoutStateDescription() ?? "n/a") " +
-                "app=\(hostProfile.appVisibilityDescription() ?? "n/a")"
-        } else {
-            nil
-        }
+            "hk=\(hostProfile.workoutStateDescription() ?? "n/a") " +
+            "app=\(hostProfile.appVisibilityDescription() ?? "n/a")"
         return "stage=\(stage) since-connect=\(Self.elapsedDescription(from: attemptConnectedAt, to: date)) " +
             "since-phase6=\(Self.elapsedDescription(from: phase6CompletedAt, to: date)) " +
             "since-rearm=\(Self.elapsedDescription(from: rearmCompletedAt, to: date)) " +
             "any-packet=\(firstAnyPacketAt != nil) " +
             "glucose-fragment=\(firstGlucoseFragmentAt != nil) " +
             "usable-glucose=\(sessionProducedGlucose) " +
-            (packetDetails.map { "\($0) " } ?? "") +
-            (hostDetails.map { "\($0) " } ?? "") +
+            "\(packetDetails) " +
+            "\(hostDetails) " +
             Self.coreBluetoothErrorDescription(error)
     }
 

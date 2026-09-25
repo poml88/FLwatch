@@ -799,8 +799,7 @@ extension WorkoutHealthKitManager: HKWorkoutSessionDelegate {
             let providerKind = WorkoutModeStore.shared.isActive
                 ? WorkoutModeStore.shared.providerKind
                 : SharedData.cgmProviderKind
-            if Libre3DiagnosticsLog.extendedTracing,
-               providerKind == .libre3BLE {
+            if providerKind == .libre3BLE {
                 Libre3DiagnosticsLog.traceReconnect(
                     "hk-state from=\(Self.stateDescription(fromState)) " +
                         "to=\(Self.stateDescription(toState))"

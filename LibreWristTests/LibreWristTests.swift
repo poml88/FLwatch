@@ -2671,7 +2671,7 @@ final class LibreWristTests: XCTestCase {
     func testWorkoutDiagnosticsTalliesOnlyExcessInWorkoutGapAndFinishesOnce() {
         let startedAt = Date(timeIntervalSinceReferenceDate: 1_000)
         var diagnostics = Libre3WorkoutDiagnostics()
-        diagnostics.begin(enabled: true, at: startedAt, batteryPercent: 80)
+        diagnostics.begin(at: startedAt, batteryPercent: 80)
         diagnostics.recordAttempt()
         diagnostics.recordAttempt()
         diagnostics.recordAdvertisementCallback()
