@@ -43,7 +43,8 @@ SUPPORTED_RELEASE_LOCALES = %w[
 
 SCHEME = ENV.fetch("FASTLANE_SCHEME", "FLwatch")
 EXPORT_METHOD = ENV.fetch("FASTLANE_EXPORT_METHOD", "app-store")
-WHATS_NEW_FILE = File.expand_path("whats_new/en-GB.txt", __dir__)
+WHATS_NEW_METADATA_PATH = File.expand_path("whats_new", __dir__)
+WHATS_NEW_FILE = File.join(WHATS_NEW_METADATA_PATH, "en-GB", "release_notes.txt")
 WHAT_TO_TEST_FILE = File.expand_path("what_to_test/en-GB.txt", __dir__)
 METADATA_PATH = File.expand_path("metadata", __dir__)
 APP_DESCRIPTION_METADATA_PATH = File.expand_path("app_descriptions", __dir__)
@@ -151,6 +152,42 @@ def whats_new_text
   text
 end
 
+def localized_whats_new_requested?(options)
+  value = options[:localized]
+  value == true || value.to_s.casecmp("true").zero? || value.to_s == "1"
+end
+
+def validate_localized_whats_new!
+  missing_locales = []
+  empty_locales = []
+
+  SUPPORTED_RELEASE_LOCALES.each do |locale|
+    release_notes_path = File.join(WHATS_NEW_METADATA_PATH, locale, "release_notes.txt")
+
+    if !File.exist?(release_notes_path)
+      missing_locales << locale
+    elsif File.read(release_notes_path).strip.empty?
+      empty_locales << locale
+    end
+  end
+
+  unexpected_locales = if Dir.exist?(WHATS_NEW_METADATA_PATH)
+                         Dir.children(WHATS_NEW_METADATA_PATH).select do |entry|
+                           File.directory?(File.join(WHATS_NEW_METADATA_PATH, entry)) &&
+                             !SUPPORTED_RELEASE_LOCALES.include?(entry)
+                         end
+                       else
+                         []
+                       end
+
+  errors = []
+  errors << "Missing release_notes.txt for: #{missing_locales.join(', ')}" unless missing_locales.empty?
+  errors << "Empty release_notes.txt for: #{empty_locales.join(', ')}" unless empty_locales.empty?
+  errors << "Unexpected locale directories: #{unexpected_locales.sort.join(', ')}" unless unexpected_locales.empty?
+
+  UI.user_error!(errors.join("\n")) unless errors.empty?
+end
+
 def what_to_test_text
   UI.user_error!("Missing external testing notes file at #{WHAT_TO_TEST_FILE}") unless File.exist?(WHAT_TO_TEST_FILE)
 
@@ -160,13 +197,19 @@ def what_to_test_text
   text
 end
 
-def prepare_release_notes!
-  text = whats_new_text
+def prepare_release_notes!(localized: false)
+  validate_localized_whats_new! if localized
+  english_text = whats_new_text unless localized
 
   # Prevent stale metadata from re-activating locales you don't use in App Store Connect.
   FileUtils.rm_rf(File.join(METADATA_PATH, "en-US"))
 
   SUPPORTED_RELEASE_LOCALES.each do |locale|
+    text = if localized
+             File.read(File.join(WHATS_NEW_METADATA_PATH, locale, "release_notes.txt")).strip
+           else
+             english_text
+           end
     locale_dir = File.join(METADATA_PATH, locale)
     FileUtils.mkdir_p(locale_dir)
     File.write(File.join(locale_dir, "release_notes.txt"), "#{text}\n")
@@ -273,8 +316,11 @@ platform :ios do
     end
   end
 
-  desc "Upload the English What's New text to all localizations on the editable App Store version"
-  lane :upload_whats_new do
+  desc "Upload What's New to the editable App Store version; pass localized:true to use localized files"
+  lane :upload_whats_new do |options|
+    localized = localized_whats_new_requested?(options)
+    validate_localized_whats_new! if localized
+
     with_deliver_api_key_json do |api_key_json_path|
       # Authorize the direct Connect API lookup used to require an existing editable version.
       app_store_connect_api_key_if_configured
@@ -286,11 +332,26 @@ platform :ios do
       )
 
       with_cleared_auth_env do
-        set_changelog(
-          api_key_path: api_key_json_path,
-          version: app_version,
-          changelog: whats_new_text
-        )
+        if localized
+          UI.message("Uploading localized What's New text to App Store version #{app_version}")
+          upload_to_app_store(
+            api_key_path: api_key_json_path,
+            app_version: app_version,
+            metadata_path: WHATS_NEW_METADATA_PATH,
+            skip_binary_upload: true,
+            skip_screenshots: true,
+            skip_app_version_update: true,
+            force: true,
+            run_precheck_before_submit: false,
+            submit_for_review: false
+          )
+        else
+          set_changelog(
+            api_key_path: api_key_json_path,
+            version: app_version,
+            changelog: whats_new_text
+          )
+        end
       end
     end
   end
@@ -327,10 +388,10 @@ platform :ios do
     end
   end
 
-  desc "Build and upload an App Store release, copying English release notes to all locales"
-  lane :release do
+  desc "Build and upload an App Store release; pass localized:true to use localized release notes"
+  lane :release do |options|
     build_archive
-    prepare_release_notes!
+    prepare_release_notes!(localized: localized_whats_new_requested?(options))
 
     with_deliver_api_key_json do |api_key_json_path|
       with_cleared_auth_env do
@@ -347,8 +408,11 @@ platform :ios do
     end
   end
 
-  desc "Submit an already uploaded TestFlight build for App Store release"
-  lane :release_existing_build do
+  desc "Submit an existing TestFlight build; pass localized:true to use localized release notes"
+  lane :release_existing_build do |lane_options|
+    localized = localized_whats_new_requested?(lane_options)
+    validate_localized_whats_new! if localized
+
     options = {
       skip_binary_upload: true,
       skip_metadata: true,
@@ -362,12 +426,25 @@ platform :ios do
     build_number = ENV["APP_STORE_BUILD_NUMBER"].to_s.strip
     options[:build_number] = build_number unless build_number.empty?
 
+    if localized
+      options[:skip_metadata] = false
+      options[:metadata_path] = WHATS_NEW_METADATA_PATH
+      options[:skip_app_version_update] = true
+      options[:run_precheck_before_submit] = false
+    end
+
     with_deliver_api_key_json do |api_key_json_path|
+      # Authorize the direct Connect API lookup even when localized metadata
+      # replaces the set_changelog call that normally establishes the token.
+      app_store_connect_api_key_if_configured
+
       with_cleared_auth_env do
-        set_changelog(
-          api_key_path: api_key_json_path,
-          changelog: whats_new_text
-        )
+        unless localized
+          set_changelog(
+            api_key_path: api_key_json_path,
+            changelog: whats_new_text
+          )
+        end
 
         # `deliver` auto-detects `app_version` from the newest local `*.ipa` if present.
         # For existing-build submissions that can point at a stale archive, so pin the

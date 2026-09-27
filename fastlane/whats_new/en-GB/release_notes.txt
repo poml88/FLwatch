@@ -1,0 +1,2 @@
+* Try the new workout mode in FLwatch on Apple Watch. See your glucose, trend, recent change and graph alongside workout information, with configurable alerts for low glucose, rapid drops and missing readings.
+* If you use Libre 3 or Libre 3+ with direct Bluetooth, Apple Watch can connect directly to the sensor during a workout—so you can exercise without your iPhone nearby. For the most reliable connection, wear your watch on the arm closest to the sensor, ideally the same arm.

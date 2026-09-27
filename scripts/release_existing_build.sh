@@ -3,21 +3,23 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
-whats_new_file="$repo_root/fastlane/whats_new/en-GB.txt"
+whats_new_file="$repo_root/fastlane/whats_new/en-GB/release_notes.txt"
 
 submit="0"
 auto_release="0"
 build_number=""
+localized="0"
 
 usage() {
   cat <<'EOF'
 Usage:
-  ./scripts/release_existing_build.sh [--submit] [--auto-release] [--build BUILD_NUMBER]
+  ./scripts/release_existing_build.sh [--submit] [--auto-release] [--build BUILD_NUMBER] [--localized]
 
 Options:
   --submit          Submit the selected build for App Store review
   --auto-release    Automatically release after approval
   --build NUMBER    Use a specific processed App Store Connect build number
+  --localized       Upload all localized What's New files instead of using English for every locale
   --help            Show this help
 
 Examples:
@@ -46,6 +48,10 @@ while [[ $# -gt 0 ]]; do
       build_number="$2"
       shift 2
       ;;
+    --localized)
+      localized="1"
+      shift
+      ;;
     --help|-h)
       usage
       exit 0
@@ -61,6 +67,10 @@ done
 if [[ -n "$build_number" && ! "$build_number" =~ ^[0-9]+$ ]]; then
   printf 'Error: build number must be numeric.\n' >&2
   exit 1
+fi
+
+if [[ "$localized" == "1" ]]; then
+  whats_new_file="$repo_root/fastlane/whats_new/"
 fi
 
 cd "$repo_root"
@@ -89,4 +99,8 @@ if [[ -n "$build_number" ]]; then
 fi
 printf '\n'
 
-bundle exec fastlane release_existing_build
+if [[ "$localized" == "1" ]]; then
+  bundle exec fastlane release_existing_build localized:true
+else
+  bundle exec fastlane release_existing_build
+fi

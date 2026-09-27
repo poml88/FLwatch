@@ -37,7 +37,7 @@ Build and upload a build for external TestFlight testers
 [bundle exec] fastlane ios upload_whats_new
 ```
 
-Upload the English What's New text to all localizations on the editable App Store version
+Upload What's New to the editable App Store version; pass localized:true to use localized files
 
 ### ios upload_descriptions
 
@@ -53,7 +53,7 @@ Upload localized app descriptions to the existing editable App Store version
 [bundle exec] fastlane ios release
 ```
 
-Build and upload an App Store release, copying English release notes to all locales
+Build and upload an App Store release; pass localized:true to use localized release notes
 
 ### ios release_existing_build
 
@@ -61,7 +61,7 @@ Build and upload an App Store release, copying English release notes to all loca
 [bundle exec] fastlane ios release_existing_build
 ```
 
-Submit an already uploaded TestFlight build for App Store release
+Submit an existing TestFlight build; pass localized:true to use localized release notes
 
 ----
 
