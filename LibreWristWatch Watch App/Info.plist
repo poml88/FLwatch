@@ -24,7 +24,9 @@
 		</dict>
 	</array>
 	<key>UIBackgroundModes</key>
-	<array/>
+	<array>
+        <string>bluetooth-central</string>
+    </array>
 	<key>WKBackgroundModes</key>
 	<array>
 		<string>workout-processing</string>
