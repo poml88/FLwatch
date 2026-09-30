@@ -502,6 +502,8 @@ enum DefaultsKey: String {
     case libre3StuckSnapshots = "libre3StreamRecordsKey"
     case libre3GlucoseOnlyDeathCount = "libre3GlucoseOnlyDeathCountKey"
     case libre3GlucoseOnlyDeathLastSeen = "libre3GlucoseOnlyDeathLastSeenKey"
+    case libre3ReconnectGateDropTimes = "libre3ReconnectGateDropTimesKey"
+    case libre3ReconnectGateSensorID = "libre3ReconnectGateSensorIDKey"
     case libre3LastRecordedSignalLossDeliveryDate = "libre3LastRecordedSignalLossDeliveryDateKey"
     // Optional, FLwatch-local correction for newly received Libre 3 BLE values.
     // The log is intentionally small and is cleared when a different sensor is paired.
@@ -1404,6 +1406,14 @@ enum SharedData {
     static var libre3PeripheralUUID: String {
         get { store.getString(.libre3PeripheralUUID, defaultValue: "") }
         set {
+            #if os(watchOS)
+            // Same-sensor provisioning temporarily clears the UUID for discovery;
+            // that does not clear bluetoothd's per-peripheral timeout history.
+            if !newValue.isEmpty, newValue != libre3ReconnectGateSensorID {
+                libre3ReconnectGateDropTimes = []
+                libre3ReconnectGateSensorID = newValue
+            }
+            #endif
             if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3PeripheralUUID.rawValue) }
             else { store.setString(newValue, forKey: .libre3PeripheralUUID) }
         }
@@ -1634,6 +1644,26 @@ enum SharedData {
         set {
             if let newValue { store.setDate(newValue, forKey: .libre3GlucoseOnlyDeathLastSeen) }
             else { store.removeObject(forKey: DefaultsKey.libre3GlucoseOnlyDeathLastSeen.rawValue) }
+        }
+    }
+
+    /// Watch-local system-state estimate; clearing diagnostic logs must retain it.
+    static var libre3ReconnectGateDropTimes: [Date] {
+        get {
+            store.array(forKey: DefaultsKey.libre3ReconnectGateDropTimes.rawValue)
+                as? [Date] ?? []
+        }
+        set { store.set(newValue, forKey: DefaultsKey.libre3ReconnectGateDropTimes.rawValue) }
+    }
+
+    static var libre3ReconnectGateSensorID: String {
+        get { store.getString(.libre3ReconnectGateSensorID, defaultValue: "") }
+        set {
+            if newValue.isEmpty {
+                store.removeObject(forKey: DefaultsKey.libre3ReconnectGateSensorID.rawValue)
+            } else {
+                store.setString(newValue, forKey: .libre3ReconnectGateSensorID)
+            }
         }
     }
 

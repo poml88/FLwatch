@@ -226,6 +226,21 @@ enum Libre3DiagnosticsLog {
         let header = "\(appBuildDescription) — Libre 3 diagnostics exported \(localTimestamp(from: Date()))"
         let glucoseOnlyLastSeen = SharedData.libre3GlucoseOnlyDeathLastSeen
             .map { localTimestamp(from: $0) } ?? "never"
+        #if os(watchOS)
+        var gateEstimate = Libre3ReconnectGateEstimate(
+            sensorID: SharedData.libre3ReconnectGateSensorID,
+            dropTimes: SharedData.libre3ReconnectGateDropTimes
+        )
+        gateEstimate.trim(at: Date())
+        if gateEstimate.dropTimes != SharedData.libre3ReconnectGateDropTimes {
+            SharedData.libre3ReconnectGateDropTimes = gateEstimate.dropTimes
+        }
+        let reconnectGateStats = [
+            "Reconnect gate estimate: \(gateEstimate.dropTimes.count) timeouts in 5.8 h · \(gateEstimate.isGateLikely ? "likely" : "no")"
+        ]
+        #else
+        let reconnectGateStats: [String] = []
+        #endif
         let notable = notableEntries()
         let merged = mergedEntries()
         return ([
@@ -233,9 +248,12 @@ enum Libre3DiagnosticsLog {
             "",
             "Lifetime stats:",
             "Glucose-only deaths: \(SharedData.libre3GlucoseOnlyDeathCount) · last \(glucoseOnlyLastSeen)",
-            "",
-            "Notable events:",
         ]
+            + reconnectGateStats
+            + [
+                "",
+                "Notable events:",
+            ]
             + (notable.isEmpty ? ["None"] : notable)
             + ["", "Merged retained log:"]
             + (merged.isEmpty ? ["None"] : merged))
@@ -350,6 +368,7 @@ enum Libre3DiagnosticsLog {
     }
 
     static func clearAllLogs() {
+        // The reconnect-gate estimate mirrors system state, not log contents.
         SharedData.libre3DiagnosticEvents = []
         SharedData.libre3ReconnectTrace = []
         SharedData.libre3NotableEvents = []

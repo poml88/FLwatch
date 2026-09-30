@@ -2377,6 +2377,9 @@
         }
       }
     },
+    "After repeated signal losses, Apple Watch now reconnects only when the sensor is close. Turn Bluetooth off and on to reset." : {
+      "comment" : "Body of an Apple Watch workout notification advising the user to toggle Bluetooth to clear an estimated sensor reconnect penalty."
+    },
     "Alert me above" : {
       "localizations" : {
         "de" : {
@@ -25595,6 +25598,9 @@
           }
         }
       }
+    },
+    "Sensor reconnect limited" : {
+      "comment" : "Title of an Apple Watch workout notification when repeated sensor connection timeouts likely limit Bluetooth reconnects."
     },
     "Sensor session ended" : {
       "comment" : "A notification title shown when the sensor is scheduled to have reached its expiry time.",

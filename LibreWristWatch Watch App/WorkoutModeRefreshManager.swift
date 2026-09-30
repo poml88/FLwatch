@@ -76,6 +76,7 @@ final class WorkoutAlertNotificationManager {
     nonisolated static let notificationCategoryIdentifier = "WATCH_WORKOUT_ALERT"
     nonisolated static let snoozeActionIdentifier = "WATCH_WORKOUT_ALERT_SNOOZE"
     private static let noReadingIdentifier = "watch-workout-no-reading"
+    private static let reconnectGateIdentifier = "watch-workout-reconnect-gate"
     private static let snoozeInterval: TimeInterval = 15 * 60
     /// Deliberately half the phone's 20-minute signal-loss dead-man. That one
     /// covers a phone left behind on a table, where the user is not relying on it
@@ -96,6 +97,8 @@ final class WorkoutAlertNotificationManager {
     private var isWorkoutAlertingActive = false
     private var isEvaluating = false
     private var evaluationRequested = false
+    /// Invalidates a suspended gate notification when its advice is retracted.
+    private var reconnectGateNotificationGeneration = 0
     // Process-local dedupe avoids a workout-state file write every minute. The
     // pending OS request carries its own deadline across a crash or suspension.
     private var lastArmedReadingDate: Date?
@@ -222,6 +225,7 @@ final class WorkoutAlertNotificationManager {
     func stopWorkout() async {
         isWorkoutAlertingActive = false
         lastArmedReadingDate = nil
+        retractReconnectGate()
         let pendingRequests = await notificationCenter.pendingNotificationRequests()
         let workoutRequestIdentifiers = pendingRequests
             .map(\.identifier)
@@ -633,6 +637,67 @@ final class WorkoutAlertNotificationManager {
             logger.error("Failed to schedule the workout no-reading notification: \(error.localizedDescription, privacy: .public)")
             return false
         }
+    }
+
+    /// The persisted estimator calls this only on a new gate-likely transition.
+    func postReconnectGateLikely() async {
+        let generation = reconnectGateNotificationGeneration
+        guard isWorkoutAlertingActive,
+              WorkoutModeStore.shared.isActive,
+              !WorkoutModeStore.shared.isEnding,
+              let settings = await enabledNotificationSettings() else { return }
+        // Authorization lookup suspends; Bluetooth or the workout may stop.
+        guard generation == reconnectGateNotificationGeneration,
+              isWorkoutAlertingActive,
+              WorkoutModeStore.shared.isActive,
+              !WorkoutModeStore.shared.isEnding else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = String(
+            localized: "Sensor reconnect limited",
+            comment: "Title of an Apple Watch workout notification when repeated sensor connection timeouts likely limit Bluetooth reconnects."
+        )
+        content.body = String(
+            localized: "After repeated signal losses, Apple Watch now reconnects only when the sensor is close. Turn Bluetooth off and on to reset.",
+            comment: "Body of an Apple Watch workout notification advising the user to toggle Bluetooth to clear an estimated sensor reconnect penalty."
+        )
+        // No category: this Bluetooth advice has no glucose-alert snooze action.
+        applyDelivery(to: content, requestsCriticalDelivery: false, settings: settings)
+        let request = UNNotificationRequest(
+            identifier: Self.reconnectGateIdentifier,
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(
+                timeInterval: Self.deliveryDelay,
+                repeats: false
+            )
+        )
+        do {
+            try await notificationCenter.add(request)
+            guard generation == reconnectGateNotificationGeneration,
+                  isWorkoutAlertingActive,
+                  WorkoutModeStore.shared.isActive,
+                  !WorkoutModeStore.shared.isEnding else {
+                notificationCenter.removePendingNotificationRequests(
+                    withIdentifiers: [Self.reconnectGateIdentifier]
+                )
+                notificationCenter.removeDeliveredNotifications(
+                    withIdentifiers: [Self.reconnectGateIdentifier]
+                )
+                return
+            }
+        } catch {
+            logger.error("Failed to schedule the workout reconnect-gate notification: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    func retractReconnectGate() {
+        reconnectGateNotificationGeneration &+= 1
+        notificationCenter.removePendingNotificationRequests(
+            withIdentifiers: [Self.reconnectGateIdentifier]
+        )
+        notificationCenter.removeDeliveredNotifications(
+            withIdentifiers: [Self.reconnectGateIdentifier]
+        )
     }
 
     private func hasDeliveredNoReadingAlert() async -> Bool {

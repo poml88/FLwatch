@@ -144,6 +144,8 @@ struct Libre3HostProfile {
     let batteryPercentage: @MainActor () -> Int?
     let workoutStateDescription: @MainActor () -> String?
     let appVisibilityDescription: @MainActor () -> String?
+    let postReconnectGateLikely: @MainActor () async -> Void
+    let retractReconnectGate: @MainActor () -> Void
     /// Whether this host requests and consumes historical/clinical backfill.
     /// Workout mode is deliberately realtime-only, including unsolicited bursts.
     let usesBackfill: Bool
@@ -198,6 +200,12 @@ struct Libre3HostProfile {
     private static let watchAppVisibilityDescription: @MainActor () -> String? = {
         WatchConnectivityManager.shared.watchAppVisibilityDescription
     }
+    private static let watchPostReconnectGateLikely: @MainActor () async -> Void = {
+        await WorkoutAlertNotificationManager.shared.postReconnectGateLikely()
+    }
+    private static let watchRetractReconnectGate: @MainActor () -> Void = {
+        WorkoutAlertNotificationManager.shared.retractReconnectGate()
+    }
 #else
     private static let watchWorkoutLowGlucoseAlerts = Libre3LowGlucoseAlertHost(
         isEnabled: false,
@@ -206,6 +214,8 @@ struct Libre3HostProfile {
     private static let watchBatteryPercentage: @MainActor () -> Int? = { nil }
     private static let watchWorkoutStateDescription: @MainActor () -> String? = { nil }
     private static let watchAppVisibilityDescription: @MainActor () -> String? = { nil }
+    private static let watchPostReconnectGateLikely: @MainActor () async -> Void = {}
+    private static let watchRetractReconnectGate: @MainActor () -> Void = {}
 #endif
 
     static let watchWorkout = Libre3HostProfile(
@@ -242,6 +252,8 @@ struct Libre3HostProfile {
         batteryPercentage: watchBatteryPercentage,
         workoutStateDescription: watchWorkoutStateDescription,
         appVisibilityDescription: watchAppVisibilityDescription,
+        postReconnectGateLikely: watchPostReconnectGateLikely,
+        retractReconnectGate: watchRetractReconnectGate,
         usesBackfill: false,
         allowsFullAuthorization: false,
         acquiresByActiveScan: true,
@@ -355,6 +367,8 @@ extension Libre3HostProfile {
         batteryPercentage: { nil },
         workoutStateDescription: { nil },
         appVisibilityDescription: { nil },
+        postReconnectGateLikely: {},
+        retractReconnectGate: {},
         usesBackfill: true,
         allowsFullAuthorization: true,
         acquiresByActiveScan: false,
@@ -761,6 +775,42 @@ struct Libre3ScannerLifetimePolicy {
 
     static func isCurrent(expected: Int, current: Int?) -> Bool {
         expected == current
+    }
+}
+
+/// Mirrors observed bluetoothd behaviour on watchOS 26.6, not documented API.
+/// Five code-6 timeouts in this window appear to gate reconnects at -70 dBm.
+struct Libre3ReconnectGateEstimate: Equatable, Sendable {
+    static let window: TimeInterval = 20_864
+    static let timeoutThreshold = 5
+
+    private(set) var sensorID: String = ""
+    private(set) var dropTimes: [Date] = []
+
+    var isGateLikely: Bool { dropTimes.count >= Self.timeoutThreshold }
+
+    mutating func synchronize(sensorID: String, at date: Date) {
+        if self.sensorID != sensorID {
+            self.sensorID = sensorID
+            reset()
+        }
+        trim(at: date)
+    }
+
+    mutating func trim(at date: Date) {
+        dropTimes.removeAll { date.timeIntervalSince($0) >= Self.window }
+    }
+
+    /// Trimming before the transition check lets an expired episode notify anew.
+    mutating func recordTimeout(for sensorID: String, at date: Date) -> Bool {
+        synchronize(sensorID: sensorID, at: date)
+        let wasLikely = isGateLikely
+        dropTimes.append(date)
+        return !wasLikely && isGateLikely
+    }
+
+    mutating func reset() {
+        dropTimes.removeAll()
     }
 }
 
@@ -3194,6 +3244,13 @@ final class Libre3DirectManager: ObservableObject {
         switch event {
         case .stateChanged(let state):
             Libre3DiagnosticsLog.traceReconnect("cb-state value=\(state.rawValue)")
+            if state == .poweredOff, hostProfile.device == .watchWorkout {
+                SharedData.libre3ReconnectGateDropTimes = []
+                hostProfile.retractReconnectGate()
+                Libre3DiagnosticsLog.traceReconnect(
+                    "reconnect-gate-estimate reset reason=bluetooth-off"
+                )
+            }
             switch state {
             case .poweredOn:
                 if shouldMaintainConnection,
@@ -3270,6 +3327,15 @@ final class Libre3DirectManager: ObservableObject {
 
         case .didDisconnect(let peripheral, let error):
             let receivedAt = Date()
+            // bluetoothd counts the timeout reason regardless of app intent.
+            // Our explicit cancels do not produce code 6.
+            if hostProfile.device == .watchWorkout,
+               matchesSavedPeripheral(peripheral),
+               let error = error as NSError?,
+               error.domain == CBErrorDomain,
+               error.code == CBError.connectionTimeout.rawValue {
+                recordReconnectGateTimeout(at: receivedAt)
+            }
             let systemDisposition: Libre3SystemReconnectDisconnectDisposition
             if let metadata = contextualEvent.disconnectMetadata {
                 systemDisposition = handleSystemReconnectDisconnect(
@@ -3361,6 +3427,30 @@ final class Libre3DirectManager: ObservableObject {
                isActiveProvider,
                Libre3StateStore.isPaired {
                 start()
+            }
+        }
+    }
+
+    private func recordReconnectGateTimeout(at date: Date) {
+        var estimate = Libre3ReconnectGateEstimate(
+            sensorID: SharedData.libre3ReconnectGateSensorID,
+            dropTimes: SharedData.libre3ReconnectGateDropTimes
+        )
+        let becameLikely = estimate.recordTimeout(
+            for: SharedData.libre3PeripheralUUID,
+            at: date
+        )
+        SharedData.libre3ReconnectGateSensorID = estimate.sensorID
+        SharedData.libre3ReconnectGateDropTimes = estimate.dropTimes
+        Libre3DiagnosticsLog.traceReconnect(
+            "reconnect-gate-estimate count=\(estimate.dropTimes.count) gate=\(estimate.isGateLikely ? "likely" : "no")"
+        )
+        if becameLikely {
+            Task {
+                // A Bluetooth-off callback may reset the estimate before this runs.
+                guard SharedData.libre3ReconnectGateSensorID == estimate.sensorID,
+                      SharedData.libre3ReconnectGateDropTimes.contains(date) else { return }
+                await hostProfile.postReconnectGateLikely()
             }
         }
     }
