@@ -367,12 +367,20 @@ struct WatchAppWorkoutView: View {
 
                 if currentProviderKind == .libre3BLE {
                     Text(
-                        "Wear the watch on the arm closest to the sensor. Otherwise the signal has to cross your body, and reconnecting can take much longer.",
-                        comment: "Placement advice on the Apple Watch workout start screen for direct Libre 3 sensor readings. Body tissue absorbs the 2.4 GHz signal, so a sensor on the opposite arm makes reconnecting slow."
+                        "Wear your watch on the arm closest to the sensor.",
+                        comment: "Short placement reminder on the Apple Watch workout start screen for direct Libre 3 sensor readings."
                     )
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.caption)
                     .multilineTextAlignment(.center)
+
+                    NavigationLink {
+                        WorkoutSensorConnectionTipsView()
+                    } label: {
+                        Text(
+                            "Sensor connection tips",
+                            comment: "Navigation link to Libre 3 sensor placement and Bluetooth reconnect advice on Apple Watch."
+                        )
+                    }
                 }
             }
             .padding(.top, 4)
@@ -438,6 +446,7 @@ struct WatchAppWorkoutView: View {
             heartRateText: currentHeartRateText,
             distanceText: currentDistanceText,
             connectionStatus: connectionStatus,
+            showsSensorConnectionTips: workoutModeStore.providerKind == .libre3BLE,
             showsGraph: !libreLinkUpHistory.libreLinkUpGlucose.isEmpty,
             isEnding: workoutManager.operationState == .ending,
             isBusy: workoutManager.isBusy
@@ -466,6 +475,63 @@ struct WatchAppWorkoutView: View {
             lowGlucoseThreshold: selectedThreshold,
             workoutType: selectedWorkoutType,
             providerKind: currentProviderKind
+        )
+    }
+}
+
+// MARK: - Libre 3 connection help
+
+private struct WorkoutSensorConnectionTipsView: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Watch placement", comment: "Heading for advice about wearing Apple Watch near the Libre 3 sensor.")
+                        .font(.headline)
+                        .accessibilityAddTraits(.isHeader)
+                    Text(
+                        "Wear the watch on the arm closest to the sensor. Otherwise the signal has to cross your body, and reconnecting can take much longer.",
+                        comment: "Placement advice in Apple Watch sensor connection help. Body tissue absorbs the signal, so a sensor on the opposite arm makes reconnecting slow."
+                    )
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Sensor reconnect limited", comment: "Heading in Apple Watch sensor connection help matching the notification title for limited Libre 3 sensor reconnection after repeated signal losses.")
+                        .font(.headline)
+                        .accessibilityAddTraits(.isHeader)
+                    // Explains the "Sensor reconnect limited" notification,
+                    // whose body only has room for the action.
+                    Text(
+                        "After repeated signal losses, Apple Watch only reconnects when the sensor is very close. Turning Bluetooth off and on resets this.",
+                        comment: "Explanation in Apple Watch sensor connection help of the system limit described by the notification titled \"Sensor reconnect limited\"."
+                    )
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Bluetooth reset shortcut", comment: "Heading for steps that use Airplane Mode to switch Apple Watch Bluetooth off and on.")
+                        .font(.headline)
+                        .accessibilityAddTraits(.isHeader)
+                    Text(
+                        "1. In Settings > Airplane Mode, set Bluetooth to turn off as well.",
+                        comment: "First step of the Apple Watch Bluetooth reset shortcut. Use the system's names for Settings, Airplane Mode and Bluetooth."
+                    )
+                    Text(
+                        "2. When you need to reset Bluetooth, open Control Center and turn Airplane Mode on.",
+                        comment: "Second step of the Apple Watch Bluetooth reset shortcut, after configuring Airplane Mode to turn Bluetooth off. Use the system's names for Control Center, Airplane Mode and Bluetooth."
+                    )
+                    Text(
+                        "3. Turn Airplane Mode off again.",
+                        comment: "Final step of the Apple Watch Bluetooth reset shortcut, restoring Bluetooth after turning Airplane Mode on. Use the system's name for Airplane Mode."
+                    )
+                }
+            }
+            .font(.body)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+        }
+        .navigationTitle(
+            String(localized: "Connection tips", comment: "Navigation title of the Apple Watch help screen for direct Libre 3 sensor connections.")
         )
     }
 }
@@ -499,6 +565,7 @@ private struct ActiveWorkoutDisplayValues {
     let heartRateText: String
     let distanceText: String?
     let connectionStatus: WorkoutConnectionDisplay?
+    let showsSensorConnectionTips: Bool
     let showsGraph: Bool
     let isEnding: Bool
     let isBusy: Bool
@@ -562,6 +629,16 @@ private struct ActiveWorkoutContent<GraphContent: View>: View {
                 showsActiveWorkoutLayoutBorders ? Color.red : Color.clear,
                 width: 0.5
             )
+            if values.showsSensorConnectionTips {
+                NavigationLink {
+                    WorkoutSensorConnectionTipsView()
+                } label: {
+                    Text(
+                        "Sensor connection tips",
+                        comment: "Navigation link to Libre 3 sensor placement and Bluetooth reconnect advice on Apple Watch."
+                    )
+                }
+            }
         }
         .padding(.top, -6)
         .toolbar {
@@ -987,6 +1064,7 @@ private struct WorkoutGraphPreview: View {
                         isFailure: false,
                         showsPlacementHint: false
                     ),
+                    showsSensorConnectionTips: true,
                     showsGraph: true,
                     isEnding: false,
                     isBusy: false

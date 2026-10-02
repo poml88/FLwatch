@@ -269,7 +269,7 @@ struct PhoneAppLibre3ConnectView: View {
                 if developerModeEnabled {
                     Text(
                         "A current setup lets Workout Mode receive Libre 3 readings without the iPhone nearby.",
-                        comment: "Explains why Libre 3 provisioning readiness matters for Apple Watch Workout Mode."
+                        comment: "Explains why Libre 3 provisioning readiness matters for Apple Watch Workout Mode. Developer mode gated."
                     )
                 }
                 Text(

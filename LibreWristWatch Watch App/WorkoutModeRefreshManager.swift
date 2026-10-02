@@ -658,8 +658,8 @@ final class WorkoutAlertNotificationManager {
             comment: "Title of an Apple Watch workout notification when repeated sensor connection timeouts likely limit Bluetooth reconnects."
         )
         content.body = String(
-            localized: "After repeated signal losses, Apple Watch now reconnects only when the sensor is close. Turn Bluetooth off and on to reset.",
-            comment: "Body of an Apple Watch workout notification advising the user to toggle Bluetooth to clear an estimated sensor reconnect penalty."
+            localized: "Turn Bluetooth off and on in Settings on Apple Watch to reset. Tip: Airplane Mode does this faster if it is set to turn off Bluetooth.",
+            comment: "Body of an Apple Watch workout notification. The watch only reconnects to the glucose sensor at close range after repeated connection losses; switching Bluetooth off and on in the watch's own Settings app clears that. The action comes first on purpose. Use the system's names for Bluetooth, Settings and Airplane Mode."
         )
         // No category: this Bluetooth advice has no glucose-alert snooze action.
         applyDelivery(to: content, requestsCriticalDelivery: false, settings: settings)

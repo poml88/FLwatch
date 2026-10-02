@@ -179,66 +179,6 @@
         }
       }
     },
-    "“Libre 3 app” here means whichever Abbott app you use: FreeStyle Libre 3, or Libre by Abbott in the US." : {
-      "comment" : "Defines a shorthand the rest of this screen uses, so the other texts can say 'the Libre 3 app' without naming one of Abbott's two apps and misleading users of the other. Keep both product names untranslated.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "„Libre 3-App“ bezeichnet hier die von dir verwendete Abbott-App: FreeStyle Libre 3 oder, in den USA, Libre by Abbott."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aquí, «app Libre 3» se refiere a la app de Abbott que uses: FreeStyle Libre 3 o, en EE. UU., Libre by Abbott."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ici, « app Libre 3 » désigne l’app Abbott que vous utilisez : FreeStyle Libre 3 ou, aux États-Unis, Libre by Abbott."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Qui, “app Libre 3” indica l’app Abbott che utilizzi: FreeStyle Libre 3 oppure, negli Stati Uniti, Libre by Abbott."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ここで「Libre 3アプリ」とは、使用しているAbbottのアプリ（FreeStyle Libre 3、または米国ではLibre by Abbott）を指します。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Met ‘Libre 3-app’ wordt hier de Abbott-app bedoeld die je gebruikt: FreeStyle Libre 3 of, in de VS, Libre by Abbott."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Określenie „aplikacja Libre 3” oznacza tutaj używaną aplikację firmy Abbott: FreeStyle Libre 3 albo, w USA, Libre by Abbott."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Под «приложением Libre 3» здесь понимается используемое приложение Abbott: FreeStyle Libre 3 или Libre by Abbott в США."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此处的“Libre 3 App”是指你使用的 Abbott App：FreeStyle Libre 3，或美国地区的 Libre by Abbott。"
-          }
-        }
-      }
-    },
     "(override)" : {
       "comment" : "Marks that the displayed Libre 3 receiver ID comes from the developer override instead of the account lookup."
     },
@@ -892,6 +832,65 @@
     "1" : {
 
     },
+    "1. In Settings > Airplane Mode, set Bluetooth to turn off as well." : {
+      "comment" : "First step of the Apple Watch Bluetooth reset shortcut. Use the system's names for Settings, Airplane Mode and Bluetooth.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Stelle unter Einstellungen > Flugmodus ein, dass auch Bluetooth ausgeschaltet wird."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. En Ajustes > Modo Avión, configura Bluetooth para que también se desactive."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Dans Réglages > Mode Avion, configurez Bluetooth pour qu’il soit également désactivé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. In Impostazioni > Uso in aereo, imposta anche la disattivazione del Bluetooth."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. 「設定」>「機内モード」で、Bluetoothもオフになるように設定します。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Stel in Instellingen > Vliegtuigmodus in dat Bluetooth ook wordt uitgeschakeld."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. W aplikacji Ustawienia > Tryb Samolot ustaw wyłączanie także Bluetooth."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. В разделе «Настройки» > «Авиарежим» настройте также отключение Bluetooth."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. 在“设置”>“飞行模式”中，设定同时关闭蓝牙。"
+          }
+        }
+      }
+    },
     "1.5" : {
       "localizations" : {
         "de" : {
@@ -905,6 +904,65 @@
     "2" : {
 
     },
+    "2. When you need to reset Bluetooth, open Control Center and turn Airplane Mode on." : {
+      "comment" : "Second step of the Apple Watch Bluetooth reset shortcut, after configuring Airplane Mode to turn Bluetooth off. Use the system's names for Control Center, Airplane Mode and Bluetooth.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Wenn du Bluetooth zurücksetzen möchtest, öffne das Kontrollzentrum und schalte den Flugmodus ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Cuando necesites restablecer Bluetooth, abre el Centro de control y activa el modo Avión."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Pour réinitialiser Bluetooth, ouvrez le centre de contrôle et activez le mode Avion."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Quando devi reimpostare il Bluetooth, apri Centro di Controllo e attiva Uso in aereo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Bluetoothをリセットするときは、コントロールセンターを開いて機内モードをオンにします。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Als je Bluetooth wilt resetten, open je het bedieningspaneel en schakel je de vliegtuigmodus in."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Gdy chcesz zresetować Bluetooth, otwórz centrum sterowania i włącz tryb Samolot."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Когда потребуется сбросить Bluetooth, откройте Пункт управления и включите авиарежим."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. 需要重置蓝牙时，打开控制中心并开启飞行模式。"
+          }
+        }
+      }
+    },
     "2.5" : {
       "localizations" : {
         "de" : {
@@ -917,6 +975,65 @@
     },
     "3" : {
 
+    },
+    "3. Turn Airplane Mode off again." : {
+      "comment" : "Final step of the Apple Watch Bluetooth reset shortcut, restoring Bluetooth after turning Airplane Mode on. Use the system's name for Airplane Mode.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Schalte den Flugmodus wieder aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Vuelve a desactivar el modo Avión."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Désactivez à nouveau le mode Avion."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Disattiva di nuovo Uso in aereo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. 機内モードを再びオフにします。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Schakel de vliegtuigmodus weer uit."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Ponownie wyłącz tryb Samolot."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Снова выключите авиарежим."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. 再次关闭飞行模式。"
+          }
+        }
+      }
     },
     "3.5" : {
       "localizations" : {
@@ -1329,7 +1446,7 @@
 
     },
     "A current setup lets Workout Mode receive Libre 3 readings without the iPhone nearby." : {
-      "comment" : "Explains why Libre 3 provisioning readiness matters for Apple Watch Workout Mode."
+      "comment" : "Explains why Libre 3 provisioning readiness matters for Apple Watch Workout Mode. Developer mode gated."
     },
     "A Libre 3 BLE reading is needed before the current raw sensor value can be shown." : {
       "comment" : "A message displayed when a Libre 3 BLE reading is not available.",
@@ -2377,8 +2494,64 @@
         }
       }
     },
-    "After repeated signal losses, Apple Watch now reconnects only when the sensor is close. Turn Bluetooth off and on to reset." : {
-      "comment" : "Body of an Apple Watch workout notification advising the user to toggle Bluetooth to clear an estimated sensor reconnect penalty."
+    "After repeated signal losses, Apple Watch only reconnects when the sensor is very close. Turning Bluetooth off and on resets this." : {
+      "comment" : "Explanation in Apple Watch sensor connection help of the system limit described by the notification titled \"Sensor reconnect limited\".",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach wiederholten Signalverlusten verbindet sich die Apple Watch nur noch, wenn der Sensor sehr nah ist. Wenn du Bluetooth aus- und wieder einschaltest, wird diese Einschränkung zurückgesetzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tras pérdidas repetidas de señal, el Apple Watch solo vuelve a conectarse cuando el sensor está muy cerca. Desactivar y volver a activar Bluetooth elimina esta limitación."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Après des pertes de signal répétées, l’Apple Watch ne se reconnecte que lorsque le capteur est très proche. Désactiver puis réactiver Bluetooth supprime cette limitation."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dopo ripetute perdite di segnale, Apple Watch si riconnette solo quando il sensore è molto vicino. Disattivare e riattivare il Bluetooth rimuove questa limitazione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信号の途切れが繰り返されると、Apple Watchはセンサーがすぐ近くにあるときにしか再接続しなくなります。Bluetoothを一度オフにしてからオンにすると、この制限が解除されます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na herhaald signaalverlies maakt de Apple Watch alleen opnieuw verbinding als de sensor heel dichtbij is. Door Bluetooth uit en weer in te schakelen, hef je deze beperking op."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Po wielokrotnej utracie sygnału Apple Watch łączy się ponownie tylko wtedy, gdy sensor jest bardzo blisko. Wyłączenie i ponowne włączenie Bluetooth usuwa to ograniczenie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "После неоднократной потери сигнала Apple Watch подключается повторно, только когда сенсор находится совсем рядом. Выключение и повторное включение Bluetooth снимает это ограничение."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多次信号中断后，Apple Watch 只有在传感器非常靠近时才会重新连接。关闭再打开蓝牙即可解除此限制。"
+          }
+        }
+      }
     },
     "Alert me above" : {
       "localizations" : {
@@ -3025,10 +3198,122 @@
       }
     },
     "Apple Watch could not take ownership of the Libre 3 sensor." : {
-      "comment" : "Workout start failure when the direct-sensor ownership claim is rejected."
+      "comment" : "Workout start failure when the direct-sensor ownership claim is rejected.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Apple Watch konnte die Verbindung zum Libre 3-Sensor nicht übernehmen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El Apple Watch no pudo hacerse cargo de la conexión con el sensor Libre 3."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’Apple Watch n’a pas pu prendre en charge la connexion au capteur Libre 3."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch non ha potuto prendere il controllo della connessione al sensore Libre 3."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple WatchにLibre 3センサーの接続を引き継げませんでした。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Apple Watch kon de verbinding met de Libre 3-sensor niet overnemen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch nie mógł przejąć połączenia z sensorem Libre 3."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch не удалось взять на себя подключение к сенсору Libre 3."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch无法接管Libre 3传感器的连接。"
+          }
+        }
+      }
     },
     "Apple Watch has not received a new glucose reading during your workout." : {
-      "comment" : "Body of a notification warning that glucose readings stopped during an Apple Watch workout."
+      "comment" : "Body of a notification warning that glucose readings stopped during an Apple Watch workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Apple Watch hat während deines Trainings keinen neuen Glukosewert erhalten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El Apple Watch no ha recibido una nueva lectura de glucosa durante tu entrenamiento."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’Apple Watch n’a pas reçu de nouvelle mesure de glucose pendant votre entraînement."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch non ha ricevuto una nuova lettura del glucosio durante il tuo allenamento."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウト中にApple Watchが新しいグルコース測定値を受信していません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Apple Watch heeft tijdens je training geen nieuwe glucosewaarde ontvangen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch nie otrzymał nowego odczytu glukozy podczas treningu."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch не получил новое показание глюкозы во время тренировки."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch在体能训练期间未收到新的葡萄糖读数。"
+          }
+        }
+      }
     },
     "Apply to future readings" : {
       "comment" : "A button that applies the offset to future Libre 3 glucose readings.",
@@ -3800,7 +4085,63 @@
       }
     },
     "Bluetooth access is required for direct sensor readings." : {
-      "comment" : "Workout start failure when Apple Watch Bluetooth permission is denied or restricted."
+      "comment" : "Workout start failure when Apple Watch Bluetooth permission is denied or restricted.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für direkte Sensormessungen ist Bluetooth-Zugriff erforderlich."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se necesita acceso a Bluetooth para recibir lecturas directamente del sensor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’accès au Bluetooth est nécessaire pour recevoir les mesures directement du capteur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "È necessario l’accesso al Bluetooth per ricevere le letture direttamente dal sensore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーから測定値を直接受信するには、Bluetoothへのアクセスが必要です。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toegang tot Bluetooth is vereist om metingen rechtstreeks van de sensor te ontvangen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dostęp do Bluetooth jest wymagany do odbierania odczytów bezpośrednio z sensora."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для получения показаний напрямую с сенсора требуется доступ к Bluetooth."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直接接收传感器读数需要蓝牙访问权限。"
+          }
+        }
+      }
     },
     "Bluetooth heartbeat" : {
       "localizations" : {
@@ -4275,6 +4616,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "蓝牙已就绪"
+          }
+        }
+      }
+    },
+    "Bluetooth reset shortcut" : {
+      "comment" : "Heading for steps that use Airplane Mode to switch Apple Watch Bluetooth off and on.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth schneller zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atajo para restablecer Bluetooth"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccourci pour réinitialiser Bluetooth"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scorciatoia per reimpostare il Bluetooth"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetoothをすばやくリセットする方法"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth sneller resetten"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szybki reset Bluetooth"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Быстрый сброс Bluetooth"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速重置蓝牙"
           }
         }
       }
@@ -4988,7 +5388,63 @@
       }
     },
     "Cardio" : {
-      "comment" : "Short Apple Watch label for a mixed cardio workout."
+      "comment" : "Short Apple Watch label for a mixed cardio workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cardio"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cardio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cardio"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cardio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カーディオ"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cardio"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cardio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кардио"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有氧"
+          }
+        }
+      }
     },
     "CGM provider" : {
       "localizations" : {
@@ -6463,6 +6919,65 @@
         }
       }
     },
+    "Connection tips" : {
+      "comment" : "Navigation title of the Apple Watch help screen for direct Libre 3 sensor connections.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungstipps"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consejos de conexión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conseils de connexion"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consigli di connessione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続のヒント"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindingstips"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wskazówki dotyczące połączenia"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Советы по подключению"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接提示"
+          }
+        }
+      }
+    },
     "Connects directly to a Libre 3 / Libre 3 Plus sensor over Bluetooth — no follower account or cloud needed. You pair by holding your phone to the sensor." : {
       "comment" : "A description of the FreeStyle Libre 3 (Bluetooth) CGM provider.",
       "isCommentAutoGenerated" : true,
@@ -7009,7 +7524,63 @@
       }
     },
     "Could not start the workout." : {
-      "comment" : "Generic Apple Watch workout start failure."
+      "comment" : "Generic Apple Watch workout start failure.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Training konnte nicht gestartet werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo iniciar el entrenamiento."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de démarrer l’entraînement."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile avviare l’allenamento."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウトを開始できませんでした。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De training kon niet worden gestart."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się rozpocząć treningu."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось начать тренировку."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法开始体能训练。"
+          }
+        }
+      }
     },
     "Couldn't find the sensor. Keep your phone near it." : {
       "comment" : "Error message when the sensor isn't found.",
@@ -8119,7 +8690,63 @@
       }
     },
     "Cycling" : {
-      "comment" : "Workout activity choice on Apple Watch."
+      "comment" : "Workout activity choice on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radfahren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciclismo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vélo"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciclismo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サイクリング"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fietsen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jazda na rowerze"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Велоспорт"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "骑行"
+          }
+        }
+      }
     },
     "Data Sharing" : {
       "comment" : "Navigation title for settings that send glucose and insulin data to other services.\nSettings row that opens controls for sending data to Apple Health and Nightscout.",
@@ -9948,7 +10575,63 @@
       }
     },
     "Elliptical" : {
-      "comment" : "Workout activity choice on Apple Watch."
+      "comment" : "Workout activity choice on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crosstrainer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elíptica"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vélo elliptique"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ellittica"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エリプティカル"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crosstrainer"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orbitrek"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эллиптический тренажёр"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "椭圆机"
+          }
+        }
+      }
     },
     "Enable Bluetooth heartbeat" : {
       "localizations" : {
@@ -10774,66 +11457,6 @@
     },
     "Enter the developer code." : {
 
-    },
-    "Enter your LibreView Account ID above first — the selected app's receiver ID is derived from it." : {
-      "comment" : "Shown under a disabled scan button when the LibreView Account ID field is empty but the chosen app needs it. The sensor's receiver ID is computed from that account ID.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gib oben zuerst deine LibreView-Konto-ID ein – die Receiver-ID der ausgewählten App wird daraus abgeleitet."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Introduce primero arriba tu ID de cuenta de LibreView; de ella se deriva el ID del receptor de la app seleccionada."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saisissez d’abord ci-dessus l’identifiant de votre compte LibreView : l’identifiant du récepteur de l’app sélectionnée en est dérivé."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inserisci prima qui sopra l’ID del tuo account LibreView: da questo viene ricavato l’ID ricevitore dell’app selezionata."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "まず上にLibreViewアカウントIDを入力してください。選択したアプリのレシーバーIDは、このIDから算出されます。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voer hierboven eerst je LibreView-account-ID in; de ontvanger-ID van de geselecteerde app wordt hiervan afgeleid."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Najpierw wprowadź powyżej identyfikator konta LibreView — na jego podstawie wyliczany jest identyfikator odbiornika wybranej aplikacji."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сначала введите выше идентификатор учётной записи LibreView — из него вычисляется идентификатор приёмника выбранного приложения."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请先在上方输入你的 LibreView 账户 ID；所选 App 的接收器 ID 由此计算得出。"
-          }
-        }
-      }
     },
     "Error message: %@" : {
       "localizations" : {
@@ -12504,72 +13127,69 @@
       }
     },
     "Functional Strength" : {
-      "comment" : "Workout activity choice on Apple Watch."
+      "comment" : "Workout activity choice on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funktionelles Krafttraining"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuerza funcional"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renforcement fonctionnel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forza funzionale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "機能的筋力トレーニング"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Functionele krachttraining"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funkcjonalny trening siłowy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Функциональная силовая тренировка"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "功能性力量训练"
+          }
+        }
+      }
     },
     "g" : {
 
     },
     "g / 1U" : {
 
-    },
-    "Get Account ID" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Konto-ID abrufen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Obtener ID de cuenta"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Obtenir l’identifiant du compte"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ottieni ID account"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アカウントIDを取得"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Account-ID ophalen"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pobierz identyfikator konta"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Получить идентификатор учётной записи"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "获取账户ID"
-          }
-        }
-      }
     },
     "Get Current Blood Glucose" : {
       "localizations" : {
@@ -12742,65 +13362,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "获取当前血糖值。"
-          }
-        }
-      }
-    },
-    "Getting Account ID…" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Konto-ID wird abgerufen…"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Obteniendo ID de cuenta…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Obtention de l’identifiant du compte…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recupero ID account…"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アカウントIDを取得中…"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Account-ID ophalen…"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pobieranie identyfikatora konta…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Получение идентификатора учётной записи…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在获取账户ID…"
           }
         }
       }
@@ -12983,7 +13544,63 @@
       }
     },
     "Glucose dropping quickly" : {
-      "comment" : "Title of a rapid glucose-drop notification during an Apple Watch workout."
+      "comment" : "Title of a rapid glucose-drop notification during an Apple Watch workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glukose fällt schnell"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La glucosa baja rápidamente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le glucose baisse rapidement"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il glucosio scende rapidamente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "グルコースが急低下"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucose daalt snel"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glukoza szybko spada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Глюкоза быстро снижается"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "葡萄糖快速下降"
+          }
+        }
+      }
     },
     "Glucose Full Graph Widget" : {
       "comment" : "Name of the glucose full graph widget.",
@@ -13175,7 +13792,63 @@
       }
     },
     "Glucose is falling quickly during your workout." : {
-      "comment" : "Body of a rapid glucose-drop notification during an Apple Watch workout."
+      "comment" : "Body of a rapid glucose-drop notification during an Apple Watch workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Glukose fällt während des Trainings schnell."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu glucosa está bajando rápidamente durante el entrenamiento."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre taux de glucose baisse rapidement pendant votre entraînement."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo glucosio sta scendendo rapidamente durante l’allenamento."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウト中にグルコースが急速に低下しています。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je glucose daalt snel tijdens je training."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poziom glukozy szybko spada podczas treningu."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уровень глюкозы быстро снижается во время тренировки."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "体能训练期间，葡萄糖水平正在快速下降。"
+          }
+        }
+      }
     },
     "Glucose is high" : {
       "localizations" : {
@@ -13294,7 +13967,63 @@
       }
     },
     "Glucose is low during workout" : {
-      "comment" : "Title of a workout-specific low-glucose notification on Apple Watch."
+      "comment" : "Title of a workout-specific low-glucose notification on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niedrige Glukose beim Training"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucosa baja durante el entrenamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucose bas pendant l’entraînement"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glucosio basso durante l’allenamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウト中のグルコース低下"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lage glucose tijdens training"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niska glukoza podczas treningu"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Низкая глюкоза во время тренировки"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "体能训练期间葡萄糖偏低"
+          }
+        }
+      }
     },
     "Glucose is moving. Wait for a steady stretch before comparing." : {
       "comment" : "A warning that glucose is moving.",
@@ -13592,7 +14321,63 @@
 
     },
     "Health data is not available on this Apple Watch." : {
-      "comment" : "Workout start failure when HealthKit is unavailable."
+      "comment" : "Workout start failure when HealthKit is unavailable.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesundheitsdaten sind auf dieser Apple Watch nicht verfügbar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los datos de salud no están disponibles en este Apple Watch."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les données de santé ne sont pas disponibles sur cette Apple Watch."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I dati sanitari non sono disponibili su questo Apple Watch."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このApple Watchではヘルスケアデータを利用できません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gezondheidsgegevens zijn niet beschikbaar op deze Apple Watch."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dane zdrowotne nie są dostępne na tym Apple Watch."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Данные о здоровье недоступны на этих Apple Watch."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此Apple Watch无法使用健康数据。"
+          }
+        }
+      }
     },
     "Heartbeat received" : {
       "comment" : "A status text that is displayed when a heartbeat is received.",
@@ -13842,7 +14627,63 @@
       }
     },
     "Hiking" : {
-      "comment" : "Workout activity choice on Apple Watch."
+      "comment" : "Workout activity choice on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wandern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senderismo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Randonnée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escursionismo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ハイキング"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiken"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wędrówka"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пеший туризм"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "徒步"
+          }
+        }
+      }
     },
     "Hold sensor to phone to pair" : {
       "comment" : "A button label that says \"Hold sensor to phone to pair\".",
@@ -14439,7 +15280,63 @@
       }
     },
     "Indoor" : {
-      "comment" : "Location label for an indoor Apple Watch workout."
+      "comment" : "Location label for an indoor Apple Watch workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drinnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En interior"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En intérieur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al chiuso"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屋内"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binnen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "W pomieszczeniu"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В помещении"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "室内"
+          }
+        }
+      }
     },
     "Info" : {
       "localizations" : {
@@ -17348,7 +18245,63 @@
       }
     },
     "Mixed Cardio" : {
-      "comment" : "Workout activity choice on Apple Watch."
+      "comment" : "Workout activity choice on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gemischtes Cardio"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cardio mixto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cardio mixte"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cardio misto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ミックスカーディオ"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gemengde cardio"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mieszany trening cardio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смешанное кардио"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "混合有氧训练"
+          }
+        }
+      }
     },
     "mmol/L" : {
 
@@ -18597,7 +19550,63 @@
 
     },
     "No recent glucose reading" : {
-      "comment" : "Title of an Apple Watch notification when no new glucose reading arrives during a workout."
+      "comment" : "Title of an Apple Watch notification when no new glucose reading arrives during a workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein aktueller Glukosewert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin lecturas recientes de glucosa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune mesure récente de glucose"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna lettura recente del glucosio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近のグルコース測定値なし"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen recente glucosewaarde"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak aktualnego odczytu glukozy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет свежих показаний глюкозы"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无近期葡萄糖读数"
+          }
+        }
+      }
     },
     "No recent reading available." : {
       "localizations" : {
@@ -20133,7 +21142,63 @@
       }
     },
     "Outdoor" : {
-      "comment" : "Location label for an outdoor Apple Watch workout."
+      "comment" : "Location label for an outdoor Apple Watch workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draußen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al aire libre"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En extérieur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All’aperto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屋外"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buiten"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na zewnątrz"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На улице"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "户外"
+          }
+        }
+      }
     },
     "Pair a Libre 3 or Libre 3 Plus sensor before setting an offset." : {
       "comment" : "A description of the need to pair a Libre 3 or Libre 3 Plus sensor to set an offset.",
@@ -21231,66 +22296,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "请选择启动此传感器时所用的 App 和版本。FreeStyle Libre 3 与 Libre by Abbott 使用不同的接收器 ID，而 Libre by Abbott 从 1.4.0 版开始更改了生成方法。选择错误时将被拒绝（错误 0xB1）。"
-          }
-        }
-      }
-    },
-    "Pick the app this sensor was started in. Both apps derive the receiver ID from your LibreView account but compute it differently, so the wrong one is rejected (error 0xB1). Libre by Abbott is the newer US app; elsewhere it is FreeStyle Libre 3." : {
-      "comment" : "Explains the app picker when pairing an already-running sensor. 0xB1 is the sensor's own error code for a receiver-ID mismatch; keep it as-is. Keep the product names untranslated.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle die App aus, mit der dieser Sensor gestartet wurde. Beide Apps leiten die Receiver-ID aus deinem LibreView-Konto ab, berechnen sie aber unterschiedlich. Daher wird die falsche App abgelehnt (Fehler 0xB1). Libre by Abbott ist die neuere US-App; andernorts ist es FreeStyle Libre 3."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elige la app con la que se inició este sensor. Ambas apps derivan el ID del receptor de tu cuenta de LibreView, pero lo calculan de forma distinta, por lo que se rechazará la opción incorrecta (error 0xB1). Libre by Abbott es la app más reciente de EE. UU.; en otros lugares se usa FreeStyle Libre 3."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choisissez l’app avec laquelle ce capteur a été démarré. Les deux apps dérivent l’identifiant du récepteur de votre compte LibreView, mais le calculent différemment ; la mauvaise app est donc refusée (erreur 0xB1). Libre by Abbott est la nouvelle app américaine ; ailleurs, il s’agit de FreeStyle Libre 3."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scegli l’app con cui è stato avviato questo sensore. Entrambe le app ricavano l’ID ricevitore dal tuo account LibreView, ma lo calcolano in modo diverso, quindi quella errata viene rifiutata (errore 0xB1). Libre by Abbott è la nuova app statunitense; altrove si usa FreeStyle Libre 3."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "このセンサーを開始したアプリを選択してください。どちらのアプリもLibreViewアカウントからレシーバーIDを算出しますが、計算方法が異なるため、間違ったアプリを選ぶと拒否されます（エラー0xB1）。Libre by Abbottは米国向けの新しいアプリで、それ以外の地域ではFreeStyle Libre 3です。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies de app waarmee deze sensor is gestart. Beide apps leiden de ontvanger-ID af van je LibreView-account, maar berekenen deze anders. De verkeerde app wordt daarom geweigerd (fout 0xB1). Libre by Abbott is de nieuwere Amerikaanse app; elders is dit FreeStyle Libre 3."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wybierz aplikację, w której uruchomiono ten sensor. Obie aplikacje wyliczają identyfikator odbiornika na podstawie konta LibreView, ale robią to inaczej, dlatego niewłaściwa aplikacja zostanie odrzucona (błąd 0xB1). Libre by Abbott to nowsza aplikacja amerykańska; w innych regionach jest to FreeStyle Libre 3."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Выберите приложение, в котором был запущен этот сенсор. Оба приложения вычисляют идентификатор приёмника из учётной записи LibreView, но делают это по-разному, поэтому неверный вариант будет отклонён (ошибка 0xB1). Libre by Abbott — новое приложение для США; в других регионах используется FreeStyle Libre 3."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请选择启动此传感器时所用的 App。两个 App 都根据你的 LibreView 账户计算接收器 ID，但算法不同，因此选择错误的 App 会被拒绝（错误 0xB1）。Libre by Abbott 是较新的美国版 App；其他地区使用 FreeStyle Libre 3。"
           }
         }
       }
@@ -23986,7 +24991,63 @@
       }
     },
     "Rowing" : {
-      "comment" : "Workout activity choice on Apple Watch."
+      "comment" : "Workout activity choice on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rudern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rameur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vogatore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ローイング"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roeien"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiosłowanie"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гребля"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "划船"
+          }
+        }
+      }
     },
     "RSSI %lld • %@" : {
       "localizations" : {
@@ -23999,7 +25060,63 @@
       }
     },
     "Running" : {
-      "comment" : "Workout activity choice on Apple Watch."
+      "comment" : "Workout activity choice on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laufen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correr"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Course à pied"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corsa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ランニング"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hardlopen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bieg"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бег"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跑步"
+          }
+        }
+      }
     },
     "Save" : {
       "localizations" : {
@@ -24770,7 +25887,122 @@
       }
     },
     "Sensor connected to Apple Watch." : {
-      "comment" : "CarPlay status shown instead of stale glucose while an Apple Watch workout owns the Libre 3 sensor.\nPhone Home overlay body shown while an Apple Watch workout owns the Libre 3 sensor connection."
+      "comment" : "CarPlay status shown instead of stale glucose while an Apple Watch workout owns the Libre 3 sensor.\nPhone Home overlay body shown while an Apple Watch workout owns the Libre 3 sensor connection.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor mit Apple Watch verbunden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor conectado al Apple Watch."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capteur connecté à l’Apple Watch."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensore connesso ad Apple Watch."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーはApple Watchに接続されています。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor verbonden met Apple Watch."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor połączony z Apple Watch."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сенсор подключён к Apple Watch."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器已连接到Apple Watch。"
+          }
+        }
+      }
+    },
+    "Sensor connection tips" : {
+      "comment" : "Navigation link to Libre 3 sensor placement and Bluetooth reconnect advice on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipps zur Sensorverbindung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consejos de conexión del sensor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conseils de connexion du capteur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consigli per connettere il sensore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサー接続のヒント"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tips voor de sensorverbinding"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wskazówki dotyczące połączenia z sensorem"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Советы по подключению сенсора"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器连接提示"
+          }
+        }
+      }
     },
     "Sensor data quality issue" : {
       "localizations" : {
@@ -25600,7 +26832,63 @@
       }
     },
     "Sensor reconnect limited" : {
-      "comment" : "Title of an Apple Watch workout notification when repeated sensor connection timeouts likely limit Bluetooth reconnects."
+      "comment" : "Heading in Apple Watch sensor connection help matching the notification title for limited Libre 3 sensor reconnection after repeated signal losses.\nTitle of an Apple Watch workout notification when repeated sensor connection timeouts likely limit Bluetooth reconnects.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor-Wiederverbindung eingeschränkt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconexión del sensor limitada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnexion du capteur limitée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riconnessione del sensore limitata"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーの再接続が制限されています"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnieuw verbinden met sensor beperkt"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ponowne łączenie z sensorem ograniczone"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторное подключение сенсора ограничено"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器重连受限"
+          }
+        }
+      }
     },
     "Sensor session ended" : {
       "comment" : "A notification title shown when the sensor is scheduled to have reached its expiry time.",
@@ -26196,7 +27484,63 @@
 
     },
     "Set up the selected glucose provider on your iPhone first." : {
-      "comment" : "Workout start failure when the selected glucose provider has no credentials or paired sensor on Apple Watch."
+      "comment" : "Workout start failure when the selected glucose provider has no credentials or paired sensor on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richte zuerst den ausgewählten Glukoseanbieter auf deinem iPhone ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configura primero el proveedor de glucosa seleccionado en tu iPhone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurez d’abord le fournisseur de glucose sélectionné sur votre iPhone."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configura prima il fornitore di dati del glucosio selezionato sul tuo iPhone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まずiPhoneで選択したグルコースデータの提供元を設定してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stel eerst de geselecteerde glucoseprovider in op je iPhone."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najpierw skonfiguruj wybranego dostawcę danych glukozy na iPhonie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сначала настройте выбранный источник данных глюкозы на iPhone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先在iPhone上设置所选的葡萄糖数据提供方。"
+          }
+        }
+      }
     },
     "Settings" : {
       "localizations" : {
@@ -26547,66 +27891,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "以传感器佩戴者身份登录"
-          }
-        }
-      }
-    },
-    "Sign in with the LibreView account used by the app above and tap Get Account ID to fill it in. The receiver ID is derived from it, so it has to be the account that sensor belongs to." : {
-      "comment" : "Footer of the LibreView credentials section. “Get Account ID” is the button directly above — keep the two wordings consistent.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Melde dich mit dem LibreView-Konto an, das von der oben ausgewählten App verwendet wird, und tippe auf „Konto-ID abrufen“, um die ID einzutragen. Die Receiver-ID wird daraus abgeleitet; deshalb muss es das Konto sein, zu dem der Sensor gehört."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inicia sesión con la cuenta de LibreView que usa la app seleccionada arriba y toca «Obtener ID de cuenta» para rellenarla. El ID del receptor se deriva de ella, por lo que debe ser la cuenta a la que pertenece el sensor."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connectez-vous avec le compte LibreView utilisé par l’app sélectionnée ci-dessus, puis touchez « Obtenir l’identifiant du compte » pour le renseigner. L’identifiant du récepteur en est dérivé ; il doit donc s’agir du compte auquel appartient le capteur."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Accedi con l’account LibreView usato dall’app selezionata sopra e tocca “Ottieni ID account” per inserirlo. L’ID ricevitore viene ricavato da questo valore, quindi deve essere l’account a cui appartiene il sensore."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上で選択したアプリで使用しているLibreViewアカウントにサインインし、「アカウントIDを取得」をタップして入力してください。レシーバーIDはこのアカウントIDから算出されるため、センサーが登録されているアカウントである必要があります。"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meld je aan met het LibreView-account dat door de hierboven gekozen app wordt gebruikt en tik op ‘Account-ID ophalen’ om dit in te vullen. De ontvanger-ID wordt hiervan afgeleid, dus dit moet het account zijn waartoe de sensor behoort."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zaloguj się na konto LibreView używane przez wybraną powyżej aplikację i stuknij „Pobierz identyfikator konta”, aby go uzupełnić. Na jego podstawie wyliczany jest identyfikator odbiornika, dlatego musi to być konto, do którego należy sensor."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Войдите в учётную запись LibreView, используемую выбранным выше приложением, и нажмите «Получить идентификатор учётной записи», чтобы заполнить это поле. Из него вычисляется идентификатор приёмника, поэтому это должна быть учётная запись, к которой привязан сенсор."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使用上方所选 App 使用的 LibreView 账户登录，然后轻点“获取账户ID”自动填入。接收器 ID 由此计算得出，因此必须使用此传感器所属的账户。"
           }
         }
       }
@@ -27248,10 +28532,122 @@
       }
     },
     "Stair Climbing" : {
-      "comment" : "Workout activity choice on Apple Watch."
+      "comment" : "Workout activity choice on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Treppensteigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subir escaleras"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Montée d’escaliers"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salire le scale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "階段昇降"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Traplopen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wchodzenie po schodach"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подъём по лестнице"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "爬楼梯"
+          }
+        }
+      }
     },
     "Stairs" : {
-      "comment" : "Short Apple Watch label for a stair-climbing workout."
+      "comment" : "Short Apple Watch label for a stair-climbing workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Treppen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escaleras"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escaliers"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "階段"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trappen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schody"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лестница"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "楼梯"
+          }
+        }
+      }
     },
     "Start" : {
       "comment" : "Starts the selected workout on Apple Watch.",
@@ -27664,10 +29060,122 @@
       }
     },
     "Strength" : {
-      "comment" : "Short Apple Watch label for a functional strength workout."
+      "comment" : "Short Apple Watch label for a functional strength workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kraft"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuerza"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renforcement"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forza"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筋力"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kracht"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siła"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сила"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "力量"
+          }
+        }
+      }
     },
     "Strength Training" : {
-      "comment" : "Workout activity choice on Apple Watch."
+      "comment" : "Workout activity choice on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Krafttraining"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrenamiento de fuerza"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Musculation"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allenamento di forza"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筋力トレーニング"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Krachttraining"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trening siłowy"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Силовая тренировка"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "力量训练"
+          }
+        }
+      }
     },
     "Stuck glucose evidence" : {
       "comment" : "A label displayed above compact diagnostic evidence for suspected stuck-glucose episodes.",
@@ -28018,7 +29526,63 @@
       }
     },
     "Take Sensor Back" : {
-      "comment" : "Button that starts moving the Libre 3 sensor connection from Apple Watch back to iPhone.\nConfirms moving the Libre 3 sensor connection from Apple Watch back to iPhone without ending the workout.\nTitle of the iPhone confirmation shown before reclaiming the Libre 3 sensor from an Apple Watch workout."
+      "comment" : "Button that starts moving the Libre 3 sensor connection from Apple Watch back to iPhone.\nConfirms moving the Libre 3 sensor connection from Apple Watch back to iPhone without ending the workout.\nTitle of the iPhone confirmation shown before reclaiming the Libre 3 sensor from an Apple Watch workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor zurückholen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recuperar sensor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Récupérer le capteur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riprendi il sensore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサー接続を戻す"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor terugnemen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przejmij sensor"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернуть сенсор"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收回传感器连接"
+          }
+        }
+      }
     },
     "Tap on circular watch complication: updates glucose value" : {
       "localizations" : {
@@ -28486,13 +30050,181 @@
       }
     },
     "The Libre 3 sensor has expired." : {
-      "comment" : "Workout start failure because the paired sensor is past its wear duration."
+      "comment" : "Workout start failure because the paired sensor is past its wear duration.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Laufzeit des Libre 3-Sensors ist abgelaufen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El sensor Libre 3 ha caducado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le capteur Libre 3 a expiré."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il sensore Libre 3 è scaduto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre 3センサーの使用期限が切れています。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Libre 3-sensor is verlopen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czas użytkowania sensora Libre 3 dobiegł końca."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Срок службы сенсора Libre 3 истёк."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre 3传感器已到期。"
+          }
+        }
+      }
     },
     "The Libre 3 sensor is still warming up." : {
-      "comment" : "Workout start failure because the paired sensor has not finished warming up."
+      "comment" : "Workout start failure because the paired sensor has not finished warming up.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Libre 3-Sensor befindet sich noch in der Aufwärmphase."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El sensor Libre 3 aún está en fase de calentamiento."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le capteur Libre 3 est encore en cours de préchauffage."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il sensore Libre 3 è ancora in fase di riscaldamento."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre 3センサーはまだウォームアップ中です。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Libre 3-sensor is nog aan het opwarmen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor Libre 3 jest nadal w fazie rozgrzewania."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сенсор Libre 3 ещё прогревается."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre 3传感器仍在预热。"
+          }
+        }
+      }
     },
     "The Libre 3 sensor setup has not reached this Apple Watch yet." : {
-      "comment" : "Workout start failure when direct-sensor credentials have not been provisioned to Apple Watch."
+      "comment" : "Workout start failure when direct-sensor credentials have not been provisioned to Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Einrichtung des Libre 3-Sensors wurde noch nicht auf diese Apple Watch übertragen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuración del sensor Libre 3 aún no se ha transferido a este Apple Watch."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuration du capteur Libre 3 n’a pas encore été transférée à cette Apple Watch."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configurazione del sensore Libre 3 non è ancora stata trasferita a questo Apple Watch."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre 3センサーの設定はまだこのApple Watchに転送されていません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De configuratie van de Libre 3-sensor is nog niet overgedragen naar deze Apple Watch."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfiguracja sensora Libre 3 nie została jeszcze przesłana na ten Apple Watch."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки сенсора Libre 3 ещё не переданы на эти Apple Watch."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre 3传感器设置尚未传输到此Apple Watch。"
+          }
+        }
+      }
     },
     "The Nightscout configuration could not be removed." : {
       "comment" : "Error shown when removing the saved Nightscout configuration fails.",
@@ -29620,7 +31352,63 @@
       }
     },
     "This moves Libre 3 readings back to this iPhone. It does not end the workout. End the workout separately on Apple Watch." : {
-      "comment" : "Explains that reclaiming the Libre 3 sensor on iPhone does not stop the separate HealthKit workout running on Apple Watch."
+      "comment" : "Explains that reclaiming the Libre 3 sensor on iPhone does not stop the separate HealthKit workout running on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dadurch werden Libre 3-Messwerte wieder auf diesem iPhone empfangen. Das Training wird dabei nicht beendet. Beende das Training separat auf der Apple Watch."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto hace que las lecturas de Libre 3 vuelvan a recibirse en este iPhone. No finaliza el entrenamiento. Finaliza el entrenamiento por separado en el Apple Watch."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les mesures Libre 3 seront à nouveau reçues sur cet iPhone. Cela ne met pas fin à l’entraînement. Terminez l’entraînement séparément sur l’Apple Watch."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le letture di Libre 3 verranno nuovamente ricevute su questo iPhone. L’allenamento non viene terminato. Termina l’allenamento separatamente su Apple Watch."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre 3の測定値の受信先をこのiPhoneに戻します。ワークアウトは終了しません。Apple Watchで別途ワークアウトを終了してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hierdoor worden Libre 3-metingen weer op deze iPhone ontvangen. De training wordt niet beëindigd. Beëindig de training apart op de Apple Watch."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odczyty Libre 3 będą ponownie odbierane na tym iPhonie. Nie zakończy to treningu. Zakończ trening osobno na Apple Watch."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показания Libre 3 снова будут поступать на этот iPhone. Тренировка при этом не завершится. Завершите её отдельно на Apple Watch."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这会将Libre 3读数的接收设备切换回此iPhone，但不会结束体能训练。请在Apple Watch上单独结束体能训练。"
+          }
+        }
+      }
     },
     "This sensor has expired." : {
       "comment" : "Text displayed when a sensor is expired.",
@@ -30695,6 +32483,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "尝试登录错误的区域服务器。请联系客服支持。"
+          }
+        }
+      }
+    },
+    "Turn Bluetooth off and on in Settings on Apple Watch to reset. Tip: Airplane Mode does this faster if it is set to turn off Bluetooth." : {
+      "comment" : "Body of an Apple Watch workout notification. The watch only reconnects to the glucose sensor at close range after repeated connection losses; switching Bluetooth off and on in the watch's own Settings app clears that. The action comes first on purpose. Use the system's names for Bluetooth, Settings and Airplane Mode.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte Bluetooth in den Einstellungen auf der Apple Watch aus und wieder ein, um die Einschränkung zurückzusetzen. Tipp: Mit dem Flugmodus geht das schneller, wenn er auch Bluetooth ausschaltet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactiva y vuelve a activar Bluetooth en Ajustes del Apple Watch para eliminar la limitación. Consejo: El modo Avión lo hace más rápido si está configurado para desactivar Bluetooth."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactivez puis réactivez Bluetooth dans Réglages sur l’Apple Watch pour supprimer la limitation. Astuce : Le mode Avion permet de le faire plus vite s’il est configuré pour désactiver Bluetooth."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disattiva e riattiva il Bluetooth in Impostazioni su Apple Watch per rimuovere la limitazione. Suggerimento: Uso in aereo è più rapido se è impostato per disattivare il Bluetooth."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watchの「設定」でBluetoothを一度オフにしてからオンにすると、制限が解除されます。ヒント：機内モードでBluetoothもオフになるように設定しておくと、よりすばやく操作できます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schakel Bluetooth uit en weer in via Instellingen op de Apple Watch om de beperking op te heffen. Tip: Met de vliegtuigmodus gaat dit sneller als deze is ingesteld om Bluetooth uit te schakelen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyłącz i ponownie włącz Bluetooth w Ustawieniach na Apple Watch, aby usunąć ograniczenie. Wskazówka: Tryb Samolot pozwala zrobić to szybciej, jeśli jest ustawiony tak, aby wyłączać Bluetooth."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выключите и снова включите Bluetooth в «Настройках» на Apple Watch, чтобы снять ограничение. Совет: Это можно сделать быстрее с помощью авиарежима, если он настроен на отключение Bluetooth."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Apple Watch 的“设置”中关闭再打开蓝牙以解除限制。提示：如果已设定飞行模式同时关闭蓝牙，切换飞行模式会更快捷。"
           }
         }
       }
@@ -32175,7 +34022,63 @@
       }
     },
     "Waiting for the Libre 3 sensor status from your iPhone." : {
-      "comment" : "Workout start failure when Apple Watch cannot yet determine the sensor warm-up or expiry state."
+      "comment" : "Workout start failure when Apple Watch cannot yet determine the sensor warm-up or expiry state.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warte auf den Status des Libre 3-Sensors von deinem iPhone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando el estado del sensor Libre 3 desde tu iPhone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente de l’état du capteur Libre 3 envoyé par votre iPhone."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa dello stato del sensore Libre 3 dal tuo iPhone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhoneからのLibre 3センサーの状態を待っています。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachten op de status van de Libre 3-sensor van je iPhone."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oczekiwanie na status sensora Libre 3 z iPhone’a."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ожидание статуса сенсора Libre 3 с iPhone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待iPhone发送Libre 3传感器状态。"
+          }
+        }
+      }
     },
     "Waiting to retry after a network or server error." : {
       "comment" : "Nightscout status shown while an upload waits for another retry.",
@@ -32237,7 +34140,63 @@
       }
     },
     "Walking" : {
-      "comment" : "Workout activity choice on Apple Watch."
+      "comment" : "Workout activity choice on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gehen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caminar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marche"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camminata"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウォーキング"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wandelen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marsz"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ходьба"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "步行"
+          }
+        }
+      }
     },
     "Warm-up" : {
       "comment" : "A label for the warm-up time of a sensor.",
@@ -32535,6 +34494,65 @@
         }
       }
     },
+    "Watch placement" : {
+      "comment" : "Heading for advice about wearing Apple Watch near the Libre 3 sensor.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Position der Watch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dónde llevar el reloj"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Position de la montre"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posizione dell’orologio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watchの装着位置"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaatsing van de Watch"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umiejscowienie zegarka"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расположение часов"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手表佩戴位置"
+          }
+        }
+      }
+    },
     "Watch revision" : {
       "comment" : "Label for the Libre 3 provisioning revision acknowledged as installed on Apple Watch."
     },
@@ -32771,7 +34789,7 @@
       }
     },
     "Wear the watch on the arm closest to the sensor. Otherwise the signal has to cross your body, and reconnecting can take much longer." : {
-      "comment" : "Placement advice on the Apple Watch workout start screen for direct Libre 3 sensor readings. Body tissue absorbs the 2.4 GHz signal, so a sensor on the opposite arm makes reconnecting slow.",
+      "comment" : "Placement advice in Apple Watch sensor connection help. Body tissue absorbs the signal, so a sensor on the opposite arm makes reconnecting slow.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -32888,8 +34906,123 @@
         }
       }
     },
+    "Wear your watch on the arm closest to the sensor." : {
+      "comment" : "Short placement reminder on the Apple Watch workout start screen for direct Libre 3 sensor readings.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trage deine Apple Watch an dem Arm, der dem Sensor am nächsten ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lleva el Apple Watch en el brazo más cercano al sensor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Portez votre Apple Watch au bras le plus proche du capteur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indossa Apple Watch sul braccio più vicino al sensore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーに近い側の腕にApple Watchを装着してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draag je Apple Watch om de arm die het dichtst bij de sensor is."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noś Apple Watch na ręce najbliżej sensora."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Носите Apple Watch на руке, ближайшей к сенсору."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请将 Apple Watch 戴在最靠近传感器一侧的手臂上。"
+          }
+        }
+      }
+    },
     "Weights" : {
-      "comment" : "Short Apple Watch label for a traditional strength workout."
+      "comment" : "Short Apple Watch label for a traditional strength workout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gewichte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pesas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poids"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pesi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウェイト"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gewichten"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciężary"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отягощения"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "负重"
+          }
+        }
+      }
     },
     "Welcome" : {
       "localizations" : {
@@ -33343,10 +35476,122 @@
       }
     },
     "Workout permission was not granted." : {
-      "comment" : "Workout start failure when HealthKit permission cannot be obtained."
+      "comment" : "Workout start failure when HealthKit permission cannot be obtained.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Berechtigung für Training wurde nicht erteilt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se concedió permiso para el entrenamiento."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’autorisation pour l’entraînement n’a pas été accordée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il permesso per l’allenamento non è stato concesso."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウトの許可が付与されていません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er is geen toestemming voor de training verleend."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udzielono uprawnień do treningu."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешение на тренировку не предоставлено."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未授予体能训练权限。"
+          }
+        }
+      }
     },
     "Workout running on Apple Watch" : {
-      "comment" : "Phone Home overlay title shown while an Apple Watch workout owns the Libre 3 sensor connection."
+      "comment" : "Phone Home overlay title shown while an Apple Watch workout owns the Libre 3 sensor connection.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Training läuft auf Apple Watch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrenamiento en curso en el Apple Watch"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entraînement en cours sur l’Apple Watch"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allenamento in corso su Apple Watch"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watchでワークアウト中"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Training actief op Apple Watch"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trening trwa na Apple Watch"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тренировка идёт на Apple Watch"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch正在进行体能训练"
+          }
+        }
+      }
     },
     "Workout started." : {
       "comment" : "Confirmation after an Apple Watch workout starts."
@@ -33536,7 +35781,63 @@
       }
     },
     "Yoga" : {
-      "comment" : "Workout activity choice on Apple Watch."
+      "comment" : "Workout activity choice on Apple Watch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yoga"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yoga"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yoga"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yoga"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ヨガ"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yoga"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Joga"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Йога"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "瑜伽"
+          }
+        }
+      }
     },
     "You can change this later in Settings." : {
       "comment" : "A description of the picker's footer.",
@@ -34307,7 +36608,63 @@
       }
     },
     "Your workout alert level is %@." : {
-      "comment" : "Body of a low-glucose workout notification. The value is the user's workout alert threshold with its glucose unit."
+      "comment" : "Body of a low-glucose workout notification. The value is the user's workout alert threshold with its glucose unit.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Warnschwelle beim Training liegt bei %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu umbral de alerta durante el entrenamiento es %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre seuil d’alerte pendant l’entraînement est de %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La tua soglia di avviso durante l’allenamento è %@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークアウト中の通知しきい値は%@です。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je waarschuwingsdrempel tijdens de training is %@."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twój próg alertu podczas treningu wynosi %@."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш порог оповещения во время тренировки — %@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "体能训练期间的提醒阈值为%@。"
+          }
+        }
+      }
     },
     "Zero disables the correction. Changing this value does not alter readings already stored in the graph." : {
       "comment" : "A description of the offset correction.",
