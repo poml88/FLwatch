@@ -439,7 +439,7 @@ struct Libre3ReadingStatus: Equatable {
 struct Libre3StuckGlucoseTracker {
     /// Advancing repeats required before an episode is reported. Five means six
     /// consecutive one-minute readings held the same value over a five-minute span.
-    static let episodeThreshold = 5
+    static let episodeThreshold = 12
 
     enum EndReason: String, Equatable {
         case valueChanged
