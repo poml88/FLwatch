@@ -23,10 +23,8 @@
 			<string>ef el wotsch</string>
 		</dict>
 	</array>
-	<key>UIBackgroundModes</key>
-	<array>
-        <string>bluetooth-central</string>
-    </array>
+    <key>UIBackgroundModes</key>
+    <array/>
 	<key>WKBackgroundModes</key>
 	<array>
 		<string>workout-processing</string>
