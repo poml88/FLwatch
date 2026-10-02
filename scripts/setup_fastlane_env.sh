@@ -2,6 +2,26 @@
 
 set -euo pipefail
 
+if [[ "${1:-}" == "--help" ]]; then
+  cat <<'HELP'
+Usage: ./scripts/setup_fastlane_env.sh [--help]
+
+Interactively configure Fastlane authentication and external TestFlight groups.
+This setup script does not run a Fastlane lane, build, or upload anything.
+
+Prompts for the App Store Connect API key ID, issuer ID, downloaded .p8 key
+file path, and comma-separated external TestFlight group names (default:
+External). Existing configuration values are offered as prompt defaults.
+
+Checks that the key file exists, then writes the four settings to
+.env.fastlane.local in the repository root, replacing that file's contents.
+The private key itself remains in the .p8 file; only its path is saved.
+
+--help prints this description and exits without prompting or writing files.
+HELP
+  exit 0
+fi
+
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 env_file="$repo_root/.env.fastlane.local"
 

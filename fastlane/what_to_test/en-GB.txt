@@ -1,2 +1,2 @@
-* better carplay implementation. alterts now also on carplay.
-* warning about LLU 5 API
+* When sending feedback via TestFlight, add some contact of your's in case you want a reply. Otherwise it is anonymous.
+* Adds a notification that warns about the direct-to-watch reconnect gate.

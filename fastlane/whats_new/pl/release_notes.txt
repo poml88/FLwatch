@@ -1,2 +1,3 @@
 * Wypróbuj nowy tryb treningu FLwatch na Apple Watch. Monitoruj poziom glukozy, trend, ostatnią zmianę i wykres wraz z informacjami o treningu. Możesz także skonfigurować alerty niskiego poziomu glukozy, szybkiego spadku oraz braku odczytów.
 * Jeśli korzystasz z Libre 3 lub Libre 3+ przez bezpośrednie połączenie Bluetooth, Apple Watch może podczas treningu łączyć się bezpośrednio z sensorem. Możesz więc ćwiczyć bez iPhone’a w pobliżu. Aby uzyskać możliwie niezawodne połączenie, noś Apple Watch na ręce najbliżej sensora, najlepiej na tej samej ręce.
+* Ta wersja dodaje powiadomienie na Apple Watch, które ostrzega o ograniczeniach ponownego łączenia z sensorem.

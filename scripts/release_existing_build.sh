@@ -15,6 +15,15 @@ usage() {
 Usage:
   ./scripts/release_existing_build.sh [--submit] [--auto-release] [--build BUILD_NUMBER] [--localized]
 
+Prepare an App Store release using an already uploaded, processed build.
+This lane does not build or upload a binary. It updates What's New on the
+existing editable App Store version using English for every locale by default,
+or all ten language files under fastlane/whats_new/ with --localized.
+
+Update the notes before running. The script waits for Enter (Ctrl-C cancels)
+and uses your configured App Store Connect API key. Submission and automatic
+release are off unless the corresponding options below are supplied.
+
 Options:
   --submit          Submit the selected build for App Store review
   --auto-release    Automatically release after approval

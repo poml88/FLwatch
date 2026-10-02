@@ -2,6 +2,25 @@
 
 set -euo pipefail
 
+if [[ "${1:-}" == "--help" ]]; then
+  cat <<'HELP'
+Usage: ./scripts/upload_whats_new.sh [--localized] [--help]
+
+Upload What's New text to the existing editable App Store version.
+This lane does not build, upload a binary, or submit the app for review.
+
+By default, uploads fastlane/whats_new/en-GB/release_notes.txt.
+With --localized, validates and uploads all ten language files under
+fastlane/whats_new/.
+
+Update the notes before running. The script waits for Enter (Ctrl-C cancels)
+and uses your configured App Store Connect API key for the upload.
+
+--help prints this description and exits without running Fastlane.
+HELP
+  exit 0
+fi
+
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 whats_new_file="$repo_root/fastlane/whats_new/en-GB/release_notes.txt"
 localized="0"
@@ -12,7 +31,7 @@ if [[ "${1:-}" == "--localized" ]]; then
 fi
 
 if [[ $# -gt 0 ]]; then
-  printf 'Usage: %s [--localized]\n' "$0" >&2
+  printf 'Usage: %s [--localized] [--help]\n' "$0" >&2
   exit 1
 fi
 
