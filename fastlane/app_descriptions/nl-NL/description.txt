@@ -1,12 +1,14 @@
-FLwatch toont glucosemetingen van Abbott FreeStyle Libre 2-, Libre 3- en Libre 3+-sensoren en van Dexcom G6 / G7 / ONE+-sensoren op je iPhone en Apple Watch.
+FLwatch toont glucosemetingen van Abbott FreeStyle Libre 2 / 3 / 3+ en Dexcom G6 / G7 / ONE+ op iPhone en Apple Watch.
 
-Glucosegegevens kunnen worden ontvangen via de LibreLinkUp-cloud, Dexcom Share of een rechtstreekse Bluetooth-verbinding met Libre 3- en Libre 3+-sensoren.
+Ontvang glucosegegevens via de LibreLinkUp-cloud, Dexcom Share of rechtstreeks via Bluetooth van Libre 3 en Libre 3+.
 
-Met FLwatch kun je ook insulinedoses vastleggen. Aparte grafieken tonen de actieve insuline (Insulin on Board, IOB) en insulineactiviteit, zodat je beter inzicht krijgt in de samenhang tussen insuline en glucose.
+De trainingsmodus werkt met alle ondersteunde CGM-aanbieders. Volg je glucosegrafiek tijdens het sporten en stel een aparte trainingsmelding voor lage glucose in om dalingen op te merken.
 
-Glucosemetingen en vastgelegde insulinedoses kunnen naar de Gezondheid-app worden geëxporteerd. Bij een rechtstreekse Bluetooth-verbinding met Libre 3 of Libre 3+ kun je ze ook naar je eigen Nightscout-server exporteren.
+Met Libre 3 en Libre 3+ kun je je iPhone tijdens het sporten achterlaten. Start een training in FLwatch om sensormetingen via Bluetooth rechtstreeks op je Apple Watch te ontvangen.
 
-Dankzij native Apple Watch-ondersteuning, widgets, Live Activiteiten en instelbare glucose- en sensormeldingen blijven je glucosegegevens gemakkelijk zichtbaar op je Apple apparaten en ondersteunen ze je bij je dagelijkse diabetesmanagement.
+Leg insulinedoses vast en bekijk grafieken van actieve insuline en insulineactiviteit.
+
+Apple Watch, widgets, Live Activiteiten en instelbare glucose- en sensormeldingen maken je gegevens gemakkelijk toegankelijk.
 
 FLwatch is gratis en open source.
 
@@ -14,7 +16,7 @@ FUNCTIES
 
 Glucosemonitoring
 • Bloedglucosegrafiek op iPhone en Apple Watch
-• Interactieve grafiek op iPhone: tik om afzonderlijke metingen te bekijken
+• Interactieve iPhone-grafiek: tik op afzonderlijke metingen
 • Optionele kalibratie-offset voor rechtstreeks verbonden Libre 3- en Libre 3+-sensoren
 • Vraag je huidige glucose en trend op met Opdrachten of Siri
 • Optionele modus die het scherm aanhoudt voor snel aflezen
@@ -26,13 +28,13 @@ CGM-aanbieders
 
 Meldingen
 • Instelbare meldingen voor lage en hoge glucose op iPhone, Apple Watch en CarPlay
-• Extra meldingen voor kritiek lage glucose en signaalverlies bij rechtstreeks verbonden Libre 3- en Libre 3+-sensoren
+• Extra meldingen voor kritisch lage glucose en signaalverlies bij rechtstreeks verbonden Libre 3- en Libre 3+-sensoren
 • Opwarmstatus, resterende sensorlevensduur en meldingen over verlopen of te vervangen Libre 3- en Libre 3+-sensoren
 • Optionele kritieke meldingen en afzonderlijke Niet storen-tijden
 
 Insuline bijhouden
 • Leg insulinedoses vast op iPhone, of met Opdrachten en Siri op iPhone en Apple Watch
-• Eenvoudige koolhydraat- en insulinecalculator op basis van portiegrootte en een instelbare insuline-koolhydraatverhouding
+• Eenvoudige koolhydraat- en insulinecalculator met portiegrootte en instelbare insuline-koolhydraatverhouding
 • Berekening van actieve insuline (IOB)
 • Ondersteuning voor snelwerkende en ultrasnelwerkende bolusinsuline
 • Grafiek van actieve insuline
@@ -48,17 +50,21 @@ Widgets, Live Activiteiten en CarPlay
 
 Apple Watch
 • Native watchOS-app
+• Trainingsmodus met glucosemonitoring en instelbare meldingen voor lage glucose voor alle ondersteunde CGM-aanbieders
+• Rechtstreekse Bluetooth-metingen van Libre 3 en Libre 3+ op het horloge tijdens trainingen
 • Een ruime keuze aan widgets en wijzerplaatcomplicaties
 • Glucosegrafiek rechtstreeks op het horloge
-• Vanaf watchOS 11 kunnen Live Activiteiten naar de Slimme stapel worden gespiegeld
+• Vanaf watchOS 11: Live Activiteiten gespiegeld naar de Slimme stapel
+
+Draag het horloge op de arm die het dichtst bij de sensor is voor de beste rechtstreekse verbinding. De verbinding kan toch wegvallen en de metingen onderbreken.
 
 Gegevens delen
 • Exporteer glucosemetingen en vastgelegde insulinedoses naar de Gezondheid-app
-• Exporteer bij een rechtstreekse Bluetooth-verbinding met Libre 3 of Libre 3+ glucosemetingen en vastgelegde insulinedoses naar je eigen Nightscout-server
+• Exporteer bij een directe Bluetooth-verbinding met Libre 3 / 3+ glucosemetingen en vastgelegde insulinedoses naar je eigen Nightscout-server
 
 MEER INFORMATIE
 
-Ga voor documentatie, functiedetails en de open-sourcecode naar:
+Documentatie, functies en open-sourcecode:
 https://flwatch.app/
 
 DISCLAIMER

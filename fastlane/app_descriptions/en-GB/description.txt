@@ -2,11 +2,13 @@ FLwatch displays blood glucose readings from Abbott FreeStyle Libre 2, Libre 3 a
 
 Glucose data can be received through the LibreLinkUp cloud, Dexcom Share, or a direct Bluetooth connection to Libre 3 and Libre 3+ sensors.
 
-FLwatch also lets you record insulin doses and visualizes insulin-on-board and insulin activity with dedicated graphs, helping you better understand how insulin and glucose levels interact.
+Workout mode is available with every supported CGM provider. Follow your glucose graph during exercise and set a workout-specific low-glucose alert to help you notice when your glucose falls.
 
-Glucose readings and recorded insulin doses can be exported to Apple Health. When using a direct Libre 3 or Libre 3+ Bluetooth connection, they can also be exported to your own Nightscout server.
+With Libre 3 and Libre 3+, direct-to-watch Bluetooth support lets you leave your iPhone behind during exercise. Start a workout in FLwatch to receive sensor readings directly on your Apple Watch.
 
-With native Apple Watch support, widgets, Live Activities, and configurable glucose and sensor alerts, your glucose data is always visible across your Apple devices, helping support daily diabetes management.
+Record insulin doses and view insulin-on-board and insulin activity graphs.
+
+With Apple Watch support, widgets, Live Activities, and configurable glucose and sensor alerts, your glucose data is easily accessible across your Apple devices.
 
 FLwatch is free and open source.
 
@@ -48,9 +50,13 @@ Widgets, Live Activities and CarPlay
 
 Apple Watch
 • Native watchOS app
+• Workout mode with glucose monitoring and configurable low-glucose alerts for all supported CGM providers
+• Direct-to-watch Bluetooth readings from Libre 3 and Libre 3+ during workouts
 • A wide range of widgets and watch face complications
 • Glucose graph directly on the watch
 • On watchOS 11 or later, Live Activities can be mirrored to the Smart Stack
+
+For the best direct-to-watch connection, wear your watch on the arm closest to the sensor. Connection drops can still occur and interrupt readings.
 
 Data Sharing
 • Export glucose readings and recorded insulin doses to Apple Health
@@ -72,3 +78,4 @@ TRADEMARK NOTICE
 All product names, trademarks, and registered trademarks are the property of their respective owners. Their use here is for identification purposes only and does not imply affiliation with or endorsement by the trademark holders.
 
 This app is not affiliated with or endorsed by Abbott Diabetes Care Inc. or Dexcom Inc.
+

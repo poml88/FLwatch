@@ -1,12 +1,14 @@
-FLwatch zeigt Blutzuckerwerte von Abbott FreeStyle Libre 2-, Libre 3- und Libre 3 Plus-Sensoren sowie von Dexcom G6 / G7 / ONE+ auf iPhone und Apple Watch an.
+FLwatch zeigt auf iPhone und Apple Watch Blutzuckerwerte von Abbott FreeStyle Libre 2 / 3 / 3+ und Dexcom G6 / G7 / ONE+ an.
 
-Die Glukosedaten können über die LibreLinkUp-Cloud, Dexcom Share oder eine direkte Bluetooth-Verbindung zu Libre 3- und Libre 3 Plus-Sensoren empfangen werden.
+Empfange Glukosedaten über die LibreLinkUp-Cloud, Dexcom Share oder direkt per Bluetooth von Libre 3 und Libre 3+.
 
-Mit FLwatch kannst du außerdem Insulindosen erfassen. Diagramme für aktives Insulin (Insulin on Board, IOB) und Insulinaktivität helfen dir, das Zusammenspiel von Insulin und Glukose besser zu verstehen.
+Der Trainingsmodus ist für alle unterstützten CGM-Anbieter verfügbar. Verfolge dein Glukosediagramm beim Sport und stelle einen Trainingsalarm für niedrige Glukose ein, um sinkende Werte zu erkennen.
 
-Glukosewerte und erfasste Insulindosen können nach Apple Health exportiert werden. Bei einer direkten Bluetooth-Verbindung mit einem Libre 3- oder Libre 3 Plus-Sensor ist auch der Export auf deinen eigenen Nightscout-Server möglich.
+Mit Libre 3 / 3+ kannst du dein iPhone beim Sport zurücklassen. Starte ein Training in FLwatch, um Sensorwerte per Bluetooth direkt auf deiner Apple Watch zu empfangen.
 
-Mit Apple Watch-Unterstützung, Widgets, Live Activities und konfigurierbaren Alarmen bleiben deine Glukosedaten auf deinen Apple-Geräten gut im Blick.
+Erfasse Insulindosen und sieh dir Diagramme für aktives Insulin und Insulinaktivität an.
+
+Apple Watch, Widgets, Live Activities und einstellbare Glukose- und Sensoralarme machen deine Daten leicht zugänglich.
 
 FLwatch ist kostenlos und Open Source.
 
@@ -14,25 +16,25 @@ FUNKTIONEN
 
 Glukoseüberwachung
 • Blutzuckerdiagramm auf iPhone und Apple Watch
-• Interaktives Diagramm auf dem iPhone – tippe auf einzelne Messwerte, um Details anzuzeigen
-• Optionaler Kalibrierungs-Offset für direkt verbundene Libre 3- und Libre 3 Plus-Sensoren
+• Interaktives iPhone-Diagramm: einzelne Werte antippen
+• Optionaler Kalibrierungs-Offset für direkt verbundene Libre 3- und Libre 3+-Sensoren
 • Aktuellen Glukosewert und Trend über Kurzbefehle oder Siri abfragen
-• Optionaler Modus mit dauerhaft eingeschaltetem Display für einen schnellen Blick
+• Optional dauerhaft eingeschaltetes Display zum schnellen Ablesen
 
 CGM-Anbieter
-• Direkte Bluetooth-Verbindung zu Libre 3- und Libre 3 Plus-Sensoren
+• Direkte Bluetooth-Verbindung zu Libre 3- und Libre 3+-Sensoren
 • LibreLinkUp-Cloud
 • Dexcom Share
 
 Alarme
 • Konfigurierbare Alarme bei niedriger und hoher Glukose auf iPhone, Apple Watch und CarPlay
-• Zusätzliche Alarme bei kritisch niedriger Glukose und Signalverlust für direkt verbundene Libre 3- und Libre 3 Plus-Sensoren
-• Aufwärmstatus, verbleibende Sensorlaufzeit sowie Ablauf- und Austauschhinweise für Libre 3 und Libre 3 Plus
+• Zusätzliche Alarme bei kritisch niedriger Glukose und Signalverlust für Libre 3 / 3+ mit Direktverbindung
+• Aufwärmstatus, verbleibende Sensorlaufzeit sowie Ablauf- und Austauschhinweise für Libre 3 und Libre 3+
 • Optionale kritische Zustellung und individuelle „Nicht stören“-Zeiten
 
 Insulinprotokoll
 • Insulindosen auf dem iPhone oder mit Kurzbefehlen und Siri auf iPhone und Apple Watch erfassen
-• Einfacher Kohlenhydrat- und Insulinrechner anhand von Portionsgröße und einstellbarem Insulin-Kohlenhydrat-Verhältnis
+• Kohlenhydrat- und Insulinrechner mit Portionsgröße und einstellbarem Insulin-Kohlenhydrat-Verhältnis
 • Berechnung des aktiven Insulins (IOB)
 • Unterstützung für schnell und ultraschnell wirkende Bolusinsuline
 • Diagramm für aktives Insulin
@@ -48,17 +50,21 @@ Widgets, Live Activities und CarPlay
 
 Apple Watch
 • Native watchOS-App
+• Trainingsmodus für alle unterstützten CGM-Anbieter mit Glukoseüberwachung und einstellbaren Alarmen bei niedriger Glukose
+• Direkte Libre 3 / 3+-Sensorwerte per Bluetooth auf der Watch beim Training
 • Viele Widgets und Komplikationen für Zifferblätter
 • Glukosediagramm direkt auf der Watch
-• Ab watchOS 11 können Live Activities in den Smart Stapel gespiegelt werden
+• Ab watchOS 11 können Live Activities in den Smart-Stapel gespiegelt werden
+
+Trage die Watch für die beste Sensorverbindung am Arm, der dem Sensor am nächsten ist. Verbindungsabbrüche können die Messwertanzeige dennoch unterbrechen.
 
 Datenfreigabe
 • Glukosewerte und erfasste Insulindosen nach Apple Health exportieren
-• Bei direkter Bluetooth-Verbindung mit Libre 3 oder Libre 3 Plus Glukosewerte und Insulindosen auf deinen Nightscout-Server exportieren
+• Bei direkter Bluetooth-Verbindung mit Libre 3 / 3+ Glukosewerte und Insulindosen auf deinen Nightscout-Server exportieren
 
 WEITERE INFORMATIONEN
 
-Dokumentation, Funktionsdetails und den Open-Source-Code findest du unter:
+Dokumentation, Funktionen und Open-Source-Code:
 https://flwatch.app/
 
 HAFTUNGSAUSSCHLUSS

@@ -1,12 +1,14 @@
-FLwatch mostra su iPhone e Apple Watch i valori della glicemia rilevati dai sensori Abbott FreeStyle Libre 2, Libre 3 e Libre 3+, oltre che dai sensori Dexcom G6 / G7 / ONE+.
+FLwatch mostra su iPhone e Apple Watch la glicemia dei sensori Abbott FreeStyle Libre 2 / 3 / 3+ e Dexcom G6 / G7 / ONE+.
 
-I dati della glicemia possono essere ricevuti tramite il cloud LibreLinkUp, Dexcom Share oppure con una connessione Bluetooth diretta ai sensori Libre 3 e Libre 3+.
+Ricevi la glicemia dal cloud LibreLinkUp, da Dexcom Share o tramite Bluetooth diretto con Libre 3 e Libre 3+.
 
-FLwatch permette anche di registrare le dosi di insulina. Grafici dedicati mostrano l’insulina attiva (Insulin on Board, IOB) e l’attività insulinica, aiutandoti a capire meglio l’interazione tra insulina e glicemia.
+La modalità allenamento è disponibile con tutti i fornitori CGM supportati. Segui il grafico durante l’esercizio e imposta un avviso di glicemia bassa dedicato per rilevare i cali.
 
-I valori della glicemia e le dosi di insulina registrate possono essere esportati nell’app Salute. Quando utilizzi una connessione Bluetooth diretta con Libre 3 o Libre 3+, puoi esportarli anche sul tuo server Nightscout.
+Con Libre 3 / 3+, lascia l’iPhone a casa mentre ti alleni. Avvia un allenamento in FLwatch per ricevere i valori del sensore direttamente su Apple Watch via Bluetooth.
 
-Con Apple Watch, widget, Attività in tempo reale e avvisi configurabili, i dati della glicemia restano facilmente accessibili sui tuoi dispositivi Apple.
+Registra le dosi di insulina e consulta i grafici dell’insulina attiva e dell’attività insulinica.
+
+Apple Watch, widget, Attività in tempo reale e avvisi configurabili per glicemia e sensore rendono i tuoi dati facilmente accessibili.
 
 FLwatch è gratuito e open source.
 
@@ -14,10 +16,10 @@ FUNZIONI
 
 Monitoraggio della glicemia
 • Grafico della glicemia su iPhone e Apple Watch
-• Grafico interattivo su iPhone: tocca un valore per visualizzarne i dettagli
-• Offset di calibrazione facoltativo per i sensori Libre 3 e Libre 3+ collegati direttamente
+• Grafico interattivo su iPhone: tocca i valori per consultarli
+• Offset di calibrazione facoltativo per Libre 3 / 3+ con connessione diretta
 • Controlla la glicemia attuale e la tendenza con Comandi Rapidi o Siri
-• Modalità facoltativa con schermo sempre acceso per una consultazione rapida
+• Schermo sempre acceso facoltativo per consultazioni rapide
 
 Fornitori CGM
 • Connessione Bluetooth diretta ai sensori Libre 3 e Libre 3+
@@ -26,39 +28,43 @@ Fornitori CGM
 
 Avvisi
 • Avvisi configurabili per glicemia bassa e alta su iPhone, Apple Watch e CarPlay
-• Avvisi aggiuntivi per glicemia molto bassa e perdita del segnale con sensori Libre 3 e Libre 3+ collegati direttamente
-• Stato di riscaldamento, durata residua del sensore e notifiche di scadenza e sostituzione per Libre 3 e Libre 3+
+• Avvisi di glicemia molto bassa e perdita del segnale per Libre 3 / 3+ con connessione diretta
+• Riscaldamento, durata residua e notifiche di scadenza e sostituzione per Libre 3 / 3+
 • Notifiche critiche facoltative e orari Non disturbare distinti per ogni avviso
 
 Gestione dell’insulina
-• Registra le dosi di insulina su iPhone oppure con Comandi Rapidi e Siri su iPhone e Apple Watch
-• Calcolatore di base per carboidrati e insulina basato sulla porzione e su un rapporto insulina/carboidrati configurabile
+• Registra dosi di insulina su iPhone o con Comandi Rapidi e Siri su iPhone e Apple Watch
+• Calcolatore di base di carboidrati e insulina per porzione e rapporto insulina/carboidrati configurabile
 • Calcolo dell’insulina attiva (IOB)
 • Supporto per insuline prandiali ad azione rapida e ultrarapida
 • Grafico dell’insulina attiva
 • Grafico dell’attività insulinica
 
 Widget, Attività in tempo reale e CarPlay
-• Widget per la schermata Home di iOS, con e senza grafici
-• Widget per la schermata di blocco
-• Widget StandBy per la visualizzazione accanto al letto
+• Widget Home di iOS con e senza grafici
+• Widget della schermata di blocco
+• Widget StandBy per la vista dal letto
 • Attività in tempo reale per controllare rapidamente la glicemia
 • Vista CarPlay con glicemia attuale e IOB
 • Grafici della glicemia in CarPlay tramite widget e Attività in tempo reale
 
 Apple Watch
 • App watchOS nativa
-• Numerosi widget e complicazioni per i quadranti
-• Grafico della glicemia direttamente sull’orologio
-• Da watchOS 11, le Attività in tempo reale possono essere duplicate nella Raccolta smart
+• Modalità allenamento con monitoraggio e avvisi di glicemia bassa configurabili per tutti i fornitori CGM supportati
+• Valori Bluetooth diretti da Libre 3 e Libre 3+ sull’orologio durante gli allenamenti
+• Numerosi widget e complicazioni dei quadranti
+• Grafico della glicemia sull’orologio
+• Da watchOS 11, Attività in tempo reale duplicate nella Raccolta smart
+
+Per una migliore connessione diretta al sensore, indossa l’orologio sul braccio più vicino al sensore. Possono comunque verificarsi disconnessioni che interrompono le letture.
 
 Condivisione dei dati
 • Esporta i valori della glicemia e le dosi di insulina registrate nell’app Salute
-• Con Libre 3 o Libre 3+ collegato direttamente, esporta glicemia e dosi di insulina sul tuo server Nightscout
+• Con Libre 3 / 3+ in Bluetooth diretto, esporta glicemia e dosi di insulina sul tuo server Nightscout
 
 ALTRE INFORMAZIONI
 
-Per documentazione, dettagli sulle funzioni e codice open source, visita:
+Documentazione, funzioni e codice open source:
 https://flwatch.app/
 
 AVVERTENZA

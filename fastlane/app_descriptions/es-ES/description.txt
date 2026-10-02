@@ -1,12 +1,14 @@
-FLwatch muestra en tu iPhone y Apple Watch las lecturas de glucosa en sangre de los sensores Abbott FreeStyle Libre 2, Libre 3 y Libre 3+, así como de los sensores Dexcom G6 / G7 / ONE+.
+FLwatch muestra en iPhone y Apple Watch la glucosa de sensores Abbott FreeStyle Libre 2 / 3 / 3+ y Dexcom G6 / G7 / ONE+.
 
-Los datos de glucosa pueden recibirse a través de la nube de LibreLinkUp, Dexcom Share o mediante una conexión Bluetooth directa con sensores Libre 3 y Libre 3+.
+Recibe datos de glucosa mediante la nube de LibreLinkUp, Dexcom Share o Bluetooth directo con Libre 3 y Libre 3+.
 
-FLwatch también permite registrar dosis de insulina. Los gráficos de insulina activa (Insulin on Board, IOB) y actividad te ayudan a entender mejor su relación con la glucosa.
+El modo de entrenamiento admite todos los proveedores de CGM compatibles. Sigue tu gráfico durante el ejercicio y fija una alerta de glucosa baja para el entrenamiento que te ayude a detectar descensos.
 
-Las lecturas de glucosa y las dosis de insulina registradas pueden exportarse a la app Salud. Si utilizas una conexión Bluetooth directa con Libre 3 o Libre 3+, también puedes exportarlas a tu propio servidor Nightscout.
+Con Libre 3 / 3+, haz ejercicio sin llevar tu iPhone. Inicia un entrenamiento en FLwatch para recibir lecturas del sensor directamente en Apple Watch por Bluetooth.
 
-Con Apple Watch, widgets, Actividades en directo y alertas configurables, puedes consultar fácilmente tus datos de glucosa en tus dispositivos Apple.
+Registra dosis de insulina y consulta los gráficos de insulina activa y de actividad de la insulina.
+
+Apple Watch, widgets, Actividades en directo y alertas de glucosa y del sensor configurables facilitan el acceso a tus datos.
 
 FLwatch es gratis y de código abierto.
 
@@ -15,9 +17,9 @@ FUNCIONES
 Monitorización de glucosa
 • Gráfico de glucosa en sangre en iPhone y Apple Watch
 • Gráfico interactivo en iPhone: toca una lectura para ver sus detalles
-• Ajuste de calibración opcional para sensores Libre 3 y Libre 3+ conectados directamente
+• Ajuste de calibración opcional para Libre 3 / 3+ con conexión directa
 • Consulta tu glucosa actual y la tendencia con Atajos o Siri
-• Modo opcional de pantalla siempre encendida para consultas rápidas
+• Pantalla siempre encendida opcional para consultas rápidas
 
 Proveedores de CGM
 • Conexión Bluetooth directa con sensores Libre 3 y Libre 3+
@@ -26,31 +28,35 @@ Proveedores de CGM
 
 Alertas
 • Alertas configurables de glucosa baja y alta en iPhone, Apple Watch y CarPlay
-• Alertas adicionales de glucosa críticamente baja y pérdida de señal para sensores Libre 3 y Libre 3+ conectados directamente
+• Alertas de glucosa críticamente baja y pérdida de señal para Libre 3 / 3+ con conexión directa
 • Calentamiento, vida útil restante y avisos de caducidad y sustitución para Libre 3 y Libre 3+
 • Notificaciones críticas opcionales y horarios individuales de No molestar
 
 Seguimiento de insulina
-• Registra dosis de insulina en el iPhone o con Atajos y Siri en el iPhone y el Apple Watch
-• Calculadora básica de carbohidratos e insulina según la porción y una proporción insulina-carbohidratos configurable
+• Registra dosis de insulina en iPhone o con Atajos y Siri en iPhone y Apple Watch
+• Calculadora básica de carbohidratos e insulina por porción y ratio insulina-carbohidratos ajustable
 • Cálculo de insulina activa (IOB)
 • Compatible con insulinas de bolo de acción rápida y ultrarrápida
 • Gráfico de insulina activa
 • Gráfico de actividad de la insulina
 
 Widgets, Actividades en directo y CarPlay
-• Widgets para la pantalla de inicio de iOS, con y sin gráficos
-• Widgets para la pantalla de bloqueo
+• Widgets de inicio de iOS con y sin gráficos
+• Widgets de la pantalla de bloqueo
 • Widgets para el modo En reposo junto a la cama
-• Actividades en directo para consultar rápidamente la glucosa
+• Actividades en directo para consultar la glucosa rápidamente
 • Vista de CarPlay con la glucosa actual y la IOB
 • Gráficos de glucosa en CarPlay mediante widgets y Actividades en directo
 
 Apple Watch
 • App nativa para watchOS
-• Una amplia variedad de widgets y complicaciones para las esferas
+• Entrenamientos con seguimiento de glucosa y alertas de glucosa baja ajustables para todos los proveedores de CGM compatibles
+• Lecturas directas de Libre 3 / 3+ por Bluetooth en el reloj durante entrenamientos
+• Muchos widgets y complicaciones para las esferas
 • Gráfico de glucosa directamente en el reloj
-• A partir de watchOS 11, las Actividades en directo pueden mostrarse en el Grupo Inteligente
+• Desde watchOS 11, Actividades en directo reflejadas en el Grupo Inteligente
+
+Para mejorar la conexión directa, lleva el reloj en el brazo más cercano al sensor. Aun así, las desconexiones pueden interrumpir las lecturas.
 
 Compartir datos
 • Exporta las lecturas de glucosa y las dosis de insulina registradas a la app Salud
@@ -58,7 +64,7 @@ Compartir datos
 
 MÁS INFORMACIÓN
 
-Encontrarás documentación, detalles de las funciones y el código abierto en:
+Documentación, funciones y código abierto:
 https://flwatch.app/
 
 AVISO
