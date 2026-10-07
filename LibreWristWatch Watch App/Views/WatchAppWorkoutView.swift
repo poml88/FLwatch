@@ -130,6 +130,19 @@ struct WatchAppWorkoutView: View {
         return .red
     }
 
+    /// Read on every TimelineView tick. Trim expired saved drop times locally
+    /// so the glyph hides once the gate window has passed. Read-only: a view
+    /// body must not write the trimmed list back.
+    private func isReconnectGateLikely(at now: Date) -> Bool {
+        guard workoutModeStore.providerKind == .libre3BLE else { return false }
+        var estimate = Libre3ReconnectGateEstimate(
+            sensorID: SharedData.libre3ReconnectGateSensorID,
+            dropTimes: SharedData.libre3ReconnectGateDropTimes
+        )
+        estimate.trim(at: now)
+        return estimate.isGateLikely
+    }
+
     // MARK: - Libre 3 connection status
 
     /// What the workout screen says about the Libre 3 link, plus whether that
@@ -440,6 +453,7 @@ struct WatchAppWorkoutView: View {
             elapsedText: elapsedText(at: now),
             batteryLevel: batteryLevel >= 0 ? Double(batteryLevel) : nil,
             sensorConnectionIndicatorColor: sensorConnectionIndicatorColor,
+            showsReconnectGateGlyph: isReconnectGateLikely(at: now),
             fiveMinuteDeltaText: Self.displaysFiveMinuteDelta
                 ? fiveMinuteDeltaText
                 : nil,
@@ -561,6 +575,7 @@ private struct ActiveWorkoutDisplayValues {
     let elapsedText: String
     let batteryLevel: Double?
     let sensorConnectionIndicatorColor: Color?
+    let showsReconnectGateGlyph: Bool
     let fiveMinuteDeltaText: String?
     let heartRateText: String
     let distanceText: String?
@@ -661,6 +676,16 @@ private struct ActiveWorkoutContent<GraphContent: View>: View {
                 )
 
             HStack(spacing: 4) {
+                if values.showsReconnectGateGlyph {
+                    Image(systemName: "pedestrian.gate.closed")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.orange)
+                        // Unlike the dot, nothing else on this screen states the gate,
+                        // so it needs its own VoiceOver label.
+                        .accessibilityLabel(
+                            Text("Sensor reconnect limited", comment: "Accessibility label for the gate glyph on the Apple Watch workout screen, shown while repeated sensor connection losses likely limit Bluetooth reconnects. Same wording as the notification title.")
+                        )
+                }
                 if let sensorConnectionIndicatorColor = values.sensorConnectionIndicatorColor {
                     Image(systemName: "circle.fill")
                         .font(.system(size: 6))
@@ -1056,6 +1081,7 @@ private struct WorkoutGraphPreview: View {
                     elapsedText: "24:18",
                     batteryLevel: 0.72,
                     sensorConnectionIndicatorColor: .green,
+                    showsReconnectGateGlyph: true,
                     fiveMinuteDeltaText: nil,
                     heartRateText: "138",
                     distanceText: "3.2 km",
