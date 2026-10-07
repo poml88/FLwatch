@@ -8,7 +8,7 @@
 //  `HistoricalReadingPage`s on the `historicData` channel, which the manager's
 //  data-plane state decodes and the mapper folds into the rolling buffer.
 //
-//  This mirrors LibreCRKit's validated harness bootstrap exactly: enable the
+//  This mirrors RoundWhiteDiscKit's validated harness bootstrap exactly: enable the
 //  `historicData` notify, then write an AES-CCM-wrapped
 //  `historicalBackfillGreaterEqual` command (a per-session advancing sequence,
 //  using the `patchControlWrite` packet kind) to `patchControl`.
@@ -19,7 +19,7 @@
 import Foundation
 import CoreBluetooth
 import OSLog
-import LibreCRKit
+import RoundWhiteDiscKit
 
 enum Libre3BackfillImporter {
 

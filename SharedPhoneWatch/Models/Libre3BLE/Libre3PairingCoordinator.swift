@@ -3,7 +3,7 @@
 //  FLwatch
 //
 //  Drives the foreground NFC pairing step for the Libre 3 direct-BLE provider.
-//  Maps the user-chosen `Libre3Mode` to a LibreCRKit `Libre3NFCScanMode`, runs
+//  Maps the user-chosen `Libre3Mode` to a RoundWhiteDiscKit `Libre3NFCScanMode`, runs
 //  the scan (one tap: the reader reads patch info + issues the activation/switch
 //  command in a single session), then persists the resulting PIN + metadata via
 //  `Libre3StateStore`.
@@ -18,7 +18,7 @@
 import Foundation
 import CoreNFC
 import OSLog
-import LibreCRKit
+import RoundWhiteDiscKit
 
 @MainActor
 final class Libre3PairingCoordinator: ObservableObject {
@@ -240,6 +240,9 @@ final class Libre3PairingCoordinator: ObservableObject {
             WatchConnectivityManager.shared.sendSettingsSnapshotToWatch()
 
             Logger.libre3.info("Paired via \(mode.rawValue, privacy: .public): serial=\(result.patchInfo.serialNumber, privacy: .public) fw=\(result.patchInfo.firmwareVersion, privacy: .public) addr=\(activation.bleAddressDisplay, privacy: .private)")
+            // Pairing metadata is non-secret; never include PINs or command payloads.
+            let command = result.commandCode.map { String(format: "0x%02X", $0.rawValue) } ?? "none"
+            Logger.libre3.info("NFC pairing command=\(command, privacy: .public) productType=\(result.patchInfo.productType, privacy: .public) securityVersion=\(result.patchInfo.securityVersion, privacy: .public) region=\(result.patchInfo.region, privacy: .public) generation=\(result.patchInfo.generation, privacy: .public)")
 
             state = .paired(
                 serial: sensorState.serialNumber ?? result.patchInfo.serialNumber,
@@ -263,11 +266,15 @@ final class Libre3PairingCoordinator: ObservableObject {
     }
 
     /// Forget the paired sensor and clear stored credentials.
-    func disconnect() {
+    func disconnect(preserveOtherProviderConnection: Bool = false) {
         WatchConnectivityManager.shared.reclaimLibre3SensorBeforeDisconnectIfNeeded()
         Libre3DirectManager.shared.forgetSensor()
         Libre3StateStore.clear()
-        UserDefaults.group.connected = .disconnected
+        // Launch migration can clear a dormant BLE pairing while a cloud
+        // provider is active; keep that provider's shared connection gate.
+        if !preserveOtherProviderConnection || SharedData.cgmProviderKind == .libre3BLE {
+            UserDefaults.group.connected = .disconnected
+        }
         state = .idle
         // Tell the watch the sensor is gone so its provider-account gate closes
         // (the snapshot now carries a nil libre3Serial).
@@ -284,7 +291,7 @@ final class Libre3PairingCoordinator: ObservableObject {
     /// The Unix second the reader wrote into the activation command — what the
     /// sensor is told its activation moment was, and therefore its t=0.
     ///
-    /// LibreCRKit picks this timestamp itself, immediately before the tag exchange
+    /// RoundWhiteDiscKit picks this timestamp itself, immediately before the tag exchange
     /// (`CoreNFCActivationReader.defaultActivationTimeSeconds`, deliberately one
     /// second back), and surfaces it only as the raw command parameters it echoes
     /// back. Their layout is package API: `NFCActivationCommand.metcrc` builds
@@ -412,9 +419,9 @@ final class Libre3PairingCoordinator: ObservableObject {
 }
 
 extension Libre3NFCPatchInfo {
-    /// Human model name from LibreCRKit's `productType` + `generation`.
+    /// Human model name from RoundWhiteDiscKit's `productType` + `generation`.
     ///
-    /// (We used to parse these fields ourselves because LibreCRKit's patch-info
+    /// (We used to parse these fields ourselves because RoundWhiteDiscKit's patch-info
     /// offsets were off by the 3-byte prefix; that was fixed upstream in
     /// `d96c914`, so we now read `productType`/`generation`/`firmwareVersion`/
     /// `warmupMinutes` straight from `Libre3NFCPatchInfo`. Only this model-name

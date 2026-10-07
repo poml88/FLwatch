@@ -46,6 +46,18 @@ struct LibreWristApp: App {
         SensorAlertNotificationManager.shared.clearApplicationTerminatedNotification()
         
         WatchConnectivityManager.shared.startSession()
+        // Old pairings used white-box authorization. Reuse disconnect so the
+        // existing NFC setup appears, and the watch receives the cleared state.
+        if SharedData.libre3SensorIsPaired && SharedData.libre3SecurityVersion == nil {
+            Libre3StateStore.adoptLegacyInstallationReceiverIDIfNeeded()
+            Libre3PairingCoordinator().disconnect(preserveOtherProviderConnection: true)
+            // The home view tells the user once why the sensor was unpaired.
+            SharedData.libre3RepairNoticePending = true
+            Logger.libre3.info("Libre3 BLE legacy pairing cleared; pair again with NFC")
+        }
+        // Load the pinned Arweave credentials (or verified disk cache) once on
+        // the phone. The manager resumes BLE after installation succeeds.
+        Libre3DirectManager.shared.preparePairingIdentities()
         BluetoothHeartbeatManager.shared.startIfNeeded()
         if SharedData.bluetoothHeartbeatEnabled {
             BluetoothHeartbeatManager.shared.startScanning()

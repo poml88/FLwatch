@@ -3,7 +3,7 @@
 //  FLwatch
 //
 //  The shared BLE engine for the `.libre3BLE` provider. It owns
-//  LibreCRKit's `SensorScannerNG` / `SensorSession` / `PairingFlow` / data-plane
+//  RoundWhiteDiscKit's `SensorScannerNG` / `SensorSession` / `PairingFlow` / data-plane
 //  decoder and, when it decodes a realtime reading, writes straight into the
 //  shared `LibreLinkUpHistory` store — exactly like `DexcomShareProvider`, but
 //  triggered by a BLE notification instead of a network call (PLAN §4).
@@ -14,7 +14,7 @@
 //  Concurrency (PLAN §6): this object is `@MainActor`, mirroring
 //  `BluetoothHeartbeatManager` (which already proves CB-callback → MainActor
 //  works in this app). Notifications are consumed in a MainActor task whose
-//  `for await` hops each event off LibreCRKit's private BLE queue onto main; the
+//  `for await` hops each event off RoundWhiteDiscKit's private BLE queue onto main; the
 //  cheap per-minute decode runs inline on main; only the one-time auth crypto is
 //  `await`-ed on the `PairingFlow` actor (off-main).
 //
@@ -26,9 +26,8 @@
 import Foundation
 import Combine
 import CoreBluetooth
-import Security
 import OSLog
-import LibreCRKit
+import RoundWhiteDiscKit
 
 #if os(iOS)
 import UIKit
@@ -171,7 +170,7 @@ struct Libre3HostProfile {
     /// of seven trials. The active mode cancels only in the silence ten seconds
     /// after a burst; the phone keeps its proven standing intent unchanged.
     let burstConnectMode: Libre3BurstConnectMode
-    /// Per-characteristic ceiling for the seven-CCCD post-auth re-arm. LibreCRKit's
+    /// Per-characteristic ceiling for the seven-CCCD post-auth re-arm. RoundWhiteDiscKit's
     /// 15 s default was calibrated against the phone's ~1.56 s serial ACK cadence
     /// (seventh ACK at ~8.85 s); observed phone re-arms take 7.7-10.8 s, so that
     /// shipping host remains at 15 s. The watch runs roughly 1.5x slower:
@@ -432,7 +431,7 @@ struct Libre3ReadingStatus: Equatable {
 /// Only otherwise-usable readings participate. A DQ error, blocking sensor
 /// condition, warm-up, or expiry ends the run because those faults are already
 /// visible through the normal quality path. `.notActionable` remains eligible:
-/// LibreCRKit treats it as advisory, so it does not make the reading unusable.
+/// RoundWhiteDiscKit treats it as advisory, so it does not make the reading unusable.
 ///
 /// A value type so the run rules — which are easy to get subtly wrong — are
 /// unit-testable without a live BLE session.
@@ -536,7 +535,7 @@ struct Libre3StuckGlucoseTracker {
 }
 
 /// One successfully decrypted data-plane packet retained by the opt-in developer
-/// capture. The LibreCRKit packet already contains both its decrypted plaintext
+/// capture. The RoundWhiteDiscKit packet already contains both its decrypted plaintext
 /// and decoded payload, so capture itself performs no extra formatting work.
 struct Libre3LivePacketRecord: Identifiable, Equatable {
     let id: Int
@@ -1336,7 +1335,7 @@ enum Libre3SensorNotRespondingPolicy {
     }
 }
 
-/// Recognises the LibreCRKit log lines that report a CCCD enable which never
+/// Recognises the RoundWhiteDiscKit log lines that report a CCCD enable which never
 /// reached the sensor, for the handshake characteristics only.
 ///
 /// This reads another module's log text, which is fragile by nature. It is worth
@@ -1349,10 +1348,10 @@ enum Libre3SensorNotRespondingPolicy {
 /// back in as literals, so they only prove the parser does what it is told — if
 /// `SensorSession` rewords its two skip lines, the tests keep passing and this
 /// tracing silently stops. Re-read `SensorSession.discoverAndSubscribe` and
-/// `setNotify` by hand whenever LibreCRKit is updated, until the package exposes
+/// `setNotify` by hand whenever RoundWhiteDiscKit is updated, until the package exposes
 /// a shared constant or a structured event to bind against.
 enum Libre3CCCDSkipLog {
-    /// The two shapes LibreCRKit logs when no CCCD *enable* reached the sensor:
+    /// The two shapes RoundWhiteDiscKit logs when no CCCD *enable* reached the sensor:
     /// the connect-time subscribe skip, and the `setNotify` no-op.
     ///
     /// Only the enable direction is evidence. A skipped *disable* ("already off")
@@ -1641,9 +1640,16 @@ struct Libre3PeripheralDiscoveryPolicy {
 
     static func acceptsDiscoveredIdentifier(
         _ discoveredID: UUID,
-        savedID: UUID?
+        savedID: UUID?,
+        advertisedLocalName: String?,
+        bleAddress: String
     ) -> Bool {
-        savedID.map { discoveredID == $0 } ?? true
+        if let savedID { return discoveredID == savedID }
+        // Before authentication binds a UUID, only the NFC-addressed sensor
+        // may win the scan. A cached peripheral name is not an advertisement.
+        let expectedName = bleAddress.replacingOccurrences(of: ":", with: "").uppercased()
+        guard !expectedName.isEmpty, let advertisedLocalName else { return false }
+        return advertisedLocalName.uppercased() == expectedName
     }
 }
 
@@ -1891,6 +1897,11 @@ final class Libre3DirectManager: ObservableObject {
     static let shared = Libre3DirectManager()
     private let hostProfile = Libre3HostProfile.current
 
+#if os(iOS)
+    private var identityInstallationTask: Task<Void, Never>?
+    private var identityInstallationAllowsPendingPhoneReclaim = false
+#endif
+
     /// CoreBluetooth state-restoration identifier for this manager's central.
     /// Distinct from the heartbeat's (`…bluetoothHeartbeat`) so the two never
     /// collide; chosen in Phase 0.
@@ -2011,7 +2022,7 @@ final class Libre3DirectManager: ObservableObject {
     /// Set only while `awaitConnectedPeripheral` is suspended. Existing host
     /// cadences sample this wait without adding a diagnostic timer or wakeup.
     private var connectWaitStartedAt: Date?
-    /// Tracks this manager's scan intent; LibreCRKit deliberately exposes no
+    /// Tracks this manager's scan intent; RoundWhiteDiscKit deliberately exposes no
     /// synchronous `isScanning` snapshot across its private central queue.
     private var scanStartedAt: Date?
     /// A failed connected setup is cancelled before another attempt. A callback
@@ -2315,6 +2326,7 @@ final class Libre3DirectManager: ObservableObject {
             connectionState = .idle
             return
         }
+        guard authorizationSetupIsReady(allowPendingPhoneReclaim: allowPendingPhoneReclaim) else { return }
         let beginsWorkoutAcquisition = !shouldMaintainConnection
         shouldMaintainConnection = true
         if beginsWorkoutAcquisition, hostProfile.device == .watchWorkout {
@@ -2360,6 +2372,9 @@ final class Libre3DirectManager: ObservableObject {
     /// Tear down the connection and stop streaming (provider switched away, or
     /// the user disconnected the sensor).
     func stop() {
+#if os(iOS)
+        identityInstallationAllowsPendingPhoneReclaim = false
+#endif
         let stoppingScannerGeneration = scannerGeneration
         let pendingSystemReconnectPeripheral = systemReconnectPeripheral
         // Clear intent first: cancelling the CoreBluetooth request/session below
@@ -2775,7 +2790,7 @@ final class Libre3DirectManager: ObservableObject {
     /// packet has been decoded.
     ///
     /// This is the one moment where warm-up is certain and its start is known
-    /// without the sensor telling us: LibreCRKit only accepts
+    /// without the sensor telling us: RoundWhiteDiscKit only accepts
     /// `activateFreshSensor` on a state-0x01 sensor, and that command starts the
     /// wear clock during the scan. Seeding here shows the warm-up UI and schedules
     /// the completion reminder immediately instead of ~1–2 minutes later, when the
@@ -2789,7 +2804,7 @@ final class Libre3DirectManager: ObservableObject {
     /// Only fresh activation may do this — a takeover/parallel join reads a sensor
     /// of unknown age, whose start is knowable only from the BLE life count.
     ///
-    /// `activationDate` must be the timestamp LibreCRKit wrote into the activation
+    /// `activationDate` must be the timestamp RoundWhiteDiscKit wrote into the activation
     /// command — the moment the sensor was told it was activated, which
     /// `Libre3PairingCoordinator.activationTime(inCommandParameters:receiverID:)`
     /// recovers from the scan result. Not the time this call runs: the NFC round
@@ -3185,7 +3200,7 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
-    /// Record the one LibreCRKit event that separates the two causes of a silent
+    /// Record the one RoundWhiteDiscKit event that separates the two causes of a silent
     /// handshake: a CCCD enable we never actually wrote.
     ///
     /// `SensorSession` skips `setNotifyValue` when CoreBluetooth already reports
@@ -3196,7 +3211,7 @@ final class Libre3DirectManager: ObservableObject {
     /// `BLETiming` discards everything until a sink is installed, and nothing in
     /// the app installed one.
     ///
-    /// The sink is called from LibreCRKit's own queues, so the closure is
+    /// The sink is called from RoundWhiteDiscKit's own queues, so the closure is
     /// `@Sendable` (capturing nothing, parsing through a nonisolated pure
     /// function) and hops to the main actor for the `@MainActor` diagnostics log.
     private func installCCCDSkipTracing() {
@@ -3276,7 +3291,9 @@ final class Libre3DirectManager: ObservableObject {
         case .didDiscover(let found):
             if Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
                 found.peripheral.identifier,
-                savedID: savedPeripheralID
+                savedID: savedPeripheralID,
+                advertisedLocalName: found.advertisementData[CBAdvertisementDataLocalNameKey],
+                bleAddress: SharedData.libre3BleAddress
             ) {
                 let observedAt = Date()
                 attemptDiagnostics.recordAdvertisement(
@@ -3698,6 +3715,8 @@ final class Libre3DirectManager: ObservableObject {
               isCurrentScanner(scanner, generation: scannerGeneration),
               scanner.centralState == .poweredOn else { return }
 
+        guard authorizationSetupIsReady() else { return }
+
         if systemReconnectTarget(scannerGeneration: scannerGeneration) != nil {
             clearReconnectBackoff()
         }
@@ -4116,7 +4135,7 @@ final class Libre3DirectManager: ObservableObject {
         )
         try checkCurrentScanner(scanner, generation: scannerGeneration)
         // On the phone, ask CoreBluetooth to wake us when it next sees this
-        // peripheral after a background range loss. LibreCRKit makes this a
+        // peripheral after a background range loss. RoundWhiteDiscKit makes this a
         // no-op on watchOS, where the workout session supplies runtime instead.
         scanner.registerForConnectionEvents(peripheralIDs: [peripheral.identifier])
 
@@ -4292,7 +4311,7 @@ final class Libre3DirectManager: ObservableObject {
         )
 
         do {
-            // LibreCRKit coordinates the seven operations and waits for every ACK.
+            // RoundWhiteDiscKit coordinates the seven operations and waits for every ACK.
             try await session.refreshDataPlaneNotifications(
                 characteristics: plan.characteristics,
                 forceReArm: plan.forceReArm,
@@ -4676,7 +4695,9 @@ final class Libre3DirectManager: ObservableObject {
             if case .didDiscover(let found) = event,
                Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
                    found.peripheral.identifier,
-                   savedID: savedID
+                   savedID: savedID,
+                   advertisedLocalName: found.advertisementData[CBAdvertisementDataLocalNameKey],
+                   bleAddress: SharedData.libre3BleAddress
                ) {
                 Libre3DiagnosticsLog.traceReconnect(
                     "discover-selection kind=scan rssi=\(found.rssi)"
@@ -5100,25 +5121,24 @@ final class Libre3DirectManager: ObservableObject {
         }
         let result = try await runHandshake(session: session, blePIN: sensorState.blePIN)
         // A successful full attempt replaces stale cached authorization material.
-        try Libre3StateStore.saveReconnectKey(result.phase5Material.rawKey)
+        try Libre3StateStore.saveReconnectKey(result.reconnectKey)
+        SharedData.libre3AppIdentityLabel = result.identityLabel
         // The raw key changes on every successful full authorization. Publish
         // it immediately rather than waiting for an unrelated settings sync.
         hostProfile.phoneConnectivity.sendProvisioningPackage()
-        return result.handshake.sessionMaterial
+        return result.sessionMaterial
     }
 
     /// Cached/direct reconnect: `0x11 StartAuthorization` → R1/nonce notify →
     /// Phase 5 → Phase 6, skipping the certificate + ephemeral exchange (PLAN
-    /// Phase 5; LibreCRKit `runCachedReconnectHandshake`). The persisted Phase-5
-    /// raw key is reused for reconnects. A disconnect during the pending 0x08
+    /// Phase 5; RoundWhiteDiscKit `runCachedReconnectHandshake`). The persisted plain
+    /// Phase-5 key is reused for reconnects. A disconnect during the pending 0x08
     /// write is wrapped as stale-key rejection; later radio loss is not.
     private func runCachedReconnect(session: SensorSession, blePIN: Data, reconnectKey: Data) async throws -> Phase6SessionMaterial {
         let transport = Libre3Phase5TrackingTransport(session: session)
         let flow = PairingFlow(
             transport: transport,
-            eventLogger: { message in
-                Logger.libre3.debug("\(message, privacy: .public)")
-            }
+            eventLogger: { message in Self.logPairingProgress(message) }
         )
         do {
             let result = try await flow.runCachedReconnectHandshake(
@@ -5131,69 +5151,146 @@ final class Libre3DirectManager: ObservableObject {
         }
     }
 
-    /// Phase 1–6 first-pair authorization. All three NFC pairing modes
-    /// (takeover / fresh / parallel-join) leave FLwatch holding its own BLE PIN,
-    /// so each runs the command-gated *first-pair* handshake to derive its own
-    /// session keys. The cached-reconnect path above is the Phase 5 fast path
-    /// for subsequent connects. Phase 5 material is derived in-package from the
-    /// bundled first-pair source plus our entropy. Returns the full derived
-    /// result so the caller can persist `phase5Material.rawKey` — the
-    /// established Phase-5 authorization key reused by the cached reconnect.
-    private func runHandshake(session: SensorSession, blePIN: Data) async throws -> FirstPairDerivedHandshakeResult {
-        let transport = Libre3Phase5TrackingTransport(session: session)
-        // Use LibreCRKit's bundled v1 (`03 03`) app certificate for first-pair.
-        // LibreCRKit owns the matching certificate material and auto-selects the
-        // index-1 Phase-5 static scalar from the `03 03` prefix.
-        let phoneCert = try PhoneCert.bundled162b()
-
-        // The Phase 3 phone ephemeral and the Phase 5 null entropy must come from
-        // the SAME sampled entropy — first-pair derives the ephemeral keypair
-        // *from* the null entropy, and the handshake later re-derives the expected
-        // ephemeral public key from that entropy and checks it matches what we
-        // sent in Phase 3. Generating them independently (random phoneEph + random
-        // entropySource) trips `phase5EphemeralPublicKeyMismatch`. So: sample the
-        // native ephemeral once, hand its keypair to PairingFlow, and feed the
-        // handshake a FIXED entropy source returning that same null entropy
-        // (maxEntropyAttempts: 1). Mirrors LibreCRKit's own harness
-        // (`runFirstPairCandidateHandshake`) and the libre3BT sample app.
-        let nativeEphemeral = try SessionKey.makeFirstPairNativeEphemeral { count in
-            try Self.randomBytes(count)
+    /// Prefer the credential that already authorized this sensor, otherwise use
+    /// the installed order (ROW first). Region is metadata, not a selector.
+    private func selectedPairingIdentity() throws -> AppIdentity {
+        let identities = try AppIdentities.installed()
+        if let stored = identities.first(where: { $0.label == SharedData.libre3AppIdentityLabel }) {
+            return stored
         }
+        guard let first = identities.first else { throw AppIdentityError.notInstalled }
+        return first
+    }
+
+#if os(iOS)
+    /// Launch and later BLE reloads share one attempt. A failed download can be
+    /// retried by the next reload; BLE itself stays paused until installation.
+    func preparePairingIdentities(allowPendingPhoneReclaim: Bool = false) {
+        identityInstallationAllowsPendingPhoneReclaim =
+            identityInstallationAllowsPendingPhoneReclaim || allowPendingPhoneReclaim
+        guard !AppIdentities.isInstalled, identityInstallationTask == nil else { return }
+        identityInstallationTask = Task { [weak self] in
+            do {
+                try await Libre3AppIdentities.shared.ensureInstalled()
+                guard let self else { return }
+                self.identityInstallationTask = nil
+                let resumeImmediately = self.identityInstallationAllowsPendingPhoneReclaim
+                self.identityInstallationAllowsPendingPhoneReclaim = false
+                // An NFC pair may have reclaimed the phone while downloading.
+                // Preserve its existing immediate-resume rule, rechecking owner.
+                if resumeImmediately {
+                    self.resumeAfterHandoff(immediately: true)
+                } else {
+                    self.startIfNeeded()
+                }
+            } catch {
+                guard let self else { return }
+                self.identityInstallationTask = nil
+                guard self.isActiveProvider, Libre3StateStore.isPaired,
+                      self.ownershipPermitsConnection ||
+                        (self.identityInstallationAllowsPendingPhoneReclaim &&
+                         SharedData.libre3SessionOwner.owner == .phone) else { return }
+                self.pauseAuthorization(for: error)
+            }
+        }
+    }
+#endif
+
+    /// The phone needs installed identities and the migration marker before
+    /// BLE setup. The cached-only watch uses the phone's provisioned key.
+    private func authorizationSetupIsReady(allowPendingPhoneReclaim: Bool = false) -> Bool {
+        guard hostProfile.allowsFullAuthorization else { return true }
+        do {
+            guard SharedData.libre3SecurityVersion != nil else {
+                throw Libre3DirectError.notPaired
+            }
+#if os(iOS)
+            if !AppIdentities.isInstalled {
+                preparePairingIdentities(allowPendingPhoneReclaim: allowPendingPhoneReclaim)
+                return false
+            }
+#endif
+            _ = try selectedPairingIdentity()
+            return true
+        } catch {
+            pauseAuthorization(for: error)
+            return false
+        }
+    }
+
+    private func pauseAuthorization(for error: Error) {
+        let message = Self.friendlyMessage(for: error)
+        if !shouldMaintainConnection, connectionState == .failed(message) { return }
+        stop()
+        connectionState = .failed(message)
+        let description = Self.supportSafeDescription(for: error)
+        DebugMessageSingleton.shared.libreLinkUpResponseError = "Libre3 BLE: \(description)"
+        Libre3DiagnosticsLog.traceReconnect("authorization-paused error=\(description)")
+        Logger.libre3.error("Libre3 BLE authorization paused: \(description, privacy: .public)")
+    }
+
+    /// Full authorization uses a fresh ephemeral keypair. Recompute the same
+    /// authorization key from the returned preamble rather than mutating state
+    /// captured by a closure crossing into PairingFlow's actor.
+    private func runHandshake(
+        session: SensorSession,
+        blePIN: Data
+    ) async throws -> (sessionMaterial: Phase6SessionMaterial, reconnectKey: Data, identityLabel: String) {
+        let identity = try selectedPairingIdentity()
+        Logger.libre3.info("Libre3 BLE pairing identity=\(identity.label, privacy: .public)")
+        let transport = Libre3Phase5TrackingTransport(session: session)
         let flow = PairingFlow(
             transport: transport,
-            phoneCert: phoneCert,
-            phoneEph: nativeEphemeral.keyPair,
-            eventLogger: { message in
-                Logger.libre3.debug("\(message, privacy: .public)")
-            }
+            phoneCert: identity.certificate,
+            eventLogger: { message in Self.logPairingProgress(message) }
         )
         do {
             let result = try await flow.runCommandGatedFirstPairHandshake(
                 blePIN: blePIN,
-                maxEntropyAttempts: 1,
-                entropySource: { count in
-                    try Self.fixedEntropy(nativeEphemeral.nullEntropy11A, count: count)
-                }
+                phase5RawKeyProvider: { @Sendable preamble in
+                    try Self.authorizationKey(identity: identity, preamble: preamble)
+                },
+                phase5Cipher: { @Sendable key in try AppIdentity.phase5Cipher(key) }
             )
-            return result
+            let reconnectKey = try Self.authorizationKey(identity: identity, preamble: result.preamble)
+            Logger.libre3.info("Libre3 BLE full authorization verified Phase 6")
+            return (result.sessionMaterial, reconnectKey, identity.label)
         } catch {
             throw transport.classify(error)
         }
     }
 
-    /// Fixed entropy source for the first-pair handshake: returns the exact
-    /// null entropy already used to derive the Phase 3 ephemeral keypair, so the
-    /// handshake's ephemeral-public-key consistency check passes. Mirrors the
-    /// sample app's `fixedEntropySource`.
-    private static func fixedEntropy(_ entropy: Data, count: Int) throws -> Data {
-        guard count == entropy.count else {
-            throw Libre3DirectError.entropySizeMismatch(expected: count, actual: entropy.count)
+    nonisolated private static func authorizationKey(
+        identity: AppIdentity,
+        preamble: FirstPairPreambleResult
+    ) throws -> Data {
+        let handshake = preamble.phaseHandshake
+        return try identity.authKey(
+            phoneEphemeral: handshake.phoneEph.privateKey,
+            sensorEphemeral: handshake.sensorEphPub,
+            sensorStatic: EphemeralExchange.parsePeerPubkey(handshake.sensorCert.staticPub)
+        )
+    }
+
+    /// The package's detailed messages contain sensitive payloads. Forward only
+    /// these fixed progress markers, never certificates, secrets, or wire bytes.
+    nonisolated private static func logPairingProgress(_ message: String) {
+        switch message {
+        case "PairingFlow: preamble start",
+             "PairingFlow: cached reconnect preamble start",
+             "PairingFlow: send StartAuthentication 0x01",
+             "PairingFlow: send StartAuthorization 0x11",
+             "PairingFlow: send SendChallengeLoadDone 0x08",
+             "PairingFlow: await Phase 6",
+             "PairingFlow: await cached reconnect Phase 6":
+            Logger.libre3.debug("\(message, privacy: .public)")
+        default:
+            break
         }
-        return entropy
     }
 
     /// MainActor notification pump. The `for await` hops each fragment off
-    /// LibreCRKit's BLE queue onto main; assembling + decrypting one ~35-byte
+    /// RoundWhiteDiscKit's BLE queue onto main; assembling + decrypting one ~35-byte
     /// frame per minute is trivially cheap, so it rides main race-free (PLAN §6).
     /// Returns when the stream finishes (the session disconnected).
     private func consumeNotifications(
@@ -5617,7 +5714,7 @@ final class Libre3DirectManager: ObservableObject {
                 // Before this sensor's first reading, an undisplayable value is the
                 // expected tail of warm-up rather than a fault that "will resume on
                 // its own" — the awaiting-first-reading overlay already explains it.
-                // LibreCRKit assesses each frame against the real 60-minute
+                // RoundWhiteDiscKit assesses each frame against the real 60-minute
                 // lifecycle, so the minute-60 frame arrives here having lost its
                 // `.sensorWarmup` issue. Narrow to this branch only: the ESA and
                 // data-quality matches above take precedence, so a genuine
@@ -6370,7 +6467,6 @@ final class Libre3DirectManager: ObservableObject {
         if let pairingError = error as? PairingFlowError {
             switch pairingError {
             case .phase6VerificationFailed,
-                 .phase5EphemeralPublicKeyMismatch,
                  .unexpectedCommandResponse,
                  .sensorCertificateVerificationFailed:
                 return .credential
@@ -6418,15 +6514,6 @@ final class Libre3DirectManager: ObservableObject {
         return "localized=\"\(error.localizedDescription)\" domain=\(nsError.domain) code=\(nsError.code) hex=0x\(String(nsError.code, radix: 16))"
     }
 
-    private static func randomBytes(_ count: Int) throws -> Data {
-        var bytes = [UInt8](repeating: 0, count: count)
-        let status = SecRandomCopyBytes(kSecRandomDefault, count, &bytes)
-        guard status == errSecSuccess else {
-            throw Libre3DirectError.entropyUnavailable(status)
-        }
-        return Data(bytes)
-    }
-
     /// Produces support-safe diagnostics while retaining error type/case names,
     /// ATT/CoreBluetooth codes, and characteristic UUIDs. Every associated
     /// `Data` value is represented only by its byte count; unknown error types
@@ -6442,8 +6529,6 @@ final class Libre3DirectManager: ObservableObject {
 
         case let error as PairingFlowError:
             switch error {
-            case .sessionKeyDerivationNotImplemented:
-                return "sessionKeyDerivationNotImplemented"
             case .commandTransportRequired:
                 return "commandTransportRequired"
             case .phoneCertRequired:
@@ -6458,10 +6543,6 @@ final class Libre3DirectManager: ObservableObject {
                 return "tail4WrongSize(\(count))"
             case .phase6VerificationFailed(let message):
                 return "phase6VerificationFailed(\(message))"
-            case .phase5MaterialUnavailable:
-                return "phase5MaterialUnavailable"
-            case .phase5EphemeralPublicKeyMismatch(let expected, let actual):
-                return "phase5EphemeralPublicKeyMismatch(expectedBytes=\(expected.count), actualBytes=\(actual.count))"
             case .randomFailed(let status):
                 return "randomFailed(\(status))"
             case .writeTimeout(let label, let seconds):
@@ -6496,13 +6577,26 @@ final class Libre3DirectManager: ObservableObject {
                 return supportSafeUnknownDescription(for: error)
             }
 
+        case let error as AppIdentityError:
+            // Credential validation errors carry labels or private input. Omit
+            // associated values from support diagnostics.
+            switch error {
+            case .notInstalled: return "appIdentitiesNotInstalled"
+            case .unsupportedFormat: return "appIdentitiesUnsupportedFormat"
+            case .badHex: return "appIdentitiesBadHex"
+            case .keyCertificateMismatch: return "appIdentityKeyCertificateMismatch"
+            @unknown default: return supportSafeUnknownDescription(for: error)
+            }
+
+        case is Libre3AppIdentityLoadingError:
+            return "appIdentityPayloadInvalid"
+
         case is CancellationError,
              is Libre3DirectError,
              is SensorScannerError,
              is SensorSessionError,
              is SensorSessionTransportError,
              is Libre3ReceiverIDError,
-             is Libre3PatchContextError,
              is Libre3SensorStateError,
              is DataFrameError,
              is BleFramingError,
@@ -6512,20 +6606,12 @@ final class Libre3DirectManager: ObservableObject {
              is ClinicalReadingRecordError,
              is PatchStatusError,
              is PatchControlCommandError,
-             is CipherFnError,
-             is Phase5SessionDataError,
-             is Phase5KeyScheduleError,
              is Phase6ResponseError,
              is EphemeralExchangeError,
              is ChallengeError,
              is PhoneCertError,
              is SensorCertError,
-             is SessionKeyError,
-             is KAuthError,
-             is AESCCMError,
-             is LibAESError,
-             is FirstPairSourceSliceError,
-             is Child23KAuthImportError:
+             is AESCCMError:
             return String(describing: error)
 
         default:
@@ -6543,6 +6629,16 @@ final class Libre3DirectManager: ObservableObject {
 
     private static func friendlyMessage(for error: Error) -> String {
         switch error {
+        case AppIdentityError.notInstalled:
+            return String(
+                localized: "Couldn't download the sensor pairing data. Check your internet connection and try again.",
+                comment: "BLE setup is paused because no verified sensor pairing data is available in the phone's cache and the download gateways could not be reached. The user should check their internet connection and retry."
+            )
+        case is AppIdentityError, is Libre3AppIdentityLoadingError:
+            return String(
+                localized: "The downloaded sensor pairing data could not be verified. Please try again later.",
+                comment: "BLE setup is paused because downloaded sensor pairing data failed the pinned digest or credential validation. The user should retry later to fetch verified data."
+            )
         case Libre3DirectError.notPaired, Libre3DirectError.notStarted:
             return String(localized: "No sensor is paired.")
         case Libre3DirectError.sensorNotFound:
@@ -6563,6 +6659,4 @@ enum Libre3DirectError: Error {
     case cachedReconnectKeyUnavailable
     case fullAuthorizationNotPermitted
     case sensorNotFound
-    case entropyUnavailable(OSStatus)
-    case entropySizeMismatch(expected: Int, actual: Int)
 }

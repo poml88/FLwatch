@@ -9,7 +9,7 @@ import XCTest
 import CoreBluetooth
 // Needed only to name `Libre3ReceiverID.Derivation` in the activating-app
 // mapping assertions; `@testable import FLwatch` does not re-export it.
-import LibreCRKit
+import RoundWhiteDiscKit
 @testable import FLwatch
 
 final class LibreWristTests: XCTestCase {
@@ -2448,7 +2448,7 @@ final class LibreWristTests: XCTestCase {
 
     // These cover the parser only. The inputs are hand-copied from
     // `SensorSession`, so they do NOT protect the cross-module contract: a
-    // reworded log line in LibreCRKit leaves these passing while production
+    // reworded log line in RoundWhiteDiscKit leaves these passing while production
     // tracing stops. See the note on `Libre3CCCDSkipLog`.
     func testConnectTimeHandshakeCCCDSkipIsTraced() throws {
         let uuid = LibreSensorGATT.Char.secCommandResponse.uuidString
@@ -2834,15 +2834,60 @@ final class LibreWristTests: XCTestCase {
         XCTAssertFalse(
             Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
                 discoveredID,
-                savedID: savedID
+                savedID: savedID,
+                advertisedLocalName: "AABBCCDDEEFF",
+                bleAddress: "AA:BB:CC:DD:EE:FF"
             )
         )
         XCTAssertTrue(
             Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
-                discoveredID,
-                savedID: nil
+                savedID,
+                savedID: savedID,
+                advertisedLocalName: nil,
+                bleAddress: ""
             )
         )
+    }
+
+    func testUnboundDiscoveryAcceptsOnlyNFCAddressedAdvertisement() {
+        let discoveredID = UUID()
+        let bleAddress = "AA:BB:CC:DD:EE:FF"
+        XCTAssertTrue(
+            Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                discoveredID,
+                savedID: nil,
+                advertisedLocalName: "aabbccddeeff",
+                bleAddress: bleAddress
+            )
+        )
+        for localName in [nil, "Libre 3", "112233445566"] as [String?] {
+            XCTAssertFalse(
+                Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                    discoveredID,
+                    savedID: nil,
+                    advertisedLocalName: localName,
+                    bleAddress: bleAddress
+                )
+            )
+        }
+        XCTAssertFalse(
+            Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                discoveredID,
+                savedID: nil,
+                advertisedLocalName: "",
+                bleAddress: ""
+            )
+        )
+    }
+
+    func testPairingIdentityPayloadRejectsUnpinnedJSON() {
+        // Even syntactically valid credential JSON must match the pinned bytes.
+        let payload = Data(#"{"format":1,"curve":"P-256","identities":[]}"#.utf8)
+        XCTAssertThrowsError(try Libre3AppIdentities.validatePayload(payload)) { error in
+            guard case Libre3AppIdentityLoadingError.invalidPayload = error else {
+                return XCTFail("Expected the pinned payload validation error")
+            }
+        }
     }
 
     func testPeripheralCandidateIsReturnedOnlyAfterAuthentication() throws {
@@ -3081,7 +3126,7 @@ final class LibreWristTests: XCTestCase {
     /// `Libre3ActivatingApp.usesLibreViewAccount` and its phone-side `derivation`
     /// answer the same question — does this app fold account-specific data into a
     /// receiver ID — but can't be one property: the enum is shared code compiled
-    /// into the watch and widget targets, which don't link LibreCRKit and so can't
+    /// into widget targets, which don't link RoundWhiteDiscKit and so can't
     /// name `Libre3ReceiverID.Derivation`.
     ///
     /// A case added to one switch but not the other makes
@@ -3112,7 +3157,7 @@ final class LibreWristTests: XCTestCase {
     }
 
     /// Known-answer vectors for both folds, so moving the arithmetic into
-    /// LibreCRKit can't quietly change what goes on the wire.
+    /// RoundWhiteDiscKit can't quietly change what goes on the wire.
     ///
     /// The expected values were computed from the implementation that shipped in
     /// build 202 (commit 8fdc80a), before either fold moved to the package — the

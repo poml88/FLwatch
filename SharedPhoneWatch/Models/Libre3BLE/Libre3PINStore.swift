@@ -4,7 +4,7 @@
 //
 //  Keychain wrapper for the Libre 3 BLE PIN — the 4-byte secret returned by the
 //  NFC activation/switch response and used as the `tail4` in the Phase-5
-//  challenge. It's the one sensitive bit of the pairing, so (per PLAN §9) it
+//  challenge. It's sensitive pairing material, so (per PLAN §9) it
 //  lives in the keychain rather than the app group; the non-secret metadata
 //  (serial, BLE address, receiver ID) goes in `SharedData`.
 //
@@ -12,7 +12,7 @@
 //  binary, not a UTF-8 string). Keychain survival across reinstall is NOT
 //  required (PLAN §9: re-pair via NFC after reinstall) — this is for secrecy.
 //
-//  It also holds the 16-byte Phase-5 raw key established by the full handshake.
+//  It also holds the 16-byte plain Phase-5 key established by the full handshake.
 //  The cached/direct handshake (`runCachedReconnectHandshake`, PLAN Phase 5)
 //  reuses that authorization material on every reconnect. It's secret material,
 //  so it lives beside the PIN in the keychain rather than the app group.
@@ -34,7 +34,8 @@ enum Libre3PINStoreError: Error, LocalizedError {
 enum Libre3PINStore {
 
     private static let pinAccount = "libre3.ble.pin"
-    // Keep the legacy account name so existing paired sensors retain their key.
+    // Keep the storage slot; phone launch clears legacy pairings and their
+    // white-box keys before starting BLE.
     private static let reconnectKeyAccount = "libre3.ble.kenc"
     private static let installationReceiverIDAccount = "libre3.receiverID.installation"
 
@@ -62,7 +63,7 @@ enum Libre3PINStore {
 
     /// The receiver ID identifying this FLwatch installation, used for sensors
     /// FLwatch activates itself. Held as little-endian hex text, so the caller
-    /// can round-trip it through LibreCRKit's own parser.
+    /// can round-trip it through RoundWhiteDiscKit's own parser.
     ///
     /// Not a secret — it lives here for the keychain's other property, surviving
     /// reinstall. Everything else this file holds can be re-established by

@@ -1385,6 +1385,8 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
                 wearDurationMinutes: SharedData.libre3WearDurationMinutes,
                 generation: SharedData.libre3Generation,
                 productType: SharedData.libre3ProductType,
+                securityVersion: SharedData.libre3SecurityVersion,
+                region: SharedData.libre3Region,
                 sensorStartDateMillisecondsSince1970: SharedData.libre3SensorStartDate.map {
                     Int64(($0.timeIntervalSince1970 * 1_000).rounded())
                 },

@@ -420,6 +420,7 @@ enum DefaultsKey: String {
     case hasSeenWelcomeMessage = "hasSeenWelcomeMessage"
     case hasSeenNotification001 = "hasSeenNotification001"
     case lastSeenUpdateNoteVersion = "lastSeenUpdateNoteVersion"
+    case libre3RepairNoticePending = "libre3RepairNoticePending"
     case libreLinkUpHistorySnapshot = "libreLinkUpHistorySnapshotKey"
     
     
@@ -474,6 +475,9 @@ enum DefaultsKey: String {
     case libre3WearDurationMinutes = "libre3WearDurationMinutesKey"
     case libre3Generation = "libre3GenerationKey"
     case libre3ProductType = "libre3ProductTypeKey"
+    case libre3SecurityVersion = "libre3SecurityVersionKey"
+    case libre3Region = "libre3RegionKey"
+    case libre3AppIdentityLabel = "libre3AppIdentityLabelKey"
     // BLE engine status, published by `Libre3DirectManager` on the active host
     // and read by the shared provider and watch workout UI. They stay decoupled
     // because widgets omit the engine and the watch workout owns its lifetime.
@@ -1011,6 +1015,14 @@ enum SharedData {
     static func markNotificationSeen(version: Int) {
         lastSeenUpdateNoteVersion = max(lastSeenUpdateNoteVersion, version)
     }
+
+    /// Set by the launch migration when it unpairs a Libre 3 sensor paired by an
+    /// older version. Persisted because the migration can run during a
+    /// background Bluetooth launch, before the home view can show the note.
+    static var libre3RepairNoticePending: Bool {
+        get { store.getBool(.libre3RepairNoticePending, defaultValue: false) }
+        set { store.setBool(newValue, forKey: .libre3RepairNoticePending) }
+    }
     
     static var libreLinkUpUserId: String {
         get { store.getString(.libreLinkUpUserId, defaultValue: "") }
@@ -1106,9 +1118,9 @@ enum SharedData {
     // MARK: - Libre 3 direct BLE (non-secret sensor metadata)
     //
     // Written by `Libre3StateStore` on the phone after a successful NFC pair.
-    // Stored as plain primitives (not the LibreCRKit `Libre3SensorState` type)
+    // Stored as plain primitives (not the RoundWhiteDiscKit `Libre3SensorState` type)
     // so shared gates like `hasActiveProviderAccount` can read "is a sensor
-    // paired?" from the watch/widget targets, which don't link LibreCRKit. The
+    // paired?" from widgets without linking RoundWhiteDiscKit. The
     // secret BLE PIN is NOT here — it lives in the keychain.
 
     static var libre3Serial: String {
@@ -1487,6 +1499,30 @@ enum SharedData {
     static var libre3ProductType: Int {
         get { store.getInt(.libre3ProductType) }
         set { store.setInt(newValue, forKey: .libre3ProductType) }
+    }
+
+    /// Nil means the sensor needs a new NFC pair. Zero is a valid stored value.
+    static var libre3SecurityVersion: Int? {
+        get { (store.object(forKey: DefaultsKey.libre3SecurityVersion.rawValue) as? NSNumber)?.intValue }
+        set {
+            if let newValue { store.setInt(newValue, forKey: .libre3SecurityVersion) }
+            else { store.removeObject(forKey: DefaultsKey.libre3SecurityVersion.rawValue) }
+        }
+    }
+
+    /// Full UInt16 NFC localization word; identity selection does not use it.
+    static var libre3Region: Int? {
+        get { (store.object(forKey: DefaultsKey.libre3Region.rawValue) as? NSNumber)?.intValue }
+        set {
+            if let newValue { store.setInt(newValue, forKey: .libre3Region) }
+            else { store.removeObject(forKey: DefaultsKey.libre3Region.rawValue) }
+        }
+    }
+
+    /// Phone credential that last completed full authorization for this sensor.
+    static var libre3AppIdentityLabel: String {
+        get { store.getString(.libre3AppIdentityLabel, defaultValue: "") }
+        set { store.setString(newValue, forKey: .libre3AppIdentityLabel) }
     }
 
     /// Whether the BLE engine is currently in an error state. Written by

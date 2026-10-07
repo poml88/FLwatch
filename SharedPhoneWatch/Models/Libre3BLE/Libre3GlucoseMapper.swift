@@ -2,7 +2,7 @@
 //  Libre3GlucoseMapper.swift
 //  FLwatch
 //
-//  Pure mapping from LibreCRKit's decoded `RealtimeGlucoseReading` to FLwatch's
+//  Pure mapping from RoundWhiteDiscKit's decoded `RealtimeGlucoseReading` to FLwatch's
 //  canonical `LibreLinkUpGlucose`, mirroring `DexcomShareTrendMapper`. This is
 //  the BLE analogue of that mapper: it converts a push-decoded sensor reading
 //  into the same model every downstream surface (home, watch, widgets) already
@@ -12,7 +12,7 @@
 //
 
 import Foundation
-import LibreCRKit
+import RoundWhiteDiscKit
 
 enum Libre3GlucoseMapper {
 
@@ -24,7 +24,7 @@ enum Libre3GlucoseMapper {
 
     // MARK: - Trend arrow
     //
-    // LibreCRKit's `Libre3Trend` has the five Libre levels (plus an
+    // RoundWhiteDiscKit's `Libre3Trend` has the five Libre levels (plus an
     // undetermined/raw escape). FLwatch's `TrendArrow` is a superset that also
     // models the two Dexcom "very quickly" extremes — Libre never produces
     // those, so the five real levels map straight across and anything
@@ -171,7 +171,7 @@ enum Libre3GlucoseMapper {
         )
     }
 
-    /// Scalar core kept separate from LibreCRKit construction so the app target's
+    /// Scalar core kept separate from RoundWhiteDiscKit construction so the app target's
     /// mapping semantics remain unit-testable without linking the package into the
     /// test target independently.
     static func makeGlucose(

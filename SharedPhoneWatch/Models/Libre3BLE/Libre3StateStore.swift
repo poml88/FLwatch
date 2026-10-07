@@ -2,17 +2,119 @@
 //  Libre3StateStore.swift
 //  FLwatch
 //
-//  Bridges the LibreCRKit `Libre3SensorState` and FLwatch's split
+//  Bridges the RoundWhiteDiscKit `Libre3SensorState` and FLwatch's split
 //  persistence: the secret BLE PIN → keychain (`Libre3PINStore`), the non-secret
 //  metadata → app group (`SharedData`). The phone writes pairing state after NFC;
 //  the watch later installs the same shape from its provisioning package.
 //
 
 import Foundation
-import LibreCRKit
+import RoundWhiteDiscKit
 import OSLog
 #if os(iOS)
 import StoreKit
+import CryptoKit
+#endif
+
+enum Libre3AppIdentityLoadingError: Error {
+    case invalidPayload
+}
+
+#if os(iOS)
+/// Phone-only credentials, pinned to LibreLoop's Arweave payload. The watch
+/// receives only the reconnect key. Keep this in an existing target source so
+/// neither app needs a bundled credential resource or a project-file change.
+actor Libre3AppIdentities {
+    static let shared = Libre3AppIdentities()
+    private static let transactionID = "qWbA3dXIHU2sU51oYtdYlouSfkCx-GczN2swLQb0upk"
+    private static let expectedPayloadSHA256 = "ab18ce8bcb978526e102cc5e16440f06d2aee19426c26a15dd0013d66e9995ed"
+    private static let gateways = ["https://arweave.net", "https://turbo-gateway.com"]
+    private var inFlight: Task<Void, Error>?
+
+    func ensureInstalled() async throws {
+        if AppIdentities.isInstalled { return }
+        if let inFlight {
+            try await inFlight.value
+            return
+        }
+        let task = Task { try await self.install() }
+        inFlight = task
+        defer { inFlight = nil }
+        try await task.value
+    }
+
+    private func install() async throws {
+        let fileURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("FLwatch", isDirectory: true)
+            .appendingPathComponent("app-credentials-v1.xz")
+        if let saved = try? Data(contentsOf: fileURL) {
+            do {
+                try Self.installBlob(saved)
+                Logger.libre3.info("Libre3 BLE pairing identities installed from cache")
+                return
+            } catch {
+                // Never log validation errors: they can contain credential input.
+                Logger.libre3.info("Libre3 BLE pairing identity cache rejected; downloading again")
+            }
+        }
+
+        var lastError: Error = AppIdentityError.notInstalled
+        for gateway in Self.gateways {
+            guard let url = URL(string: "\(gateway)/\(Self.transactionID)") else { continue }
+            let blob: Data
+            do {
+                let (data, response) = try await URLSession.shared.data(from: url)
+                guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+                    throw URLError(.badServerResponse)
+                }
+                blob = data
+            } catch {
+                Logger.libre3.info("Libre3 BLE pairing identity gateway unavailable: \(gateway, privacy: .public)")
+                continue
+            }
+            do {
+                try Self.installBlob(blob)
+            } catch {
+                lastError = error
+                Logger.libre3.error("Libre3 BLE pairing identity gateway payload rejected: \(gateway, privacy: .public)")
+                continue
+            }
+            do {
+                try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try blob.write(to: fileURL, options: .atomic)
+            } catch {
+                // Valid in-memory credentials still allow pairing if caching fails.
+                Logger.libre3.error("Libre3 BLE pairing identities installed but could not be cached")
+            }
+            Logger.libre3.info("Libre3 BLE pairing identities installed from \(gateway, privacy: .public)")
+            return
+        }
+        throw lastError
+    }
+
+    nonisolated private static func installBlob(_ blob: Data) throws {
+        do {
+            let payload = try (blob as NSData).decompressed(using: .lzma) as Data
+            try validatePayload(payload)
+            try AppIdentities.install(json: payload)
+            guard !(try AppIdentities.installed()).isEmpty else {
+                throw AppIdentityError.notInstalled
+            }
+        } catch let error as AppIdentityError {
+            throw error
+        } catch {
+            throw Libre3AppIdentityLoadingError.invalidPayload
+        }
+    }
+
+    /// Verify the decompressed bytes before parsing or installing any credentials.
+    nonisolated static func validatePayload(_ payload: Data) throws {
+        let digest = SHA256.hash(data: payload).map { String(format: "%02x", $0) }.joined()
+        guard digest == expectedPayloadSHA256 else {
+            throw Libre3AppIdentityLoadingError.invalidPayload
+        }
+    }
+}
 #endif
 
 enum Libre3StateStoreError: Error {
@@ -53,6 +155,10 @@ struct Libre3ProvisionedState: Codable, Equatable, Sendable {
     let wearDurationMinutes: Int
     let generation: Int
     let productType: Int
+    // Optional so older phone/watch provisioning payloads still decode.
+    let securityVersion: Int?
+    // Preserve the full UInt16 localization word on the provisioning wire.
+    let region: Int?
     let sensorStartDateMillisecondsSince1970: Int64?
     let blePIN: Data
     let reconnectKey: Data?
@@ -75,12 +181,12 @@ struct Libre3ReceiverIDPreview: Equatable, Sendable {
     let usesOverride: Bool
 }
 
-/// The LibreCRKit fold this app applies to its account-specific input, or nil
+/// The RoundWhiteDiscKit fold this app applies to its account-specific input, or nil
 /// when it derives nothing from an account — `.flwatchOnly` presents the
 /// installation identity instead.
 ///
 /// Lives here rather than on the type itself: `Libre3ActivatingApp` also compiles
-/// into widget targets that do not link LibreCRKit and therefore cannot name
+/// into widget targets that do not link RoundWhiteDiscKit and therefore cannot name
 /// `Libre3ReceiverID.Derivation`. Exhaustive on purpose, and must mirror
 /// `usesLibreViewAccount` — see the note there.
 extension Libre3ActivatingApp {
@@ -182,7 +288,7 @@ enum Libre3StateStore {
     /// `activatingApp`, or nil when neither can resolve one. The single place
     /// this mapping happens, so the UI matches the next scan.
     ///
-    /// The folds themselves are LibreCRKit's, lowercasing included, so
+    /// The folds themselves are RoundWhiteDiscKit's, lowercasing included, so
     /// `.freeStyleLibre3` stays byte-identical to the FNV over the lowercased
     /// Account ID that shipped before this setting existed.
     static func receiverID(
@@ -302,7 +408,7 @@ enum Libre3StateStore {
     }
 
     /// Formatted preview of the above, so the view layer needn't import
-    /// LibreCRKit. Nil when neither account data nor an override resolves an ID.
+    /// RoundWhiteDiscKit. Nil when neither account data nor an override resolves an ID.
     static func receiverIDPreviewDetails(
         forAccountID accountID: String,
         activatingApp: Libre3ActivatingApp,
@@ -550,9 +656,10 @@ enum Libre3StateStore {
         try? Libre3PINStore.deleteReconnectKey()
         // Every NFC re-pair must rediscover and authenticate the BLE peripheral.
         SharedData.libre3PeripheralUUID = ""
+        SharedData.libre3AppIdentityLabel = ""
         SharedData.libre3Serial = serial
         SharedData.libre3BleAddress = state.bleAddress ?? ""
-        // Firmware + lifecycle/model fields come straight from LibreCRKit's
+        // Firmware + lifecycle/model fields come straight from RoundWhiteDiscKit's
         // patch-info parser (offsets fixed upstream in d96c914 to match what we
         // validated against DiaBLE/Juggluco). Persisted so reconnect needs no
         // NFC re-scan.
@@ -561,6 +668,8 @@ enum Libre3StateStore {
         SharedData.libre3WearDurationMinutes = Int(patchInfo.wearDurationMinutes)
         SharedData.libre3Generation = Int(patchInfo.generation)
         SharedData.libre3ProductType = Int(patchInfo.productType)
+        SharedData.libre3SecurityVersion = Int(patchInfo.securityVersion)
+        SharedData.libre3Region = Int(patchInfo.region)
         if let receiverID = state.receiverID {
             SharedData.libre3ReceiverIDHex = receiverID.littleEndianHex
         }
@@ -641,6 +750,8 @@ enum Libre3StateStore {
         SharedData.libre3WearDurationMinutes = state.wearDurationMinutes
         SharedData.libre3Generation = state.generation
         SharedData.libre3ProductType = state.productType
+        SharedData.libre3SecurityVersion = state.securityVersion
+        SharedData.libre3Region = state.region
         SharedData.libre3SensorStartDate = state.sensorStartDate
         SharedData.libre3CalibrationSensorSerial = state.calibrationSensorSerial
         SharedData.libre3CalibrationOffsetMgDL = state.calibrationOffsetMgDL
@@ -692,6 +803,9 @@ enum Libre3StateStore {
         SharedData.libre3WearDurationMinutes = 0
         SharedData.libre3Generation = 0
         SharedData.libre3ProductType = 0
+        SharedData.libre3SecurityVersion = nil
+        SharedData.libre3Region = nil
+        SharedData.libre3AppIdentityLabel = ""
     }
 
     static var isPaired: Bool { SharedData.libre3SensorIsPaired }

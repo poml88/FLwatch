@@ -111,7 +111,18 @@ struct PhoneAppHomeView: View {
     }
     
     // -------------------------------------
-    private let startupUpdateNote: StartupUpdateNote? = nil
+    /// Shown once, and only to users whose Libre 3 sensor the launch migration
+    /// unpaired. Version 3 because the commented example below uses 2.
+    private var startupUpdateNote: StartupUpdateNote? {
+        guard SharedData.libre3RepairNoticePending else { return nil }
+        return StartupUpdateNote(
+            version: 3,
+            message: String(
+                localized: "Libre 3 sensors now pair in a new way. Please pair your sensor once more with NFC on the Connect tab. Until then, FLwatch receives no readings from it on the phone or the watch.",
+                comment: "Update note shown once after updating, when a Libre 3 sensor paired with an older app version was unpaired. The user must scan it again with NFC on the Connect tab."
+            )
+        )
+    }
 
     /// `value` changes when FLwatch applied a correction; `rawValue` remains the
     /// sensor-reported mg/dL × 10. Base the indicator on the displayed reading,

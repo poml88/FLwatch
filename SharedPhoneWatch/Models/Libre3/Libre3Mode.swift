@@ -4,12 +4,12 @@
 //
 //  The three Libre 3 direct-BLE pairing modes. Persisted (so the UI can show
 //  how the current sensor was paired) and used by `Libre3PairingCoordinator` to
-//  choose the LibreCRKit `Libre3NFCScanMode`. Also holds `Libre3ActivatingApp`,
-//  which selects the account-specific receiver-ID input and LibreCRKit fold.
+//  choose the RoundWhiteDiscKit `Libre3NFCScanMode`. Also holds `Libre3ActivatingApp`,
+//  which selects the account-specific receiver-ID input and RoundWhiteDiscKit fold.
 //
-//  Kept in shared code (no LibreCRKit / CoreNFC import) because it round-trips
-//  through `SharedData`, which compiles into the watch + widget targets that
-//  don't link LibreCRKit. For the same reason both mappings onto LibreCRKit
+//  Kept in shared code (no RoundWhiteDiscKit / CoreNFC import) because it round-trips
+//  through `SharedData`, which also compiles into widget targets that don't
+//  link RoundWhiteDiscKit. For the same reason both mappings onto RoundWhiteDiscKit
 //  types live phone-side: mode → `Libre3NFCScanMode` in the coordinator,
 //  activating app → `Libre3ReceiverID.Derivation` in `Libre3StateStore`.
 //
@@ -130,7 +130,7 @@ enum Libre3ActivatingApp: String, Codable, CaseIterable, Equatable, Identifiable
     /// so the account rows are needed and takeover / parallel join are possible.
     ///
     /// Answers the same question as the phone-side `derivation` mapping in
-    /// `Libre3StateStore`, which can't live here because it names a LibreCRKit
+    /// `Libre3StateStore`, which can't live here because it names a RoundWhiteDiscKit
     /// type this file's other targets don't link. Exhaustive on purpose, so a new
     /// case forces both switches to be revisited; that the two agree is asserted
     /// by `LibreWristTests.testActivatingAppAccountUseMatchesDerivation`.
