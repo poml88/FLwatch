@@ -26950,7 +26950,7 @@
       }
     },
     "Sensor reconnect limited" : {
-      "comment" : "Heading in Apple Watch sensor connection help matching the notification title for limited Libre 3 sensor reconnection after repeated signal losses.\nTitle of an Apple Watch workout notification when repeated sensor connection timeouts likely limit Bluetooth reconnects.",
+      "comment" : "Accessibility label for the gate glyph on the Apple Watch workout screen, shown while repeated sensor connection losses likely limit Bluetooth reconnects. Same wording as the notification title.\nHeading in Apple Watch sensor connection help matching the notification title for limited Libre 3 sensor reconnection after repeated signal losses.\nTitle of an Apple Watch workout notification when repeated sensor connection timeouts likely limit Bluetooth reconnects.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
