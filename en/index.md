@@ -24,7 +24,7 @@ FLwatch began as a personal project to support my own diabetes management. I mad
 
 - Glucose, insulin-on-board, and insulin-activity graphs on iPhone and Apple Watch
 - Direct Bluetooth, LibreLinkUp, and Dexcom Share connection options
-- Workout mode for all supported CGM providers, with direct-to-watch Bluetooth readings from Libre 3 and Libre 3+ during workouts
+- Workout mode for all supported CGM providers, with **direct-to-watch** Bluetooth readings from Libre 3 and Libre 3+ during workouts
 - Configurable glucose and sensor alerts
 - Home Screen, Lock Screen, StandBy, and Apple Watch widgets and complications
 - Live Activities, CarPlay, Siri, and Shortcuts support
@@ -36,7 +36,7 @@ FLwatch began as a personal project to support my own diabetes management. I mad
 | Manufacturer | Sensors | Connection |
 | --- | --- | --- |
 | Abbott | FreeStyle Libre 2 and FreeStyle Libre 2+ | LibreLinkUp |
-| Abbott | FreeStyle Libre 3 and FreeStyle Libre 3+ | Direct Bluetooth to iPhone; direct Bluetooth to Apple Watch during FLwatch workouts; or LibreLinkUp |
+| Abbott | FreeStyle Libre 3 and FreeStyle Libre 3+ | Direct Bluetooth to iPhone; **direct Bluetooth to Apple Watch** during FLwatch workouts; or LibreLinkUp |
 | Dexcom | G6, G7, and ONE+ | Dexcom Share |
 
 ### Features {#features}
@@ -55,6 +55,8 @@ FLwatch began as a personal project to support my own diabetes management. I mad
 - Additional critical-low and signal-loss alerts for directly connected FreeStyle Libre 3 and FreeStyle Libre 3+ sensors
 - Sensor warm-up status, remaining life, expiry, and replacement notifications for directly connected FreeStyle Libre 3 and FreeStyle Libre 3+ sensors
 - Optional Critical Alerts and separate Do Not Disturb times for each alert type
+
+Configure regular alerts on the iPhone's Notifications tab (bell icon).
 
 FLwatch alerts are provided on a best-effort basis and are not guaranteed. They may be delayed or missed. Always confirm your glucose reading before taking action.
 
@@ -80,6 +82,7 @@ FLwatch alerts are provided on a best-effort basis and are not guaranteed. They 
 #### Apple Watch Workouts
 
 - Workout mode for all supported CGM providers, with a glucose graph and configurable workout low-glucose alert
+- Additional critically-low, rapid-drop, and missing-reading alerts, with a 15-minute snooze for glucose notifications
 - Direct Bluetooth readings from FreeStyle Libre 3 and FreeStyle Libre 3+ while a workout is running in FLwatch
 - Workout view showing glucose, trend, heart rate, elapsed time, and insulin on board when available
 - Distance for supported outdoor activities
@@ -90,6 +93,8 @@ LibreLinkUp and Dexcom Share workouts require internet access on the watch and c
 
 - Export glucose readings and recorded insulin doses to Apple Health
 - With a direct FreeStyle Libre 3 or FreeStyle Libre 3+ Bluetooth connection, export glucose readings and recorded insulin doses to your own Nightscout server
+
+Configure these exports under `Settings > Data Sharing` on iPhone. Apple Health glucose and insulin exports can be enabled independently.
 
 {% include screenshots.html %}
 
@@ -121,6 +126,12 @@ In `Started with`, select the app and version **used to activate this sensor**, 
 | `Libre by Abbott` | Libre by Abbott version 1.4.0 or later |
 | `Libre by Abbott V ≤ 1.3.0` | Libre by Abbott version 1.3.0 or earlier |
 
+<div class="notice-note">
+<strong>Libre by Abbott: retrieving the Receiver ID signs you out</strong>
+<br>
+For Libre by Abbott version 1.4.0 or later, retrieving the Receiver ID logs you out of the Abbott app. Version 1.4.0 has no logout or login button, so you must delete and reinstall the Abbott app to log back in. The Receiver ID is stable and FLwatch saves it, so you only need to retrieve it once for the same account.
+</div>
+
 These three options use different receiver IDs, so the selection must match how the sensor was activated. Sign in with the LibreView account used by that app, then tap `Get Receiver ID`. Use the sensor wearer's LibreView account, not a LibreLinkUp follower account.
 
 - Only one app should access the sensor at a time. Before using FLwatch, fully close the Abbott app and turn off its Bluetooth access in iOS Settings. Switching between apps can take two to three minutes.
@@ -133,6 +144,8 @@ The `Fresh` mode is only for a brand-new, unused sensor. It starts the sensor's 
 If you choose `FLwatch only` when activating a fresh sensor, no Abbott app can use that sensor later. Select `FLwatch only` again if you need to re-pair it; no LibreView account is required for this option.
 
 Once paired, keep your iPhone near the sensor. Glucose readings are received directly over Bluetooth about once a minute, without a follower account or cloud connection. A direct connection also enables calibration offset, critical-low and signal-loss alerts, sensor-status notifications, and Nightscout export.
+
+The optional offset is configured under `Settings > Sensor calibration`. It applies a local correction only to newly received readings in FLwatch; it does not recalibrate the sensor or change existing history.
 
 These direct-connection features are not available for FreeStyle Libre 2 or FreeStyle Libre 2+ sensors.
 
