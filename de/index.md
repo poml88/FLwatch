@@ -56,7 +56,7 @@ FLwatch entstand als persönliches Projekt, um mich bei meinem eigenen Diabetesm
 - Hinweise zu Aufwärmstatus, verbleibender Laufzeit, Ablauf und Austausch direkt verbundener FreeStyle Libre 3- und FreeStyle Libre 3+-Sensoren
 - Optionale kritische Hinweise und separate „Nicht stören“-Zeiträume für jede Warnungsart
 
-Reguläre Warnungen konfigurieren Sie auf dem iPhone im Tab für Benachrichtigungen (Glockensymbol).
+Reguläre Warnungen konfigurieren Sie auf dem iPhone im Tab `Mitteilungen` (Glockensymbol).
 
 FLwatch-Hinweise werden nach bestem Bemühen zugestellt und sind nicht garantiert. Sie können verspätet eintreffen oder ausbleiben. Bestätigen Sie immer Ihren Glukosewert, bevor Sie handeln.
 

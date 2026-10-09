@@ -84,7 +84,7 @@ FLwatch-meldingen worden naar beste vermogen afgeleverd en zijn niet gegarandeer
 - Work-outmodus voor alle ondersteunde CGM-aanbieders, met een glucosegrafiek en instelbare waarschuwing voor lage glucose tijdens de work-out
 - Extra waarschuwingen voor kritiek lage glucose, snelle daling en ontbrekende metingen, met een sluimerfunctie van 15 minuten voor glucosemeldingen
 - Rechtstreekse Bluetooth-metingen van FreeStyle Libre 3 en FreeStyle Libre 3+ zolang er een work-out in FLwatch loopt
-- Work-outweergave met glucose, trend, hartslag, verstreken tijd en insuline aan boord wanneer beschikbaar
+- Work-outweergave met glucose, trend, hartslag, verstreken tijd en actieve insuline wanneer beschikbaar
 - Afstand voor ondersteunde buitenactiviteiten
 
 Work-outs met LibreLinkUp of Dexcom Share vereisen internettoegang op het horloge en voortdurende uploads van glucosemetingen door de telefoon van de sensordrager.
