@@ -24,6 +24,7 @@ FLwatch est né d’un projet personnel destiné à m’aider dans la gestion de
 
 - Graphiques de glucose, d’insuline active et d’activité de l’insuline sur iPhone et Apple Watch
 - Connexions possibles par Bluetooth direct, LibreLinkUp et Dexcom Share
+- Mode exercice pour tous les fournisseurs de CGM pris en charge, avec réception Bluetooth **directement sur l’Apple Watch** des mesures Libre 3 et Libre 3+ pendant l’exercice
 - Alertes de glycémie et de capteur configurables
 - Widgets et complications pour l’écran d’accueil, l’écran verrouillé, le mode En veille et l’Apple Watch
 - Prise en charge des activités en direct, de CarPlay, de Siri et de Raccourcis
@@ -35,7 +36,7 @@ FLwatch est né d’un projet personnel destiné à m’aider dans la gestion de
 | Fabricant | Capteurs | Connexion |
 | --- | --- | --- |
 | Abbott | FreeStyle Libre 2 et FreeStyle Libre 2+ | LibreLinkUp |
-| Abbott | FreeStyle Libre 3 et FreeStyle Libre 3+ | Bluetooth direct ou LibreLinkUp |
+| Abbott | FreeStyle Libre 3 et FreeStyle Libre 3+ | Bluetooth direct vers l’iPhone ; **Bluetooth direct vers l’Apple Watch** pendant les exercices FLwatch ; ou LibreLinkUp |
 | Dexcom | G6, G7 et ONE+ | Dexcom Share |
 
 ### Fonctionnalités {#features}
@@ -54,6 +55,8 @@ FLwatch est né d’un projet personnel destiné à m’aider dans la gestion de
 - Alertes supplémentaires de glycémie très basse et de perte du signal pour les capteurs FreeStyle Libre 3 et FreeStyle Libre 3+ connectés directement
 - Notifications concernant le démarrage, l’autonomie restante, l’expiration et le remplacement des capteurs FreeStyle Libre 3 et FreeStyle Libre 3+ connectés directement
 - Alertes critiques facultatives et plages « Ne pas déranger » distinctes pour chaque type d’alerte
+
+Configurez les alertes habituelles dans l’onglet Notifications de l’iPhone (icône de cloche).
 
 Les alertes FLwatch sont envoyées dans la mesure du possible et ne sont pas garanties. Elles peuvent être retardées ou manquées. Confirmez toujours votre glycémie avant d’agir.
 
@@ -76,10 +79,22 @@ Les alertes FLwatch sont envoyées dans la mesure du possible et ne sont pas gar
 - Vue CarPlay affichant le glucose actuel et l’IOB
 - Courbes de glycémie dans CarPlay grâce aux widgets et aux activités en direct
 
+#### Exercices sur Apple Watch
+
+- Mode exercice pour tous les fournisseurs de CGM pris en charge, avec courbe de glycémie et alerte de glycémie basse configurable pour l’exercice
+- Alertes supplémentaires de glycémie très basse, de baisse rapide et d’absence de mesures, avec une suspension de 15 minutes des notifications de glycémie
+- Mesures Bluetooth directes de FreeStyle Libre 3 et FreeStyle Libre 3+ pendant un exercice lancé dans FLwatch
+- Vue d’exercice affichant le glucose, la tendance, la fréquence cardiaque, le temps écoulé et l’insuline active lorsqu’elle est disponible
+- Distance pour les activités de plein air prises en charge
+
+Les exercices avec LibreLinkUp ou Dexcom Share nécessitent un accès à Internet sur la montre et l’envoi continu des mesures de glucose par le téléphone du porteur du capteur.
+
 #### Exportation des données
 
 - Exportation des mesures de glucose et des doses d’insuline enregistrées vers Apple Health
 - Avec une connexion Bluetooth directe à un capteur FreeStyle Libre 3 ou FreeStyle Libre 3+, exportation des mesures de glucose et des doses d’insuline enregistrées vers votre propre serveur Nightscout
+
+Configurez ces exportations sous `Paramètres > Partage des données` sur l’iPhone. Les exportations du glucose et de l’insuline vers Apple Health peuvent être activées indépendamment.
 
 {% include screenshots.html %}
 
@@ -95,22 +110,58 @@ Vous pourrez modifier ultérieurement le CGM sélectionné dans les `Paramètres
 
 Si l’application watchOS est installée, les réglages et les identifiants de connexion au cloud saisis dans l’application iPhone sont transférés vers l’application Apple Watch. Vous pouvez les transférer à nouveau ultérieurement en appuyant une nouvelle fois sur `Se connecter`.
 
-### Connexion directe aux capteurs FreeStyle Libre 3 et FreeStyle Libre 3+
+### Connexion directe aux capteurs FreeStyle Libre 3 et FreeStyle Libre 3+ {#direct-sensor-setup}
+
+#### Configuration sur iPhone
 
 Lors d’une nouvelle installation, choisissez `FreeStyle Libre 3 (Bluetooth)` dans le sélecteur de CGM. FLwatch ouvre alors automatiquement l’écran de connexion Bluetooth.
 
-Avant le jumelage :
+Pour un capteur déjà activé, le mode `Parallèle` est recommandé. Il conserve la validité des identifiants de connexion de l’application Abbott enregistrés dans le capteur, ce qui facilite le retour ultérieur à cette application.
 
-- Pour la plupart des utilisateurs dont le capteur est déjà activé, le mode `Parallèle` est recommandé. Les identifiants de connexion FreeStyle Libre 3 déjà enregistrés dans le capteur restent ainsi valides, ce qui facilite le retour ultérieur à l’application FreeStyle Libre 3.
-- Connectez-vous avec le compte LibreView utilisé pour activer le capteur, puis touchez `Obtenir l’identifiant du compte` dans FLwatch. Pour le jumelage parallèle, les informations du compte doivent correspondre à celles du compte ayant servi à activer le capteur. Ce compte est différent du compte suiveur LibreLinkUp utilisé pour une connexion au cloud.
-- Une seule application doit accéder au capteur à la fois. Avant d’utiliser FLwatch, fermez complètement l’application FreeStyle Libre 3 et désactivez son accès au Bluetooth dans les réglages iOS. Le passage d’une application à l’autre peut prendre deux à trois minutes.
+Dans `Démarré avec`, sélectionnez l’application et la version **utilisées pour activer ce capteur**, même si vous avez depuis mis à jour l’application Abbott :
+
+| Option dans FLwatch | Capteur activé avec |
+| --- | --- |
+| `FreeStyle Libre 3` | L’application FreeStyle Libre 3, y compris FreeStyle Libre 3 – US |
+| `Libre by Abbott` | Libre by Abbott version 1.4.0 ou ultérieure |
+| `Libre by Abbott V ≤ 1.3.0` | Libre by Abbott version 1.3.0 ou antérieure |
+
+<div class="notice-note">
+<strong>Libre by Abbott : récupérer l’identifiant du récepteur vous déconnecte</strong>
+<br>
+Avec Libre by Abbott version 1.4.0 ou ultérieure, la récupération de l’identifiant du récepteur vous déconnecte de l’application Abbott. La version 1.4.0 ne possède aucun bouton de déconnexion ou de connexion : vous devez donc supprimer puis réinstaller l’application Abbott pour vous reconnecter. L’identifiant du récepteur est stable et FLwatch l’enregistre ; il suffit donc de le récupérer une seule fois pour le même compte.
+</div>
+
+Ces trois options utilisent des identifiants de récepteur différents : votre choix doit correspondre à la manière dont le capteur a été activé. Connectez-vous avec le compte LibreView utilisé par cette application, puis touchez `Obtenir l’identifiant du récepteur`. Utilisez le compte LibreView du porteur du capteur, et non un compte suiveur LibreLinkUp.
+
+- Une seule application doit accéder au capteur à la fois. Avant d’utiliser FLwatch, fermez complètement l’application Abbott et désactivez son accès au Bluetooth dans les réglages iOS. Le passage d’une application à l’autre peut prendre deux à trois minutes.
 - Lorsque FLwatch vous demande d’effectuer un scan, placez le haut de votre iPhone contre le capteur et maintenez-le immobile jusqu’à la fin du jumelage NFC.
 
-Le mode `Neuf` est exclusivement réservé à un capteur neuf et jamais utilisé. Il démarre immédiatement la durée de port du capteur et cette opération est irréversible. La plupart des utilisateurs doivent activer le capteur dans l’application FreeStyle Libre 3, puis le jumeler avec FLwatch en mode `Parallèle`.
+Si le jumelage échoue avec l’erreur `0xB1`, vérifiez le choix dans `Démarré avec` et le compte LibreView. Les capteurs activés avec un lecteur FreeStyle Libre 3 ne peuvent pas être jumelés avec FLwatch.
+
+Le mode `Neuf` est exclusivement réservé à un capteur neuf et jamais utilisé. Il démarre immédiatement la durée de port du capteur et cette opération est irréversible. La plupart des utilisateurs doivent activer le capteur dans leur application Abbott, puis le jumeler avec FLwatch en mode `Parallèle`.
+
+Si vous choisissez `FLwatch uniquement` pour activer un capteur neuf, aucune application Abbott ne pourra utiliser ce capteur par la suite. Sélectionnez à nouveau `FLwatch uniquement` si vous devez le jumeler de nouveau ; aucun compte LibreView n’est requis pour cette option.
 
 Une fois le jumelage terminé, gardez votre iPhone à proximité du capteur. Les mesures de glucose sont reçues directement par Bluetooth environ une fois par minute, sans compte suiveur ni connexion au cloud. Une connexion directe permet également d’utiliser le décalage d’étalonnage, les alertes de glycémie très basse et de perte du signal, les notifications d’état du capteur et l’exportation vers Nightscout.
 
+Le décalage facultatif se configure sous `Paramètres > Étalonnage du capteur`. Il applique une correction locale uniquement aux nouvelles mesures reçues dans FLwatch ; il ne réétalonne pas le capteur et ne modifie pas l’historique existant.
+
 Ces fonctionnalités de connexion directe ne sont pas disponibles avec les capteurs FreeStyle Libre 2 et FreeStyle Libre 2+.
+
+#### Apple Watch pendant les exercices {#direct-to-watch}
+
+Avec Libre 3 et Libre 3+, FLwatch peut recevoir les mesures directement sur l’Apple Watch pendant un exercice ; vous pouvez donc laisser votre iPhone chez vous. Après la configuration initiale, les mesures Bluetooth directes ne nécessitent ni accès à Internet ni Apple Watch cellulaire.
+
+1. Jumelez le capteur sur l’iPhone comme décrit ci-dessus. Gardez l’iPhone et la montre à proximité, avec FLwatch installé sur les deux. Sur l’écran `Se connecter` de l’iPhone, vérifiez que `Directement sur l’Apple Watch` affiche `Prêt pour la connexion directe au capteur`.
+2. Ouvrez FLwatch sur l’Apple Watch et balayez jusqu’à `Exercice`. Choisissez votre activité, ajustez `Seuil bas d’exercice` et vérifiez `Alertes d’exercice`. Autorisez l’accès au Bluetooth et les permissions Santé demandées.
+3. Touchez `Démarrer` et gardez la montre près du capteur. Vérifiez qu’une nouvelle mesure de glucose apparaît avant de laisser votre iPhone.
+
+La connexion directe à la montre fonctionne pendant les exercices **démarrés dans FLwatch**. Démarrer un exercice dans l’application Exercice d’Apple ne lance pas cette connexion.
+
+**Portez votre montre sur le bras le plus proche du capteur.** Si le signal doit traverser votre corps, la reconnexion peut prendre beaucoup plus de temps. Des déconnexions restent possibles et peuvent interrompre les mesures et les alertes de glycémie. Si FLwatch affiche `Reconnexion du capteur limitée`, désactivez puis réactivez le Bluetooth dans les **réglages de l’Apple Watch**, puis rapprochez la montre du capteur. Le lien `Conseils de connexion du capteur` sur l’écran d’exercice de FLwatch fournit une aide supplémentaire.
+
+Touchez `Terminer l’exercice` dans FLwatch lorsque vous avez terminé. L’exercice est enregistré dans Apple Health et l’iPhone peut reprendre la connexion au capteur lorsqu’il est à proximité. `Récupérer le capteur` sur l’iPhone renvoie les mesures vers le téléphone, mais ne termine pas l’exercice ; terminez-le séparément sur l’Apple Watch.
 
 ### Configurer LibreLinkUp
 
@@ -158,7 +209,9 @@ Si l’application Apple Watch n’était pas installée lors de la connexion, i
 
 ### Heartbeat Bluetooth pour les connexions au cloud
 
-Avec LibreLinkUp ou Dexcom Share, les alertes FLwatch de glycémie basse et élevée nécessitent le heartbeat Bluetooth. Activez-le sous `Paramètres > Heartbeat Bluetooth` et sélectionnez le transmetteur de capteur situé à proximité. FLwatch ne peut pas envoyer ces alertes avec une connexion au cloud lorsque le heartbeat est désactivé ; continuez à utiliser les alertes du fabricant du capteur comme alertes principales.
+Pour les alertes habituelles de glycémie basse et élevée sur l’iPhone avec LibreLinkUp ou Dexcom Share, activez le heartbeat Bluetooth sous `Paramètres > Heartbeat Bluetooth` et sélectionnez le transmetteur de capteur situé à proximité. Ces alertes sur iPhone nécessitent le heartbeat ; continuez à utiliser les alertes du fabricant du capteur comme alertes principales.
+
+Pendant un exercice démarré dans FLwatch sur l’Apple Watch, la montre actualise les mesures du cloud et fournit ses propres alertes d’exercice. Celles-ci ne nécessitent pas le réglage de heartbeat Bluetooth de l’iPhone, mais la montre doit avoir accès à Internet et le téléphone du porteur du capteur doit continuer à envoyer les mesures de glucose.
 
 La connexion Bluetooth directe aux capteurs FreeStyle Libre 3 et FreeStyle Libre 3+ n’utilise pas ce réglage.
 
@@ -179,6 +232,7 @@ Le calculateur intégré utilise la taille de la portion et un rapport insuline/
 - Placez un widget ou une complication sur l’écran d’accueil, l’écran verrouillé ou le cadran pour accéder rapidement à FLwatch.
 - Les activités en direct de l’iPhone peuvent être recopiées dans la Smart Stack de l’Apple Watch à partir de watchOS 11.
 - Siri et Raccourcis peuvent afficher ou lire votre glycémie actuelle et enregistrer des doses d’insuline.
+- Pour des instructions détaillées et des exemples de phrases, ouvrez `Paramètres > Intégration Siri` dans FLwatch sur l’iPhone.
 - Pour un accès mains libres, créez un raccourci qui ouvre FLwatch, attribuez-lui un nom tel que `courbe de glycémie` et activez `Afficher sur Apple Watch` si vous le souhaitez.
 
 ### Notes techniques

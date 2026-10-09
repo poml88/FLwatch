@@ -24,6 +24,7 @@ FLwatch最初是一个用于辅助我管理自身糖尿病的个人项目。我�
 
 - 在iPhone和Apple Watch上显示葡萄糖、体内活性胰岛素和胰岛素活性图表
 - 支持蓝牙直连、LibreLinkUp和Dexcom Share连接
+- 支持所有兼容CGM提供方的体能训练模式，训练期间可通过蓝牙将Libre 3和Libre 3+读数**直接接收至Apple Watch**
 - 可配置葡萄糖和传感器警报
 - 支持主屏幕、锁定屏幕、StandBy和Apple Watch小组件与复杂功能
 - 支持实时活动、CarPlay、Siri和快捷指令
@@ -35,7 +36,7 @@ FLwatch最初是一个用于辅助我管理自身糖尿病的个人项目。我�
 | 制造商 | 传感器 | 连接方式 |
 | --- | --- | --- |
 | Abbott | FreeStyle Libre 2和FreeStyle Libre 2+ | LibreLinkUp |
-| Abbott | FreeStyle Libre 3和FreeStyle Libre 3+ | 蓝牙直连或LibreLinkUp |
+| Abbott | FreeStyle Libre 3和FreeStyle Libre 3+ | 蓝牙直连iPhone；FLwatch体能训练期间**蓝牙直连Apple Watch**；或LibreLinkUp |
 | Dexcom | G6、G7和ONE+ | Dexcom Share |
 
 ### 功能 {#features}
@@ -54,6 +55,8 @@ FLwatch最初是一个用于辅助我管理自身糖尿病的个人项目。我�
 - 为蓝牙直连的FreeStyle Libre 3和FreeStyle Libre 3+传感器提供葡萄糖严重偏低和信号丢失警报
 - 提供蓝牙直连FreeStyle Libre 3和FreeStyle Libre 3+传感器的预热状态、剩余使用时间、到期和更换通知
 - 可选的关键警报，并可为每种警报类型单独设置“勿扰模式”时段
+
+请在iPhone的通知标签页（铃铛图标）中配置常规警报。
 
 FLwatch警报会尽力送达，但不作保证。警报可能延迟或遗漏。采取行动前，请务必确认葡萄糖读数。
 
@@ -76,10 +79,22 @@ FLwatch警报会尽力送达，但不作保证。警报可能延迟或遗漏。�
 - 显示当前葡萄糖值和IOB的CarPlay视图
 - 通过小组件和实时活动在CarPlay中显示葡萄糖图表
 
+#### Apple Watch体能训练
+
+- 支持所有兼容CGM提供方的体能训练模式，显示葡萄糖图表，并可配置训练期间的低葡萄糖警报
+- 提供葡萄糖严重偏低、快速下降和读数缺失的额外警报，葡萄糖通知可暂停15分钟
+- 在FLwatch中进行体能训练时，通过蓝牙直接接收FreeStyle Libre 3和FreeStyle Libre 3+读数
+- 训练视图显示葡萄糖、趋势、心率、已用时间，以及可用时的体内活性胰岛素
+- 显示支持的户外活动距离
+
+使用LibreLinkUp或Dexcom Share进行训练时，手表需要互联网连接，传感器佩戴者的手机也必须持续上传葡萄糖读数。
+
 #### 数据导出
 
 - 将葡萄糖读数和已记录的胰岛素剂量导出到Apple Health
 - 蓝牙直连FreeStyle Libre 3或FreeStyle Libre 3+传感器时，将葡萄糖读数和已记录的胰岛素剂量导出到您自己的Nightscout服务器
+
+请在iPhone的`设置 > 数据共享`中配置这些导出功能。导出到Apple Health的葡萄糖和胰岛素功能可分别开启。
 
 {% include screenshots.html %}
 
@@ -95,22 +110,58 @@ FLwatch警报会尽力送达，但不作保证。警报可能延迟或遗漏。�
 
 如果已安装watchOS应用，在iPhone应用中输入的云连接设置和凭据会传输到Apple Watch应用。您可以稍后再次轻点`连接`来重新传输。
 
-### 蓝牙直连FreeStyle Libre 3和FreeStyle Libre 3+
+### 蓝牙直连FreeStyle Libre 3和FreeStyle Libre 3+ {#direct-sensor-setup}
+
+#### iPhone设置
 
 全新安装时，请在CGM选择器中选择`FreeStyle Libre 3 (Bluetooth)`。FLwatch随后会自动打开蓝牙连接界面。
 
-配对前：
+对于已激活的传感器，建议选择`并行`模式。该模式会保留传感器中Abbott应用现有连接凭据的有效性，方便您稍后切换回该应用。
 
-- 对于大多数使用已激活传感器的用户，建议选择`并行`模式。该模式会保留传感器现有FreeStyle Libre 3连接凭据的有效性，方便您稍后切换回FreeStyle Libre 3应用。
-- 使用激活传感器时所用的LibreView账户登录，然后在FLwatch中轻点`获取账户ID`。并行配对要求账户信息与激活传感器时所用的账户一致。该账户不同于云连接所使用的LibreLinkUp关注者账户。
-- 同一时间只能有一个应用访问传感器。使用FLwatch前，请彻底关闭FreeStyle Libre 3应用，并在iOS设置中关闭该应用的蓝牙访问权限。在应用之间切换可能需要两到三分钟。
+在`启动应用`中选择**激活此传感器时使用的应用和版本**，即使您之后已经更新了Abbott应用：
+
+| FLwatch中的选项 | 激活传感器时使用的应用 |
+| --- | --- |
+| `FreeStyle Libre 3` | FreeStyle Libre 3应用，包括FreeStyle Libre 3 – US |
+| `Libre by Abbott` | Libre by Abbott 1.4.0或更高版本 |
+| `Libre by Abbott V ≤ 1.3.0` | Libre by Abbott 1.3.0或更早版本 |
+
+<div class="notice-note">
+<strong>Libre by Abbott：获取接收器ID会使您退出登录</strong>
+<br>
+对于Libre by Abbott 1.4.0或更高版本，获取接收器ID会使您退出Abbott应用的登录状态。1.4.0版本没有退出或登录按钮，因此您必须删除并重新安装Abbott应用才能再次登录。接收器ID保持不变，FLwatch会保存它，因此同一账户只需获取一次。
+</div>
+
+这三个选项使用不同的接收器ID，因此选择必须与传感器的激活方式一致。使用该应用所用的LibreView账户登录，然后轻点`获取接收器 ID`。请使用传感器佩戴者的LibreView账户，而不是LibreLinkUp关注者账户。
+
+- 同一时间只能有一个应用访问传感器。使用FLwatch前，请彻底关闭Abbott应用，并在iOS设置中关闭该应用的蓝牙访问权限。在应用之间切换可能需要两到三分钟。
 - 当FLwatch提示扫描时，请将iPhone顶部贴近传感器并保持不动，直至NFC配对完成。
 
-`全新`模式仅适用于从未使用过的全新传感器。它会立即开始计算传感器的佩戴周期，且无法撤销。大多数用户应先在FreeStyle Libre 3应用中激活传感器，然后使用`并行`模式与FLwatch配对。
+如果配对失败并显示错误`0xB1`，请检查`启动应用`选项和LibreView账户。使用FreeStyle Libre 3读取器激活的传感器无法与FLwatch配对。
+
+`全新`模式仅适用于从未使用过的全新传感器。它会立即开始计算传感器的佩戴周期，且无法撤销。大多数用户应先在自己的Abbott应用中激活传感器，然后使用`并行`模式与FLwatch配对。
+
+如果激活全新传感器时选择`仅 FLwatch`，之后任何Abbott应用都无法使用该传感器。如果需要重新配对，也请再次选择`仅 FLwatch`；此选项不需要LibreView账户。
 
 配对后，请将iPhone保持在传感器附近。葡萄糖读数约每分钟通过蓝牙直接接收一次，无需关注者账户或云连接。蓝牙直连还可启用校准偏移、葡萄糖严重偏低和信号丢失警报、传感器状态通知以及Nightscout导出。
 
+可选偏移在`设置 > 传感器校准`中设置。它仅对FLwatch新接收的读数应用本地修正，不会重新校准传感器或更改已有历史记录。
+
 FreeStyle Libre 2和FreeStyle Libre 2+传感器不支持这些蓝牙直连功能。
+
+#### 体能训练期间使用Apple Watch {#direct-to-watch}
+
+使用Libre 3和Libre 3+时，FLwatch可以在体能训练期间直接在Apple Watch上接收读数，让您无需随身携带iPhone。完成初始设置后，蓝牙直连读数不需要互联网连接，也不需要蜂窝网络版Apple Watch。
+
+1. 按上述步骤在iPhone上配对传感器。iPhone和手表均需安装FLwatch，并保持彼此靠近。在iPhone的`连接`界面中，确认`直连 Apple Watch`显示`已准备好直连传感器`。
+2. 在Apple Watch上打开FLwatch，滑动至`体能训练`。选择活动，调整`体能训练低值`并查看`体能训练提醒`。允许蓝牙访问及所请求的健康权限。
+3. 轻点`开始`并将手表保持在传感器附近。确认出现新的葡萄糖读数后，再将iPhone留在原处。
+
+手表直连仅在**FLwatch中启动的体能训练**期间运行。在Apple的体能训练应用中启动训练不会启动此连接。
+
+**请将手表戴在最靠近传感器的那只手臂上。** 如果信号必须穿过身体，重新连接可能需要更长时间。连接仍可能中断，导致读数和葡萄糖警报暂停。如果FLwatch显示`传感器重连受限`，请在**Apple Watch的设置**中关闭再开启蓝牙，然后将手表靠近传感器。FLwatch训练界面中的`传感器连接提示`链接提供更多帮助。
+
+完成后，在FLwatch中轻点`结束体能训练`。训练会保存到Apple Health，iPhone靠近传感器时便可恢复连接。iPhone上的`收回传感器连接`会将读数接收切回手机，但不会结束训练；请在Apple Watch上单独结束训练。
 
 ### 设置LibreLinkUp
 
@@ -158,7 +209,9 @@ Dexcom G6、Dexcom G7和Dexcom ONE+传感器可以通过Dexcom Share提供葡萄
 
 ### 云连接的蓝牙心跳
 
-使用LibreLinkUp或Dexcom Share时，FLwatch的低葡萄糖和高葡萄糖警报需要蓝牙心跳。请在`设置 > 蓝牙心跳`中将其开启，并选择附近的传感器发射器。蓝牙心跳关闭时，FLwatch无法通过云连接发送这些警报；请继续将传感器制造商提供的警报作为主要警报。
+使用LibreLinkUp或Dexcom Share时，请在`设置 > 蓝牙心跳`中开启蓝牙心跳，并选择附近的传感器发射器，以接收iPhone上的常规低葡萄糖和高葡萄糖警报。这些iPhone警报需要蓝牙心跳；请继续将传感器制造商提供的警报作为主要警报。
+
+在Apple Watch的FLwatch中启动体能训练后，手表会刷新云端读数并提供独立的训练警报。这些警报不依赖iPhone的蓝牙心跳设置，但手表需要互联网连接，传感器佩戴者的手机也必须继续上传葡萄糖读数。
 
 蓝牙直连FreeStyle Libre 3和FreeStyle Libre 3+时不使用此设置。
 
@@ -179,6 +232,7 @@ Dexcom G6、Dexcom G7和Dexcom ONE+传感器可以通过Dexcom Share提供葡萄
 - 将小组件或复杂功能放在主屏幕、锁定屏幕或表盘上，即可快速访问FLwatch。
 - 从watchOS 11开始，iPhone上的实时活动可以镜像到Apple Watch的智能叠放中。
 - Siri和快捷指令可以显示或朗读当前葡萄糖值，也可以记录胰岛素剂量。
+- 如需详细说明和示例语句，请在iPhone的FLwatch中打开`设置 > Siri 集成`。
 - 如需免提访问，请创建一个用于打开FLwatch的快捷指令，将其命名为`葡萄糖图表`等名称，并根据需要启用`在Apple Watch上显示`。
 
 ### 技术说明
