@@ -159,6 +159,8 @@ Z Libre 3 i Libre 3+ FLwatch może odbierać odczyty bezpośrednio na Apple Watc
 
 Bezpośrednie połączenie z zegarkiem działa podczas treningów **rozpoczętych w FLwatch**. Rozpoczęcie treningu w aplikacji Trening firmy Apple nie uruchamia tego połączenia.
 
+**Wskazówka dotycząca baterii:** Jeśli rozpoczynasz trening głównie po to, aby nadal odbierać odczyty bezpośrednio na Apple Watch, Joga (W pomieszczeniu) zwykle jest dobrym wyborem pozwalającym ograniczyć zużycie baterii. Włączenie trybu niskiego zużycia energii w `Ustawienia > Bateria` na Apple Watch może dodatkowo zmniejszyć zużycie.
+
 **Noś zegarek na ręce znajdującej się najbliżej sensora.** Jeśli sygnał musi przechodzić przez ciało, ponowne połączenie może trwać znacznie dłużej. Nadal mogą występować zerwania połączenia, przerywające odczyty i alerty glukozy. Jeśli FLwatch pokazuje `Ponowne łączenie z sensorem ograniczone`, wyłącz i włącz Bluetooth w **ustawieniach Apple Watch**, a następnie zbliż zegarek do sensora. Łącze `Wskazówki dotyczące połączenia z sensorem` na ekranie treningu FLwatch zawiera dalsze wskazówki.
 
 Po zakończeniu stuknij `Zakończ trening` w FLwatch. Trening zostanie zapisany w Apple Health, a iPhone będzie mógł wznowić połączenie z sensorem, gdy znajdzie się w pobliżu. `Przejmij sensor` na iPhonie przenosi odczyty z powrotem na telefon, ale nie kończy treningu; zakończ go osobno na Apple Watch.

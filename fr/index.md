@@ -159,6 +159,8 @@ Avec Libre 3 et Libre 3+, FLwatch peut recevoir les mesures directement sur l’
 
 La connexion directe à la montre fonctionne pendant les exercices **démarrés dans FLwatch**. Démarrer un exercice dans l’application Exercice d’Apple ne lance pas cette connexion.
 
+**Conseil pour économiser la batterie :** Si vous démarrez un exercice principalement pour continuer à recevoir les mesures directement sur l’Apple Watch, Yoga (En intérieur) est généralement un bon choix pour limiter la consommation de batterie. Activer le mode économie d’énergie sous `Réglages > Batterie` sur l’Apple Watch peut réduire davantage la consommation.
+
 **Portez votre montre sur le bras le plus proche du capteur.** Si le signal doit traverser votre corps, la reconnexion peut prendre beaucoup plus de temps. Des déconnexions restent possibles et peuvent interrompre les mesures et les alertes de glycémie. Si FLwatch affiche `Reconnexion du capteur limitée`, désactivez puis réactivez le Bluetooth dans les **réglages de l’Apple Watch**, puis rapprochez la montre du capteur. Le lien `Conseils de connexion du capteur` sur l’écran d’exercice de FLwatch fournit une aide supplémentaire.
 
 Touchez `Terminer l’exercice` dans FLwatch lorsque vous avez terminé. L’exercice est enregistré dans Apple Health et l’iPhone peut reprendre la connexion au capteur lorsqu’il est à proximité. `Récupérer le capteur` sur l’iPhone renvoie les mesures vers le téléphone, mais ne termine pas l’exercice ; terminez-le séparément sur l’Apple Watch.

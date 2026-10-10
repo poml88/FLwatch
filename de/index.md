@@ -159,6 +159,8 @@ Mit Libre 3 und Libre 3+ kann FLwatch während eines Trainings Werte direkt auf 
 
 Die direkte Verbindung zur Uhr läuft während eines **in FLwatch gestarteten Trainings**. Ein Training in Apples Training-App startet diese Verbindung nicht.
 
+**Akkutipp:** Wenn Sie ein Training hauptsächlich starten, um weiterhin Werte direkt auf der Apple Watch zu empfangen, ist Yoga (Drinnen) in der Regel eine gute Wahl für einen niedrigen Akkuverbrauch. Der Stromsparmodus unter `Einstellungen > Batterie` auf der Apple Watch kann den Akkuverbrauch zusätzlich senken.
+
 **Tragen Sie die Uhr an dem Arm, der dem Sensor am nächsten ist.** Muss das Signal durch Ihren Körper, kann die Wiederverbindung deutlich länger dauern. Verbindungsabbrüche können dennoch auftreten und Werte sowie Glukosewarnungen unterbrechen. Zeigt FLwatch `Sensor-Wiederverbindung eingeschränkt`, schalten Sie Bluetooth in den **Einstellungen auf der Apple Watch** aus und wieder ein. Halten Sie die Uhr anschließend nahe an den Sensor. Der Link `Tipps zur Sensorverbindung` im Trainingsbildschirm von FLwatch bietet weitere Hilfe.
 
 Tippen Sie nach dem Training in FLwatch auf `Training beenden`. Das Training wird in Apple Health gespeichert, und das iPhone kann die Sensorverbindung wieder übernehmen, sobald es in der Nähe ist. `Sensor zurückholen` auf dem iPhone überträgt die Werte zurück zum Telefon, beendet aber nicht das Training. Beenden Sie dieses separat auf der Apple Watch.

@@ -159,6 +159,8 @@ Con Libre 3 y Libre 3+, FLwatch puede recibir lecturas directamente en el Apple 
 
 La conexión directa al reloj funciona durante los entrenamientos **iniciados en FLwatch**. Iniciar un entrenamiento en la aplicación Entreno de Apple no inicia esta conexión.
 
+**Consejo para ahorrar batería:** Si inicia un entrenamiento principalmente para seguir recibiendo lecturas directamente en el Apple Watch, Yoga (En interior) suele ser una buena opción para consumir menos batería. Activar el modo de bajo consumo en `Ajustes > Batería` en el Apple Watch puede reducir aún más el consumo.
+
 **Lleve el reloj en el brazo más cercano al sensor.** Si la señal tiene que atravesar su cuerpo, la reconexión puede tardar mucho más. Aun así, pueden producirse desconexiones e interrumpir las lecturas y las alertas de glucosa. Si FLwatch muestra `Reconexión del sensor limitada`, desactive y vuelva a activar Bluetooth en los **ajustes del Apple Watch** y acerque el reloj al sensor. El enlace `Consejos de conexión del sensor` de la pantalla de entrenamiento de FLwatch ofrece más ayuda.
 
 Pulse `Finalizar entrenamiento` en FLwatch cuando termine. Esto guarda el entrenamiento en Apple Health y permite que el iPhone retome la conexión al sensor cuando esté cerca. `Recuperar sensor` en el iPhone devuelve las lecturas al teléfono, pero no finaliza el entrenamiento; finalícelo por separado en el Apple Watch.

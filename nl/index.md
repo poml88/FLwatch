@@ -159,6 +159,8 @@ Met Libre 3 en Libre 3+ kan FLwatch tijdens een work-out metingen rechtstreeks o
 
 De rechtstreekse horlogeverbinding werkt tijdens work-outs **die in FLwatch zijn gestart**. Een work-out starten in Apples Work-out-app activeert deze verbinding niet.
 
+**Batterijtip:** Als je een work-out vooral start om metingen rechtstreeks op Apple Watch te blijven ontvangen, is Yoga (Binnen) meestal een goede keuze voor een laag batterijverbruik. Door de energiebesparingsmodus in te schakelen onder `Instellingen > Batterij` op Apple Watch kun je het verbruik verder verminderen.
+
 **Draag je horloge om de arm die het dichtst bij de sensor is.** Als het signaal door je lichaam moet, kan opnieuw verbinden veel langer duren. Verbindingsonderbrekingen kunnen nog steeds metingen en glucosewaarschuwingen onderbreken. Als FLwatch `Opnieuw verbinden met sensor beperkt` toont, schakel Bluetooth uit en weer in via de **instellingen op Apple Watch** en breng het horloge vervolgens dicht bij de sensor. De link `Tips voor de sensorverbinding` op het work-outscherm van FLwatch biedt meer hulp.
 
 Tik op `Work-out beëindigen` in FLwatch wanneer je klaar bent. De work-out wordt opgeslagen in Apple Health en de iPhone kan de sensorverbinding hervatten wanneer deze in de buurt is. `Sensor terugnemen` op iPhone brengt de metingen terug naar de telefoon, maar beëindigt de work-out niet; beëindig deze afzonderlijk op Apple Watch.

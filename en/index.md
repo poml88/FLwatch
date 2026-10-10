@@ -159,6 +159,8 @@ With Libre 3 and Libre 3+, FLwatch can receive readings directly on Apple Watch 
 
 The direct watch connection runs during workouts **started in FLwatch**. Starting a workout in Apple's Workout app does not start this connection.
 
+**Battery tip:** If you start a workout mainly to keep direct-to-watch readings active, Yoga (Indoor) is usually a good choice for low battery usage. Enabling Low Power Mode under `Settings > Battery` on Apple Watch can reduce battery usage further.
+
 **Wear your watch on the arm closest to the sensor.** If the signal has to cross your body, reconnecting can take much longer. Connection drops can still occur and interrupt readings and glucose alerts. If FLwatch shows `Sensor reconnect limited`, turn Bluetooth off and on in **Settings on Apple Watch**, then bring the watch close to the sensor. The `Sensor connection tips` link in FLwatch's workout screen provides more help.
 
 Tap `End Workout` in FLwatch when you finish. This saves the workout to Apple Health and lets the iPhone resume the sensor connection when nearby. `Take Sensor Back` on iPhone moves readings back to the phone but does not end the workout; end it separately on Apple Watch.
