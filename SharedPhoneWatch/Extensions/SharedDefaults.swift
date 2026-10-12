@@ -52,7 +52,9 @@ enum Libre3WorkoutDisconnectOutcome: String, Codable, Sendable {
 /// A claim records the watch's local workout lifecycle decision; the phone
 /// cannot independently verify that a remote HealthKit workout is still active.
 struct Libre3WorkoutOwnershipEvent: Codable, Equatable, Sendable {
-    static let currentProtocolVersion = 1
+    // RWDK reconnect keys are plain AES keys. Older watch apps must not accept
+    // a new handoff and interpret them as white-box authorization material.
+    static let currentProtocolVersion = 2
 
     let protocolVersion: Int
     let kind: Libre3WorkoutOwnershipEventKind

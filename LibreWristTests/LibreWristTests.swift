@@ -1833,6 +1833,32 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
+    func testWorkoutOwnershipRejectsWhiteBoxProtocolVersion() {
+        let transitions: [(Libre3WorkoutOwnershipEventKind, Libre3WorkoutOwnershipDevice)] = [
+            (.claim, .watch), (.released, .phone),
+        ]
+        for (kind, origin) in transitions {
+            let event = Libre3WorkoutOwnershipEvent(
+                protocolVersion: 1,
+                kind: kind,
+                origin: origin,
+                owner: .watch,
+                workoutSessionID: UUID(),
+                revision: 100,
+                provisioningRevision: 42,
+                disconnectOutcome: .confirmedDisconnect,
+                createdAt: Date(timeIntervalSince1970: 100)
+            )
+            var state = Libre3WorkoutOwnershipState()
+            let originalState = state
+
+            XCTAssertEqual(state.apply(event, isLocal: false), .malformed)
+            XCTAssertEqual(state, originalState)
+            XCTAssertTrue(state.connectionIsPermitted(on: .phone))
+            XCTAssertFalse(state.connectionIsPermitted(on: .watch))
+        }
+    }
+
     func testWorkoutOwnershipRejectsDelayedClaimAfterRelease() {
         let sessionID = UUID()
         let claim = workoutOwnershipEvent(

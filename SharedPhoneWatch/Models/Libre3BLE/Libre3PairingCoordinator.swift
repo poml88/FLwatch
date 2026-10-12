@@ -25,9 +25,18 @@ final class Libre3PairingCoordinator: ObservableObject {
 
     enum PairingState: Equatable {
         case idle
+        case preparingPairing
         case scanning
         case paired(serial: String, bleAddress: String, firmware: String)
         case failed(message: String)
+
+        /// Keep pairing inputs locked while credentials load, before NFC opens.
+        var isBusy: Bool {
+            switch self {
+            case .preparingPairing, .scanning: return true
+            case .idle, .paired, .failed: return false
+            }
+        }
     }
 
     /// Result of a non-destructive `.readPatchInfo` scan — no command sent, no
@@ -92,6 +101,7 @@ final class Libre3PairingCoordinator: ObservableObject {
     /// Reads patch info only (`0xA1`) — no activation/switch command, no PIN
     /// rotation. Safe to run on a sensor the vendor app is actively using.
     func readSensorInfo() async {
+        guard !state.isBusy else { return }
         guard NFCTagReaderSession.readingAvailable else {
             state = .failed(message: String(localized: "This iPhone can't scan NFC tags."))
             return
@@ -120,12 +130,13 @@ final class Libre3PairingCoordinator: ObservableObject {
     // MARK: - Pairing
 
     func pair(mode: Libre3Mode) async {
+        guard !state.isBusy else { return }
         guard NFCTagReaderSession.readingAvailable else {
             state = .failed(message: String(localized: "This iPhone can't scan NFC tags."))
             return
         }
 
-        state = .scanning
+        state = .preparingPairing
 
         // Resolved before the NFC session opens: for a FLwatch-activated sensor
         // this mints and stores the installation identity, and activating one
@@ -153,6 +164,22 @@ final class Libre3PairingCoordinator: ObservableObject {
             return
         }
 
+        // Activation starts the wear clock, and takeover changes the receiver.
+        // Verify we can authorize before issuing either command to the sensor.
+        do {
+            try await Libre3AppIdentities.shared.ensureInstalled()
+            try Task.checkCancellation()
+        } catch is CancellationError {
+            state = restingState()
+            return
+        } catch {
+            // Credential errors can contain input; keep it out of the log.
+            Logger.libre3.error("NFC pairing aborted: verified pairing identities unavailable")
+            state = .failed(message: Libre3DirectManager.friendlyMessage(for: error))
+            return
+        }
+
+        state = .scanning
         let scanMode = Self.scanMode(for: mode, receiverID: receiverID.value)
 
         let reader = Libre3NFCActivationReader()
@@ -244,6 +271,7 @@ final class Libre3PairingCoordinator: ObservableObject {
             let command = result.commandCode.map { String(format: "0x%02X", $0.rawValue) } ?? "none"
             Logger.libre3.info("NFC pairing command=\(command, privacy: .public) productType=\(result.patchInfo.productType, privacy: .public) securityVersion=\(result.patchInfo.securityVersion, privacy: .public) region=\(result.patchInfo.region, privacy: .public) generation=\(result.patchInfo.generation, privacy: .public)")
 
+            SharedData.libre3RepairNoticePending = false
             state = .paired(
                 serial: sensorState.serialNumber ?? result.patchInfo.serialNumber,
                 bleAddress: sensorState.bleAddress ?? activation.bleAddressDisplay,

@@ -55,8 +55,9 @@ struct LibreWristApp: App {
             SharedData.libre3RepairNoticePending = true
             Logger.libre3.info("Libre3 BLE legacy pairing cleared; pair again with NFC")
         }
-        // Load the pinned Arweave credentials (or verified disk cache) once on
-        // the phone. The manager resumes BLE after installation succeeds.
+        // Preload the pinned Arweave credentials (or verified disk cache).
+        // Central restoration and cached reconnect never wait for this task;
+        // only NFC pairing and full BLE authorization require the identities.
         Libre3DirectManager.shared.preparePairingIdentities()
         BluetoothHeartbeatManager.shared.startIfNeeded()
         if SharedData.bluetoothHeartbeatEnabled {

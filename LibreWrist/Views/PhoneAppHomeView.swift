@@ -232,6 +232,7 @@ struct PhoneAppHomeView: View {
             Button("Understood", role: .cancel) {
                 guard let startupUpdateNote else { return }
                 SharedData.markNotificationSeen(version: startupUpdateNote.version)
+                SharedData.libre3RepairNoticePending = false
             }
         }
         message: {

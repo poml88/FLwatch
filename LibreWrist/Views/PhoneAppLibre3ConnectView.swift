@@ -332,13 +332,13 @@ struct PhoneAppLibre3ConnectView: View {
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .disabled(coordinator.state == .scanning || isFetchingAccountID)
+                .disabled(coordinator.state.isBusy || isFetchingAccountID)
 
             SecureField("LibreView password", text: $libreViewPassword)
                 .textContentType(.password)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .disabled(coordinator.state == .scanning || isFetchingAccountID)
+                .disabled(coordinator.state.isBusy || isFetchingAccountID)
 
             Button {
                 fetchAccountID()
@@ -363,7 +363,7 @@ struct PhoneAppLibre3ConnectView: View {
                 }
             }
             .disabled(
-                coordinator.state == .scanning
+                coordinator.state.isBusy
                     || isFetchingAccountID
                     || libreViewEmail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     || libreViewPassword.isEmpty
@@ -410,7 +410,7 @@ struct PhoneAppLibre3ConnectView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .font(.system(.body, design: .monospaced))
-                    .disabled(coordinator.state == .scanning || isFetchingAccountID)
+                    .disabled(coordinator.state.isBusy || isFetchingAccountID)
 
                 TextField(text: receiverIDOverrideBinding) {
                     Text(
@@ -421,7 +421,7 @@ struct PhoneAppLibre3ConnectView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(.system(.body, design: .monospaced))
-                .disabled(coordinator.state == .scanning || isFetchingAccountID)
+                .disabled(coordinator.state.isBusy || isFetchingAccountID)
 
                 if receiverIDOverrideInputIsInvalid {
                     Text(
@@ -450,7 +450,7 @@ struct PhoneAppLibre3ConnectView: View {
                 Text("Fresh").tag(Libre3Mode.activateFresh)
             }
             .pickerStyle(.segmented)
-            .disabled(coordinator.state == .scanning)
+            .disabled(coordinator.state.isBusy)
 
             Text(modeDescription(selectedMode))
                 .font(.subheadline)
@@ -482,10 +482,30 @@ struct PhoneAppLibre3ConnectView: View {
             } label: {
                 HStack {
                     Image(systemName: "wave.3.right.circle")
-                    Text(coordinator.state == .scanning ? "Scanning…" : "Hold sensor to phone to pair")
+                    switch coordinator.state {
+                    case .preparingPairing:
+                        Text(
+                            "Preparing sensor pairing…",
+                            comment: "Pairing button status while FLwatch loads or downloads verified sensor pairing credentials, before the NFC scan opens."
+                        )
+                    case .scanning:
+                        Text(
+                            "Scanning…",
+                            comment: "Pairing button status while the NFC session reads and pairs with the sensor."
+                        )
+                    default:
+                        Text(
+                            "Hold sensor to phone to pair",
+                            comment: "Button that starts NFC sensor pairing. The user holds the sensor against the top of the iPhone."
+                        )
+                    }
+                    if coordinator.state == .preparingPairing {
+                        Spacer()
+                        ProgressView()
+                    }
                 }
             }
-            .disabled(coordinator.state == .scanning || scanBlockedReason != nil)
+            .disabled(coordinator.state.isBusy || scanBlockedReason != nil)
 
             if let scanBlockedReason {
                 Label {
@@ -517,7 +537,7 @@ struct PhoneAppLibre3ConnectView: View {
                     Text("Read sensor info (no changes)")
                 }
             }
-            .disabled(coordinator.state == .scanning)
+            .disabled(coordinator.state.isBusy)
 
             if let info = coordinator.lastScannedInfo {
                 LabeledContent("Serial", value: info.serial)
@@ -594,7 +614,7 @@ struct PhoneAppLibre3ConnectView: View {
                     )
                 }
             }
-            .disabled(coordinator.state == .scanning || isFetchingAccountID)
+            .disabled(coordinator.state.isBusy || isFetchingAccountID)
         } header: {
             if selectedMode.startsIrreversibleWearClock {
                 Text(

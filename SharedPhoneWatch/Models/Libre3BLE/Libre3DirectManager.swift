@@ -1899,7 +1899,6 @@ final class Libre3DirectManager: ObservableObject {
 
 #if os(iOS)
     private var identityInstallationTask: Task<Void, Never>?
-    private var identityInstallationAllowsPendingPhoneReclaim = false
 #endif
 
     /// CoreBluetooth state-restoration identifier for this manager's central.
@@ -2264,6 +2263,10 @@ final class Libre3DirectManager: ObservableObject {
     private func activeProviderChanged() {
         if isActiveProvider {
             DebugMessageSingleton.shared.libreLinkUpResponseError = "none"
+#if os(iOS)
+            // Preload even before NFC has paired a sensor; the scan joins this task.
+            preparePairingIdentities()
+#endif
             // Switching providers away and back must not override a live watch
             // handoff. `start()` deliberately honors that ownership gate; only
             // workout release/reclaim or a new NFC pair resumes the phone.
@@ -2326,7 +2329,7 @@ final class Libre3DirectManager: ObservableObject {
             connectionState = .idle
             return
         }
-        guard authorizationSetupIsReady(allowPendingPhoneReclaim: allowPendingPhoneReclaim) else { return }
+        guard authorizationSetupIsReady() else { return }
         let beginsWorkoutAcquisition = !shouldMaintainConnection
         shouldMaintainConnection = true
         if beginsWorkoutAcquisition, hostProfile.device == .watchWorkout {
@@ -2372,9 +2375,10 @@ final class Libre3DirectManager: ObservableObject {
     /// Tear down the connection and stop streaming (provider switched away, or
     /// the user disconnected the sensor).
     func stop() {
-#if os(iOS)
-        identityInstallationAllowsPendingPhoneReclaim = false
-#endif
+        stop(preservingSignalLoss: false)
+    }
+
+    private func stop(preservingSignalLoss: Bool) {
         let stoppingScannerGeneration = scannerGeneration
         let pendingSystemReconnectPeripheral = systemReconnectPeripheral
         // Clear intent first: cancelling the CoreBluetooth request/session below
@@ -2391,7 +2395,11 @@ final class Libre3DirectManager: ObservableObject {
         clearReconnectBackoff()
         cancelDisconnectHandoffRecovery()
         disconnectHandoffPolicy.reset()
-        setSignalLossState(deadline: nil)
+        // An authorization pause is still an outage for the paired provider.
+        // Explicit disconnect/provider changes use the ordinary cancellation.
+        if !preservingSignalLoss {
+            setSignalLossState(deadline: nil)
+        }
         finishAttemptSummary(outcome: .cancelled)
         if let scanner, scanner.centralState == .poweredOn {
             stopScan(scanner, reason: "stop")
@@ -3819,7 +3827,7 @@ final class Libre3DirectManager: ObservableObject {
             Libre3DiagnosticsLog.traceReconnect(
                 "setup-failed stage=\(endedStage) class=\(failureCategory.rawValue) error=\(errorName)"
             )
-            Logger.libre3.error("Libre3 BLE lifecycle error: \(String(describing: error), privacy: .public)")
+            Logger.libre3.error("Libre3 BLE lifecycle error: \(Self.supportSafeDescription(for: error), privacy: .public)")
         }
         // Runs before `finishConnectedAttempt` so the no-stream warning it may
         // emit can report what this attempt actually triggered.
@@ -3959,9 +3967,14 @@ final class Libre3DirectManager: ObservableObject {
     /// SensorScannerNG owns the peripheral through the connect intent; the state
     /// guards prevent rapid `didConnect` re-fires.
     private func armStandingConnectIntent() {
+        // Do not open a link during backoff if full authorization would first
+        // need a download. Cached reconnect keeps its CoreBluetooth wake source.
         guard shouldMaintainConnection,
               isActiveProvider,
               Libre3StateStore.isPaired,
+              AppIdentities.isInstalled
+                || !hostProfile.allowsFullAuthorization
+                || authorizationPath(reconnectKey: Libre3StateStore.loadReconnectKey()) == .cached,
               let scanner,
               let scannerGeneration,
               systemReconnectTarget(scannerGeneration: scannerGeneration) == nil,
@@ -4090,8 +4103,6 @@ final class Libre3DirectManager: ObservableObject {
         silenceWatchdogTask = nil
         lastGlucoseRecoveryAttemptAt = nil
         peripheralBindingTracker.reset()
-        Libre3DiagnosticsLog.traceReconnect("connect-start")
-
         guard let sensorState = Libre3StateStore.loadState() else {
             throw Libre3DirectError.notPaired
         }
@@ -4101,6 +4112,20 @@ final class Libre3DirectManager: ObservableObject {
             scannerGeneration: scannerGeneration
         )
         try checkCurrentScanner(scanner, generation: scannerGeneration)
+
+#if os(iOS)
+        if authorizationPath(reconnectKey: Libre3StateStore.loadReconnectKey()) == .full {
+            // The central and restoration observer already exist. Prepare full
+            // authorization before this attempt requests a sensor connection;
+            // cached reconnect never waits for app credentials.
+            lastAttemptStage = "credentials"
+            try await Libre3AppIdentities.shared.ensureInstalled()
+            try Task.checkCancellation()
+            try checkCurrentScanner(scanner, generation: scannerGeneration)
+            lastAttemptStage = "connect"
+        }
+#endif
+        Libre3DiagnosticsLog.traceReconnect("connect-start")
 
         let peripheral: CBPeripheral
         // System recovery already owns the connect intent. Reuse its retained
@@ -5068,6 +5093,16 @@ final class Libre3DirectManager: ObservableObject {
         throw SensorScannerError.connectionFailed("event stream ended")
     }
 
+    /// Keep credential preparation and authorization on the same recovery path.
+    private func authorizationPath(reconnectKey: Data?) -> Libre3AuthorizationPath {
+        hostProfile.allowsFullAuthorization
+            ? Libre3AuthorizationRecoveryPolicy.path(
+                hasReconnectKey: reconnectKey != nil,
+                authenticationFailures: reconnectFailureTracker.authenticationFailures
+            )
+            : .cached
+    }
+
     /// Authorize a connected sensor. On the phone, a saved Phase-5 key uses the
     /// recovery order cached, cached, full, cached, cached, cached. The watch is
     /// cached-only: a full handshake there would invalidate the phone's key.
@@ -5078,12 +5113,7 @@ final class Libre3DirectManager: ObservableObject {
         if !hostProfile.allowsFullAuthorization, reconnectKey == nil {
             throw Libre3DirectError.cachedReconnectKeyUnavailable
         }
-        let path: Libre3AuthorizationPath = hostProfile.allowsFullAuthorization
-            ? Libre3AuthorizationRecoveryPolicy.path(
-                hasReconnectKey: reconnectKey != nil,
-                authenticationFailures: reconnectFailureTracker.authenticationFailures
-            )
-            : .cached
+        let path = authorizationPath(reconnectKey: reconnectKey)
 
         if path == .cached, let reconnectKey {
             Libre3DiagnosticsLog.traceReconnect(
@@ -5152,7 +5182,7 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     /// Prefer the credential that already authorized this sensor, otherwise use
-    /// the installed order (ROW first). Region is metadata, not a selector.
+    /// the installed order. Region is metadata, not a selector.
     private func selectedPairingIdentity() throws -> AppIdentity {
         let identities = try AppIdentities.installed()
         if let stored = identities.first(where: { $0.label == SharedData.libre3AppIdentityLabel }) {
@@ -5163,65 +5193,41 @@ final class Libre3DirectManager: ObservableObject {
     }
 
 #if os(iOS)
-    /// Launch and later BLE reloads share one attempt. A failed download can be
-    /// retried by the next reload; BLE itself stays paused until installation.
-    func preparePairingIdentities(allowPendingPhoneReclaim: Bool = false) {
-        identityInstallationAllowsPendingPhoneReclaim =
-            identityInstallationAllowsPendingPhoneReclaim || allowPendingPhoneReclaim
-        guard !AppIdentities.isInstalled, identityInstallationTask == nil else { return }
+    /// Best-effort launch/provider-switch preload. Cached reconnect
+    /// does not need identities; NFC pairing and full authorization await the
+    /// actor's shared installation.
+    func preparePairingIdentities() {
+        guard isActiveProvider, !AppIdentities.isInstalled,
+              identityInstallationTask == nil else { return }
         identityInstallationTask = Task { [weak self] in
+            defer { self?.identityInstallationTask = nil }
             do {
                 try await Libre3AppIdentities.shared.ensureInstalled()
-                guard let self else { return }
-                self.identityInstallationTask = nil
-                let resumeImmediately = self.identityInstallationAllowsPendingPhoneReclaim
-                self.identityInstallationAllowsPendingPhoneReclaim = false
-                // An NFC pair may have reclaimed the phone while downloading.
-                // Preserve its existing immediate-resume rule, rechecking owner.
-                if resumeImmediately {
-                    self.resumeAfterHandoff(immediately: true)
-                } else {
-                    self.startIfNeeded()
-                }
             } catch {
-                guard let self else { return }
-                self.identityInstallationTask = nil
-                guard self.isActiveProvider, Libre3StateStore.isPaired,
-                      self.ownershipPermitsConnection ||
-                        (self.identityInstallationAllowsPendingPhoneReclaim &&
-                         SharedData.libre3SessionOwner.owner == .phone) else { return }
-                self.pauseAuthorization(for: error)
+                // Do not stop a working cached session or log credential input.
+                // A full attempt surfaces the error and uses normal BLE retries.
+                Logger.libre3.info("Libre3 BLE pairing identity preload unavailable; full authorization will retry")
             }
         }
     }
 #endif
 
-    /// The phone needs installed identities and the migration marker before
-    /// BLE setup. The cached-only watch uses the phone's provisioned key.
-    private func authorizationSetupIsReady(allowPendingPhoneReclaim: Bool = false) -> Bool {
-        guard hostProfile.allowsFullAuthorization else { return true }
-        do {
-            guard SharedData.libre3SecurityVersion != nil else {
-                throw Libre3DirectError.notPaired
-            }
-#if os(iOS)
-            if !AppIdentities.isInstalled {
-                preparePairingIdentities(allowPendingPhoneReclaim: allowPendingPhoneReclaim)
-                return false
-            }
-#endif
-            _ = try selectedPairingIdentity()
-            return true
-        } catch {
-            pauseAuthorization(for: error)
+    /// Both hosts require the RWDK migration marker before using a saved key.
+    /// Credentials are required only when the phone selects full authorization.
+    private func authorizationSetupIsReady() -> Bool {
+        guard SharedData.libre3SecurityVersion != nil else {
+            pauseAuthorization(for: Libre3DirectError.legacyPairingRequiresPhoneSetup)
             return false
         }
+        return true
     }
 
     private func pauseAuthorization(for error: Error) {
         let message = Self.friendlyMessage(for: error)
         if !shouldMaintainConnection, connectionState == .failed(message) { return }
-        stop()
+        recoverSignalLossDeadlineIfNeeded()
+        stop(preservingSignalLoss: true)
+        reconcileSignalLossArming()
         connectionState = .failed(message)
         let description = Self.supportSafeDescription(for: error)
         DebugMessageSingleton.shared.libreLinkUpResponseError = "Libre3 BLE: \(description)"
@@ -5236,6 +5242,7 @@ final class Libre3DirectManager: ObservableObject {
         session: SensorSession,
         blePIN: Data
     ) async throws -> (sessionMaterial: Phase6SessionMaterial, reconnectKey: Data, identityLabel: String) {
+        // Credential installation completes before the connection is requested.
         let identity = try selectedPairingIdentity()
         Logger.libre3.info("Libre3 BLE pairing identity=\(identity.label, privacy: .public)")
         let transport = Libre3Phase5TrackingTransport(session: session)
@@ -5249,8 +5256,7 @@ final class Libre3DirectManager: ObservableObject {
                 blePIN: blePIN,
                 phase5RawKeyProvider: { @Sendable preamble in
                     try Self.authorizationKey(identity: identity, preamble: preamble)
-                },
-                phase5Cipher: { @Sendable key in try AppIdentity.phase5Cipher(key) }
+                }
             )
             let reconnectKey = try Self.authorizationKey(identity: identity, preamble: result.preamble)
             Logger.libre3.info("Libre3 BLE full authorization verified Phase 6")
@@ -6096,9 +6102,10 @@ final class Libre3DirectManager: ObservableObject {
     /// advancing readings remain the only path that moves an existing deadline.
     private func reconcileSignalLossArming() {
         // A startup recovery task or a late lifecycle packet can finish after
-        // stand-down began. Reassert cancellation instead of restoring its stale
-        // deadline while the watch owns glucose delivery.
-        guard ownershipPermitsConnection else {
+        // disconnect, provider change or stand-down. Reassert cancellation if
+        // this paired provider no longer owns glucose delivery here.
+        guard isActiveProvider, Libre3StateStore.isPaired,
+              ownershipPermitsConnection else {
             setSignalLossState(deadline: nil)
             return
         }
@@ -6627,17 +6634,23 @@ final class Libre3DirectManager: ObservableObject {
         return typeName
     }
 
-    private static func friendlyMessage(for error: Error) -> String {
+    /// Shared with the NFC credential preflight so download errors have one message.
+    static func friendlyMessage(for error: Error) -> String {
         switch error {
         case AppIdentityError.notInstalled:
             return String(
                 localized: "Couldn't download the sensor pairing data. Check your internet connection and try again.",
-                comment: "BLE setup is paused because no verified sensor pairing data is available in the phone's cache and the download gateways could not be reached. The user should check their internet connection and retry."
+                comment: "NFC pairing or full BLE authorization could not proceed because no verified sensor pairing data is available in the phone's cache and the download gateways could not be reached. The user should check their internet connection and retry."
             )
         case is AppIdentityError, is Libre3AppIdentityLoadingError:
             return String(
                 localized: "The downloaded sensor pairing data could not be verified. Please try again later.",
-                comment: "BLE setup is paused because downloaded sensor pairing data failed the pinned digest or credential validation. The user should retry later to fetch verified data."
+                comment: "NFC pairing or full BLE authorization could not proceed because downloaded sensor pairing data failed the pinned digest or credential validation. The user should retry later to fetch verified data."
+            )
+        case Libre3DirectError.legacyPairingRequiresPhoneSetup:
+            return String(
+                localized: "This sensor was paired with an older version of FLwatch. Open FLwatch on your iPhone and pair it again using NFC.",
+                comment: "BLE setup failure, primarily on an updated watch retaining an old pairing. The old reconnect key is incompatible with the new Bluetooth implementation; the user must open the iPhone app and pair the sensor again via NFC."
             )
         case Libre3DirectError.notPaired, Libre3DirectError.notStarted:
             return String(localized: "No sensor is paired.")
@@ -6656,6 +6669,7 @@ final class Libre3DirectManager: ObservableObject {
 enum Libre3DirectError: Error {
     case notStarted
     case notPaired
+    case legacyPairingRequiresPhoneSetup
     case cachedReconnectKeyUnavailable
     case fullAuthorizationNotPermitted
     case sensorNotFound
