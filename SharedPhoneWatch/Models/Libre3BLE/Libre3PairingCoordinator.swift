@@ -47,6 +47,8 @@ final class Libre3PairingCoordinator: ObservableObject {
         /// Libre 3 / Libre 3 Plus / Lingo, from productType + generation.
         let model: String
         let firmware: String
+        let securityVersion: UInt16
+        let region: UInt16
         let stateByte: UInt8
         let wearDurationMinutes: UInt16
         /// Warm-up duration in minutes (Libre 3 = 60).
@@ -59,6 +61,8 @@ final class Libre3PairingCoordinator: ObservableObject {
             serial = patchInfo.serialNumber
             model = patchInfo.modelName
             firmware = patchInfo.firmwareVersion
+            securityVersion = patchInfo.securityVersion
+            region = patchInfo.region
             stateByte = patchInfo.stateByte
             wearDurationMinutes = patchInfo.wearDurationMinutes
             warmupMinutes = Int(patchInfo.warmupMinutes)
@@ -116,7 +120,7 @@ final class Libre3PairingCoordinator: ObservableObject {
             let info = ScannedSensorInfo(patchInfo: result.patchInfo)
             lastScannedInfo = info
             state = restingState()
-            Logger.libre3.info("Read sensor info: serial=\(info.serial, privacy: .public) model=\(info.model, privacy: .public) fw=\(info.firmware, privacy: .public) warmup=\(info.warmupMinutes ?? -1, privacy: .public)min state=0x\(String(result.patchInfo.stateByte, radix: 16), privacy: .public)")
+            Logger.libre3.info("Read sensor info: serial=\(info.serial, privacy: .public) model=\(info.model, privacy: .public) fw=\(info.firmware, privacy: .public) securityVersion=\(info.securityVersion, privacy: .public) region=\(info.region, privacy: .public) warmup=\(info.warmupMinutes ?? -1, privacy: .public)min state=0x\(String(result.patchInfo.stateByte, radix: 16), privacy: .public)")
         } catch {
             if Self.isUserCancellation(error) {
                 state = restingState()

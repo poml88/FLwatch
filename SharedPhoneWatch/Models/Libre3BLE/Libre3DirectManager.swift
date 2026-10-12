@@ -1645,10 +1645,11 @@ struct Libre3PeripheralDiscoveryPolicy {
         bleAddress: String
     ) -> Bool {
         if let savedID { return discoveredID == savedID }
-        // Before authentication binds a UUID, only the NFC-addressed sensor
-        // may win the scan. A cached peripheral name is not an advertisement.
+        // Compare an advertised name when present; unnamed candidates must prove
+        // their identity through authentication before their UUID is persisted.
+        guard let advertisedLocalName, !advertisedLocalName.isEmpty else { return true }
         let expectedName = bleAddress.replacingOccurrences(of: ":", with: "").uppercased()
-        guard !expectedName.isEmpty, let advertisedLocalName else { return false }
+        guard !expectedName.isEmpty else { return false }
         return advertisedLocalName.uppercased() == expectedName
     }
 }

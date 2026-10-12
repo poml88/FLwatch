@@ -2857,14 +2857,16 @@ final class LibreWristTests: XCTestCase {
         let savedID = UUID()
         let discoveredID = UUID()
 
-        XCTAssertFalse(
-            Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
-                discoveredID,
-                savedID: savedID,
-                advertisedLocalName: "AABBCCDDEEFF",
-                bleAddress: "AA:BB:CC:DD:EE:FF"
+        for localName in [nil, "", "AABBCCDDEEFF"] as [String?] {
+            XCTAssertFalse(
+                Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                    discoveredID,
+                    savedID: savedID,
+                    advertisedLocalName: localName,
+                    bleAddress: "AA:BB:CC:DD:EE:FF"
+                )
             )
-        )
+        }
         XCTAssertTrue(
             Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
                 savedID,
@@ -2875,7 +2877,7 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
-    func testUnboundDiscoveryAcceptsOnlyNFCAddressedAdvertisement() {
+    func testUnboundDiscoveryComparesAdvertisedNameWithNFCAddress() {
         let discoveredID = UUID()
         let bleAddress = "AA:BB:CC:DD:EE:FF"
         XCTAssertTrue(
@@ -2886,7 +2888,7 @@ final class LibreWristTests: XCTestCase {
                 bleAddress: bleAddress
             )
         )
-        for localName in [nil, "Libre 3", "112233445566"] as [String?] {
+        for localName in ["Libre 3", "112233445566"] {
             XCTAssertFalse(
                 Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
                     discoveredID,
@@ -2900,10 +2902,26 @@ final class LibreWristTests: XCTestCase {
             Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
                 discoveredID,
                 savedID: nil,
-                advertisedLocalName: "",
+                advertisedLocalName: "AABBCCDDEEFF",
                 bleAddress: ""
             )
         )
+    }
+
+    func testUnboundDiscoveryAllowsUnnamedCandidatesForAuthentication() {
+        let discoveredID = UUID()
+        for localName in [nil, ""] as [String?] {
+            for bleAddress in ["AA:BB:CC:DD:EE:FF", ""] {
+                XCTAssertTrue(
+                    Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                        discoveredID,
+                        savedID: nil,
+                        advertisedLocalName: localName,
+                        bleAddress: bleAddress
+                    )
+                )
+            }
+        }
     }
 
     func testPairingIdentityPayloadRejectsUnpinnedJSON() {

@@ -18,6 +18,7 @@ struct PhoneAppLibre3ConnectView: View {
     @ObservedObject private var directManager = Libre3DirectManager.shared
     @State private var selectedMode: Libre3Mode = .parallelJoin
     @State private var showFreshActivationConfirm = false
+    @State private var showReceiverIDSignOutConfirm = false
     @AppStorage(DefaultsKey.developerModeEnabled.rawValue) private var developerModeEnabled = false
     @State private var logEntries: [String] = []
     @State private var notableEntries: [String] = []
@@ -178,6 +179,34 @@ struct PhoneAppLibre3ConnectView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This starts the sensor’s wear period—14 days for Libre 3 or 15 days for Libre 3 Plus—and can’t be undone. Most users should activate the sensor in the FreeStyle Libre 3 app instead, then pair it here using Parallel mode.")
+        }
+        .confirmationDialog(
+            Text(
+                "Libre by Abbott will be signed out",
+                comment: "Title of the warning before retrieving the current Libre by Abbott app's receiver ID, which signs that app out."
+            ),
+            isPresented: $showReceiverIDSignOutConfirm,
+            titleVisibility: .visible
+        ) {
+            Button(role: .destructive) {
+                fetchAccountID()
+            } label: {
+                Text(
+                    "Get Receiver ID",
+                    comment: "Confirms retrieving the receiver ID for Libre 3 sensor pairing, signing the Libre by Abbott app out."
+                )
+            }
+            Button(role: .cancel) {} label: {
+                Text(
+                    "Cancel",
+                    comment: "Dismisses the receiver ID sign-out warning without signing in."
+                )
+            }
+        } message: {
+            Text(
+                "Getting the receiver ID signs in to your Libre by Abbott account, which signs the Libre by Abbott app out. The app currently has no way to sign in again: delete it, reinstall it from the App Store, and sign in. You only need to do this once. The receiver ID stays the same afterwards.",
+                comment: "Warning before retrieving the current Libre by Abbott receiver ID. Explains that the vendor app is signed out and needs reinstalling to sign in again, and that the receiver ID only needs to be retrieved once."
+            )
         }
         .alert(
             "Calibration reset",
@@ -341,7 +370,13 @@ struct PhoneAppLibre3ConnectView: View {
                 .disabled(coordinator.state.isBusy || isFetchingAccountID)
 
             Button {
-                fetchAccountID()
+                // Each current Libre by Abbott lookup signs the vendor app out,
+                // so require confirmation every time, including repeat lookups.
+                if activatingApp == .libreByAbbottServerID {
+                    showReceiverIDSignOutConfirm = true
+                } else {
+                    fetchAccountID()
+                }
             } label: {
                 HStack {
                     Image(systemName: "person.badge.key")
@@ -543,6 +578,22 @@ struct PhoneAppLibre3ConnectView: View {
                 LabeledContent("Serial", value: info.serial)
                 LabeledContent("Model", value: info.model)
                 LabeledContent("Firmware", value: info.firmware)
+                LabeledContent {
+                    Text(verbatim: String(info.securityVersion))
+                } label: {
+                    Text(
+                        "Security version",
+                        comment: "Sensor info row showing the security protocol version read from Libre 3 NFC patch info."
+                    )
+                }
+                LabeledContent {
+                    Text(verbatim: sensorRegionText(info.region))
+                } label: {
+                    Text(
+                        "Region",
+                        comment: "Sensor info row showing the sensor's market region and raw NFC region code."
+                    )
+                }
                 LabeledContent("Status", value: info.isFresh ? "New (not activated)" : "Active")
                 // Raw NFC state byte (diagnostic).
                 LabeledContent("State byte", value: String(format: "0x%02X", info.stateByte))
@@ -1298,6 +1349,35 @@ struct PhoneAppLibre3ConnectView: View {
                 localized: "Activate a brand-new, unused sensor directly with FLwatch. This immediately starts the sensor’s wear period and cannot be undone. Pick the companion app below before you scan — it can’t be changed afterwards.",
                 comment: "Explains the Fresh pairing mode, which starts an unused sensor's wear period. “Companion app” refers to the picker directly below — keep the two wordings consistent."
             )
+        }
+    }
+
+    private func sensorRegionText(_ region: UInt16) -> String {
+        // Preserve the raw NFC code for diagnostics, including unknown regions.
+        let code = String(region)
+        switch region {
+        case 1:
+            return String(
+                localized: "Europe (\(code))",
+                comment: "Libre 3 sensor market region followed by its raw NFC region code in parentheses."
+            )
+        case 2:
+            return String(
+                localized: "USA (\(code))",
+                comment: "Libre 3 sensor market region followed by its raw NFC region code in parentheses."
+            )
+        case 4:
+            return String(
+                localized: "Australia/Canada (\(code))",
+                comment: "Libre 3 sensor market region covering Australia and Canada, followed by its raw NFC region code in parentheses."
+            )
+        case 8:
+            return String(
+                localized: "Eastern/Rest of world (\(code))",
+                comment: "Libre 3 sensor market region covering eastern markets and the rest of the world, followed by its raw NFC region code in parentheses."
+            )
+        default:
+            return code
         }
     }
 
