@@ -1,3 +1,4 @@
-* Try the new workout mode in FLwatch on Apple Watch. See your glucose, trend, recent change and graph alongside workout information, with configurable alerts for low glucose, rapid drops and missing readings.
-* If you use Libre 3 or Libre 3+ with direct Bluetooth, Apple Watch can connect directly to the sensor during a workout—so you can exercise without your iPhone nearby. For the most reliable connection, wear your watch on the arm closest to the sensor, ideally the same arm.
-* This version adds a watch notification that warns about sensor reconnect limits.
+* Important if you use Libre 3 or Libre 3+ with direct Bluetooth: after updating, pair your sensor once more with NFC on the Connect tab. Until you do, FLwatch receives no readings from the sensor on iPhone or Apple Watch. Please also make sure FLwatch is updated on your Apple Watch.
+* The Apple Watch workout screen now shows a symbol when repeated connection losses are likely limiting reconnects to the sensor, and the battery symbol shows the watch's actual charge.
+* For Libre by Abbott, FLwatch now explains before getting the receiver ID that this signs the Libre by Abbott app out, and how to sign in again.
+* Improvements to the direct Bluetooth connection.

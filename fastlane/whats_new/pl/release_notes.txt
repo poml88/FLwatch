@@ -1,3 +1,4 @@
-* Wypróbuj nowy tryb treningu FLwatch na Apple Watch. Monitoruj poziom glukozy, trend, ostatnią zmianę i wykres wraz z informacjami o treningu. Możesz także skonfigurować alerty niskiego poziomu glukozy, szybkiego spadku oraz braku odczytów.
-* Jeśli korzystasz z Libre 3 lub Libre 3+ przez bezpośrednie połączenie Bluetooth, Apple Watch może podczas treningu łączyć się bezpośrednio z sensorem. Możesz więc ćwiczyć bez iPhone’a w pobliżu. Aby uzyskać możliwie niezawodne połączenie, noś Apple Watch na ręce najbliżej sensora, najlepiej na tej samej ręce.
-* Ta wersja dodaje powiadomienie na Apple Watch, które ostrzega o ograniczeniach ponownego łączenia z sensorem.
+* Ważne, jeśli korzystasz z Libre 3 lub Libre 3+ przez bezpośrednie połączenie Bluetooth: po aktualizacji ponownie sparuj sensor przez NFC na karcie „Połącz”. Do tego czasu FLwatch nie będzie odbierać odczytów z sensora na iPhonie ani na Apple Watch. Upewnij się też, że FLwatch na Apple Watch jest zaktualizowany.
+* Ekran treningu na Apple Watch wyświetla teraz symbol, gdy powtarzające się utraty połączenia prawdopodobnie ograniczają ponowne łączenie z sensorem. Symbol baterii pokazuje również rzeczywisty poziom naładowania zegarka.
+* W przypadku Libre by Abbott, przed pobraniem identyfikatora odbiornika FLwatch wyjaśnia teraz, że spowoduje to wylogowanie z aplikacji Libre by Abbott, oraz jak ponownie się zalogować.
+* Ulepszenia bezpośredniego połączenia Bluetooth.
