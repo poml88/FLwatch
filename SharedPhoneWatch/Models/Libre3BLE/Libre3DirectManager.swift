@@ -436,8 +436,8 @@ struct Libre3ReadingStatus: Equatable {
 /// A value type so the run rules — which are easy to get subtly wrong — are
 /// unit-testable without a live BLE session.
 struct Libre3StuckGlucoseTracker {
-    /// Advancing repeats required before an episode is reported. Five means six
-    /// consecutive one-minute readings held the same value over a five-minute span.
+    /// Advancing repeats required before an episode is reported. Twelve means thirteen
+    /// consecutive one-minute readings held the same value over a twelve-minute span.
     static let episodeThreshold = 12
 
     enum EndReason: String, Equatable {
@@ -1645,11 +1645,11 @@ struct Libre3PeripheralDiscoveryPolicy {
         bleAddress: String
     ) -> Bool {
         if let savedID { return discoveredID == savedID }
-        // Compare an advertised name when present; unnamed candidates must prove
-        // their identity through authentication before their UUID is persisted.
+        // Compare names when both are available; otherwise let authentication
+        // establish the candidate's identity before its UUID is persisted.
         guard let advertisedLocalName, !advertisedLocalName.isEmpty else { return true }
         let expectedName = bleAddress.replacingOccurrences(of: ":", with: "").uppercased()
-        guard !expectedName.isEmpty else { return false }
+        guard !expectedName.isEmpty else { return true }
         return advertisedLocalName.uppercased() == expectedName
     }
 }

@@ -50,10 +50,15 @@ struct LibreWristApp: App {
         // existing NFC setup appears, and the watch receives the cleared state.
         if SharedData.libre3SensorIsPaired && SharedData.libre3SecurityVersion == nil {
             Libre3StateStore.adoptLegacyInstallationReceiverIDIfNeeded()
-            Libre3PairingCoordinator().disconnect(preserveOtherProviderConnection: true)
-            // The home view tells the user once why the sensor was unpaired.
-            SharedData.libre3RepairNoticePending = true
-            Logger.libre3.info("Libre3 BLE legacy pairing cleared; pair again with NFC")
+            // A failed keychain rescue must retain the receiver ID for the next
+            // launch; disconnect would clear the only remaining copy.
+            if SharedData.libre3LegacyReceiverIDRescueCompleted {
+                Libre3StateStore.seedActivatingAppFromStoredPairingIfUnset()
+                Libre3PairingCoordinator().disconnect(preserveOtherProviderConnection: true)
+                // The home view tells the user once why the sensor was unpaired.
+                SharedData.libre3RepairNoticePending = true
+                Logger.libre3.info("Libre3 BLE legacy pairing cleared; pair again with NFC")
+            }
         }
         // Preload the pinned Arweave credentials (or verified disk cache).
         // Central restoration and cached reconnect never wait for this task;

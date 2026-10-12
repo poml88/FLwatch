@@ -822,13 +822,26 @@ private struct ActiveWorkoutContent<GraphContent: View>: View {
         )
     }
 
+    private var batterySymbolName: String {
+        guard let level = values.batteryLevel else { return "battery.100percent" }
+
+        // Choose the nearest quarter-charge symbol; unknown levels use the full one.
+        switch level {
+        case ..<0.125: return "battery.0percent"
+        case ..<0.375: return "battery.25percent"
+        case ..<0.625: return "battery.50percent"
+        case ..<0.875: return "battery.75percent"
+        default: return "battery.100percent"
+        }
+    }
+
     private var batteryIndicator: some View {
         let levelText = values.batteryLevel?.formatted(
             .percent.precision(.fractionLength(0))
         ) ?? "--%"
 
         return HStack(spacing: 2) {
-            Image(systemName: "battery.100percent")
+            Image(systemName: batterySymbolName)
             Text(verbatim: levelText)
                 .monospacedDigit()
         }

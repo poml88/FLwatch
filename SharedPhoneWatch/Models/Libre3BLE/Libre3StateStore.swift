@@ -593,6 +593,25 @@ enum Libre3StateStore {
         }
     }
 
+    /// Preserve the activating app before a migration clears the paired sensor.
+    /// Leaves the setting unset when no pairing supplies a choice.
+#if os(iOS)
+    @MainActor
+    static func seedActivatingAppFromStoredPairingIfUnset() {
+        guard !SharedData.libre3ActivatingAppIsSet else { return }
+
+        if let inferred = inferActivatingAppFromStoredReceiverID() {
+            SharedData.libre3ActivatingApp = inferred
+            Logger.libre3.info("Seeded activating app to \(inferred.rawValue, privacy: .public) (matches the stored receiver ID)")
+            return
+        }
+
+        if !SharedData.libre3Serial.isEmpty {
+            SharedData.libre3ActivatingApp = .freeStyleLibre3
+            Logger.libre3.info("Seeded activating app to freeStyleLibre3 (already paired before this setting existed)")
+        }
+    }
+
     /// Pick the initial `libre3ActivatingApp` when the user has never chosen one.
     ///
     /// Preference order: what the stored receiver ID proves, then — for a sensor
@@ -606,26 +625,14 @@ enum Libre3StateStore {
     ///
     /// `@MainActor` so the defaults write — which `@AppStorage` observes — lands
     /// on the main actor rather than wherever the storefront lookup resumes.
-#if os(iOS)
     @MainActor
     static func seedActivatingAppIfUnset() async {
         // Runs before the guard below: the rescue is about the keychain identity,
         // not the picker, and must happen even for a user who has already chosen.
         adoptLegacyInstallationReceiverIDIfNeeded()
 
+        seedActivatingAppFromStoredPairingIfUnset()
         guard !SharedData.libre3ActivatingAppIsSet else { return }
-
-        if let inferred = inferActivatingAppFromStoredReceiverID() {
-            SharedData.libre3ActivatingApp = inferred
-            Logger.libre3.info("Seeded activating app to \(inferred.rawValue, privacy: .public) (matches the stored receiver ID)")
-            return
-        }
-
-        if !SharedData.libre3Serial.isEmpty {
-            SharedData.libre3ActivatingApp = .freeStyleLibre3
-            Logger.libre3.info("Seeded activating app to freeStyleLibre3 (already paired before this setting existed)")
-            return
-        }
 
         // Preserve the existing storefront seed. Libre by Abbott is no longer
         // US-only, but changing this guess would silently change established
