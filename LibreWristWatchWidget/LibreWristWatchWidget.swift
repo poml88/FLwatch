@@ -89,8 +89,12 @@ struct LibreWristWidgetEntryView : View {
         switch family {
         case .accessoryInline:
             // Inline can only render a single line of text — no images.
-            Text(verbatim: "↻ Open FLwatch")
-                .containerBackground(.background, for: .widget)
+            // Shorter fallback for narrow slots (see normalBody's inline case).
+            ViewThatFits {
+                Text(verbatim: "↻ Open FLwatch")
+                Text(verbatim: "↻ FLwatch")
+            }
+            .containerBackground(.background, for: .widget)
         case .accessoryCorner:
             Image(systemName: "arrow.clockwise")
                 .font(.system(size: 18, weight: .heavy))
@@ -249,9 +253,18 @@ struct LibreWristWidgetEntryView : View {
              .containerBackground(.background, for: .widget)
             
         case .accessoryInline:
-            Text("\(glucose)  \(entry.glucoseMeasurement.trendArrow?.symbol ?? "-")  \(entry.date, style: .timer)")
-                .strikethrough(isStaleGlucose)
-                    .widgetAccentable()
+            // Inline slot width and font are system-defined and vary by face;
+            // e.g. the Photos face's top/bottom slot on a 42 mm watch truncated
+            // the full line to "5.6 → 3…". ViewThatFits picks the first variant
+            // that fits without truncation, dropping the timer only as a last resort.
+            let trend = entry.glucoseMeasurement.trendArrow?.symbol ?? "-"
+            ViewThatFits {
+                Text("\(glucose)  \(trend)  \(entry.date, style: .timer)")
+                Text(verbatim: "\(glucose) \(trend) ") + Text(entry.date, style: .timer)
+                Text(verbatim: "\(glucose) \(trend)")
+            }
+            .strikethrough(isStaleGlucose)
+            .widgetAccentable()
             .containerBackground(.background, for: .widget)
             
             
