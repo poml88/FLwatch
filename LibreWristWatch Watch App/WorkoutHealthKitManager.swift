@@ -17,7 +17,9 @@ private extension WorkoutTypeOption {
     var healthKitActivityType: HKWorkoutActivityType {
         switch self {
         case .hiking: return .hiking
-        case .yoga: return .yoga
+        case .yoga, .glucoseFocus: return .yoga
+        case .tennis: return .tennis
+        case .pickleball: return .pickleball
         case .walking: return .walking
         case .running: return .running
         case .cycling: return .cycling
@@ -34,6 +36,8 @@ private extension WorkoutTypeOption {
         switch activityType {
         case .hiking: return .hiking
         case .yoga: return .yoga
+        case .tennis: return .tennis
+        case .pickleball: return .pickleball
         case .walking: return .walking
         case .running: return .running
         case .cycling: return .cycling
@@ -73,6 +77,8 @@ final class WorkoutHealthKitManager: NSObject {
     }
 
     static let shared = WorkoutHealthKitManager()
+
+    private static let workoutTypeMetadataKey = "FLwatch.WorkoutType"
 
     private(set) var operationState: OperationState = .idle
     private(set) var bluetoothAuthorization: CBManagerAuthorization = CBManager.authorization
@@ -218,6 +224,16 @@ final class WorkoutHealthKitManager: NSObject {
             return .startFailed
         }
 
+        // Metadata helps distinguish Glucose Focus from Yoga on recovery, but is
+        // best effort. Persisting the app's own session identity below is mandatory.
+        do {
+            try await workoutBuilder.addMetadata([
+                Self.workoutTypeMetadataKey: workoutType.rawValue
+            ])
+        } catch {
+            logger.error("Could not record workout identity metadata: \(error.localizedDescription, privacy: .public)")
+        }
+
         guard self.session === workoutSession,
               !startupFailed,
               WorkoutModeStore.shared.activate(
@@ -263,6 +279,7 @@ final class WorkoutHealthKitManager: NSObject {
         let endedAt = Date()
         let workoutSessionID = WorkoutModeStore.shared.workoutSessionID
         let providerKind = WorkoutModeStore.shared.providerKind
+        let workoutType = WorkoutModeStore.shared.workoutType
 
         _ = WorkoutModeStore.shared.markEnding(at: endedAt)
         WorkoutModeRefreshManager.shared.stop()
@@ -276,11 +293,11 @@ final class WorkoutHealthKitManager: NSObject {
             Libre3DirectManager.shared.finishWorkoutDiagnostics()
         }
 
-        // Stop the activity before saving, but keep the session recoverable
+        // Stop the activity before saving or discarding, but keep it recoverable
         // until finishWorkout completes. A crash in this window can then retry
         // the persisted ending transaction on the next launch.
         session.stopActivity(with: endedAt)
-        await finishWorkout(builder: builder, endedAt: endedAt)
+        await finishWorkout(builder: builder, endedAt: endedAt, workoutType: workoutType)
         session.end()
         clearCurrentWorkout(at: endedAt)
     }
@@ -322,7 +339,21 @@ final class WorkoutHealthKitManager: NSObject {
         let workoutSessionID = WorkoutModeStore.shared.workoutSessionID
             ?? ownershipState.workoutSessionID
             ?? UUID()
-        let workoutType = WorkoutTypeOption.from(configuration.activityType)
+        let workoutType: WorkoutTypeOption
+        if let rawValue = recoveredBuilder.metadata[Self.workoutTypeMetadataKey] as? String,
+           let recordedType = WorkoutTypeOption(rawValue: rawValue),
+           recordedType.healthKitActivityType == configuration.activityType {
+            workoutType = recordedType
+        } else if WorkoutModeStore.shared.isActive,
+                  let persistedStart = WorkoutModeStore.shared.startedAt,
+                  let recoveredStart = recoveredSession.startDate,
+                  abs(persistedStart.timeIntervalSince(recoveredStart)) < 1,
+                  WorkoutModeStore.shared.workoutType.healthKitActivityType == configuration.activityType {
+            // Match the same session, allowing for the snapshot's whole-second date precision.
+            workoutType = WorkoutModeStore.shared.workoutType
+        } else {
+            workoutType = WorkoutTypeOption.from(configuration.activityType)
+        }
         let workoutLocation = WorkoutLocationOption.from(configuration.locationType)
         let providerKind: CGMProviderKind
         if ownershipState.hasActiveWatchClaim,
@@ -357,7 +388,11 @@ final class WorkoutHealthKitManager: NSObject {
                 Libre3DirectManager.shared.finishWorkoutDiagnostics()
             }
             recoveredSession.stopActivity(with: interruptedEndDate)
-            await finishWorkout(builder: recoveredBuilder, endedAt: interruptedEndDate)
+            await finishWorkout(
+                builder: recoveredBuilder,
+                endedAt: interruptedEndDate,
+                workoutType: workoutType
+            )
             recoveredSession.end()
             clearCurrentWorkout(at: interruptedEndDate)
             logger.info("Completed an interrupted workout end transaction")
@@ -626,13 +661,24 @@ final class WorkoutHealthKitManager: NSObject {
         operationState = .idle
     }
 
-    private func finishWorkout(builder: HKLiveWorkoutBuilder, endedAt: Date) async {
+    private func finishWorkout(
+        builder: HKLiveWorkoutBuilder,
+        endedAt: Date,
+        workoutType: WorkoutTypeOption
+    ) async {
         do {
             try await builder.endCollection(at: endedAt)
         } catch {
             // Recovery can arrive after endCollection committed but before the
-            // workout was saved. Still attempt finishWorkout in that case.
+            // result was saved or discarded. Still attempt finalization in that case.
             logger.error("Could not end workout collection: \(error.localizedDescription, privacy: .public)")
+        }
+
+        if workoutType == .glucoseFocus {
+            // Monitoring sessions must not become Yoga workout entries in Health.
+            // Discarding does not remove health samples already collected by watchOS.
+            builder.discardWorkout()
+            return
         }
 
         do {
@@ -664,6 +710,7 @@ final class WorkoutHealthKitManager: NSObject {
               let builder else { return }
 
         operationState = .ending
+        let workoutType = WorkoutModeStore.shared.workoutType
         _ = WorkoutModeStore.shared.markEnding(at: endedAt)
         WorkoutModeRefreshManager.shared.stop()
         await WorkoutAlertNotificationManager.shared.stopWorkout()
@@ -686,7 +733,7 @@ final class WorkoutHealthKitManager: NSObject {
             Libre3DirectManager.shared.finishWorkoutDiagnostics()
         }
         workoutSession.end()
-        await finishWorkout(builder: builder, endedAt: endedAt)
+        await finishWorkout(builder: builder, endedAt: endedAt, workoutType: workoutType)
         clearCurrentWorkout(at: endedAt)
     }
 

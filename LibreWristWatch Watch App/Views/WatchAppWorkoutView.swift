@@ -296,8 +296,10 @@ struct WatchAppWorkoutView: View {
                 ),
                 selection: $selectedWorkoutType
             ) {
-                ForEach(WorkoutTypeOption.sortedOptions) { workoutType in
-                    Text(verbatim: "\(workoutType.displayName) · \(workoutType.defaultLocation.displayName)")
+                ForEach(workoutModeStore.workoutTypeOptions) { workoutType in
+                    Text(verbatim: workoutType == .glucoseFocus
+                         ? workoutType.displayName
+                         : "\(workoutType.displayName) · \(workoutType.defaultLocation.displayName)")
                         .tag(workoutType)
                 }
             }

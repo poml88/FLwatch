@@ -12,6 +12,9 @@ import SwiftUI
 enum WorkoutTypeOption: String, Codable, CaseIterable, Identifiable, Sendable {
     case hiking
     case yoga
+    case glucoseFocus
+    case tennis
+    case pickleball
     case walking
     case running
     case cycling
@@ -24,19 +27,11 @@ enum WorkoutTypeOption: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
-    static let sortedOptions: [WorkoutTypeOption] = [
-        .yoga,
-        .hiking,
-        .walking,
-        .running,
-        .cycling,
-        .mixedCardio,
-        .functionalStrengthTraining,
-        .traditionalStrengthTraining,
-        .elliptical,
-        .rowing,
-        .stairClimbing
-    ]
+    static var sortedOptions: [WorkoutTypeOption] {
+        allCases.sorted {
+            $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending
+        }
+    }
 
     var displayName: String {
         switch self {
@@ -44,6 +39,12 @@ enum WorkoutTypeOption: String, Codable, CaseIterable, Identifiable, Sendable {
             return String(localized: "Hiking", comment: "Workout activity choice on Apple Watch.")
         case .yoga:
             return String(localized: "Yoga", comment: "Workout activity choice on Apple Watch.")
+        case .glucoseFocus:
+            return String(localized: "Glucose Focus", comment: "Apple Watch mode that keeps direct glucose sensor readings active using a workout session, without saving a workout to Health.")
+        case .tennis:
+            return String(localized: "Tennis", comment: "Workout activity choice on Apple Watch for playing tennis.")
+        case .pickleball:
+            return String(localized: "Pickleball", comment: "Workout activity choice on Apple Watch for playing pickleball, a paddle sport.")
         case .walking:
             return String(localized: "Walking", comment: "Workout activity choice on Apple Watch.")
         case .running:
@@ -67,6 +68,8 @@ enum WorkoutTypeOption: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var shortDisplayName: String {
         switch self {
+        case .glucoseFocus:
+            return String(localized: "Focus", comment: "Short label for Glucose Focus in the active Apple Watch screen's title. Keep very short to fit a 40 mm watch; German: Fokus.")
         case .functionalStrengthTraining:
             return String(localized: "Strength", comment: "Short Apple Watch label for a functional strength workout.")
         case .traditionalStrengthTraining:
@@ -82,9 +85,10 @@ enum WorkoutTypeOption: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var isOutdoorPreferred: Bool {
         switch self {
-        case .hiking, .walking, .running, .cycling:
+        case .hiking, .walking, .running, .cycling, .tennis, .pickleball:
             return true
         case .yoga,
+             .glucoseFocus,
              .mixedCardio,
              .functionalStrengthTraining,
              .traditionalStrengthTraining,
@@ -182,6 +186,8 @@ final class WorkoutModeStore {
         // Optional so workout snapshots written before alerting shipped remain
         // decodable and naturally start with a clear alert state.
         var alertState: WorkoutAlertState?
+        // Optional so existing snapshots remain readable after recents are added.
+        var recentWorkoutTypeRawValues: [String]?
         var updatedAt = Date.distantPast
 
         var workoutType: WorkoutTypeOption {
@@ -194,6 +200,13 @@ final class WorkoutModeStore {
 
         var providerKind: CGMProviderKind {
             CGMProviderKind(rawValue: providerKindRawValue) ?? .libreLinkUp
+        }
+
+        var recentWorkoutTypes: [WorkoutTypeOption] {
+            let types = recentWorkoutTypeRawValues?.compactMap(WorkoutTypeOption.init(rawValue:))
+                ?? (updatedAt == .distantPast ? [] : [workoutType])
+            var seen = Set<WorkoutTypeOption>()
+            return Array(types.filter { seen.insert($0).inserted }.prefix(5))
         }
     }
 
@@ -208,7 +221,17 @@ final class WorkoutModeStore {
     private(set) var workoutLocation: WorkoutLocationOption
     private(set) var providerKind: CGMProviderKind
     private(set) var alertState: WorkoutAlertState
+    private(set) var recentWorkoutTypes: [WorkoutTypeOption]
     private(set) var updatedAt: Date
+
+    var workoutTypeOptions: [WorkoutTypeOption] {
+        // Keep the monitoring mode easy to find without duplicating a recent choice.
+        let leadingOptions = recentWorkoutTypes
+            + (recentWorkoutTypes.contains(.glucoseFocus) ? [] : [.glucoseFocus])
+        return leadingOptions + WorkoutTypeOption.sortedOptions.filter {
+            !leadingOptions.contains($0)
+        }
+    }
 
     private let fileManager: FileManager
     private let storeURL: URL
@@ -254,6 +277,7 @@ final class WorkoutModeStore {
         self.workoutLocation = snapshot.workoutLocation
         self.providerKind = snapshot.providerKind
         self.alertState = snapshot.alertState ?? .empty
+        self.recentWorkoutTypes = snapshot.recentWorkoutTypes
         self.updatedAt = snapshot.updatedAt
     }
 
@@ -274,6 +298,10 @@ final class WorkoutModeStore {
                 workoutLocationRawValue: workoutType.defaultLocation.rawValue,
                 providerKindRawValue: providerKind.rawValue,
                 alertState: isActive ? alertState : nil,
+                // Restoring the picker or changing an alert threshold is not a new choice.
+                recentWorkoutTypeRawValues: workoutType == self.workoutType
+                    ? recentWorkoutTypes.map(\.rawValue)
+                    : recentRawValues(selecting: workoutType),
                 updatedAt: Date()
             )
         )
@@ -300,6 +328,9 @@ final class WorkoutModeStore {
                 workoutLocationRawValue: workoutLocation.rawValue,
                 providerKindRawValue: providerKind.rawValue,
                 alertState: preservingAlertState ? alertState : .empty,
+                recentWorkoutTypeRawValues: preservingAlertState
+                    ? recentWorkoutTypes.map(\.rawValue)
+                    : recentRawValues(selecting: workoutType),
                 updatedAt: Date()
             )
         )
@@ -318,6 +349,7 @@ final class WorkoutModeStore {
                 workoutLocationRawValue: workoutLocation.rawValue,
                 providerKindRawValue: providerKind.rawValue,
                 alertState: alertState,
+                recentWorkoutTypeRawValues: recentWorkoutTypes.map(\.rawValue),
                 updatedAt: date
             )
         )
@@ -336,6 +368,7 @@ final class WorkoutModeStore {
                 workoutLocationRawValue: workoutLocation.rawValue,
                 providerKindRawValue: providerKind.rawValue,
                 alertState: nil,
+                recentWorkoutTypeRawValues: recentWorkoutTypes.map(\.rawValue),
                 updatedAt: date
             )
         )
@@ -355,9 +388,15 @@ final class WorkoutModeStore {
                 workoutLocationRawValue: workoutLocation.rawValue,
                 providerKindRawValue: providerKind.rawValue,
                 alertState: alertState,
+                recentWorkoutTypeRawValues: recentWorkoutTypes.map(\.rawValue),
                 updatedAt: date
             )
         )
+    }
+
+    private func recentRawValues(selecting workoutType: WorkoutTypeOption) -> [String] {
+        Array(([workoutType] + recentWorkoutTypes.filter { $0 != workoutType }).prefix(5))
+            .map(\.rawValue)
     }
 
     private func persist(_ snapshot: Snapshot) -> Bool {
@@ -387,6 +426,7 @@ final class WorkoutModeStore {
         workoutLocation = snapshot.workoutLocation
         providerKind = snapshot.providerKind
         alertState = snapshot.alertState ?? .empty
+        recentWorkoutTypes = snapshot.recentWorkoutTypes
         updatedAt = snapshot.updatedAt
     }
 }
