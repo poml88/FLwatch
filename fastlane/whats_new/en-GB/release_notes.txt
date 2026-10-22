@@ -1,4 +1,2 @@
-* Important if you use Libre 3 or Libre 3+ with direct Bluetooth: after updating, pair your sensor once more with NFC on the Connect tab. Until you do, FLwatch receives no readings from the sensor on iPhone or Apple Watch. Please also make sure FLwatch is updated on your Apple Watch.
-* The Apple Watch workout screen now shows a symbol when repeated connection losses are likely limiting reconnects to the sensor, and the battery symbol shows the watch's actual charge.
-* For Libre by Abbott, FLwatch now explains before getting the receiver ID that this signs the Libre by Abbott app out, and how to sign in again.
-* Improvements to the direct Bluetooth connection.
+* Small bug fixes and improvements
+
