@@ -594,7 +594,15 @@ struct PhoneAppLibre3ConnectView: View {
                         comment: "Sensor info row showing the sensor's market region and raw NFC region code."
                     )
                 }
-                LabeledContent("Status", value: info.isFresh ? "New (not activated)" : "Active")
+                LabeledContent("Status", value: sensorStateText(info.stateByte))
+                if sensorStateIsFinal(info.stateByte) {
+                    Text(
+                        "This sensor has ended and can't be used anymore. Replace it.",
+                        comment: "Hint below the sensor Status row after an NFC scan, shown when the sensor reports an insertion failure, expiry, termination or error. Such a sensor won't send data again."
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+                }
                 // Raw NFC state byte (diagnostic).
                 LabeledContent("State byte", value: String(format: "0x%02X", info.stateByte))
                 if let warmup = info.warmupMinutes {
@@ -1379,6 +1387,38 @@ struct PhoneAppLibre3ConnectView: View {
         default:
             return code
         }
+    }
+
+    /// Names the NFC patch-info state byte. Labels follow DiaBLE's Libre 3
+    /// state enum; the other reference clients agree that only 4 is running and
+    /// that 6 and 8 are terminated, but don't name the states individually.
+    private func sensorStateText(_ state: UInt8) -> String {
+        switch state {
+        case 1:
+            return String(localized: "New (not activated)", comment: "Libre 3 sensor status from an NFC scan: the sensor is unused and has never been started.")
+        case 2:
+            return String(localized: "Insertion check", comment: "Libre 3 sensor status from an NFC scan: the sensor was just started and is checking that it is correctly inserted in the skin.")
+        case 3:
+            return String(localized: "Insertion failed", comment: "Libre 3 sensor status from an NFC scan: the sensor detected it was not correctly inserted in the skin and won't start.")
+        case 4:
+            return String(localized: "Active", comment: "Libre 3 sensor status from an NFC scan: the sensor is running normally.")
+        case 5:
+            return String(localized: "Expired", comment: "Libre 3 sensor status from an NFC scan: the sensor reached the end of its wear period.")
+        case 6:
+            return String(localized: "Ended", comment: "Libre 3 sensor status from an NFC scan: the sensor has shut down for good after its wear period.")
+        case 7:
+            return String(localized: "Sensor error", comment: "Libre 3 sensor status from an NFC scan: the sensor detected an internal error, for example because it came loose.")
+        case 8:
+            return String(localized: "Ended after error", comment: "Libre 3 sensor status from an NFC scan: the sensor has shut down for good because of an internal error, before the end of its wear period.")
+        default:
+            return String(localized: "Unknown", comment: "Libre 3 sensor status from an NFC scan: the sensor reported a state the app doesn't recognise. The raw state byte is shown in the row below.")
+        }
+    }
+
+    /// States after which the sensor won't send glucose again (insertion
+    /// failed, expired, ended, error, ended after error).
+    private func sensorStateIsFinal(_ state: UInt8) -> Bool {
+        state == 3 || (5...8).contains(state)
     }
 
     /// Renders the sensor's rated lifetime: whole days when it divides evenly
