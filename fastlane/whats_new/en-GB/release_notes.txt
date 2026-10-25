@@ -1,2 +1,2 @@
-* Small bug fixes and improvements
+* Small bug fix: sensor was always shown as "active" in nfc info
 
