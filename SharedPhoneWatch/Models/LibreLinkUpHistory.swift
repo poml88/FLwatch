@@ -192,8 +192,8 @@ final class LibreLinkUpHistoryStore {
             ?? libreLinkUpGlucose.first
             ?? libreLinkUpMinuteGlucose.first
         let normalizedFullGraphHistory = fullLibreLinkUpGlucose ?? libreLinkUpGlucose
-        // Health export omits the newest live point, so only changes to the
-        // remaining historical series should trigger a reconciliation.
+        // Health export omits the newest live point and sends only readings newly
+        // entering history. Lifecycle catch-ups retry the full retained history.
         let previousExportIdentifiers = self.fullLibreLinkUpGlucose
             .dropFirst()
             .map { AppleHealthExportManager.glucoseSyncIdentifier(for: $0) }
@@ -202,6 +202,10 @@ final class LibreLinkUpHistoryStore {
             .map { AppleHealthExportManager.glucoseSyncIdentifier(for: $0) }
         let shouldExportGlucose = !nextExportIdentifiers.isEmpty
             && nextExportIdentifiers != previousExportIdentifiers
+        let previousExportIdentifierSet = Set(previousExportIdentifiers)
+        let newHealthReadings = normalizedFullGraphHistory.dropFirst().filter {
+            !previousExportIdentifierSet.contains(AppleHealthExportManager.glucoseSyncIdentifier(for: $0))
+        }
         let nextSnapshot = Snapshot(
             fullLibreLinkUpGlucose: normalizedFullGraphHistory,
             libreLinkUpGlucose: libreLinkUpGlucose,
@@ -275,9 +279,9 @@ final class LibreLinkUpHistoryStore {
 
         apply(snapshot: nextSnapshot)
         lastKnownModificationDate = modificationDate
-        if shouldExportGlucose {
+        if !newHealthReadings.isEmpty {
             Task {
-                await AppleHealthExportManager.shared.exportGlucoseSamplesIfNeeded(normalizedFullGraphHistory)
+                await AppleHealthExportManager.shared.exportGlucoseSamplesIfNeeded(newHealthReadings)
             }
         }
         if let nightscoutSensorSerial,

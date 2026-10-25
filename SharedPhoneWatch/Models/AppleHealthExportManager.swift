@@ -48,12 +48,9 @@ enum AppleHealthAuthorizationState: Equatable {
     }
 }
 
-/// Serializes the Apple Health writes. Every export reads the sync identifiers
-/// Apple Health already holds and then saves whatever is missing; two overlapping
-/// runs would both observe the same gap and both write it, because HealthKit only
-/// replaces a sample carrying a known sync identifier when the new one has a
-/// *greater* `HKMetadataKeySyncVersion` — ours is a constant, so a repeat save is
-/// stored as an additional sample instead of replacing anything.
+/// Orders deletes against exports so their writes cannot race. HealthKit ignores
+/// samples whose sync identifier is already stored unless their sync version is
+/// greater, in which case it replaces the stored sample; deduplication needs no gate.
 private actor AppleHealthExportGate {
     private var isBusy = false
     private var waiters: [CheckedContinuation<Void, Never>] = []
@@ -188,7 +185,7 @@ final class AppleHealthExportManager {
             let glucoseReadings = await MainActor.run {
                 LibreLinkUpHistory.shared.fullLibreLinkUpGlucose
             }
-            await exportGlucoseSamplesIfNeeded(glucoseReadings)
+            await exportGlucoseSamplesIfNeeded(graphHistoryReadings(from: glucoseReadings))
         case .insulin:
             await exportInsulinDeliveriesIfNeeded(InsulinDeliveryHistorySingleton.persistedHistorySnapshot())
         }
@@ -199,11 +196,12 @@ final class AppleHealthExportManager {
         await exportInsulinDeliveriesIfNeeded(insulinHistory)
     }
 
+    /// Exports historical candidates; callers must exclude the newest live reading.
     func exportGlucoseSamplesIfNeeded(_ readings: [LibreLinkUpGlucose]) async {
 #if os(iOS) && canImport(HealthKit)
         guard isExportEnabled(for: .glucose), isAuthorized(for: .glucose) else { return }
 
-        let uniqueReadings = uniqueGlucoseReadings(graphHistoryReadings(from: readings))
+        let uniqueReadings = uniqueGlucoseReadings(readings)
         guard !uniqueReadings.isEmpty else { return }
 
         await exportGate.acquire()
@@ -216,16 +214,9 @@ final class AppleHealthExportManager {
 
 #if os(iOS) && canImport(HealthKit)
     private func performGlucoseExport(_ uniqueReadings: [LibreLinkUpGlucose]) async {
-        let dates = uniqueReadings.map(\.glucose.date)
         do {
-            let existingIdentifiers = try await existingSyncIdentifiers(
-                for: glucoseType,
-                start: dates.min() ?? .distantPast,
-                end: dates.max() ?? .distantFuture
-            )
-            let newSamples = uniqueReadings.compactMap { reading -> HKQuantitySample? in
+            let samples = uniqueReadings.map { reading -> HKQuantitySample in
                 let syncIdentifier = Self.glucoseSyncIdentifier(for: reading)
-                guard !existingIdentifiers.contains(syncIdentifier) else { return nil }
 
                 let quantity = HKQuantity(unit: HKUnit(from: "mg/dL"), doubleValue: Double(reading.glucose.value))
                 let metadata: [String: Any] = [
@@ -242,15 +233,10 @@ final class AppleHealthExportManager {
                 )
             }
 
-            // Counts rather than a bare "saved N": a healthy steady state is
-            // "0 new", which is otherwise indistinguishable from an export that
-            // never ran. Duplicate regressions show up here as a non-zero "new"
-            // on a window Apple Health already holds in full.
-            Logger.healthKit.debug("Glucose export: \(uniqueReadings.count, privacy: .public) candidates, \(uniqueReadings.count - newSamples.count, privacy: .public) already present, \(newSamples.count, privacy: .public) new")
+            Logger.healthKit.debug("Glucose export: saving \(samples.count, privacy: .public) sample(s)")
 
-            guard !newSamples.isEmpty else { return }
-            try await save(samples: newSamples)
-            Logger.healthKit.info("Saved \(newSamples.count, privacy: .public) glucose sample(s) to Apple Health.")
+            try await save(samples: samples)
+            Logger.healthKit.info("Apple Health accepted \(samples.count, privacy: .public) glucose sample(s).")
         } catch {
             Logger.healthKit.error("Glucose export failed: \(error.localizedDescription, privacy: .public)")
         }
@@ -274,16 +260,9 @@ final class AppleHealthExportManager {
 
 #if os(iOS) && canImport(HealthKit)
     private func performInsulinExport(_ uniqueDeliveries: [InsulinDelivery]) async {
-        let dates = uniqueDeliveries.map { Date(timeIntervalSince1970: $0.timeStamp) }
         do {
-            let existingIdentifiers = try await existingSyncIdentifiers(
-                for: insulinType,
-                start: dates.min() ?? .distantPast,
-                end: dates.max() ?? .distantFuture
-            )
-            let newSamples = uniqueDeliveries.compactMap { delivery -> HKQuantitySample? in
+            let samples = uniqueDeliveries.map { delivery -> HKQuantitySample in
                 let syncIdentifier = Self.insulinSyncIdentifier(for: delivery)
-                guard !existingIdentifiers.contains(syncIdentifier) else { return nil }
 
                 let eventDate = Date(timeIntervalSince1970: delivery.timeStamp)
                 let quantity = HKQuantity(unit: HKUnit.internationalUnit(), doubleValue: delivery.insulinUnits)
@@ -302,11 +281,10 @@ final class AppleHealthExportManager {
                 )
             }
 
-            Logger.healthKit.debug("Insulin export: \(uniqueDeliveries.count, privacy: .public) candidates, \(uniqueDeliveries.count - newSamples.count, privacy: .public) already present, \(newSamples.count, privacy: .public) new")
+            Logger.healthKit.debug("Insulin export: saving \(samples.count, privacy: .public) sample(s)")
 
-            guard !newSamples.isEmpty else { return }
-            try await save(samples: newSamples)
-            Logger.healthKit.info("Saved \(newSamples.count, privacy: .public) insulin sample(s) to Apple Health.")
+            try await save(samples: samples)
+            Logger.healthKit.info("Apple Health accepted \(samples.count, privacy: .public) insulin sample(s).")
         } catch {
             Logger.healthKit.error("Insulin export failed: \(error.localizedDescription, privacy: .public)")
         }
@@ -362,9 +340,8 @@ final class AppleHealthExportManager {
         // Truncated to the whole second, never rounded: LibreLinkUpHistory persists
         // dates as ISO8601, which drops the fractional second. A reading exported
         // live (date x.7) and the same reading exported after a reload (date x.0)
-        // must produce the same identity, or the reload writes a second sample —
-        // HealthKit only replaces a known sync identifier when the new sample has a
-        // *greater* sync version, and ours is a constant.
+        // must produce the same identity: a different sync identifier creates a
+        // new sample in HealthKit.
         let timestamp = Int(reading.glucose.date.timeIntervalSince1970.rounded(.down))
         // Identity must not change when a Libre 3 BLE value is locally corrected.
         // All current providers initialize rawValue as uncorrected mg/dL × 10, so
@@ -465,38 +442,6 @@ final class AppleHealthExportManager {
                 }
                 continuation.resume(throwing: AppleHealthExportError.deleteFailed)
             }
-        }
-    }
-
-    private func existingSyncIdentifiers(
-        for sampleType: HKSampleType,
-        start: Date,
-        end: Date
-    ) async throws -> Set<String> {
-        let queryStart = start.addingTimeInterval(-5 * 60)
-        let queryEnd = end.addingTimeInterval(5 * 60)
-        let predicate = HKQuery.predicateForSamples(withStart: queryStart, end: queryEnd, options: [])
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let query = HKSampleQuery(
-                sampleType: sampleType,
-                predicate: predicate,
-                limit: HKObjectQueryNoLimit,
-                sortDescriptors: nil
-            ) { _, samples, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-
-                let syncIdentifiers = Set(
-                    (samples ?? []).compactMap { sample in
-                        sample.metadata?[HKMetadataKeySyncIdentifier] as? String
-                    }
-                )
-                continuation.resume(returning: syncIdentifiers)
-            }
-            healthStore.execute(query)
         }
     }
 
