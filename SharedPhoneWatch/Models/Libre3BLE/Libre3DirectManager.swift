@@ -1119,8 +1119,8 @@ struct Libre3PersistedHistorySeedPolicy {
 }
 
 /// Per-record acceptance rules for minute-resolution clinical backfill. The
-/// ordering is intentional: warm-up is the fundamental rejection reason even
-/// when a record would also fail a later boundary check.
+/// ordering is intentional: warm-up, the realtime boundary and clock skew take
+/// precedence over a remembered live rejection so their counters keep meaning.
 struct Libre3ClinicalBackfillPolicy {
     struct Boundary: Equatable {
         let lifeCount: UInt16
@@ -1132,18 +1132,34 @@ struct Libre3ClinicalBackfillPolicy {
         case rejectWarmup
         case rejectNotOlder
         case rejectSkew
+        case rejectUnusable
     }
 
     static func disposition(
         recordLifeCount: UInt16,
         mappedDate: Date,
         boundary: Boundary,
-        warmupMinutes: Int
+        warmupMinutes: Int,
+        wasRejectedLive: Bool = false
     ) -> Disposition {
         guard Int(recordLifeCount) >= warmupMinutes else { return .rejectWarmup }
         guard recordLifeCount < boundary.lifeCount else { return .rejectNotOlder }
         guard mappedDate < boundary.date else { return .rejectSkew }
+        guard !wasRejectedLive else { return .rejectUnusable }
         return .accept
+    }
+
+    /// Clinical requests reach back only one window. Retain three windows of
+    /// live rejections, and discard unreachable counts from a previous sensor.
+    /// Use an actual realtime count: the last accepted count can precede the
+    /// rejected episode and would incorrectly discard its newer rejections.
+    static func prunedRejectedMinuteLifeCounts(
+        _ rejected: Set<Int>,
+        currentLifeCount: UInt16
+    ) -> Set<Int> {
+        let current = Int(currentLifeCount)
+        let oldest = max(0, current - 3 * Int(Libre3BackfillImporter.clinicalWindowMinutes))
+        return rejected.filter { $0 >= oldest && $0 <= current }
     }
 
     /// Clinical and realtime values share lifeCount IDs. Preserve whichever
@@ -1169,6 +1185,7 @@ private struct Libre3ClinicalBackfillBurst {
     var warmupDropped = 0
     var notOlderDropped = 0
     var skewDropped = 0
+    var unusableDropped = 0
     var nonDisplayableDropped = 0
     var duplicateDropped = 0
     var minimumSkewSeconds: Int?
@@ -2106,6 +2123,9 @@ final class Libre3DirectManager: ObservableObject {
     /// Both keyed by `lifeCount` (minutes since activation) for de-duplication.
     private var historicalByLifeCount: [Int: LibreLinkUpGlucose] = [:]
     private var minuteByLifeCount: [Int: LibreLinkUpGlucose] = [:]
+    /// Phone-only clinical exclusions. Reconnects retain them; forgetting the
+    /// sensor clears them. Clinical records lack the live quality/status bits.
+    private var rejectedMinuteLifeCounts: Set<Int> = []
     private var sensorStartDate: Date?
 
     /// Display window we keep + show: 6 h 10 m, matching the LibreLinkUp graph
@@ -2886,6 +2906,10 @@ final class Libre3DirectManager: ObservableObject {
         SharedData.libre3LastLifeCount = 0
         SharedData.libre3PendingHistoricalResumeLifeCount = 0
         SharedData.libre3PendingMinuteResumeLifeCount = 0
+        rejectedMinuteLifeCounts.removeAll()
+        if hostProfile.usesBackfill, !SharedData.libre3RejectedMinuteLifeCounts.isEmpty {
+            SharedData.libre3RejectedMinuteLifeCounts = []
+        }
         SharedData.libre3LastGlucoseMgDL = 0
         SharedData.libre3LastGlucoseAt = nil
         lastArmedLifeCount = nil
@@ -4255,6 +4279,9 @@ final class Libre3DirectManager: ObservableObject {
         backfillResumeLifeCount = historicalByLifeCount.keys.max().map { UInt16(clamping: $0) }
         minuteResumeLifeCount = minuteByLifeCount.keys.max().map { UInt16(clamping: $0) }
         if hostProfile.usesBackfill {
+            // Load before notifications, but wait for a realtime count to prune:
+            // the saved accepted count may be older than the rejected minutes.
+            rejectedMinuteLifeCounts = SharedData.libre3RejectedMinuteLifeCounts
             let historicalResume = backfillResumeLifeCount
             let minuteResume = minuteResumeLifeCount
             backfillResumeLifeCount = Libre3BackfillImporter.effectiveResumeLifeCount(
@@ -5582,6 +5609,20 @@ final class Libre3DirectManager: ObservableObject {
         assessment: Libre3GlucoseQualityAssessment,
         receivedAt: Date
     ) {
+        let previousRejectedMinutes = rejectedMinuteLifeCounts
+        if hostProfile.usesBackfill {
+            // Prune on usable readings too, so old exclusions expire after recovery.
+            rejectedMinuteLifeCounts = Libre3ClinicalBackfillPolicy.prunedRejectedMinuteLifeCounts(
+                rejectedMinuteLifeCounts,
+                currentLifeCount: reading.lifeCount
+            )
+        }
+        defer {
+            // Combine pruning and a possible new rejection into one defaults write.
+            if hostProfile.usesBackfill, rejectedMinuteLifeCounts != previousRejectedMinutes {
+                SharedData.libre3RejectedMinuteLifeCounts = rejectedMinuteLifeCounts
+            }
+        }
         seedAnchorIfNeeded(lifeCount: Int(reading.lifeCount))
         guard let anchor = sensorStartDate else { return }
         let settings = SensorSettingsStore.shared.sensorSettings
@@ -5604,6 +5645,12 @@ final class Libre3DirectManager: ObservableObject {
         }
 
         guard assessment.isUsable else {
+            // Preserve an already stored minute's first decision. Otherwise keep
+            // this live rejection across reconnects/relaunches so clinical word 5
+            // cannot later expose the same value without its quality bits.
+            if hostProfile.usesBackfill, minuteByLifeCount[Int(reading.lifeCount)] == nil {
+                rejectedMinuteLifeCounts.insert(Int(reading.lifeCount))
+            }
             Logger.libre3.info("Libre3 BLE reading not usable (lifeCount=\(reading.lifeCount, privacy: .public)): \(String(describing: assessment.issues), privacy: .public)")
             // Layer B is updated at the single realtime suppress site. Embedded
             // history is still pushed below, but no unusable current value is
@@ -5974,7 +6021,8 @@ final class Libre3DirectManager: ObservableObject {
             recordLifeCount: record.lifeCount,
             mappedDate: mappedDate,
             boundary: boundary,
-            warmupMinutes: SharedData.libre3WarmupMinutes
+            warmupMinutes: SharedData.libre3WarmupMinutes,
+            wasRejectedLive: rejectedMinuteLifeCounts.contains(Int(record.lifeCount))
         ) {
         case .accept:
             break
@@ -5988,6 +6036,9 @@ final class Libre3DirectManager: ObservableObject {
             clinicalBackfillBurst.recordSkew(
                 deltaSeconds: Int(mappedDate.timeIntervalSince(boundary.date).rounded())
             )
+            return
+        case .rejectUnusable:
+            clinicalBackfillBurst.unusableDropped += 1
             return
         }
 
@@ -6043,7 +6094,7 @@ final class Libre3DirectManager: ObservableObject {
             skewDelta = "none"
         }
         Libre3DiagnosticsLog.traceReconnect(
-            "clinical-backfill-burst received=\(burst.received) added=\(burst.added) lifeCounts=\(lifeCounts) noAnchor=\(burst.noAnchorDropped) noBoundary=\(burst.noBoundaryDropped) warmupDropped=\(burst.warmupDropped) notOlderDropped=\(burst.notOlderDropped) skewDropped=\(burst.skewDropped) skewDeltaSeconds=\(skewDelta) nonDisplayable=\(burst.nonDisplayableDropped) duplicates=\(burst.duplicateDropped)"
+            "clinical-backfill-burst received=\(burst.received) added=\(burst.added) lifeCounts=\(lifeCounts) noAnchor=\(burst.noAnchorDropped) noBoundary=\(burst.noBoundaryDropped) warmupDropped=\(burst.warmupDropped) notOlderDropped=\(burst.notOlderDropped) skewDropped=\(burst.skewDropped) skewDeltaSeconds=\(skewDelta) unusable=\(burst.unusableDropped) nonDisplayable=\(burst.nonDisplayableDropped) duplicates=\(burst.duplicateDropped)"
         )
         if burst.added > 0 {
             pushHistory()

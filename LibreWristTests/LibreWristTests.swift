@@ -1640,6 +1640,109 @@ final class LibreWristTests: XCTestCase {
         }
     }
 
+    func testClinicalBackfillPolicyRejectsUnusableLiveMinute() {
+        let boundaryDate = Date(timeIntervalSince1970: 10_000)
+        let boundary = Libre3ClinicalBackfillPolicy.Boundary(lifeCount: 100, date: boundaryDate)
+
+        for wasRejectedLive in [false, true] {
+            XCTAssertEqual(
+                Libre3ClinicalBackfillPolicy.disposition(
+                    recordLifeCount: 99,
+                    mappedDate: boundaryDate.addingTimeInterval(-60),
+                    boundary: boundary,
+                    warmupMinutes: 60,
+                    wasRejectedLive: wasRejectedLive
+                ),
+                wasRejectedLive ? .rejectUnusable : .accept
+            )
+        }
+    }
+
+    func testClinicalBackfillExistingRejectionReasonsPrecedeUnusable() {
+        let boundaryDate = Date(timeIntervalSince1970: 10_000)
+        let boundary = Libre3ClinicalBackfillPolicy.Boundary(lifeCount: 100, date: boundaryDate)
+
+        // These records are all remembered live rejections, but the earlier
+        // policy checks must retain ownership of their diagnostic counters.
+        let cases: [(UInt16, Date, Libre3ClinicalBackfillPolicy.Disposition)] = [
+            (59, boundaryDate, .rejectWarmup),
+            (100, boundaryDate, .rejectNotOlder),
+            (99, boundaryDate, .rejectSkew)
+        ]
+        for (lifeCount, mappedDate, expected) in cases {
+            XCTAssertEqual(
+                Libre3ClinicalBackfillPolicy.disposition(
+                    recordLifeCount: lifeCount,
+                    mappedDate: mappedDate,
+                    boundary: boundary,
+                    warmupMinutes: 60,
+                    wasRejectedLive: true
+                ),
+                expected
+            )
+        }
+    }
+
+    func testClinicalBackfillPrunesRejectedMinutesToBoundedWindow() {
+        XCTAssertEqual(
+            Libre3ClinicalBackfillPolicy.prunedRejectedMinuteLifeCounts(
+                [0, 939, 940, 941, 999, 1_000, 1_001, 20_000],
+                currentLifeCount: 1_000
+            ),
+            Set([940, 941, 999, 1_000])
+        )
+        // Recovery continues pruning even when no new rejection is recorded.
+        XCTAssertTrue(
+            Libre3ClinicalBackfillPolicy.prunedRejectedMinuteLifeCounts(
+                [940, 941, 999, 1_000],
+                currentLifeCount: 1_061
+            ).isEmpty
+        )
+    }
+
+    func testClinicalBackfillPrunesRejectedMinutesForYoungSensor() {
+        XCTAssertEqual(
+            Libre3ClinicalBackfillPolicy.prunedRejectedMinuteLifeCounts(
+                [-1, 0, 1, 29, 30, 31, 20_000],
+                currentLifeCount: 30
+            ),
+            Set([0, 1, 29, 30])
+        )
+        XCTAssertEqual(
+            Libre3ClinicalBackfillPolicy.prunedRejectedMinuteLifeCounts(
+                [-1, 0, 1],
+                currentLifeCount: 0
+            ),
+            Set([0])
+        )
+    }
+
+    func testClinicalBackfillRetainsRejectionsAfterLastAcceptedMinute() {
+        // The last accepted minute was 100. Load the later rejections unchanged
+        // and prune against the first actual realtime count after reconnect.
+        let restoredRejections: Set<Int> = [101, 102, 103, 104, 105]
+        let rejected = Libre3ClinicalBackfillPolicy.prunedRejectedMinuteLifeCounts(
+            restoredRejections,
+            currentLifeCount: 106
+        )
+        XCTAssertEqual(rejected, restoredRejections)
+
+        let boundaryDate = Date(timeIntervalSince1970: 10_000)
+        let boundary = Libre3ClinicalBackfillPolicy.Boundary(lifeCount: 106, date: boundaryDate)
+        for lifeCount in 101...105 {
+            XCTAssertEqual(
+                Libre3ClinicalBackfillPolicy.disposition(
+                    recordLifeCount: UInt16(lifeCount),
+                    mappedDate: boundaryDate.addingTimeInterval(Double(lifeCount - 106) * 60),
+                    boundary: boundary,
+                    warmupMinutes: 60,
+                    wasRejectedLive: rejected.contains(lifeCount)
+                ),
+                .rejectUnusable
+            )
+        }
+    }
+
     func testClinicalGlucoseMapperRejectsUnavailableAndMapsValidValue() throws {
         let settings = SensorSettings(
             uom: 1,
