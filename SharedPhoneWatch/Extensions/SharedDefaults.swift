@@ -446,6 +446,10 @@ enum DefaultsKey: String {
     // Libre 3 direct BLE — non-secret sensor metadata (the BLE PIN is secret and
     // lives in the keychain via `Libre3PINStore`, not here).
     case libre3Serial = "libre3SerialKey"
+    // History ownership and switch boundaries survive disconnecting a sensor.
+    case libre3HistorySerial = "libre3HistorySerialKey"
+    case libre3SwitchMarkHistoricalEnd = "libre3SwitchMarkHistoricalEndKey"
+    case libre3SwitchMarkMinuteEnd = "libre3SwitchMarkMinuteEndKey"
     case libre3BleAddress = "libre3BleAddressKey"
     case libre3ReceiverIDHex = "libre3ReceiverIDHexKey"
     case libre3ReceiverIDOverrideHex = "libre3ReceiverIDOverrideHexKey"
@@ -1430,6 +1434,40 @@ enum SharedData {
             #endif
             if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3PeripheralUUID.rawValue) }
             else { store.setString(newValue, forKey: .libre3PeripheralUUID) }
+        }
+    }
+
+    /// Sensor associated with the retained history's switch boundaries. Unlike
+    /// pairing metadata, this must survive disconnect and re-pair operations.
+    static var libre3HistorySerial: String {
+        get { store.getString(.libre3HistorySerial, defaultValue: "") }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3HistorySerial.rawValue) }
+            else { store.setString(newValue, forKey: .libre3HistorySerial) }
+        }
+    }
+
+    /// Last retained five-minute point at the most recent sensor switch.
+    static var libre3SwitchMarkHistoricalEnd: Date? {
+        get {
+            let date = store.getDate(.libre3SwitchMarkHistoricalEnd)
+            return date.timeIntervalSince1970 == 0 ? nil : date
+        }
+        set {
+            if let newValue { store.setDate(newValue, forKey: .libre3SwitchMarkHistoricalEnd) }
+            else { store.removeObject(forKey: DefaultsKey.libre3SwitchMarkHistoricalEnd.rawValue) }
+        }
+    }
+
+    /// Last retained point of either series at the most recent sensor switch.
+    static var libre3SwitchMarkMinuteEnd: Date? {
+        get {
+            let date = store.getDate(.libre3SwitchMarkMinuteEnd)
+            return date.timeIntervalSince1970 == 0 ? nil : date
+        }
+        set {
+            if let newValue { store.setDate(newValue, forKey: .libre3SwitchMarkMinuteEnd) }
+            else { store.removeObject(forKey: DefaultsKey.libre3SwitchMarkMinuteEnd.rawValue) }
         }
     }
 

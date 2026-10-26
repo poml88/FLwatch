@@ -1118,6 +1118,38 @@ struct Libre3PersistedHistorySeedPolicy {
     }
 }
 
+/// Date boundaries retain the previous sensor's data despite a lifeCount reset.
+/// Re-scanning the same sensor must preserve an earlier switch's boundaries.
+struct Libre3SensorSwitchMarkPolicy {
+    static func isSensorSwitch(
+        historySerial: String,
+        pairedSerial: String,
+        newSerial: String
+    ) -> Bool {
+        let previous = historySerial.isEmpty ? pairedSerial : historySerial
+        return previous.isEmpty || previous != newSerial
+    }
+
+    static func marks(
+        fullHistory: [LibreLinkUpGlucose],
+        minuteHistory: [LibreLinkUpGlucose]
+    ) -> (historicalEnd: Date?, minuteEnd: Date?) {
+        let full = fullHistory.filter { $0.glucose.source == CGMReadingSource.libre3BLE }
+        let minute = minuteHistory.filter { $0.glucose.source == CGMReadingSource.libre3BLE }
+        let historicalEnd = Libre3PersistedHistorySeedPolicy.historicalPoints(
+            fullHistory: full,
+            minuteHistory: minute
+        ).map { $0.glucose.date }.max()
+        let minuteEnd = (full + minute).map { $0.glucose.date }.max()
+        return (historicalEnd, minuteEnd)
+    }
+
+    static func isBehind(_ date: Date, mark: Date?) -> Bool {
+        guard let mark else { return false }
+        return date <= mark
+    }
+}
+
 /// Per-record acceptance rules for minute-resolution clinical backfill. The
 /// ordering is intentional: warm-up is the fundamental rejection reason even
 /// when a record would also fail a later boundary check.
@@ -1169,6 +1201,7 @@ private struct Libre3ClinicalBackfillBurst {
     var warmupDropped = 0
     var notOlderDropped = 0
     var skewDropped = 0
+    var switchMarkDropped = 0
     var nonDisplayableDropped = 0
     var duplicateDropped = 0
     var minimumSkewSeconds: Int?
@@ -2107,6 +2140,9 @@ final class Libre3DirectManager: ObservableObject {
     private var historicalByLifeCount: [Int: LibreLinkUpGlucose] = [:]
     private var minuteByLifeCount: [Int: LibreLinkUpGlucose] = [:]
     private var sensorStartDate: Date?
+    /// Loaded once per connection; only a successful NFC pair changes them.
+    private var switchMarkHistoricalEnd: Date?
+    private var switchMarkMinuteEnd: Date?
 
     /// Display window we keep + show: 6 h 10 m, matching the LibreLinkUp graph
     /// filter (`dateSixHoursTenAgo`).
@@ -4221,6 +4257,8 @@ final class Libre3DirectManager: ObservableObject {
         // the persisted minute glucose). Backfill + realtime then merge on top.
         // Restricted to our own source so a previous provider's points are never
         // resurfaced.
+        switchMarkHistoricalEnd = SharedData.libre3SwitchMarkHistoricalEnd
+        switchMarkMinuteEnd = SharedData.libre3SwitchMarkMinuteEnd
         let persistedMinute = LibreLinkUpHistory.shared.libreLinkUpMinuteGlucose
             .filter { $0.glucose.source == CGMReadingSource.libre3BLE }
         if historicalByLifeCount.isEmpty {
@@ -5561,7 +5599,7 @@ final class Libre3DirectManager: ObservableObject {
             sensorStartDate: anchor,
             settings: settings,
             calibrationOffsetMgDL: calibrationOffset
-        ) {
+        ), !Libre3SensorSwitchMarkPolicy.isBehind(historical.glucose.date, mark: switchMarkHistoricalEnd) {
             // Calibration is prospective: once an ID is stored, a repeated
             // embedded/backfill sample must not pick up a later offset.
             if historicalByLifeCount[historical.glucose.id] == nil {
@@ -5897,6 +5935,7 @@ final class Libre3DirectManager: ObservableObject {
         let calibrationOffset = SharedData.effectiveLibre3CalibrationOffsetMgDL
         var added = 0
         var displayable = 0
+        var switchMarkSkipped = 0
         for sample in page.samples {
             guard let mapped = Libre3GlucoseMapper.makeGlucose(
                 fromHistorical: sample,
@@ -5905,12 +5944,16 @@ final class Libre3DirectManager: ObservableObject {
                 calibrationOffsetMgDL: calibrationOffset
             ) else { continue }
             displayable += 1
+            guard !Libre3SensorSwitchMarkPolicy.isBehind(mapped.glucose.date, mark: switchMarkHistoricalEnd) else {
+                switchMarkSkipped += 1
+                continue
+            }
             if historicalByLifeCount[mapped.glucose.id] == nil {
                 historicalByLifeCount[mapped.glucose.id] = mapped
                 added += 1
             }
         }
-        Logger.libre3.info("Libre3 BLE backfill page lc \(page.startLifeCount, privacy: .public)..\(page.endLifeCount, privacy: .public): \(page.values.count, privacy: .public) samples, \(displayable, privacy: .public) displayable, \(added, privacy: .public) added")
+        Logger.libre3.info("Libre3 BLE backfill page lc \(page.startLifeCount, privacy: .public)..\(page.endLifeCount, privacy: .public): \(page.values.count, privacy: .public) samples, \(displayable, privacy: .public) displayable, \(added, privacy: .public) added, \(switchMarkSkipped, privacy: .public) switch-mark skipped")
         guard added > 0 else { return }
         pushHistory()
     }
@@ -5954,6 +5997,11 @@ final class Libre3DirectManager: ObservableObject {
             clinicalBackfillBurst.recordSkew(
                 deltaSeconds: Int(mappedDate.timeIntervalSince(boundary.date).rounded())
             )
+            return
+        }
+
+        guard !Libre3SensorSwitchMarkPolicy.isBehind(mappedDate, mark: switchMarkMinuteEnd) else {
+            clinicalBackfillBurst.switchMarkDropped += 1
             return
         }
 
@@ -6009,7 +6057,7 @@ final class Libre3DirectManager: ObservableObject {
             skewDelta = "none"
         }
         Libre3DiagnosticsLog.traceReconnect(
-            "clinical-backfill-burst received=\(burst.received) added=\(burst.added) lifeCounts=\(lifeCounts) noAnchor=\(burst.noAnchorDropped) noBoundary=\(burst.noBoundaryDropped) warmupDropped=\(burst.warmupDropped) notOlderDropped=\(burst.notOlderDropped) skewDropped=\(burst.skewDropped) skewDeltaSeconds=\(skewDelta) nonDisplayable=\(burst.nonDisplayableDropped) duplicates=\(burst.duplicateDropped)"
+            "clinical-backfill-burst received=\(burst.received) added=\(burst.added) lifeCounts=\(lifeCounts) noAnchor=\(burst.noAnchorDropped) noBoundary=\(burst.noBoundaryDropped) warmupDropped=\(burst.warmupDropped) notOlderDropped=\(burst.notOlderDropped) skewDropped=\(burst.skewDropped) skewDeltaSeconds=\(skewDelta) nonDisplayable=\(burst.nonDisplayableDropped) duplicates=\(burst.duplicateDropped) switchMarkDropped=\(burst.switchMarkDropped)"
         )
         if burst.added > 0 {
             pushHistory()

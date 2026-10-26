@@ -206,8 +206,36 @@ final class Libre3PairingCoordinator: ObservableObject {
                 receiverID: receiverID,
                 source: "NFC \(mode.rawValue)"
             )
+            let newSerial = sensorState.serialNumber ?? result.patchInfo.serialNumber
+            let pairedSerial = SharedData.libre3Serial
+            let isSensorSwitch = Libre3SensorSwitchMarkPolicy.isSensorSwitch(
+                historySerial: SharedData.libre3HistorySerial,
+                pairedSerial: pairedSerial,
+                newSerial: newSerial
+            )
             Libre3DirectManager.shared.forgetSensor()
             try Libre3StateStore.save(state: sensorState, mode: mode, patchInfo: result.patchInfo)
+            // A failed save must not advance history ownership. Re-scans retain
+            // the earlier marks so reconnect backfill can still fill the gap.
+            if isSensorSwitch {
+                let history = LibreLinkUpHistory.shared
+                let marks = Libre3SensorSwitchMarkPolicy.marks(
+                    fullHistory: history.fullLibreLinkUpGlucose,
+                    minuteHistory: history.libreLinkUpMinuteGlucose
+                )
+                SharedData.libre3SwitchMarkHistoricalEnd = marks.historicalEnd
+                SharedData.libre3SwitchMarkMinuteEnd = marks.minuteEnd
+            }
+            SharedData.libre3HistorySerial = newSerial
+            let now = Date()
+            let historicalAge = SharedData.libre3SwitchMarkHistoricalEnd.map {
+                String(Int(now.timeIntervalSince($0) / 60))
+            } ?? "none"
+            let minuteAge = SharedData.libre3SwitchMarkMinuteEnd.map {
+                String(Int(now.timeIntervalSince($0) / 60))
+            } ?? "none"
+            let switchDescription = isSensorSwitch ? "switch" : "no switch"
+            Logger.libre3.info("Libre3 BLE pairing history: \(switchDescription, privacy: .public), historicalMarkAgeMinutes=\(historicalAge, privacy: .public) minuteMarkAgeMinutes=\(minuteAge, privacy: .public)")
             if !SharedData.libre3CalibrationSensorSerial.isEmpty,
                SharedData.libre3CalibrationSensorSerial != result.patchInfo.serialNumber {
                 // A stored serial on its own doesn't mean a calibration was in

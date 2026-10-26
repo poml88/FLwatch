@@ -204,6 +204,51 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
+    func testNightscoutHistoricalSwitchFilterLeavesNilMarkAndOtherSourcesUnchanged() {
+        let mark = Date(timeIntervalSince1970: 1_800_014_400)
+        let before = directBLENightscoutReading(
+            lifeCount: 100,
+            date: mark.addingTimeInterval(-300),
+            value: 110
+        )
+        let equal = directBLENightscoutReading(lifeCount: 105, date: mark, value: 115)
+        let after = directBLENightscoutReading(
+            lifeCount: 110,
+            date: mark.addingTimeInterval(300),
+            value: 120
+        )
+        let otherSource = LibreLinkUpGlucose(
+            glucose: Glucose(130, id: 42, date: mark.addingTimeInterval(-600), source: "Dexcom Share"),
+            color: .green,
+            trendArrow: .stable
+        )
+        let candidates = [before, equal, after, otherSource]
+
+        XCTAssertEqual(
+            NightscoutUploadManager.historicalCandidatesAfterSwitchMark(candidates, minuteMark: nil),
+            candidates
+        )
+        XCTAssertEqual(
+            NightscoutUploadManager.historicalCandidatesAfterSwitchMark(candidates, minuteMark: mark),
+            [after, otherSource]
+        )
+    }
+
+    func testNightscoutGlucoseWorkMustMatchCurrentSensor() {
+        XCTAssertTrue(NightscoutUploadManager.isCurrentGlucoseWork(
+            workSerial: "A", currentSerial: "A"
+        ))
+        XCTAssertFalse(NightscoutUploadManager.isCurrentGlucoseWork(
+            workSerial: "A", currentSerial: "B"
+        ))
+        XCTAssertFalse(NightscoutUploadManager.isCurrentGlucoseWork(
+            workSerial: nil, currentSerial: "A"
+        ))
+        XCTAssertFalse(NightscoutUploadManager.isCurrentGlucoseWork(
+            workSerial: "", currentSerial: ""
+        ))
+    }
+
     func testNightscoutMinuteCoverageMergesAdjacentRanges() {
         var coverage = NightscoutMinuteCoverage([100...105, 107...110])
 
@@ -1338,6 +1383,162 @@ final class LibreWristTests: XCTestCase {
         )
 
         XCTAssertEqual(seeded, historical)
+    }
+
+    // MARK: - Libre 3 sensor switch marks
+
+    func testSensorSwitchMarkDistinguishesSameAndDifferentSensors() {
+        XCTAssertFalse(Libre3SensorSwitchMarkPolicy.isSensorSwitch(
+            historySerial: "A", pairedSerial: "A", newSerial: "A"
+        ))
+        XCTAssertTrue(Libre3SensorSwitchMarkPolicy.isSensorSwitch(
+            historySerial: "A", pairedSerial: "A", newSerial: "B"
+        ))
+        // A second real switch must be detected even when returning to A.
+        XCTAssertTrue(Libre3SensorSwitchMarkPolicy.isSensorSwitch(
+            historySerial: "B", pairedSerial: "B", newSerial: "A"
+        ))
+    }
+
+    func testSensorSwitchMarkFallsBackToPairedSerialBeforeMigration() {
+        XCTAssertFalse(Libre3SensorSwitchMarkPolicy.isSensorSwitch(
+            historySerial: "", pairedSerial: "A", newSerial: "A"
+        ))
+        XCTAssertTrue(Libre3SensorSwitchMarkPolicy.isSensorSwitch(
+            historySerial: "", pairedSerial: "A", newSerial: "B"
+        ))
+    }
+
+    func testSensorSwitchMarkRetainsHistoryIdentityAfterDisconnect() {
+        XCTAssertFalse(Libre3SensorSwitchMarkPolicy.isSensorSwitch(
+            historySerial: "A", pairedSerial: "", newSerial: "A"
+        ))
+        XCTAssertTrue(Libre3SensorSwitchMarkPolicy.isSensorSwitch(
+            historySerial: "A", pairedSerial: "", newSerial: "B"
+        ))
+        // Retained history takes precedence over the pairing fallback.
+        XCTAssertFalse(Libre3SensorSwitchMarkPolicy.isSensorSwitch(
+            historySerial: "A", pairedSerial: "B", newSerial: "A"
+        ))
+        XCTAssertTrue(Libre3SensorSwitchMarkPolicy.isSensorSwitch(
+            historySerial: "", pairedSerial: "", newSerial: "A"
+        ))
+    }
+
+    func testSensorSwitchMarksIgnoreOtherSourcesAndExcludeInjectedMinute() {
+        let noon = Date(timeIntervalSince1970: 1_800_014_400)
+        let minute = directBLENightscoutReading(lifeCount: 20_000, date: noon, value: 110)
+        let historical = directBLENightscoutReading(
+            lifeCount: 19_980,
+            date: noon.addingTimeInterval(-20 * 60),
+            value: 115
+        )
+        let otherSource = LibreLinkUpGlucose(
+            glucose: Glucose(130, id: 42, date: noon.addingTimeInterval(300), source: "Dexcom Share"),
+            color: .green,
+            trendArrow: .stable
+        )
+
+        let marks = Libre3SensorSwitchMarkPolicy.marks(
+            fullHistory: [otherSource, minute, historical],
+            minuteHistory: [otherSource, minute]
+        )
+
+        XCTAssertEqual(marks.historicalEnd, historical.glucose.date)
+        XCTAssertEqual(marks.minuteEnd, noon)
+    }
+
+    func testSensorSwitchMinuteMarkNeverPrecedesHistoricalEnd() {
+        let date = Date(timeIntervalSince1970: 1_800_014_400)
+        let historical = directBLENightscoutReading(lifeCount: 100, date: date, value: 110)
+        let marks = Libre3SensorSwitchMarkPolicy.marks(fullHistory: [historical], minuteHistory: [])
+
+        XCTAssertEqual(marks.historicalEnd, date)
+        XCTAssertEqual(marks.minuteEnd, date)
+
+        let olderMinute = directBLENightscoutReading(
+            lifeCount: 95, date: date.addingTimeInterval(-300), value: 115
+        )
+        let withOlderMinute = Libre3SensorSwitchMarkPolicy.marks(
+            fullHistory: [historical], minuteHistory: [olderMinute]
+        )
+        XCTAssertEqual(withOlderMinute.historicalEnd, date)
+        XCTAssertEqual(withOlderMinute.minuteEnd, date)
+    }
+
+    func testSensorSwitchMarksAllowMissingHistoricalSeries() {
+        let date = Date(timeIntervalSince1970: 1_800_014_400)
+        let minute = directBLENightscoutReading(lifeCount: 100, date: date, value: 110)
+        let marks = Libre3SensorSwitchMarkPolicy.marks(fullHistory: [minute], minuteHistory: [minute])
+
+        XCTAssertNil(marks.historicalEnd)
+        XCTAssertEqual(marks.minuteEnd, date)
+    }
+
+    func testSensorSwitchMarksAreNilWithoutLibre3BLEData() {
+        let empty = Libre3SensorSwitchMarkPolicy.marks(fullHistory: [], minuteHistory: [])
+        XCTAssertNil(empty.historicalEnd)
+        XCTAssertNil(empty.minuteEnd)
+
+        let otherSource = LibreLinkUpGlucose(
+            glucose: Glucose(130, id: 42, date: Date(timeIntervalSince1970: 1_800_014_400), source: "LibreLinkUp"),
+            color: .green,
+            trendArrow: .stable
+        )
+        let marks = Libre3SensorSwitchMarkPolicy.marks(fullHistory: [otherSource], minuteHistory: [otherSource])
+        XCTAssertNil(marks.historicalEnd)
+        XCTAssertNil(marks.minuteEnd)
+    }
+
+    func testSensorSwitchMarkExcludesEqualAndOlderDates() {
+        let mark = Date(timeIntervalSince1970: 1_800_014_400)
+        XCTAssertTrue(Libre3SensorSwitchMarkPolicy.isBehind(mark.addingTimeInterval(-1), mark: mark))
+        XCTAssertTrue(Libre3SensorSwitchMarkPolicy.isBehind(mark, mark: mark))
+        XCTAssertFalse(Libre3SensorSwitchMarkPolicy.isBehind(mark.addingTimeInterval(1), mark: mark))
+        XCTAssertFalse(Libre3SensorSwitchMarkPolicy.isBehind(mark, mark: nil))
+    }
+
+    func testSensorSwitchKeepsGraphContinuousWithoutNightscoutOverlap() {
+        let noon = Date(timeIntervalSince1970: 1_800_014_400)
+        let oldMinute = directBLENightscoutReading(lifeCount: 20_000, date: noon, value: 110)
+        let oldHistorical = [20, 60].map { minutesAgo in
+            directBLENightscoutReading(
+                lifeCount: 20_000 - minutesAgo,
+                date: noon.addingTimeInterval(-Double(minutesAgo) * 60),
+                value: 115
+            )
+        }
+        let marks = Libre3SensorSwitchMarkPolicy.marks(
+            fullHistory: [oldMinute] + oldHistorical,
+            minuteHistory: [oldMinute]
+        )
+        XCTAssertEqual(marks.historicalEnd, noon.addingTimeInterval(-20 * 60))
+        XCTAssertEqual(marks.minuteEnd, noon)
+
+        // New sensor: 11:40, 11:45, 11:50, 11:55, 12:00, 12:05.
+        let newHistorical = [-20, -15, -10, -5, 0, 5].map { minutesFromNoon in
+            directBLENightscoutReading(
+                lifeCount: 1_000 + minutesFromNoon,
+                date: noon.addingTimeInterval(Double(minutesFromNoon) * 60),
+                value: 120
+            )
+        }
+        let storedNewHistorical = newHistorical.filter {
+            !Libre3SensorSwitchMarkPolicy.isBehind($0.glucose.date, mark: marks.historicalEnd)
+        }
+        XCTAssertEqual(storedNewHistorical, Array(newHistorical.dropFirst()))
+        XCTAssertTrue(Libre3SensorSwitchMarkPolicy.isBehind(noon, mark: marks.minuteEnd))
+        XCTAssertFalse(Libre3SensorSwitchMarkPolicy.isBehind(noon.addingTimeInterval(60), mark: marks.minuteEnd))
+
+        // The same 11:45–12:00 points keep the five-minute graph/Health series
+        // continuous, but must not be uploaded over the old sensor's minutes.
+        XCTAssertEqual(
+            NightscoutUploadManager.historicalCandidatesAfterSwitchMark(
+                oldHistorical + storedNewHistorical,
+                minuteMark: marks.minuteEnd
+            ),
+            [newHistorical[newHistorical.count - 1]]
+        )
     }
 
     // MARK: - Libre 3 backfill bounds
