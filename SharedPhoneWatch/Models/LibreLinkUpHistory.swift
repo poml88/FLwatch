@@ -193,7 +193,8 @@ final class LibreLinkUpHistoryStore {
             ?? libreLinkUpMinuteGlucose.first
         let normalizedFullGraphHistory = fullLibreLinkUpGlucose ?? libreLinkUpGlucose
         // Health export omits the newest live point and sends only readings newly
-        // entering history. Lifecycle catch-ups retry the full retained history.
+        // entering history. Lifecycle catch-ups retry the full retained history,
+        // with the export manager skipping identifiers already saved successfully.
         let previousExportIdentifiers = self.fullLibreLinkUpGlucose
             .dropFirst()
             .map { AppleHealthExportManager.glucoseSyncIdentifier(for: $0) }

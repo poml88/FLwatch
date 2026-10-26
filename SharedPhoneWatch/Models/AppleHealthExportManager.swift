@@ -48,9 +48,8 @@ enum AppleHealthAuthorizationState: Equatable {
     }
 }
 
-/// Orders deletes against exports so their writes cannot race. HealthKit ignores
-/// samples whose sync identifier is already stored unless their sync version is
-/// greater, in which case it replaces the stored sample; deduplication needs no gate.
+/// Serializes exports, deletes, and saved-identifier record updates so a catch-up
+/// cannot re-save a sample while another operation is saving or forgetting it.
 private actor AppleHealthExportGate {
     private var isBusy = false
     private var waiters: [CheckedContinuation<Void, Never>] = []
@@ -158,9 +157,14 @@ final class AppleHealthExportManager {
         }
 
         let state = await authorizationState(for: kind)
-        setExportEnabled(state == .authorized, for: kind)
         if state == .authorized {
-            await exportAvailableDataIfNeeded(for: kind)
+            await exportGate.acquire()
+            setExportEnabled(true, for: kind)
+            setSavedSyncIdentifiers([], for: kind)
+            await performAvailableDataExportIfNeeded(for: kind)
+            await exportGate.release()
+        } else {
+            setExportEnabled(false, for: kind)
         }
         return state
 #else
@@ -180,32 +184,47 @@ final class AppleHealthExportManager {
     }
 
     private func exportAvailableDataIfNeeded(for kind: AppleHealthDataKind) async {
+#if os(iOS) && canImport(HealthKit)
+        await exportGate.acquire()
+        await performAvailableDataExportIfNeeded(for: kind)
+        await exportGate.release()
+#else
+        _ = kind
+#endif
+    }
+
+#if os(iOS) && canImport(HealthKit)
+    /// Caller holds the gate before taking the snapshot, so trimming cannot
+    /// forget a newer identifier saved while a catch-up was waiting for the gate.
+    private func performAvailableDataExportIfNeeded(for kind: AppleHealthDataKind) async {
+        guard isExportEnabled(for: kind), isAuthorized(for: kind) else { return }
+
         switch kind {
         case .glucose:
             let glucoseReadings = await MainActor.run {
                 LibreLinkUpHistory.shared.fullLibreLinkUpGlucose
             }
-            await exportGlucoseSamplesIfNeeded(graphHistoryReadings(from: glucoseReadings))
+            await performGlucoseExport(Self.glucoseExportCandidates(from: graphHistoryReadings(from: glucoseReadings)), isCatchUp: true)
         case .insulin:
-            await exportInsulinDeliveriesIfNeeded(InsulinDeliveryHistorySingleton.persistedHistorySnapshot())
+            await performInsulinExport(uniqueInsulinDeliveries(InsulinDeliveryHistorySingleton.persistedHistorySnapshot()), isCatchUp: true)
         }
     }
+#endif
 
     func exportInsulinCatchUpIfNeeded() async {
-        let insulinHistory = InsulinDeliveryHistorySingleton.persistedHistorySnapshot()
-        await exportInsulinDeliveriesIfNeeded(insulinHistory)
+        await exportAvailableDataIfNeeded(for: .insulin)
     }
 
     /// Exports historical candidates; callers must exclude the newest live reading.
     func exportGlucoseSamplesIfNeeded(_ readings: [LibreLinkUpGlucose]) async {
 #if os(iOS) && canImport(HealthKit)
-        guard isExportEnabled(for: .glucose), isAuthorized(for: .glucose) else { return }
-
-        let uniqueReadings = uniqueGlucoseReadings(readings)
+        let uniqueReadings = Self.glucoseExportCandidates(from: readings)
         guard !uniqueReadings.isEmpty else { return }
 
         await exportGate.acquire()
-        await performGlucoseExport(uniqueReadings)
+        if isExportEnabled(for: .glucose), isAuthorized(for: .glucose) {
+            await performGlucoseExport(uniqueReadings)
+        }
         await exportGate.release()
 #else
         _ = readings
@@ -213,9 +232,23 @@ final class AppleHealthExportManager {
     }
 
 #if os(iOS) && canImport(HealthKit)
-    private func performGlucoseExport(_ uniqueReadings: [LibreLinkUpGlucose]) async {
+    private func performGlucoseExport(_ uniqueReadings: [LibreLinkUpGlucose], isCatchUp: Bool = false) async {
+        var savedIdentifiers = savedSyncIdentifiers(for: .glucose)
+        if isCatchUp {
+            let retainedIdentifiers = savedIdentifiers.intersection(uniqueReadings.map(Self.glucoseSyncIdentifier(for:)))
+            if retainedIdentifiers != savedIdentifiers {
+                setSavedSyncIdentifiers(retainedIdentifiers, for: .glucose)
+                savedIdentifiers = retainedIdentifiers
+            }
+        }
+        let newReadings = uniqueReadings.filter {
+            !savedIdentifiers.contains(Self.glucoseSyncIdentifier(for: $0))
+        }
+        Logger.healthKit.debug("Glucose export: \(uniqueReadings.count, privacy: .public) candidates, \(uniqueReadings.count - newReadings.count, privacy: .public) already saved, \(newReadings.count, privacy: .public) new")
+        guard !newReadings.isEmpty else { return }
+
         do {
-            let samples = uniqueReadings.map { reading -> HKQuantitySample in
+            let samples = newReadings.map { reading -> HKQuantitySample in
                 let syncIdentifier = Self.glucoseSyncIdentifier(for: reading)
 
                 let quantity = HKQuantity(unit: HKUnit(from: "mg/dL"), doubleValue: Double(reading.glucose.value))
@@ -233,9 +266,9 @@ final class AppleHealthExportManager {
                 )
             }
 
-            Logger.healthKit.debug("Glucose export: saving \(samples.count, privacy: .public) sample(s)")
-
             try await save(samples: samples)
+            savedIdentifiers.formUnion(newReadings.map(Self.glucoseSyncIdentifier(for:)))
+            setSavedSyncIdentifiers(savedIdentifiers, for: .glucose)
             Logger.healthKit.info("Apple Health accepted \(samples.count, privacy: .public) glucose sample(s).")
         } catch {
             Logger.healthKit.error("Glucose export failed: \(error.localizedDescription, privacy: .public)")
@@ -245,13 +278,13 @@ final class AppleHealthExportManager {
 
     func exportInsulinDeliveriesIfNeeded(_ deliveries: [InsulinDelivery]) async {
 #if os(iOS) && canImport(HealthKit)
-        guard isExportEnabled(for: .insulin), isAuthorized(for: .insulin) else { return }
-
         let uniqueDeliveries = uniqueInsulinDeliveries(deliveries)
         guard !uniqueDeliveries.isEmpty else { return }
 
         await exportGate.acquire()
-        await performInsulinExport(uniqueDeliveries)
+        if isExportEnabled(for: .insulin), isAuthorized(for: .insulin) {
+            await performInsulinExport(uniqueDeliveries)
+        }
         await exportGate.release()
 #else
         _ = deliveries
@@ -259,9 +292,23 @@ final class AppleHealthExportManager {
     }
 
 #if os(iOS) && canImport(HealthKit)
-    private func performInsulinExport(_ uniqueDeliveries: [InsulinDelivery]) async {
+    private func performInsulinExport(_ uniqueDeliveries: [InsulinDelivery], isCatchUp: Bool = false) async {
+        var savedIdentifiers = savedSyncIdentifiers(for: .insulin)
+        if isCatchUp {
+            let retainedIdentifiers = savedIdentifiers.intersection(uniqueDeliveries.map(Self.insulinSyncIdentifier(for:)))
+            if retainedIdentifiers != savedIdentifiers {
+                setSavedSyncIdentifiers(retainedIdentifiers, for: .insulin)
+                savedIdentifiers = retainedIdentifiers
+            }
+        }
+        let newDeliveries = uniqueDeliveries.filter {
+            !savedIdentifiers.contains(Self.insulinSyncIdentifier(for: $0))
+        }
+        Logger.healthKit.debug("Insulin export: \(uniqueDeliveries.count, privacy: .public) candidates, \(uniqueDeliveries.count - newDeliveries.count, privacy: .public) already saved, \(newDeliveries.count, privacy: .public) new")
+        guard !newDeliveries.isEmpty else { return }
+
         do {
-            let samples = uniqueDeliveries.map { delivery -> HKQuantitySample in
+            let samples = newDeliveries.map { delivery -> HKQuantitySample in
                 let syncIdentifier = Self.insulinSyncIdentifier(for: delivery)
 
                 let eventDate = Date(timeIntervalSince1970: delivery.timeStamp)
@@ -281,9 +328,9 @@ final class AppleHealthExportManager {
                 )
             }
 
-            Logger.healthKit.debug("Insulin export: saving \(samples.count, privacy: .public) sample(s)")
-
             try await save(samples: samples)
+            savedIdentifiers.formUnion(newDeliveries.map(Self.insulinSyncIdentifier(for:)))
+            setSavedSyncIdentifiers(savedIdentifiers, for: .insulin)
             Logger.healthKit.info("Apple Health accepted \(samples.count, privacy: .public) insulin sample(s).")
         } catch {
             Logger.healthKit.error("Insulin export failed: \(error.localizedDescription, privacy: .public)")
@@ -295,15 +342,20 @@ final class AppleHealthExportManager {
 #if os(iOS) && canImport(HealthKit)
         // No export-preference check on purpose: samples we wrote earlier should
         // still be cleaned up after the user turns insulin export back off.
-        guard isAuthorized(for: .insulin) else { return }
-
         let uniqueDeliveries = uniqueInsulinDeliveries(deliveries)
         guard !uniqueDeliveries.isEmpty else { return }
 
         // Shares the export gate: a delete racing an export could re-add what it
         // just removed, or remove what the export is about to write.
         await exportGate.acquire()
-        await performInsulinDelete(uniqueDeliveries)
+        // Forget the identifiers even if permission is gone or deletion fails,
+        // so entering the same dose again can export it.
+        let identifiersToDelete = uniqueDeliveries.map(Self.insulinSyncIdentifier(for:))
+        let retainedIdentifiers = savedSyncIdentifiers(for: .insulin).subtracting(identifiersToDelete)
+        setSavedSyncIdentifiers(retainedIdentifiers, for: .insulin)
+        if isAuthorized(for: .insulin) {
+            await performInsulinDelete(uniqueDeliveries)
+        }
         await exportGate.release()
 #else
         _ = deliveries
@@ -311,6 +363,27 @@ final class AppleHealthExportManager {
     }
 
 #if os(iOS) && canImport(HealthKit)
+    // HealthKit rewrites same-version re-saves (observed 2026-10-26, contrary to
+    // HKMetadata.h and WWDC20 session 10184). This defaults record only prevents
+    // rewrites. Losing it on reinstall or a crash between save and record write
+    // costs at most one extra rewrite per sample, never a missed export.
+    // Access within this process is protected by exportGate; concurrent extension
+    // writes can lose a record update and permit a rewrite. Identifiers are added
+    // only on success.
+    private func savedSyncIdentifiers(for kind: AppleHealthDataKind) -> Set<String> {
+        switch kind {
+        case .glucose: return Set(SharedData.appleHealthSavedGlucoseSyncIdentifiers)
+        case .insulin: return Set(SharedData.appleHealthSavedInsulinSyncIdentifiers)
+        }
+    }
+
+    private func setSavedSyncIdentifiers(_ identifiers: Set<String>, for kind: AppleHealthDataKind) {
+        switch kind {
+        case .glucose: SharedData.appleHealthSavedGlucoseSyncIdentifiers = identifiers.sorted()
+        case .insulin: SharedData.appleHealthSavedInsulinSyncIdentifiers = identifiers.sorted()
+        }
+    }
+
     private func performInsulinDelete(_ uniqueDeliveries: [InsulinDelivery]) async {
         let dates = uniqueDeliveries.map { Date(timeIntervalSince1970: $0.timeStamp) }
         let identifiersToDelete = Set(uniqueDeliveries.map(Self.insulinSyncIdentifier(for:)))
@@ -469,9 +542,18 @@ final class AppleHealthExportManager {
     }
 #endif
 
-    private func uniqueGlucoseReadings(_ readings: [LibreLinkUpGlucose]) -> [LibreLinkUpGlucose] {
+    static func glucoseExportCandidates(from readings: [LibreLinkUpGlucose]) -> [LibreLinkUpGlucose] {
         var seen = Set<String>()
         return readings
+            .filter { reading in
+                // The initial history contains made-up readings with source
+                // "DiaBLE". Export only readings stamped by a real provider;
+                // extend this list when adding a provider.
+                switch reading.glucose.source {
+                case CGMReadingSource.libre3BLE, "LibreLinkUp", "Dexcom": return true
+                default: return false
+                }
+            }
             .sorted { $0.glucose.date < $1.glucose.date }
             .filter { reading in
                 let syncIdentifier = Self.glucoseSyncIdentifier(for: reading)

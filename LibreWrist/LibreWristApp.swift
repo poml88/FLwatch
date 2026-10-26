@@ -139,10 +139,10 @@ struct LibreWristApp: App {
             await NightscoutUploadManager.shared.reconcileRetainedDataAndWait()
         }
         Task {
-            // Re-send retained history on activation, background refresh, and when
-            // export is enabled. HealthKit skips duplicates, recovering saves the
-            // regular export missed without an exported-readings record that could
-            // be lost on reinstall or after a crash.
+            // Retry retained history on activation. The same catch-up runs from
+            // background refresh and when export is enabled; the manager skips
+            // identifiers it has saved successfully, so existing Health samples
+            // are not rewritten.
             await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
         }
     }

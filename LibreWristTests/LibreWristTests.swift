@@ -37,6 +37,42 @@ final class LibreWristTests: XCTestCase {
         }
     }
 
+    func testGlucoseExportCandidatesExcludePlaceholdersAndKeepProviderReadings() {
+        let now = Date(timeIntervalSince1970: 1_710_000_000)
+        // Match the initial graph's values, IDs, dates, and default "DiaBLE" source.
+        let placeholders = [(1000, 6020, -3), (1500, 6025, -2), (800, 6030, -1)].map { entry in
+            LibreLinkUpGlucose(
+                glucose: Glucose(
+                    rawValue: entry.0,
+                    id: entry.1,
+                    date: now.addingTimeInterval(Double(entry.2) * 60 * 60)
+                ),
+                color: .green,
+                trendArrow: .stable
+            )
+        }
+        let providerReadings = zip(placeholders, [CGMReadingSource.libre3BLE, "LibreLinkUp", "Dexcom"]).map { reading, source in
+            var glucose = reading.glucose
+            glucose.source = source
+            return LibreLinkUpGlucose(glucose: glucose, color: reading.color, trendArrow: reading.trendArrow)
+        }
+        let otherPlaceholders = ["Sample", "Mock", "", "Unknown"].map { source in
+            var glucose = placeholders[0].glucose
+            glucose.source = source
+            return LibreLinkUpGlucose(glucose: glucose, color: .green, trendArrow: .stable)
+        }
+
+        // A fresh-install catch-up drops the first entry before selecting candidates.
+        XCTAssertTrue(AppleHealthExportManager.glucoseExportCandidates(from: Array(placeholders.dropFirst())).isEmpty)
+        XCTAssertTrue(AppleHealthExportManager.glucoseExportCandidates(from: placeholders + otherPlaceholders).isEmpty)
+        // Real readings remain eligible even with the same dates and values as
+        // placeholders: filtering must precede identifier deduplication.
+        XCTAssertEqual(
+            AppleHealthExportManager.glucoseExportCandidates(from: placeholders + otherPlaceholders + providerReadings),
+            providerReadings
+        )
+    }
+
     func testGlucoseSyncIdentifierIsStable() throws {
         let reading = LibreLinkUpGlucose(
             glucose: Glucose(143, id: 42, date: Date(timeIntervalSince1970: 1_710_000_000), source: "LibreLinkUp"),
