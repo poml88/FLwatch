@@ -2171,10 +2171,11 @@ final class Libre3DirectManager: ObservableObject {
     /// realtime stream begins folding in fresh embedded historical samples. This
     /// is the backfill resume point ("gap since the last history reading"); using
     /// the live buffer max instead would resume from a sample harvested seconds
-    /// ago and fetch almost nothing.
+    /// ago and fetch almost nothing. The resume point is lowered by any unfinished
+    /// phone backfill from an earlier connection.
     private var backfillResumeLifeCount: UInt16?
     /// Persisted minute-series resume point captured before this session adds a
-    /// fresh realtime value.
+    /// fresh realtime value, lowered by any unfinished phone backfill.
     private var minuteResumeLifeCount: UInt16?
     /// Newest advancing realtime value accepted in this session. Clinical
     /// records must be older by both lifeCount and mapped wall-clock date.
@@ -2883,6 +2884,8 @@ final class Libre3DirectManager: ObservableObject {
         // data-plane seeds or its ~20,000-minute count would suppress arming; its
         // receipt timestamp must not turn the interval between sensors into a gap.
         SharedData.libre3LastLifeCount = 0
+        SharedData.libre3PendingHistoricalResumeLifeCount = 0
+        SharedData.libre3PendingMinuteResumeLifeCount = 0
         SharedData.libre3LastGlucoseMgDL = 0
         SharedData.libre3LastGlucoseAt = nil
         lastArmedLifeCount = nil
@@ -4251,6 +4254,37 @@ final class Libre3DirectManager: ObservableObject {
         // rejects a value the connected sensor cannot have reached.
         backfillResumeLifeCount = historicalByLifeCount.keys.max().map { UInt16(clamping: $0) }
         minuteResumeLifeCount = minuteByLifeCount.keys.max().map { UInt16(clamping: $0) }
+        if hostProfile.usesBackfill {
+            let historicalResume = backfillResumeLifeCount
+            let minuteResume = minuteResumeLifeCount
+            backfillResumeLifeCount = Libre3BackfillImporter.effectiveResumeLifeCount(
+                saved: historicalResume,
+                pending: UInt16(clamping: SharedData.libre3PendingHistoricalResumeLifeCount)
+            )
+            minuteResumeLifeCount = Libre3BackfillImporter.effectiveResumeLifeCount(
+                saved: minuteResume,
+                pending: UInt16(clamping: SharedData.libre3PendingMinuteResumeLifeCount)
+            )
+            let loweredHistorical = historicalResume.map {
+                (backfillResumeLifeCount ?? $0) < $0
+            } ?? false
+            let loweredMinute = minuteResume.map {
+                (minuteResumeLifeCount ?? $0) < $0
+            } ?? false
+            if loweredHistorical || loweredMinute {
+                Libre3DiagnosticsLog.traceReconnect(
+                    "backfill-resume-pending hist=\(historicalResume.map(String.init) ?? "none")/\(backfillResumeLifeCount.map(String.init) ?? "none") min=\(minuteResume.map(String.init) ?? "none")/\(minuteResumeLifeCount.map(String.init) ?? "none")"
+                )
+            }
+            // Zero means no pending work. Preserve an empty series using the
+            // request floors so fresh samples cannot hide an interrupted gap.
+            SharedData.libre3PendingHistoricalResumeLifeCount = Int(
+                backfillResumeLifeCount ?? Libre3BackfillImporter.historicalRequestFloorLifeCount
+            )
+            SharedData.libre3PendingMinuteResumeLifeCount = Int(
+                minuteResumeLifeCount ?? Libre3BackfillImporter.clinicalRequestFloorLifeCount
+            )
+        }
 
         // All seven CCCDs must be ready before the session is exposed as streaming.
         lastAttemptStage = "rearm"
@@ -6056,6 +6090,24 @@ final class Libre3DirectManager: ObservableObject {
                 return
             }
             guard let self, self.session === originatingSession else { return }
+            // Only the deadline retires pending work. Stream-end/stop flushes
+            // keep it for the next connection, even if some data already arrived.
+            if self.hostProfile.usesBackfill,
+               self.connectionState == .streaming,
+               let outcome = self.backfillOutcome {
+                // A successful write alone does not prove the sensor replied.
+                if self.historicalPagesThisSession > outcome.historicalPagesAtRequest {
+                    SharedData.libre3PendingHistoricalResumeLifeCount = 0
+                }
+                switch outcome.clinical {
+                case .skipped:
+                    SharedData.libre3PendingMinuteResumeLifeCount = 0
+                case .requested where self.clinicalRecordsThisSession > outcome.clinicalRecordsAtRequest:
+                    SharedData.libre3PendingMinuteResumeLifeCount = 0
+                case .requested, .failed:
+                    break // Retry failed or unanswered minute requests next time.
+                }
+            }
             self.flushBackfillOutcome()
         }
     }

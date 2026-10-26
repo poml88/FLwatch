@@ -1342,9 +1342,72 @@ final class LibreWristTests: XCTestCase {
 
     // MARK: - Libre 3 backfill bounds
 
+    func testBackfillEffectiveResumeLifeCountKeepsOlderPoint() {
+        XCTAssertEqual(Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9205, pending: nil), 9205)
+        XCTAssertEqual(Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9205, pending: 0), 9205)
+        XCTAssertEqual(Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9205, pending: 9150), 9150)
+        XCTAssertEqual(Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9150, pending: 9205), 9150)
+        XCTAssertEqual(Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9150, pending: 9150), 9150)
+        XCTAssertEqual(Libre3BackfillImporter.effectiveResumeLifeCount(saved: nil, pending: 9150), 9150)
+        XCTAssertNil(Libre3BackfillImporter.effectiveResumeLifeCount(saved: nil, pending: nil))
+        XCTAssertNil(Libre3BackfillImporter.effectiveResumeLifeCount(saved: nil, pending: 0))
+    }
+
+    func testInterruptedBackfillResumesBeforeFreshSavedReadings() {
+        let historicalResume = Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9205, pending: 9150)
+        let minuteResume = Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9224, pending: 9174)
+
+        XCTAssertEqual(
+            Libre3BackfillImporter.backfillStartLifeCount(
+                lastHistoricalLifeCount: historicalResume,
+                currentLifeCount: 9225
+            ),
+            9150
+        )
+        // Carry-over still obeys the existing 20-minute clinical window.
+        XCTAssertEqual(
+            Libre3BackfillImporter.clinicalBackfillStartLifeCount(
+                lastMinuteLifeCount: minuteResume,
+                currentLifeCount: 9225
+            ),
+            9205
+        )
+    }
+
+    func testInterruptedBackfillWithInitiallyEmptyHistoryKeepsWindow() {
+        // Match the manager's persisted representation: zero means no pending
+        // request, so an empty series must instead retain its request floor.
+        let initialResume = Libre3BackfillImporter.effectiveResumeLifeCount(saved: nil, pending: nil)
+        let pendingHistorical = initialResume ?? Libre3BackfillImporter.historicalRequestFloorLifeCount
+        let pendingMinute = initialResume ?? Libre3BackfillImporter.clinicalRequestFloorLifeCount
+
+        // The first connection saved fresh readings before its backfill finished.
+        let historicalResume = Libre3BackfillImporter.effectiveResumeLifeCount(
+            saved: 980, pending: pendingHistorical
+        )
+        let minuteResume = Libre3BackfillImporter.effectiveResumeLifeCount(
+            saved: 1000, pending: pendingMinute
+        )
+        XCTAssertEqual(
+            Libre3BackfillImporter.backfillStartLifeCount(
+                lastHistoricalLifeCount: historicalResume,
+                currentLifeCount: 1001
+            ),
+            280
+        )
+        XCTAssertEqual(
+            Libre3BackfillImporter.clinicalBackfillStartLifeCount(
+                lastMinuteLifeCount: minuteResume,
+                currentLifeCount: 1001
+            ),
+            981
+        )
+    }
+
     func testHistoricalBackfillStartLifeCountBoundsAndAligns() {
         XCTAssertEqual(Libre3BackfillImporter.displayWindowMinutes, 370)
         XCTAssertEqual(Libre3BackfillImporter.historicalRequestWindowMinutes, 720)
+        XCTAssertEqual(Libre3BackfillImporter.historicalRequestFloorLifeCount, 5)
         XCTAssertEqual(
             Libre3BackfillImporter.backfillStartLifeCount(
                 lastHistoricalLifeCount: nil,
@@ -1411,6 +1474,7 @@ final class LibreWristTests: XCTestCase {
     }
 
     func testClinicalBackfillStartLifeCountBoundsWithoutUnderflow() {
+        XCTAssertEqual(Libre3BackfillImporter.clinicalRequestFloorLifeCount, 1)
         XCTAssertEqual(
             Libre3BackfillImporter.clinicalBackfillStartLifeCount(
                 lastMinuteLifeCount: nil,
