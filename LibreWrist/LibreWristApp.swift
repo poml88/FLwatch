@@ -139,8 +139,10 @@ struct LibreWristApp: App {
             await NightscoutUploadManager.shared.reconcileRetainedDataAndWait()
         }
         Task {
-            // HealthKit reads may fail while locked, so reconcile both data
-            // types when the app becomes active again.
+            // Retry retained history on activation. The same catch-up runs from
+            // background refresh and when export is enabled; the manager skips
+            // identifiers it has saved successfully, so existing Health samples
+            // are not rewritten.
             await AppleHealthExportManager.shared.exportAllAvailableDataIfNeeded()
         }
     }

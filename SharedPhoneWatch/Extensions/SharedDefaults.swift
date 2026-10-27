@@ -348,6 +348,8 @@ enum DefaultsKey: String {
     case appleHealthExportEnabled = "appleHealthExportEnabledKey" // legacy, seeds the two keys below
     case appleHealthExportGlucoseEnabled = "appleHealthExportGlucoseEnabledKey"
     case appleHealthExportInsulinEnabled = "appleHealthExportInsulinEnabledKey"
+    case appleHealthSavedGlucoseSyncIdentifiers = "appleHealthSavedGlucoseSyncIdentifiersKey"
+    case appleHealthSavedInsulinSyncIdentifiers = "appleHealthSavedInsulinSyncIdentifiersKey"
     case nightscoutUploadEnabled = "nightscoutUploadEnabledKey"
     case nightscoutURL = "nightscoutURLKey"
     case nightscoutTokenPresent = "nightscoutTokenPresentKey"
@@ -737,6 +739,16 @@ enum SharedData {
     static var appleHealthExportInsulinEnabled: Bool {
         get { store.getBool(.appleHealthExportInsulinEnabled, defaultValue: legacyAppleHealthExportEnabled) }
         set { store.setBool(newValue, forKey: .appleHealthExportInsulinEnabled) }
+    }
+
+    static var appleHealthSavedGlucoseSyncIdentifiers: [String] {
+        get { store.getStringArray(.appleHealthSavedGlucoseSyncIdentifiers) }
+        set { store.setStringArray(newValue, forKey: .appleHealthSavedGlucoseSyncIdentifiers) }
+    }
+
+    static var appleHealthSavedInsulinSyncIdentifiers: [String] {
+        get { store.getStringArray(.appleHealthSavedInsulinSyncIdentifiers) }
+        set { store.setStringArray(newValue, forKey: .appleHealthSavedInsulinSyncIdentifiers) }
     }
 
     static var nightscoutUploadEnabled: Bool {
