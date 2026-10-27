@@ -403,6 +403,65 @@
         }
       }
     },
+    "%@ email" : {
+      "comment" : "Email field for retrieving the receiver ID. The placeholder is the selected Abbott app ('FreeStyle Libre 3' or 'Libre by Abbott'); use the email for that app's account and keep its name untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-Mail für %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correo electrónico de %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse e-mail pour %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email di %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@のメールアドレス"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-mailadres voor %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adres e-mail w %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Электронная почта для %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 账户邮箱"
+          }
+        }
+      }
+    },
     "%@ U" : {
       "comment" : "Insulin on board amount on Apple Watch. The interpolated value is a localized decimal number; U means insulin units."
     },
@@ -466,6 +525,71 @@
     },
     "%lld" : {
 
+    },
+    "%lld · %@" : {
+      "comment" : "Numbered Libre 3 setup section heading: the step number, a middle dot, then the step title.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld · %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld · %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld · %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld · %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld · %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld · %2$@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld · %2$@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld · %2$@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld · %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld · %2$@"
+          }
+        }
+      }
     },
     "%lld d %lld h" : {
       "comment" : "A label that shows the remaining number of days, hours, and minutes until the sensor's end-of-life.",
@@ -1728,6 +1852,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Доступ временно заблокирован."
+          }
+        }
+      }
+    },
+    "Account" : {
+      "comment" : "Label before the LibreView email address the Libre 3 receiver ID was retrieved with.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konto"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuenta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compte"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウント"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konto"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Учётная запись"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "账户"
           }
         }
       }
@@ -5973,6 +6156,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在检查连接…"
+          }
+        }
+      }
+    },
+    "Choose the app this sensor was started with. A wrong choice is rejected by the sensor (error 0xB1)." : {
+      "comment" : "Explains the app picker when pairing an already-running sensor. 0xB1 is the sensor's own error code for a wrong receiver ID; keep it as-is.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle die App, mit der dieser Sensor gestartet wurde. Eine falsche Auswahl wird vom Sensor abgelehnt (Fehler 0xB1)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige la app con la que se inició este sensor. El sensor rechazará una elección incorrecta (error 0xB1)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez l’app avec laquelle ce capteur a été démarré. Le capteur rejette un choix incorrect (erreur 0xB1)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli l’app con cui è stato avviato questo sensore. Il sensore rifiuta una scelta errata (errore 0xB1)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このセンサーの開始に使用したアプリを選択してください。選択が間違っていると、センサーに拒否されます（エラー0xB1）。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies de app waarmee deze sensor is gestart. De sensor weigert een verkeerde keuze (fout 0xB1)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz aplikację, za pomocą której uruchomiono ten sensor. Sensor odrzuci nieprawidłowy wybór (błąd 0xB1)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите приложение, через которое был запущен этот сенсор. При неверном выборе сенсор отклонит запрос (ошибка 0xB1)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择启动此传感器时使用的 App。选择错误时，传感器会拒绝配对（错误 0xB1）。"
           }
         }
       }
@@ -12525,6 +12767,65 @@
         }
       }
     },
+    "FLwatch couldn't determine the Receiver ID. Check the selected app and use “Get Receiver ID” to sign in with that app's account, then try pairing again." : {
+      "comment" : "Pairing failure when the selected Abbott app's receiver ID cannot be resolved. 'Get Receiver ID' is the button on the setup screen; keep the wording identical.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch konnte die Receiver-ID nicht ermitteln. Prüfe die ausgewählte App und melde dich über „Receiver-ID abrufen“ mit dem Konto dieser App an. Versuche dann erneut, den Sensor zu koppeln."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch no pudo determinar el ID del receptor. Comprueba la app seleccionada y usa «Obtener ID del receptor» para iniciar sesión con la cuenta de esa app. Después, vuelve a intentar el enlace."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch n’a pas pu déterminer l’identifiant du récepteur. Vérifiez l’app sélectionnée et utilisez « Obtenir l’identifiant du récepteur » pour vous connecter avec le compte de cette app, puis réessayez l’association."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch non ha potuto determinare l’ID ricevitore. Controlla l’app selezionata e usa “Ottieni ID ricevitore” per accedere con l’account di quell’app, poi riprova l’abbinamento."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchはレシーバーIDを特定できませんでした。選択したアプリを確認し、「レシーバーIDを取得」からそのアプリのアカウントでログインして、もう一度ペアリングしてください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch kon de ontvanger-ID niet bepalen. Controleer de geselecteerde app en gebruik ‘Ontvanger-ID ophalen’ om je met het account van die app aan te melden. Probeer daarna opnieuw te koppelen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch nie mógł ustalić identyfikatora odbiornika. Sprawdź wybraną aplikację i użyj przycisku „Pobierz identyfikator odbiornika”, aby zalogować się na konto tej aplikacji, a następnie ponów parowanie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch не удалось определить идентификатор приёмника. Проверьте выбранное приложение и нажмите «Получить идентификатор приёмника», чтобы войти с учётной записью этого приложения, затем повторите сопряжение."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch 无法确定接收器 ID。请检查所选 App，然后使用“获取接收器 ID”登录该 App 的账户，再尝试配对。"
+          }
+        }
+      }
+    },
     "FLwatch couldn't store the identity it needs to pair with this sensor. Restart your iPhone and try again — pairing was stopped rather than risk starting a sensor FLwatch could never reconnect to." : {
       "comment" : "Pairing failure shown when the app's own receiver ID could not be saved to the keychain. Pairing is deliberately abandoned before the NFC scan, because a sensor activated with an identity the app cannot remember is unusable afterwards.",
       "localizations" : {
@@ -12586,6 +12887,7 @@
     },
     "FLwatch couldn't work out this sensor's receiver ID. Check that the app the sensor was started in is selected and that your LibreView Account ID is filled in, then try again." : {
       "comment" : "Pairing failure shown when no receiver ID could be derived for the selected app — normally because the LibreView Account ID is missing. The receiver ID is computed from that account, and the sensor rejects any other value.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -12755,6 +13057,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "FLwatch仍在尝试重新连接。如果读数没有恢复，请在“连接”标签页中重新配对传感器。"
+          }
+        }
+      }
+    },
+    "FLwatch needs your Abbott app’s Receiver ID to pair with your sensor. Sign in with the account you use in %@ to retrieve it once. Your glucose readings come directly from the sensor over Bluetooth." : {
+      "comment" : "Explains that account sign-in retrieves the receiver ID, while glucose readings come directly over Bluetooth. The placeholder is the selected Abbott app ('FreeStyle Libre 3' or 'Libre by Abbott'); keep the product name untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch benötigt die Receiver-ID deiner Abbott-App, um sich mit deinem Sensor zu koppeln. Melde dich mit dem Konto an, das du in %@ verwendest, um die ID einmalig abzurufen. Deine Glukosewerte kommen direkt vom Sensor über Bluetooth."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch necesita el ID del receptor de tu app de Abbott para enlazarse con tu sensor. Inicia sesión con la cuenta que usas en %@ para obtenerlo una sola vez. Tus lecturas de glucosa llegan directamente del sensor por Bluetooth."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch a besoin de l’identifiant du récepteur de votre app Abbott pour s’associer à votre capteur. Connectez-vous avec le compte que vous utilisez dans %@ pour le récupérer une seule fois. Vos mesures de glucose proviennent directement du capteur par Bluetooth."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch ha bisogno dell’ID ricevitore della tua app Abbott per abbinarsi al sensore. Accedi con l’account che usi in %@ per recuperarlo una sola volta. Le letture del glucosio arrivano direttamente dal sensore tramite Bluetooth."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchをセンサーとペアリングするには、AbbottアプリのレシーバーIDが必要です。%@で使用しているアカウントでログインし、一度だけ取得してください。グルコース値はBluetooth経由でセンサーから直接受信します。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch heeft de ontvanger-ID van je Abbott-app nodig om met je sensor te koppelen. Meld je aan met het account dat je in %@ gebruikt om de ID eenmalig op te halen. Je glucosewaarden komen rechtstreeks van de sensor via Bluetooth."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch potrzebuje identyfikatora odbiornika Twojej aplikacji Abbott, aby sparować się z sensorem. Zaloguj się na konto używane w %@, aby pobrać go jednorazowo. Odczyty glukozy pochodzą bezpośrednio z sensora przez Bluetooth."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для сопряжения с сенсором FLwatch нужен идентификатор приёмника вашего приложения Abbott. Войдите с учётной записью, которую используете в %@, чтобы получить его один раз. Показания глюкозы поступают напрямую с сенсора по Bluetooth."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch 需要你所用 Abbott App 的接收器 ID 才能与传感器配对。请使用你在 %@ 中使用的账户登录，获取一次即可。你的葡萄糖读数通过蓝牙直接来自传感器。"
           }
         }
       }
@@ -12994,8 +13355,68 @@
         }
       }
     },
+    "FLwatch signed in but couldn't retrieve the account details needed for the Receiver ID. Try again." : {
+      "comment" : "Error when sign-in succeeds but the response omits the account identifier needed to derive the receiver ID. The user does not enter this identifier manually.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch hat sich angemeldet, konnte aber die für die Receiver-ID benötigten Kontodaten nicht abrufen. Versuche es erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch inició sesión, pero no pudo obtener los datos de la cuenta necesarios para el ID del receptor. Inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch s’est connecté, mais n’a pas pu récupérer les informations du compte nécessaires à l’identifiant du récepteur. Réessayez."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch ha effettuato l’accesso, ma non ha potuto recuperare i dati dell’account necessari per l’ID ricevitore. Riprova."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchはログインしましたが、レシーバーIDに必要なアカウント情報を取得できませんでした。もう一度お試しください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch is aangemeld, maar kon de accountgegevens die nodig zijn voor de ontvanger-ID niet ophalen. Probeer het opnieuw."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch zalogował się, ale nie mógł pobrać danych konta potrzebnych do ustalenia identyfikatora odbiornika. Spróbuj ponownie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch выполнил вход, но не смог получить данные учётной записи, необходимые для идентификатора приёмника. Повторите попытку."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch 已登录，但无法获取接收器 ID 所需的账户信息。请重试。"
+          }
+        }
+      }
+    },
     "FLwatch stores this app's receiver ID on the sensor, so only that app can take it over later — never both. Choose FLwatch only if no Libre 3 app should ever use this sensor; FLwatch can still re-pair such a sensor itself." : {
-      "comment" : "Explains the app picker when activating a new sensor. The receiver ID written at activation decides which app can ever claim the sensor, and it cannot be changed afterwards.",
+      "comment" : "Explains the app picker when activating a new sensor. The receiver ID is written at activation and decides which app can ever claim the sensor. It cannot be changed afterwards.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -13049,6 +13470,124 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "FLwatch 会将此 App 的接收器 ID 存储到传感器中，因此以后只有这个 App 能接管传感器，两个 App 不能同时具备此能力。如果你不希望任何 Libre 3 App 使用此传感器，请选择“仅 FLwatch”；FLwatch 仍可重新与该传感器配对。"
+          }
+        }
+      }
+    },
+    "FLwatch stores this app's Receiver ID on the sensor, so only that app can take it over later — never both. Choose FLwatch only if no Libre 3 app should ever use this sensor; FLwatch can still re-pair such a sensor itself." : {
+      "comment" : "Explains the app picker when activating a new sensor. The receiver ID is written at activation and decides which app can ever claim the sensor. It cannot be changed afterwards.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch speichert die Receiver-ID dieser App auf dem Sensor, sodass später nur diese App ihn übernehmen kann – niemals beide. Wähle „Nur FLwatch“, wenn keine Libre 3-App diesen Sensor jemals verwenden soll; FLwatch kann einen solchen Sensor trotzdem erneut koppeln."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch guarda en el sensor el ID del receptor de esta app, por lo que solo esta app podrá tomar el control más adelante, nunca ambas. Elige «Solo FLwatch» si ninguna app Libre 3 debe usar este sensor; FLwatch podrá volver a enlazarlo de todos modos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch enregistre l’identifiant du récepteur de cette app sur le capteur. Seule cette app pourra donc le reprendre par la suite, jamais les deux. Choisissez « FLwatch uniquement » si aucune app Libre 3 ne doit utiliser ce capteur ; FLwatch pourra tout de même le jumeler à nouveau."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch memorizza sul sensore l’ID ricevitore di questa app, quindi in seguito solo questa app potrà acquisirlo, mai entrambe. Scegli “Solo FLwatch” se nessuna app Libre 3 dovrà mai usare questo sensore; FLwatch potrà comunque abbinarlo di nuovo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchは、このアプリのレシーバーIDをセンサーに保存します。そのため、あとで引き継げるのはこのアプリだけで、両方のアプリではありません。どのLibre 3アプリにもこのセンサーを使わせない場合は「FLwatchのみ」を選択してください。その場合でもFLwatchはセンサーを再ペアリングできます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch bewaart de ontvanger-ID van deze app op de sensor, zodat alleen deze app de sensor later kan overnemen, nooit beide. Kies ‘Alleen FLwatch’ als geen enkele Libre 3-app deze sensor ooit mag gebruiken; FLwatch kan zo’n sensor nog steeds opnieuw koppelen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch zapisuje w sensorze identyfikator odbiornika tej aplikacji, dlatego później będzie mogła przejąć go tylko ta aplikacja — nigdy obie. Wybierz „Tylko FLwatch”, jeśli żadna aplikacja Libre 3 nie powinna nigdy używać tego sensora; FLwatch nadal będzie mógł sparować go ponownie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch сохраняет в сенсоре идентификатор приёмника этого приложения, поэтому впоследствии перехватить сенсор сможет только оно, но не оба приложения. Выберите «Только FLwatch», если сенсор никогда не должен использоваться приложением Libre 3; FLwatch всё равно сможет повторно выполнить сопряжение."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch 会将此 App 的接收器 ID 存储到传感器中，因此以后只有这个 App 能接管传感器，两个 App 不能同时具备此能力。如果你不希望任何 Libre 3 App 使用此传感器，请选择“仅 FLwatch”；FLwatch 仍可重新与该传感器配对。"
+          }
+        }
+      }
+    },
+    "FLwatch stores your password only on this iPhone." : {
+      "comment" : "Footer of the LibreView sign-in section for Libre 3 pairing. The password is kept in this iPhone's keychain and not synced.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch speichert dein Passwort nur auf diesem iPhone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch guarda tu contraseña solo en este iPhone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch conserve votre mot de passe uniquement sur cet iPhone."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch memorizza la tua password solo su questo iPhone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatchはパスワードをこのiPhoneにのみ保存します。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch bewaart je wachtwoord alleen op deze iPhone."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch przechowuje Twoje hasło tylko na tym iPhonie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch хранит ваш пароль только на этом iPhone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FLwatch 仅在此 iPhone 上存储你的密码。"
           }
         }
       }
@@ -13723,7 +14262,7 @@
       }
     },
     "Get Receiver ID" : {
-      "comment" : "Button that signs in to retrieve the receiver ID used for Libre 3 sensor pairing.\nConfirms retrieving the receiver ID for Libre 3 sensor pairing, signing the Libre by Abbott app out.",
+      "comment" : "Button that signs in to the selected Abbott app's account to retrieve the receiver ID. Also confirms the warning that this signs the Libre by Abbott app out.\nTitle of the Libre 3 setup step for retrieving the selected Abbott app's receiver ID. Account sign-in is only needed to retrieve this ID.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -13839,8 +14378,126 @@
         }
       }
     },
+    "Get the Receiver ID above before pairing." : {
+      "comment" : "Shown under the disabled sensor-scan button when the selected Abbott app's receiver ID has not been retrieved yet. Refers to the 'Get Receiver ID' step above.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rufe vor dem Koppeln oben die Receiver-ID ab."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtén el ID del receptor en el paso anterior antes de enlazar el sensor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Récupérez l’identifiant du récepteur ci-dessus avant l’association."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recupera l’ID ricevitore qui sopra prima dell’abbinamento."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ペアリングする前に、上の手順でレシーバーIDを取得してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haal hierboven de ontvanger-ID op voordat je koppelt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przed parowaniem pobierz identyfikator odbiornika w kroku powyżej."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перед сопряжением получите идентификатор приёмника на шаге выше."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先在上方获取接收器 ID，然后再配对。"
+          }
+        }
+      }
+    },
+    "Get the Receiver ID for the new account or choose “Keep current account” before pairing." : {
+      "comment" : "Shown under the disabled sensor-pairing button while switching LibreView accounts. 'Keep current account' is the nearby button that cancels the switch.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rufe die Receiver-ID für das neue Konto ab oder wähle vor dem Koppeln „Aktuelles Konto beibehalten“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtén el ID del receptor de la nueva cuenta o elige «Mantener la cuenta actual» antes de enlazar el sensor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Récupérez l’identifiant du récepteur du nouveau compte ou choisissez « Conserver le compte actuel » avant l’association."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recupera l’ID ricevitore del nuovo account oppure scegli “Mantieni l’account attuale” prima dell’abbinamento."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ペアリングする前に、新しいアカウントのレシーバーIDを取得するか、「現在のアカウントを使用」を選択してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haal de ontvanger-ID voor het nieuwe account op of kies ‘Huidig account behouden’ voordat je koppelt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przed parowaniem pobierz identyfikator odbiornika dla nowego konta lub wybierz „Zachowaj bieżące konto”."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перед сопряжением получите идентификатор приёмника для новой учётной записи или выберите «Оставить текущую учётную запись»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先获取新账户的接收器 ID，或选择“保留当前账户”，然后再配对。"
+          }
+        }
+      }
+    },
     "Getting Receiver ID…" : {
-      "comment" : "Button label shown while FLwatch signs in to retrieve the receiver ID used for Libre 3 sensor pairing.",
+      "comment" : "Button label while FLwatch signs in to the selected Abbott app's account to retrieve the receiver ID.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -13899,6 +14556,66 @@
       }
     },
     "Getting the receiver ID signs in to your Libre by Abbott account, which signs the Libre by Abbott app out. The app currently has no way to sign in again: delete it, reinstall it from the App Store, and sign in. You only need to do this once. The receiver ID stays the same afterwards." : {
+      "comment" : "Warning before retrieving the current Libre by Abbott receiver ID. Explains that the vendor app is signed out and needs reinstalling to sign in again, and that the receiver ID only needs to be retrieved once.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim Abrufen der Receiver-ID erfolgt eine Anmeldung bei deinem Libre by Abbott-Konto. Dadurch wirst du in der Libre by Abbott-App abgemeldet. Die App bietet derzeit keine Möglichkeit, dich erneut anzumelden: Lösche sie, installiere sie erneut aus dem App Store und melde dich an. Du musst die Receiver-ID nur einmal abrufen. Sie bleibt danach gleich."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al obtener el ID del receptor, se inicia sesión en tu cuenta de Libre by Abbott, lo que cierra la sesión en la app Libre by Abbott. Actualmente, la app no permite volver a iniciar sesión: elimínala, vuelve a instalarla desde el App Store e inicia sesión. Solo necesitas obtener el ID del receptor una vez. El ID no cambia después."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La récupération de l’identifiant du récepteur ouvre une session sur votre compte Libre by Abbott, ce qui déconnecte l’app Libre by Abbott. L’app ne permet actuellement pas de se reconnecter : supprimez-la, réinstallez-la depuis l’App Store, puis connectez-vous. Vous n’avez besoin de récupérer l’identifiant du récepteur qu’une seule fois. Il reste ensuite identique."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il recupero dell’ID del ricevitore effettua l’accesso al tuo account Libre by Abbott, disconnettendo l’app Libre by Abbott. Al momento l’app non consente di accedere di nuovo: eliminala, reinstallala dall’App Store ed effettua l’accesso. Devi recuperare l’ID del ricevitore una sola volta. L’ID rimane invariato in seguito."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レシーバーIDを取得すると、Libre by Abbottアカウントにログインするため、Libre by Abbottアプリからログアウトされます。現在、このアプリには再ログインする方法がありません。アプリを削除し、App Storeから再インストールしてログインしてください。レシーバーIDの取得は一度だけで済みます。その後もレシーバーIDは変わりません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bij het ophalen van de ontvanger-ID wordt ingelogd op je Libre by Abbott-account, waardoor je in de Libre by Abbott-app wordt afgemeld. De app biedt momenteel geen mogelijkheid om opnieuw in te loggen: verwijder de app, installeer deze opnieuw vanuit de App Store en log in. Je hoeft de ontvanger-ID maar één keer op te halen. De ID blijft daarna hetzelfde."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobranie identyfikatora odbiornika powoduje zalogowanie się na Twoje konto Libre by Abbott, co wylogowuje aplikację Libre by Abbott. Obecnie aplikacja nie umożliwia ponownego zalogowania: usuń ją, zainstaluj ponownie z App Store i zaloguj się. Identyfikator odbiornika wystarczy pobrać tylko raz. Później pozostaje on taki sam."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "При получении идентификатора приёмника выполняется вход в вашу учётную запись Libre by Abbott, что приводит к выходу из приложения Libre by Abbott. Сейчас в приложении нет возможности войти повторно: удалите его, заново установите из App Store и войдите в учётную запись. Идентификатор приёмника нужно получить только один раз. В дальнейшем он остаётся прежним."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "获取接收器 ID 时会登录你的 Libre by Abbott 账户，从而使 Libre by Abbott 应用退出登录。目前，该应用无法重新登录：请删除应用，从 App Store 重新安装，然后登录。接收器 ID 只需获取一次，之后会保持不变。"
+          }
+        }
+      }
+    },
+    "Getting the Receiver ID signs in to your Libre by Abbott account, which signs the Libre by Abbott app out. The app currently has no way to sign in again: delete it, reinstall it from the App Store, and sign in. You only need to do this once. The Receiver ID stays the same afterwards." : {
       "comment" : "Warning before retrieving the current Libre by Abbott receiver ID. Explains that the vendor app is signed out and needs reinstalling to sign in again, and that the receiver ID only needs to be retrieved once.",
       "localizations" : {
         "de" : {
@@ -16964,6 +17681,65 @@
         }
       }
     },
+    "Keep current account" : {
+      "comment" : "Button that closes the LibreView sign-in fields again and keeps the account the current Libre 3 receiver ID came from.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuelles Konto beibehalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener la cuenta actual"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conserver le compte actuel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni l’account attuale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在のアカウントを使用"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huidig account behouden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowaj bieżące konto"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оставить текущую учётную запись"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留当前账户"
+          }
+        }
+      }
+    },
     "Keep phone screen always on" : {
       "localizations" : {
         "de" : {
@@ -17554,6 +18330,65 @@
         }
       }
     },
+    "Libre by Abbott ≤ 1.3.0 (legacy)" : {
+      "comment" : "Picker option for a sensor started by Libre by Abbott version 1.3.0 or earlier. 'Legacy' identifies the older supported versions; keep the product name and version number untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott ≤ 1.3.0 (ältere Versionen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott ≤ 1.3.0 (versiones antiguas)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott ≤ 1.3.0 (anciennes versions)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott ≤ 1.3.0 (versioni precedenti)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott ≤ 1.3.0（旧バージョン）"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott ≤ 1.3.0 (oudere versies)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott ≤ 1.3.0 (starsze wersje)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott ≤ 1.3.0 (старые версии)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott ≤ 1.3.0（旧版）"
+          }
+        }
+      }
+    },
     "Libre by Abbott could not bind this FLwatch installation to the account." : {
       "comment" : "Error shown when the Libre by Abbott login still reports that the account belongs to another device after one forced retry.",
       "localizations" : {
@@ -17738,7 +18573,67 @@
       }
     },
     "Libre by Abbott login succeeded but returned no valid receiver ID." : {
-      "comment" : "Error shown when the Libre by Abbott login response has no valid receiver UUID.",
+      "comment" : "Error when the Libre by Abbott login response has no valid receiver UUID, needed to derive the receiver ID.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anmeldung bei Libre by Abbott war erfolgreich, gab aber keine gültige Receiver-ID zurück."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El inicio de sesión en Libre by Abbott se realizó correctamente, pero no devolvió un ID de receptor válido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La connexion à Libre by Abbott a réussi, mais aucun identifiant de récepteur valide n’a été renvoyé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’accesso a Libre by Abbott è riuscito, ma non è stato restituito un ID ricevitore valido."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbottへのログインには成功しましたが、有効なレシーバーIDが返されませんでした。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aanmelden bij Libre by Abbott is gelukt, maar er is geen geldige ontvanger-ID geretourneerd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logowanie do Libre by Abbott powiodło się, ale nie zwrócono prawidłowego identyfikatora odbiornika."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в Libre by Abbott выполнен, но действительный идентификатор приёмника не получен."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott 登录成功，但未返回有效的接收器 ID。"
+          }
+        }
+      }
+    },
+    "Libre by Abbott login succeeded but returned no valid Receiver ID." : {
+      "comment" : "Error when the Libre by Abbott login response has no valid receiver UUID, needed to derive the receiver ID.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -17797,7 +18692,67 @@
       }
     },
     "Libre by Abbott requires account consent before it can return the receiver ID." : {
-      "comment" : "Error shown when the Libre by Abbott login rejects the terms-of-use or privacy-policy consent sent by FLwatch.",
+      "comment" : "Error when the Libre by Abbott login rejects the terms-of-use or privacy-policy consent sent by FLwatch before returning the receiver ID.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott benötigt die Zustimmung des Kontos, bevor die Receiver-ID zurückgegeben werden kann."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott requiere el consentimiento de la cuenta para poder devolver el ID del receptor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott nécessite le consentement du compte avant de pouvoir renvoyer l’identifiant du récepteur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott richiede il consenso dell’account prima di poter restituire l’ID ricevitore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by AbbottがレシーバーIDを返すには、アカウントでの同意が必要です。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott vereist toestemming voor het account voordat de ontvanger-ID kan worden geretourneerd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott wymaga zgody na koncie, zanim będzie mogła zwrócić identyfikator odbiornika."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы получить идентификатор приёмника в Libre by Abbott, необходимо предоставить согласие в учётной записи."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libre by Abbott 需要账户同意后才能返回接收器 ID。"
+          }
+        }
+      }
+    },
+    "Libre by Abbott requires account consent before it can return the Receiver ID." : {
+      "comment" : "Error when the Libre by Abbott login rejects the terms-of-use or privacy-policy consent sent by FLwatch before returning the receiver ID.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -17857,6 +18812,7 @@
     },
     "Libre by Abbott V ≤ 1.3.0" : {
       "comment" : "Picker option for a sensor started by Libre by Abbott version 1.3.0 or earlier. V means version; keep the product name untranslated.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -18091,6 +19047,7 @@
     },
     "LibreView account" : {
       "comment" : "A label for the LibreView account's patient UUID.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "de" : {
@@ -18150,6 +19107,7 @@
       }
     },
     "LibreView email" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -18208,6 +19166,7 @@
       }
     },
     "LibreView password" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -20910,7 +21869,7 @@
       "comment" : "Value shown when Apple Watch has not acknowledged any Libre 3 provisioning revision."
     },
     "Not retrieved yet" : {
-      "comment" : "Value shown in the Receiver ID row before the user has retrieved an ID for the selected Libre 3 app.",
+      "comment" : "Value shown in the Receiver ID row before the user has retrieved an ID for the selected Abbott app.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -22145,6 +23104,65 @@
         }
       }
     },
+    "Pair sensor" : {
+      "comment" : "Title of the last Libre 3 setup step: scanning the sensor over NFC to pair it.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor koppeln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enlazar sensor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Associer le capteur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abbina sensore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーをペアリング"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor koppelen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sparuj sensor"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сопряжение с сенсором"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对传感器"
+          }
+        }
+      }
+    },
     "Paired" : {
       "comment" : "A label for a paired sensor.",
       "isCommentAutoGenerated" : true,
@@ -22326,8 +23344,7 @@
       }
     },
     "Pairing mode" : {
-      "comment" : "A label that lets you choose how to pair with your sensor.",
-      "isCommentAutoGenerated" : true,
+      "comment" : "Title of the first Libre 3 setup step: choosing Parallel, Take over or Fresh.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -22504,6 +23521,7 @@
       }
     },
     "Password" : {
+      "comment" : "Password field for the selected Abbott app's account, used to retrieve the receiver ID.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -22523,10 +23541,34 @@
             "value" : "Mot de passe"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "パスワード"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachtwoord"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasło"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль"
           }
         },
         "zh-Hans" : {
@@ -23128,6 +24170,7 @@
     },
     "Pick the app and version this sensor was started with. FreeStyle Libre 3 and Libre by Abbott use different receiver IDs, and Libre by Abbott changed its method in version 1.4.0. The wrong choice is rejected (error 0xB1)." : {
       "comment" : "Explains the app picker when pairing an already-running sensor. Libre by Abbott version 1.4.0 changed how its receiver ID is derived. 0xB1 is the sensor's own error code for a receiver-ID mismatch; keep it as-is. Keep the product names untranslated.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -24184,6 +25227,65 @@
         }
       }
     },
+    "Ready to pair" : {
+      "comment" : "Status after a successful LibreView sign-in: the receiver ID needed for Libre 3 pairing is available, so the sensor can be scanned.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereit zum Koppeln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listo para enlazar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prêt pour l’association"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pronto per l’abbinamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ペアリングの準備完了"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klaar om te koppelen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gotowe do parowania"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово к сопряжению"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可以配对"
+          }
+        }
+      }
+    },
     "Ready to search" : {
       "comment" : "A status text that is shown when the user has selected a heartbeat device but the app is not currently scanning for devices.",
       "isCommentAutoGenerated" : true,
@@ -24245,7 +25347,7 @@
       }
     },
     "Receiver ID" : {
-      "comment" : "Diagnostic row: the identifier FLwatch would send to the sensor when pairing. Shown as a hexadecimal number.",
+      "comment" : "Diagnostic row showing the receiver ID as a hexadecimal number for support.\nLabel for the receiver ID needed to pair with a Libre 3 sensor.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -26831,6 +27933,7 @@
     },
     "Sensor activation" : {
       "comment" : "Section heading when pairing an already-running sensor: identifying the app that activated it.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -28899,6 +30002,7 @@
     },
     "Sign in above and tap Get Receiver ID before scanning." : {
       "comment" : "Shown under the disabled sensor-scan button when the selected vendor app's receiver ID has not been retrieved. 'Get Receiver ID' is the nearby button label.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -29018,6 +30122,7 @@
     },
     "Sign in with the LibreView account used by the app above, then tap Get Receiver ID." : {
       "comment" : "Footer of the LibreView credentials section. This wording applies both before starting a fresh sensor and when joining an active one. 'Get Receiver ID' is the button directly above; keep the wording consistent.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -29189,6 +30294,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "信号丢失选项"
+          }
+        }
+      }
+    },
+    "Signing in here signs the Libre by Abbott app out, and it can’t sign in again by itself. Delete it, reinstall it from the App Store and sign in. Needed only once." : {
+      "comment" : "Warning above the LibreView sign-in fields when the sensor was started with Libre by Abbott: retrieving its receiver ID signs that app out, and it has to be reinstalled to sign in again. Keep the product name untranslated.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn du dich hier anmeldest, wirst du in der Libre by Abbott-App abgemeldet. Sie kann sich nicht selbst wieder anmelden. Lösche sie, installiere sie erneut aus dem App Store und melde dich an. Das ist nur einmal nötig."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al iniciar sesión aquí, se cierra la sesión en la app Libre by Abbott, que no puede volver a iniciarla por sí sola. Elimínala, vuelve a instalarla desde el App Store e inicia sesión. Solo es necesario hacerlo una vez."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous connecter ici déconnecte l’app Libre by Abbott, qui ne peut pas se reconnecter d’elle-même. Supprimez-la, réinstallez-la depuis l’App Store, puis connectez-vous. Cette opération n’est nécessaire qu’une seule fois."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accedendo qui, l’app Libre by Abbott viene disconnessa e non può accedere di nuovo da sola. Eliminala, reinstallala dall’App Store ed effettua l’accesso. È necessario farlo una sola volta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ここでログインすると、Libre by Abbottアプリからログアウトされ、アプリ自体では再ログインできなくなります。アプリを削除し、App Storeから再インストールしてログインしてください。この操作は一度だけ必要です。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als je je hier aanmeldt, word je in de Libre by Abbott-app afgemeld. De app kan zichzelf niet opnieuw aanmelden. Verwijder de app, installeer deze opnieuw vanuit de App Store en meld je aan. Dit is maar één keer nodig."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zalogowanie się tutaj wyloguje aplikację Libre by Abbott, która nie może samodzielnie zalogować się ponownie. Usuń ją, zainstaluj ponownie z App Store i zaloguj się. Jest to konieczne tylko raz."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход здесь приводит к выходу из приложения Libre by Abbott, которое не может самостоятельно войти повторно. Удалите его, заново установите из App Store и войдите в учётную запись. Это нужно сделать только один раз."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在此登录会使 Libre by Abbott App 退出登录，且该 App 无法自行重新登录。请删除该 App，从 App Store 重新安装，然后登录。只需操作一次。"
           }
         }
       }
@@ -32059,6 +33223,7 @@
     },
     "The sensor refused pairing (0xB1): the receiver ID didn't match the one stored when the sensor was activated.\n\nCheck that “Started with” names the app this sensor was really started in — the two apps compute different receiver IDs from the same account — and that the Account ID belongs to that account.\n\nSensors started with a FreeStyle Libre 3 reader can't be paired at all." : {
       "comment" : "Pairing failure. The sensor stores a 'receiver ID' derived from the LibreView account when it is activated, and rejects any pairing attempt presenting a different one. The quoted phrase is the label of the app picker on the same screen — keep it identical to that label. Shown after a failed Take over or Parallel NFC scan.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -32112,6 +33277,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "传感器拒绝配对（0xB1）：接收器 ID 与激活传感器时存储的 ID 不一致。\n\n请检查“启动应用”是否为实际启动此传感器的 App——两个 App 会从同一账户计算出不同的接收器 ID——并确认账户 ID 属于该账户。\n\n使用 FreeStyle Libre 3 读卡器启动的传感器完全无法配对。"
+          }
+        }
+      }
+    },
+    "The sensor refused pairing (0xB1): the Receiver ID didn't match the one stored when the sensor was activated.\n\nCheck that “Started with” names the app this sensor was really started in and that you signed in with that app's account.\n\nSensors started with a FreeStyle Libre 3 reader can't be paired at all." : {
+      "comment" : "Pairing failure after a Take over or Parallel NFC scan when the receiver ID does not match. 'Started with' is the app picker label on the setup screen; keep it identical. 0xB1 is the sensor error code; keep it as-is. A FreeStyle Libre 3 reader is Abbott's dedicated hardware reader.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Sensor hat die Kopplung abgelehnt (0xB1): Die Receiver-ID stimmt nicht mit der bei der Aktivierung des Sensors gespeicherten ID überein.\n\nPrüfe, ob unter „Gestartet mit“ die App ausgewählt ist, mit der dieser Sensor tatsächlich gestartet wurde, und ob du dich mit dem Konto dieser App angemeldet hast.\n\nSensoren, die mit einem FreeStyle Libre 3-Lesegerät gestartet wurden, können nicht gekoppelt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El sensor rechazó el enlace (0xB1): el ID del receptor no coincide con el guardado cuando se activó el sensor.\n\nComprueba que «Iniciado con» indica la app con la que se inició realmente este sensor y que has iniciado sesión con la cuenta de esa app.\n\nLos sensores iniciados con un lector FreeStyle Libre 3 no se pueden enlazar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le capteur a refusé l’association (0xB1) : l’identifiant du récepteur ne correspond pas à celui enregistré lors de l’activation du capteur.\n\nVérifiez que « Démarré avec » indique l’app avec laquelle ce capteur a réellement été démarré et que vous vous êtes connecté avec le compte de cette app.\n\nLes capteurs démarrés avec un lecteur FreeStyle Libre 3 ne peuvent pas être associés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il sensore ha rifiutato l’abbinamento (0xB1): l’ID ricevitore non corrisponde a quello memorizzato all’attivazione del sensore.\n\nVerifica che “Avviato con” indichi l’app con cui è stato effettivamente avviato questo sensore e di aver effettuato l’accesso con l’account di quell’app.\n\nI sensori avviati con un lettore FreeStyle Libre 3 non possono essere abbinati."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーがペアリングを拒否しました（0xB1）。レシーバーIDが、センサーの有効化時に保存されたIDと一致しませんでした。\n\n「開始に使用したアプリ」で、このセンサーの開始に実際に使用したアプリが選択されていることと、そのアプリのアカウントでログインしていることを確認してください。\n\nFreeStyle Libre 3の読み取り装置で開始したセンサーはペアリングできません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De sensor heeft de koppeling geweigerd (0xB1): de ontvanger-ID komt niet overeen met de ID die bij het activeren van de sensor is opgeslagen.\n\nControleer of ‘Gestart met’ de app aangeeft waarmee deze sensor daadwerkelijk is gestart en of je je hebt aangemeld met het account van die app.\n\nSensoren die met een FreeStyle Libre 3-reader zijn gestart, kunnen niet worden gekoppeld."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor odrzucił parowanie (0xB1): identyfikator odbiornika nie jest zgodny z identyfikatorem zapisanym podczas aktywacji sensora.\n\nSprawdź, czy w polu „Uruchomiono za pomocą” wybrano aplikację, za pomocą której faktycznie uruchomiono ten sensor, oraz czy zalogowano się na konto tej aplikacji.\n\nSensorów uruchomionych czytnikiem FreeStyle Libre 3 nie można sparować."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сенсор отклонил сопряжение (0xB1): идентификатор приёмника не совпал с сохранённым при активации сенсора.\n\nПроверьте, что в поле «Запущен через» указано приложение, через которое действительно был запущен этот сенсор, и что вы вошли с учётной записью этого приложения.\n\nСенсоры, запущенные с помощью считывателя FreeStyle Libre 3, нельзя сопрягать."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传感器拒绝配对（0xB1）：接收器 ID 与传感器激活时存储的 ID 不匹配。\n\n请检查“启动应用”是否为实际用于启动此传感器的 App，并确认你已使用该 App 的账户登录。\n\n使用 FreeStyle Libre 3 读取器启动的传感器无法配对。"
           }
         }
       }
@@ -34663,6 +35887,65 @@
     "Use 0x followed by 8 hex digits, or a decimal number." : {
       "comment" : "Inline validation hint for the developer Receiver ID override field."
     },
+    "Use a different account" : {
+      "comment" : "Button shown once a Libre 3 receiver ID is available. Opens the LibreView sign-in fields to retrieve the ID from another account.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anderes Konto verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar otra cuenta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser un autre compte"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa un altro account"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "別のアカウントを使用"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ander account gebruiken"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Użyj innego konta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Использовать другую учётную запись"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用其他账户"
+          }
+        }
+      }
+    },
     "Use average as offset" : {
       "localizations" : {
         "de" : {
@@ -35196,6 +36479,65 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "V%1$@.%2$@"
+          }
+        }
+      }
+    },
+    "Wait for the Receiver ID to be retrieved before pairing." : {
+      "comment" : "Shown under the disabled sensor-pairing button while the account lookup retrieves the receiver ID.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warte, bis die Receiver-ID abgerufen wurde, bevor du den Sensor koppelst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espera a que se obtenga el ID del receptor antes de enlazar el sensor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attendez que l’identifiant du récepteur soit récupéré avant l’association."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attendi il recupero dell’ID ricevitore prima dell’abbinamento."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レシーバーIDの取得が完了してからペアリングしてください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wacht tot de ontvanger-ID is opgehaald voordat je koppelt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przed parowaniem poczekaj na pobranie identyfikatora odbiornika."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перед сопряжением дождитесь получения идентификатора приёмника."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请等待接收器 ID 获取完成后再配对。"
           }
         }
       }
@@ -36557,6 +37899,65 @@
         }
       }
     },
+    "Which app started this sensor?" : {
+      "comment" : "Section heading when pairing an already-running sensor: the user picks the app that activated it.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit welcher App wurde dieser Sensor gestartet?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Con qué app se inició este sensor?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avec quelle app ce capteur a-t-il été démarré ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con quale app è stato avviato questo sensore?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このセンサーの開始に使用したアプリは？"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Met welke app is deze sensor gestart?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Za pomocą której aplikacji uruchomiono ten sensor?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Через какое приложение был запущен этот сенсор?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此传感器是用哪个 App 启动的？"
+          }
+        }
+      }
+    },
     "Widget update frequency" : {
       "localizations" : {
         "de" : {
@@ -37370,6 +38771,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "您稍后可以在“设置”中更改此项。"
+          }
+        }
+      }
+    },
+    "You don’t need to sign in again, not even for future sensors." : {
+      "comment" : "Footer of the LibreView section once the Libre 3 receiver ID is available: the sign-in is a one-time step and the ID also works for sensors started later with the same app and account.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du musst dich nicht erneut anmelden, auch nicht für zukünftige Sensoren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No necesitas volver a iniciar sesión, ni siquiera para futuros sensores."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous n’avez pas besoin de vous reconnecter, même pour de futurs capteurs."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non devi effettuare di nuovo l’accesso, nemmeno per i sensori futuri."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今後のセンサーでも、再度ログインする必要はありません。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je hoeft je niet opnieuw aan te melden, ook niet voor toekomstige sensoren."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie musisz logować się ponownie, nawet w przypadku kolejnych sensorów."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторный вход не потребуется даже для следующих сенсоров."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你无需再次登录，即使以后更换传感器也是如此。"
           }
         }
       }

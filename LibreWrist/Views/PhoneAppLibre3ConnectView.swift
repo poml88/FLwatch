@@ -64,8 +64,15 @@ struct PhoneAppLibre3ConnectView: View {
     private var libreViewPatientId: String = ""
 
     /// LibreView (FreeStyle LibreLink) email used to fetch the Account ID.
+    /// Written only once a lookup succeeds, so it always names the account
+    /// behind the stored ID; the text field edits `emailInput`.
     @AppStorage(DefaultsKey.libre3LibreViewEmail.rawValue, store: UserDefaults.group)
     private var libreViewEmail: String = ""
+    @State private var emailInput = ""
+
+    /// True while the user re-opens the sign-in fields to switch accounts
+    /// although a receiver ID is already available.
+    @State private var isChangingAccount = false
 
     /// Which app started the sensor, deciding which account-specific input and
     /// fold produce the receiver ID. Seeded once by `seedActivatingAppIfUnset()`.
@@ -97,10 +104,25 @@ struct PhoneAppLibre3ConnectView: View {
             // re-pairing a sensor FLwatch activated earlier.
             return nil
         }
+        // A cached ID belongs to the current account, not the account being
+        // entered. Never activate a sensor with it during an account switch.
+        if isFetchingAccountID {
+            return String(
+                localized: "Wait for the Receiver ID to be retrieved before pairing.",
+                comment: "Shown under the disabled sensor-pairing button while the account lookup retrieves the receiver ID."
+            )
+        }
+        // Switching the app can hide "Keep current account" if that app has no ID.
+        if isChangingAccount, receiverIDPreview != nil {
+            return String(
+                localized: "Get the Receiver ID for the new account or choose “Keep current account” before pairing.",
+                comment: "Shown under the disabled sensor-pairing button while switching LibreView accounts. 'Keep current account' is the nearby button that cancels the switch."
+            )
+        }
         guard receiverIDPreview == nil else { return nil }
         return String(
-            localized: "Sign in above and tap Get Receiver ID before scanning.",
-            comment: "Shown under the disabled sensor-scan button when the selected vendor app's receiver ID has not been retrieved. 'Get Receiver ID' is the nearby button label."
+            localized: "Get the Receiver ID above before pairing.",
+            comment: "Shown under the disabled sensor-scan button when the selected Abbott app's receiver ID has not been retrieved yet. Refers to the 'Get Receiver ID' step above."
         )
     }
 
@@ -127,6 +149,9 @@ struct PhoneAppLibre3ConnectView: View {
             // the editable field when the screen opens.
             if libreViewPassword.isEmpty, let stored = try? LibreViewPasswordKeychain.read() {
                 libreViewPassword = stored ?? ""
+            }
+            if emailInput.isEmpty {
+                emailInput = libreViewEmail
             }
             receiverIDOverrideInput = Libre3StateStore.receiverIDOverrideEditorText(
                 storedLittleEndianHex: receiverIDOverrideHex
@@ -193,7 +218,7 @@ struct PhoneAppLibre3ConnectView: View {
             } label: {
                 Text(
                     "Get Receiver ID",
-                    comment: "Confirms retrieving the receiver ID for Libre 3 sensor pairing, signing the Libre by Abbott app out."
+                    comment: "Button that signs in to the selected Abbott app's account to retrieve the receiver ID. Also confirms the warning that this signs the Libre by Abbott app out."
                 )
             }
             Button(role: .cancel) {} label: {
@@ -204,7 +229,7 @@ struct PhoneAppLibre3ConnectView: View {
             }
         } message: {
             Text(
-                "Getting the receiver ID signs in to your Libre by Abbott account, which signs the Libre by Abbott app out. The app currently has no way to sign in again: delete it, reinstall it from the App Store, and sign in. You only need to do this once. The receiver ID stays the same afterwards.",
+                "Getting the Receiver ID signs in to your Libre by Abbott account, which signs the Libre by Abbott app out. The app currently has no way to sign in again: delete it, reinstall it from the App Store, and sign in. You only need to do this once. The Receiver ID stays the same afterwards.",
                 comment: "Warning before retrieving the current Libre by Abbott receiver ID. Explains that the vendor app is signed out and needs reinstalling to sign in again, and that the receiver ID only needs to be retrieved once."
             )
         }
@@ -353,91 +378,156 @@ struct PhoneAppLibre3ConnectView: View {
         scanAndCheckSections
     }
 
+    /// The sign-in fields only show until the selected app has a receiver ID,
+    /// or while the user switches accounts. Hiding them afterwards avoids a
+    /// needless repeat sign-in, which would sign Libre by Abbott out again.
+    private var showsSignInFields: Bool {
+        receiverIDPreview == nil || isChangingAccount
+    }
+
+    /// The Abbott app whose LibreView account is needed. This section only
+    /// shows for vendor apps, so a name always exists; the fallback only keeps
+    /// the text whole.
+    private var accountAppName: String {
+        activatingApp.contendingAppName ?? activatingApp.displayName
+    }
+
     @ViewBuilder
     private var libreViewAccountSection: some View {
         Section {
-            TextField("LibreView email", text: $libreViewEmail)
+            if let receiverIDPreview {
+                receiverIDReadyRow(receiverIDPreview)
+
+                Button {
+                    if isChangingAccount {
+                        // Backing out drops unsaved edits, so the fields match
+                        // the account the stored ID came from.
+                        emailInput = libreViewEmail
+                        libreViewPassword = (try? LibreViewPasswordKeychain.read()) ?? ""
+                    }
+                    accountIDFetchError = nil
+                    isChangingAccount.toggle()
+                } label: {
+                    if isChangingAccount {
+                        Text(
+                            "Keep current account",
+                            comment: "Button that closes the LibreView sign-in fields again and keeps the account the current Libre 3 receiver ID came from."
+                        )
+                    } else {
+                        Text(
+                            "Use a different account",
+                            comment: "Button shown once a Libre 3 receiver ID is available. Opens the LibreView sign-in fields to retrieve the ID from another account."
+                        )
+                    }
+                }
+                .disabled(coordinator.state.isBusy || isFetchingAccountID)
+            }
+
+            if showsSignInFields {
+                // Lead with pairing and explain that glucose comes over BLE;
+                // account sign-in only retrieves the receiver ID.
+                Text(
+                    "FLwatch needs your Abbott app’s Receiver ID to pair with your sensor. Sign in with the account you use in \(accountAppName) to retrieve it once. Your glucose readings come directly from the sensor over Bluetooth.",
+                    comment: "Explains that account sign-in retrieves the receiver ID, while glucose readings come directly over Bluetooth. The placeholder is the selected Abbott app ('FreeStyle Libre 3' or 'Libre by Abbott'); keep the product name untranslated."
+                )
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+                // Only the current Libre by Abbott lookup signs the vendor app
+                // out; the confirmation dialog repeats this before it runs.
+                if activatingApp == .libreByAbbottServerID {
+                    Label {
+                        Text(
+                            "Signing in here signs the Libre by Abbott app out, and it can’t sign in again by itself. Delete it, reinstall it from the App Store and sign in. Needed only once.",
+                            comment: "Warning above the LibreView sign-in fields when the sensor was started with Libre by Abbott: retrieving its receiver ID signs that app out, and it has to be reinstalled to sign in again. Keep the product name untranslated."
+                        )
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+
+                TextField(text: $emailInput) {
+                    Text(
+                        "\(accountAppName) email",
+                        comment: "Email field for retrieving the receiver ID. The placeholder is the selected Abbott app ('FreeStyle Libre 3' or 'Libre by Abbott'); use the email for that app's account and keep its name untranslated."
+                    )
+                }
                 .textContentType(.username)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .disabled(coordinator.state.isBusy || isFetchingAccountID)
 
-            SecureField("LibreView password", text: $libreViewPassword)
-                .textContentType(.password)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .disabled(coordinator.state.isBusy || isFetchingAccountID)
+                SecureField(String(
+                    localized: "Password",
+                    comment: "Password field for the selected Abbott app's account, used to retrieve the receiver ID."
+                ), text: $libreViewPassword)
+                    .textContentType(.password)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .disabled(coordinator.state.isBusy || isFetchingAccountID)
 
-            Button {
-                // Each current Libre by Abbott lookup signs the vendor app out,
-                // so require confirmation every time, including repeat lookups.
-                if activatingApp == .libreByAbbottServerID {
-                    showReceiverIDSignOutConfirm = true
-                } else {
-                    fetchAccountID()
-                }
-            } label: {
-                HStack {
-                    Image(systemName: "person.badge.key")
-                    if isFetchingAccountID {
-                        Text(
-                            "Getting Receiver ID…",
-                            comment: "Button label shown while FLwatch signs in to retrieve the receiver ID used for Libre 3 sensor pairing."
-                        )
+                Button {
+                    // Each current Libre by Abbott lookup signs the vendor app
+                    // out, so require confirmation every time, including repeat
+                    // lookups.
+                    if activatingApp == .libreByAbbottServerID {
+                        showReceiverIDSignOutConfirm = true
                     } else {
-                        Text(
-                            "Get Receiver ID",
-                            comment: "Button that signs in to retrieve the receiver ID used for Libre 3 sensor pairing."
-                        )
+                        fetchAccountID()
                     }
-                    if isFetchingAccountID {
-                        Spacer()
-                        ProgressView()
-                    }
-                }
-            }
-            .disabled(
-                coordinator.state.isBusy
-                    || isFetchingAccountID
-                    || libreViewEmail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                    || libreViewPassword.isEmpty
-            )
-
-            if let accountIDFetchError {
-                Label(accountIDFetchError, systemImage: "xmark.circle")
-                    .font(.subheadline)
-                    .foregroundStyle(.red)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            LabeledContent {
-                if let receiverIDPreview {
-                    HStack(spacing: 5) {
-                        Text(verbatim: receiverIDPreview.displayString)
-                            .font(.system(.body, design: .monospaced))
-                            .textSelection(.enabled)
-                        if receiverIDPreview.usesOverride {
+                } label: {
+                    HStack {
+                        Image(systemName: "person.badge.key")
+                        if isFetchingAccountID {
                             Text(
-                                "(override)",
-                                comment: "Marks that the displayed Libre 3 receiver ID comes from the developer override instead of the account lookup."
+                                "Getting Receiver ID…",
+                                comment: "Button label while FLwatch signs in to the selected Abbott app's account to retrieve the receiver ID."
                             )
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        } else {
+                            Text(
+                                "Get Receiver ID",
+                                comment: "Button that signs in to the selected Abbott app's account to retrieve the receiver ID. Also confirms the warning that this signs the Libre by Abbott app out."
+                            )
+                        }
+                        if isFetchingAccountID {
+                            Spacer()
+                            ProgressView()
                         }
                     }
-                } else {
-                    Text(
-                        "Not retrieved yet",
-                        comment: "Value shown in the Receiver ID row before the user has retrieved an ID for the selected Libre 3 app."
-                    )
-                    .foregroundStyle(.secondary)
                 }
-            } label: {
-                Text(
-                    "Receiver ID",
-                    comment: "Diagnostic row: the identifier FLwatch would send to the sensor when pairing. Shown as a hexadecimal number."
+                .disabled(
+                    coordinator.state.isBusy
+                        || isFetchingAccountID
+                        || emailInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        || libreViewPassword.isEmpty
                 )
+
+                if let accountIDFetchError {
+                    Label(accountIDFetchError, systemImage: "xmark.circle")
+                        .font(.subheadline)
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if receiverIDPreview == nil {
+                    LabeledContent {
+                        Text(
+                            "Not retrieved yet",
+                            comment: "Value shown in the Receiver ID row before the user has retrieved an ID for the selected Abbott app."
+                        )
+                        .foregroundStyle(.secondary)
+                    } label: {
+                        Text(
+                            "Receiver ID",
+                            comment: "Label for the receiver ID needed to pair with a Libre 3 sensor."
+                        )
+                    }
+                }
             }
 
             if developerModeEnabled {
@@ -468,12 +558,68 @@ struct PhoneAppLibre3ConnectView: View {
                 }
             }
         } header: {
-            Text("LibreView account")
+            stepHeader(3, String(
+                localized: "Get Receiver ID",
+                comment: "Title of the Libre 3 setup step for retrieving the selected Abbott app's receiver ID. Account sign-in is only needed to retrieve this ID."
+            ))
         } footer: {
-            Text(
-                "Sign in with the LibreView account used by the app above, then tap Get Receiver ID.",
-                comment: "Footer of the LibreView credentials section. This wording applies both before starting a fresh sensor and when joining an active one. 'Get Receiver ID' is the button directly above; keep the wording consistent."
-            )
+            if showsSignInFields {
+                Text(
+                    "FLwatch stores your password only on this iPhone.",
+                    comment: "Footer of the LibreView sign-in section for Libre 3 pairing. The password is kept in this iPhone's keychain and not synced."
+                )
+            } else {
+                Text(
+                    "You don’t need to sign in again, not even for future sensors.",
+                    comment: "Footer of the LibreView section once the Libre 3 receiver ID is available: the sign-in is a one-time step and the ID also works for sensors started later with the same app and account."
+                )
+            }
+        }
+    }
+
+    /// Leads with the outcome. The account and the hex ID stay visible but
+    /// de-emphasised, so a wrong account stands out and support can read the ID.
+    private func receiverIDReadyRow(_ preview: Libre3ReceiverIDPreview) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Label {
+                Text(
+                    "Ready to pair",
+                    comment: "Status after a successful LibreView sign-in: the receiver ID needed for Libre 3 pairing is available, so the sensor can be scanned."
+                )
+            } icon: {
+                Image(systemName: "checkmark.circle.fill")
+            }
+            .foregroundStyle(.green)
+
+            Group {
+                if !libreViewEmail.isEmpty {
+                    HStack(spacing: 5) {
+                        Text(
+                            "Account",
+                            comment: "Label before the LibreView email address the Libre 3 receiver ID was retrieved with."
+                        )
+                        Text(verbatim: libreViewEmail)
+                    }
+                }
+
+                HStack(spacing: 5) {
+                    Text(
+                        "Receiver ID",
+                        comment: "Diagnostic row showing the receiver ID as a hexadecimal number for support."
+                    )
+                    Text(verbatim: preview.displayString)
+                        .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
+                    if preview.usesOverride {
+                        Text(
+                            "(override)",
+                            comment: "Marks that the displayed Libre 3 receiver ID comes from the developer override instead of the account lookup."
+                        )
+                    }
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
     }
 
@@ -501,8 +647,25 @@ struct PhoneAppLibre3ConnectView: View {
                 .foregroundStyle(.orange)
             }
         } header: {
-            Text("Pairing mode")
+            stepHeader(1, String(
+                localized: "Pairing mode",
+                comment: "Title of the first Libre 3 setup step: choosing Parallel, Take over or Fresh."
+            ))
         }
+    }
+
+    /// Numbers the setup sections so their order reads as steps to follow.
+    private func stepHeader(_ step: Int, _ title: String) -> Text {
+        Text(
+            "\(step) · \(title)",
+            comment: "Numbered Libre 3 setup section heading: the step number, a middle dot, then the step title."
+        )
+    }
+
+    /// The LibreView sign-in step only exists for vendor-app sensors, so the
+    /// pair step moves up one when it is hidden.
+    private var pairStepNumber: Int {
+        activatingApp.usesLibreViewAccount ? 4 : 3
     }
 
     @ViewBuilder
@@ -559,6 +722,11 @@ struct PhoneAppLibre3ConnectView: View {
                     .foregroundStyle(.red)
                     .fixedSize(horizontal: false, vertical: true)
             }
+        } header: {
+            stepHeader(pairStepNumber, String(
+                localized: "Pair sensor",
+                comment: "Title of the last Libre 3 setup step: scanning the sensor over NFC to pair it."
+            ))
         } footer: {
             Text("Hold the top of your iPhone against the sensor and keep it still until the scan completes.")
         }
@@ -635,7 +803,7 @@ struct PhoneAppLibre3ConnectView: View {
                     } label: {
                         Text(
                             "Receiver ID",
-                            comment: "Diagnostic row: the identifier FLwatch would send to the sensor when pairing. Shown as a hexadecimal number."
+                            comment: "Diagnostic row showing the receiver ID as a hexadecimal number for support."
                         )
                     }
                 }
@@ -657,7 +825,7 @@ struct PhoneAppLibre3ConnectView: View {
     private var activatingAppSection: some View {
         Section {
             Picker(selection: $activatingApp) {
-                ForEach(Libre3ActivatingApp.allCases) { app in
+                ForEach(Self.activatingAppPickerOrder) { app in
                     Text(app.displayName).tag(app)
                 }
             } label: {
@@ -676,31 +844,37 @@ struct PhoneAppLibre3ConnectView: View {
             .disabled(coordinator.state.isBusy || isFetchingAccountID)
         } header: {
             if selectedMode.startsIrreversibleWearClock {
-                Text(
-                    "Companion app",
+                stepHeader(2, String(
+                    localized: "Companion app",
                     comment: "Section heading when activating a new sensor: choosing which app, if any, should be able to use it alongside FLwatch."
-                )
+                ))
             } else {
-                Text(
-                    "Sensor activation",
-                    comment: "Section heading when pairing an already-running sensor: identifying the app that activated it."
-                )
+                stepHeader(2, String(
+                    localized: "Which app started this sensor?",
+                    comment: "Section heading when pairing an already-running sensor: the user picks the app that activated it."
+                ))
             }
         } footer: {
             Text(activatingAppFooter)
         }
     }
 
+    /// The legacy Libre by Abbott ≤ 1.3.0 option goes last: few sensors
+    /// started with those versions should still be running, but it stays until
+    /// that is certain.
+    private static let activatingAppPickerOrder: [Libre3ActivatingApp] =
+        Libre3ActivatingApp.allCases.filter { $0 != .libreByAbbott } + [.libreByAbbott]
+
     private var activatingAppFooter: String {
         if selectedMode.startsIrreversibleWearClock {
             return String(
-                localized: "FLwatch stores this app's receiver ID on the sensor, so only that app can take it over later — never both. Choose FLwatch only if no Libre 3 app should ever use this sensor; FLwatch can still re-pair such a sensor itself.",
-                comment: "Explains the app picker when activating a new sensor. The receiver ID written at activation decides which app can ever claim the sensor, and it cannot be changed afterwards."
+                localized: "FLwatch stores this app's Receiver ID on the sensor, so only that app can take it over later — never both. Choose FLwatch only if no Libre 3 app should ever use this sensor; FLwatch can still re-pair such a sensor itself.",
+                comment: "Explains the app picker when activating a new sensor. The receiver ID is written at activation and decides which app can ever claim the sensor. It cannot be changed afterwards."
             )
         }
         return String(
-            localized: "Pick the app and version this sensor was started with. FreeStyle Libre 3 and Libre by Abbott use different receiver IDs, and Libre by Abbott changed its method in version 1.4.0. The wrong choice is rejected (error 0xB1).",
-            comment: "Explains the app picker when pairing an already-running sensor. Libre by Abbott version 1.4.0 changed how its receiver ID is derived. 0xB1 is the sensor's own error code for a receiver-ID mismatch; keep it as-is. Keep the product names untranslated."
+            localized: "Choose the app this sensor was started with. A wrong choice is rejected by the sensor (error 0xB1).",
+            comment: "Explains the app picker when pairing an already-running sensor. 0xB1 is the sensor's own error code for a wrong receiver ID; keep it as-is."
         )
     }
 
@@ -1262,21 +1436,24 @@ struct PhoneAppLibre3ConnectView: View {
     // MARK: - Actions
 
     private func startScan(mode: Libre3Mode) {
-        Task { await coordinator.pair(mode: mode) }
+        Task {
+            guard scanBlockedReason == nil else { return }
+            await coordinator.pair(mode: mode)
+        }
     }
 
     /// Look up and persist the account data needed to resolve the receiver ID.
     /// Current Libre by Abbott also retrieves its account-scoped receiver UUID.
-    /// Persists the email + password so a later re-fetch needs no re-entry.
+    /// Persists the email + password together with the Account ID, so a later
+    /// re-fetch needs no re-entry and the stored email names that account.
     private func fetchAccountID() {
-        let email = libreViewEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+        let email = emailInput.trimmingCharacters(in: .whitespacesAndNewlines)
         let password = libreViewPassword
         guard !email.isEmpty, !password.isEmpty else { return }
 
         accountIDFetchError = nil
         isFetchingAccountID = true
-        libreViewEmail = email
-        try? LibreViewPasswordKeychain.save(password)
+        emailInput = email
         let selectedActivatingApp = activatingApp
 
         Task {
@@ -1284,20 +1461,20 @@ struct PhoneAppLibre3ConnectView: View {
                 let account = try await LibreViewAccountClient().fetchAccountID(
                     email: email, password: password
                 )
-                // Keep the successful legacy lookup even when the follow-up
-                // libre1 call fails, so the user can see which account resolved.
-                await MainActor.run {
-                    libreViewPatientId = account.accountID
-                }
-
                 guard selectedActivatingApp == .libreByAbbottServerID else {
                     await MainActor.run {
+                        libreViewPatientId = account.accountID
+                        libreViewEmail = email
+                        try? LibreViewPasswordKeychain.save(password)
                         isFetchingAccountID = false
                         accountIDFetchError = nil
+                        isChangingAccount = false
                     }
                     return
                 }
 
+                // Preserve the current account and its credentials until both
+                // requests succeed, so a failed switch can still be cancelled.
                 let login = try await Libre1AccountClient().login(
                     email: email,
                     password: password,
@@ -1323,8 +1500,12 @@ struct PhoneAppLibre3ConnectView: View {
                 await MainActor.run {
                     libre1ReceiverUUID = login.receiverID
                     libre1ReceiverUUIDAccountID = account.accountID
+                    libreViewPatientId = account.accountID
+                    libreViewEmail = email
+                    try? LibreViewPasswordKeychain.save(password)
                     isFetchingAccountID = false
                     accountIDFetchError = nil
+                    isChangingAccount = false
                 }
             } catch {
                 let description = (error as? Libre1AccountError)?.errorDescription

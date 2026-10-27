@@ -155,8 +155,8 @@ final class Libre3PairingCoordinator: ObservableObject {
             // would send the user to restart their iPhone, which cannot help.
             Logger.libre3.error("Pairing (\(mode.rawValue, privacy: .public)) aborted, no receiver ID for the selected app")
             state = .failed(message: String(
-                localized: "FLwatch couldn't work out this sensor's receiver ID. Check that the app the sensor was started in is selected and that your LibreView Account ID is filled in, then try again.",
-                comment: "Pairing failure shown when no receiver ID could be derived for the selected app — normally because the LibreView Account ID is missing. The receiver ID is computed from that account, and the sensor rejects any other value."
+                localized: "FLwatch couldn't determine the Receiver ID. Check the selected app and use “Get Receiver ID” to sign in with that app's account, then try pairing again.",
+                comment: "Pairing failure when the selected Abbott app's receiver ID cannot be resolved. 'Get Receiver ID' is the button on the setup screen; keep the wording identical."
             ))
             return
         } catch {
@@ -436,8 +436,8 @@ final class Libre3PairingCoordinator: ObservableObject {
             // *reader* stores an ID no account reproduces, so those sensors are
             // genuinely out of reach (DiaBLE saw 0xB1 on them too).
             return String(
-                localized: "The sensor refused pairing (0xB1): the receiver ID didn't match the one stored when the sensor was activated.\n\nCheck that “Started with” names the app this sensor was really started in — the two apps compute different receiver IDs from the same account — and that the Account ID belongs to that account.\n\nSensors started with a FreeStyle Libre 3 reader can't be paired at all.",
-                comment: "Pairing failure. The sensor stores a 'receiver ID' derived from the LibreView account when it is activated, and rejects any pairing attempt presenting a different one. The quoted phrase is the label of the app picker on the same screen — keep it identical to that label. Shown after a failed Take over or Parallel NFC scan."
+                localized: "The sensor refused pairing (0xB1): the Receiver ID didn't match the one stored when the sensor was activated.\n\nCheck that “Started with” names the app this sensor was really started in and that you signed in with that app's account.\n\nSensors started with a FreeStyle Libre 3 reader can't be paired at all.",
+                comment: "Pairing failure after a Take over or Parallel NFC scan when the receiver ID does not match. 'Started with' is the app picker label on the setup screen; keep it identical. 0xB1 is the sensor error code; keep it as-is. A FreeStyle Libre 3 reader is Abbott's dedicated hardware reader."
             )
         case 0xB0, 0xB2:
             return String(localized: "This sensor has expired.")

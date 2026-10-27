@@ -96,8 +96,8 @@ enum Libre3ActivatingApp: String, Codable, CaseIterable, Equatable, Identifiable
             return Self.libreByAbbottName
         case .libreByAbbott:
             return String(
-                localized: "Libre by Abbott V ≤ 1.3.0",
-                comment: "Picker option for a sensor started by Libre by Abbott version 1.3.0 or earlier. V means version; keep the product name untranslated."
+                localized: "Libre by Abbott ≤ 1.3.0 (legacy)",
+                comment: "Picker option for a sensor started by Libre by Abbott version 1.3.0 or earlier. 'Legacy' identifies the older supported versions; keep the product name and version number untranslated."
             )
         case .flwatchOnly:
             return String(

@@ -45,7 +45,10 @@ enum LibreViewAccountError: Error, LocalizedError, Sendable {
             }
             return reason.isEmpty ? "LibreView login failed (status \(status))." : reason
         case .accountIdMissing:
-            return "LibreView login succeeded but returned no Account ID."
+            return String(
+                localized: "FLwatch signed in but couldn't retrieve the account details needed for the Receiver ID. Try again.",
+                comment: "Error when sign-in succeeds but the response omits the account identifier needed to derive the receiver ID. The user does not enter this identifier manually."
+            )
         }
     }
 }
@@ -258,8 +261,8 @@ enum Libre1AccountError: Error, LocalizedError, Equatable, Sendable {
             )
         case .consentsRequired:
             return String(
-                localized: "Libre by Abbott requires account consent before it can return the receiver ID.",
-                comment: "Error shown when the Libre by Abbott login rejects the terms-of-use or privacy-policy consent sent by FLwatch."
+                localized: "Libre by Abbott requires account consent before it can return the Receiver ID.",
+                comment: "Error when the Libre by Abbott login rejects the terms-of-use or privacy-policy consent sent by FLwatch before returning the receiver ID."
             )
         case .rateLimited:
             return String(
@@ -273,8 +276,8 @@ enum Libre1AccountError: Error, LocalizedError, Equatable, Sendable {
             )
         case .receiverIDMissing:
             return String(
-                localized: "Libre by Abbott login succeeded but returned no valid receiver ID.",
-                comment: "Error shown when the Libre by Abbott login response has no valid receiver UUID."
+                localized: "Libre by Abbott login succeeded but returned no valid Receiver ID.",
+                comment: "Error when the Libre by Abbott login response has no valid receiver UUID, needed to derive the receiver ID."
             )
         case .badResponse(let status, let code):
             if let code {
