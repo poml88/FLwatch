@@ -1,2 +1,3 @@
-* Small bug fix: sensor was always shown as "active" in nfc info
+* improve instructions for pairing a sensor via BLE
+* improve Apple Health export when phone is locked
 
