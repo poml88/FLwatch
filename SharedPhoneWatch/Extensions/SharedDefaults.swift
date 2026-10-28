@@ -345,6 +345,8 @@ enum DefaultsKey: String {
     case widgetUpdateFrequency = "widgetUpdateFrequencyKey"
     case tapComplicationReloads = "tapComplicationReloadsKey"
     case useLiveActivities = "useLiveActivitiesKey"
+    case liveActivityLayout = "liveActivityLayoutKey"
+    case liveActivityShowTimer = "liveActivityShowTimerKey"
     case appleHealthExportEnabled = "appleHealthExportEnabledKey" // legacy, seeds the two keys below
     case appleHealthExportGlucoseEnabled = "appleHealthExportGlucoseEnabledKey"
     case appleHealthExportInsulinEnabled = "appleHealthExportInsulinEnabledKey"
@@ -722,6 +724,17 @@ enum SharedData {
     static var useLiveActivities: Bool {
         get { store.getBool(.useLiveActivities, defaultValue: true) }
         set { store.setBool(newValue, forKey: .useLiveActivities) }
+    }
+
+    static var liveActivityLayout: Int {
+        // Zero is the graph layout; keep this shared accessor independent of ActivityKit.
+        get { store.getInt(.liveActivityLayout, defaultValue: 0) }
+        set { store.setInt(newValue, forKey: .liveActivityLayout) }
+    }
+
+    static var liveActivityShowTimer: Bool {
+        get { store.getBool(.liveActivityShowTimer, defaultValue: true) }
+        set { store.setBool(newValue, forKey: .liveActivityShowTimer) }
     }
 
     /// Legacy combined Apple Health export switch, superseded by the per-type

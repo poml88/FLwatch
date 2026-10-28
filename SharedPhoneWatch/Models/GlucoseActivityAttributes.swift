@@ -2,9 +2,12 @@
 import Foundation
 import ActivityKit
 
+public enum LiveActivityLayout: Int, Codable, Sendable {
+    case graph = 0
+    case largeNumbers = 1
+}
+
 public struct FLWatchAttributes: ActivityAttributes, Codable {
-    public static let staleActivityAfterInterval: TimeInterval = 20 * 60
-    public static let staleGlucoseAfterInterval: TimeInterval = 9 * 60
     public static let glucoseActivityIdentifier = "librewrist.glucose"
     public static let iobValueScale = 100
     public static let activityValueScale = 1000
@@ -72,6 +75,8 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
         public var showIOBCurve: Bool
         public var showActivityCurve: Bool
         public var showInsulinDeliveryMarks: Bool
+        public var layout: LiveActivityLayout
+        public var showTimer: Bool
 
         private enum CodingKeys: String, CodingKey {
             case latestGlucoseText = "l"
@@ -95,6 +100,8 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             case showIOBCurve = "si"
             case showActivityCurve = "sa"
             case showInsulinDeliveryMarks = "sd"
+            case layout = "ly"
+            case showTimer = "st"
         }
 
         public init(
@@ -118,7 +125,9 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             insulinMarkers: [InsulinMarker],
             showIOBCurve: Bool,
             showActivityCurve: Bool,
-            showInsulinDeliveryMarks: Bool
+            showInsulinDeliveryMarks: Bool,
+            layout: LiveActivityLayout = .graph,
+            showTimer: Bool = true
         ) {
             self.latestGlucoseText = latestGlucoseText
             self.latestTrend = latestTrend
@@ -141,6 +150,8 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             self.showIOBCurve = showIOBCurve
             self.showActivityCurve = showActivityCurve
             self.showInsulinDeliveryMarks = showInsulinDeliveryMarks
+            self.layout = layout
+            self.showTimer = showTimer
         }
 
         public init(from decoder: any Decoder) throws {
@@ -170,6 +181,9 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             showIOBCurve = try container.decode(Bool.self, forKey: .showIOBCurve)
             showActivityCurve = try container.decode(Bool.self, forKey: .showActivityCurve)
             showInsulinDeliveryMarks = try container.decode(Bool.self, forKey: .showInsulinDeliveryMarks)
+            // Activities created by the previous build keep their original presentation.
+            layout = try container.decodeIfPresent(LiveActivityLayout.self, forKey: .layout) ?? .graph
+            showTimer = try container.decodeIfPresent(Bool.self, forKey: .showTimer) ?? true
         }
 
         public func encode(to encoder: any Encoder) throws {
@@ -200,6 +214,8 @@ public struct FLWatchAttributes: ActivityAttributes, Codable {
             try container.encode(showIOBCurve, forKey: .showIOBCurve)
             try container.encode(showActivityCurve, forKey: .showActivityCurve)
             try container.encode(showInsulinDeliveryMarks, forKey: .showInsulinDeliveryMarks)
+            try container.encode(layout, forKey: .layout)
+            try container.encode(showTimer, forKey: .showTimer)
         }
 
         private static func decodePoints(

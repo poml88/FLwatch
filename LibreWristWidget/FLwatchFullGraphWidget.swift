@@ -15,7 +15,7 @@ struct FLwatchFullGraphWidgetEntryView: View {
     @Environment(\.widgetFamily) private var family
     @Environment(\.colorScheme) var colorScheme
     
-    private let staleThreshold: TimeInterval = 5 * 60
+    private var staleThreshold: TimeInterval { SharedData.cgmProviderKind.widgetStaleReadingAfter }
     
     var isStaleGlucose: Bool {
         Date().timeIntervalSince(entry.date) > staleThreshold && !(entry.lastGlucoseMeasurement.glucose.value <= 0)

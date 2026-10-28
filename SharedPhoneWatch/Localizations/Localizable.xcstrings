@@ -3088,6 +3088,9 @@
         }
       }
     },
+    "Appearance" : {
+      "comment" : "Section heading for Live Activity layout and age-counter preferences."
+    },
     "Apple Health" : {
       "comment" : "Subtitle listing Apple Health as the available service in Data Sharing settings.",
       "localizations" : {
@@ -15628,6 +15631,9 @@
     "Glucose-only deaths" : {
 
     },
+    "Graph" : {
+      "comment" : "Live Activity layout option showing glucose and a graph."
+    },
     "Health data is not available on this Apple Watch." : {
       "comment" : "Workout start failure when HealthKit is unavailable.",
       "localizations" : {
@@ -17917,6 +17923,9 @@
         }
       }
     },
+    "Large numbers" : {
+      "comment" : "Live Activity layout option showing large glucose numbers without a graph."
+    },
     "Last heartbeat: %@" : {
       "localizations" : {
         "de" : {
@@ -18033,6 +18042,9 @@
           }
         }
       }
+    },
+    "Layout" : {
+      "comment" : "Picker label for the Live Activity's Lock Screen and Apple Watch layout."
     },
     "Libre 3 (Bluetooth)" : {
       "comment" : "A title for a placeholder view that will be replaced",
@@ -30000,6 +30012,9 @@
         }
       }
     },
+    "Show time since last reading" : {
+      "comment" : "Toggle for showing the age counter in Live Activities; widget timers are unaffected."
+    },
     "Sign in above and tap Get Receiver ID before scanning." : {
       "comment" : "Shown under the disabled sensor-scan button when the selected vendor app's receiver ID has not been retrieved. 'Get Receiver ID' is the nearby button label.",
       "extractionState" : "stale",
@@ -32451,6 +32466,9 @@
           }
         }
       }
+    },
+    "The layout applies to the Lock Screen and Apple Watch Smart Stack. The Dynamic Island keeps its layout. The timer setting applies to all Live Activity presentations. When the timer is hidden, strikethrough marks outdated glucose readings. Widget timers stay visible." : {
+      "comment" : "Explains which Live Activity surfaces use the layout and timer preferences, how stale readings are marked, and that ordinary widgets keep their timers."
     },
     "The Libre 3 sensor has expired." : {
       "comment" : "Workout start failure because the paired sensor is past its wear duration.",

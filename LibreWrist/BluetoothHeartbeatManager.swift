@@ -240,12 +240,23 @@ final class BluetoothHeartbeatManager: NSObject, ObservableObject {
     }
 
     func setEnabled(_ isEnabled: Bool) {
+        let didChange = isEnabled != self.isEnabled
         SharedData.bluetoothHeartbeatEnabled = isEnabled
         guard isHeartbeatApplicableForActiveProvider else {
             // Direct-BLE provider owns the link; never run the heartbeat,
             // regardless of the stored toggle.
             stopMonitoring()
             return
+        }
+        if didChange, SharedData.useLiveActivities {
+            // Enabling/disabling the cloud heartbeat changes the stale deadline
+            // even before another reading arrives. Rebuild from cached history.
+            Task {
+                await LiveActivityManager.shared.refreshFromCurrentHistory(
+                    useLiveActivities: SharedData.useLiveActivities,
+                    refreshIOB: false
+                )
+            }
         }
         if isEnabled {
             startIfNeeded()
