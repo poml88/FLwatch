@@ -1,3 +1,2 @@
-* improve instructions for pairing a sensor via BLE
-* improve Apple Health export when phone is locked
+* improvements of the app's text explanations
 
