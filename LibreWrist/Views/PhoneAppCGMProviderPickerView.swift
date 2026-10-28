@@ -34,7 +34,7 @@ struct PhoneAppCGMProviderPickerView: View {
                         .font(.system(.largeTitle))
                         .foregroundColor(.green)
 
-                    Text("Pick your CGM")
+                    Text("Choose how to connect", comment: "Heading of the first-launch picker where users choose a CGM connection method: direct Bluetooth or a cloud service.")
                         .font(.title2)
                         .padding(.top, 24)
 
@@ -49,27 +49,27 @@ struct PhoneAppCGMProviderPickerView: View {
 
                     VStack(spacing: 16) {
                         providerCard(
-                            title: "FreeStyle Libre",
-                            subtitle: "Connects via your LibreLinkUp follower account. Detailed setup instructions and a video guide are on the app's website.",
+                            title: Text("FreeStyle Libre 3 (Bluetooth)", comment: "Provider picker card title for a direct Bluetooth connection to a FreeStyle Libre 3 or Libre 3 Plus sensor."),
+                            subtitle: Text("Connects directly to a Libre 3 or Libre 3 Plus sensor over Bluetooth instead of through the cloud. During workouts in FLwatch on your Apple Watch, the watch can read the sensor directly, so you can leave your iPhone behind.", comment: "Description of the Libre 3 Bluetooth connection method. Apple Watch can also read the sensor directly during a workout started in FLwatch on the watch, without the iPhone nearby."),
+                            systemImage: "sensor.tag.radiowaves.forward"
+                        ) {
+                            pick(.libre3BLE)
+                        }
+
+                        providerCard(
+                            title: Text("FreeStyle Libre (Cloud)", comment: "Provider picker card title for FreeStyle Libre readings received through the LibreLinkUp cloud service, rather than directly over Bluetooth."),
+                            subtitle: Text("Connects through your LibreLinkUp follower account.", comment: "Description of the FreeStyle Libre cloud connection method in the first-launch picker. This option uses a LibreLinkUp follower account."),
                             systemImage: "drop.circle"
                         ) {
                             pick(.libreLinkUp)
                         }
 
                         providerCard(
-                            title: "Dexcom",
-                            subtitle: "Connects via Dexcom Share. In the Dexcom app, turn on Share and invite at least one follower. Then sign in here with the sharer's (patient's) account — not a follower's.",
+                            title: Text("Dexcom (Cloud)", comment: "Provider picker card title for the Dexcom Share cloud service."),
+                            subtitle: Text("Connects through Dexcom Share using the patient’s account.", comment: "Description of the Dexcom cloud connection method in the first-launch picker. The account belongs to the sensor wearer, not a follower."),
                             systemImage: "waveform.path.ecg"
                         ) {
                             pick(.dexcomShare)
-                        }
-
-                        providerCard(
-                            title: "FreeStyle Libre 3 (Bluetooth)",
-                            subtitle: "Connects directly to a Libre 3 / Libre 3 Plus sensor over Bluetooth — no follower account or cloud needed. You pair by holding your phone to the sensor.",
-                            systemImage: "sensor.tag.radiowaves.forward"
-                        ) {
-                            pick(.libre3BLE)
                         }
                     }
                     .padding(.horizontal, 24)
@@ -83,8 +83,8 @@ struct PhoneAppCGMProviderPickerView: View {
     }
 
     private func providerCard(
-        title: LocalizedStringKey,
-        subtitle: LocalizedStringKey,
+        title: Text,
+        subtitle: Text,
         systemImage: String,
         action: @escaping () -> Void
     ) -> some View {
@@ -95,10 +95,10 @@ struct PhoneAppCGMProviderPickerView: View {
                     .foregroundStyle(.green)
                     .frame(width: 36)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
+                    title
                         .font(.headline)
                         .foregroundStyle(Color.primary)
-                    Text(subtitle)
+                    subtitle
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)

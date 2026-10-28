@@ -222,7 +222,7 @@ struct PhoneAppHomeView: View {
             Button("Start", role: .cancel, action: {SharedData.hasSeenWelcomeMessage = true})
         }
         message: {
-            Text("Thank you for downloading FLwatch. I hope it will prove useful.\n\nTo get startet, please read the SETUP AND USAGE guide. In case of questions, please contact support. More info on the Settings tab.")
+            Text("Thank you for downloading FLwatch. I develop FLwatch independently, in my own time, driven by my own experience of living with diabetes and the wish to make everyday life a little easier for others too. I hope you find it useful.\n\nTo get started, please read the SETUP AND USAGE guide. In case of questions, please contact support. More info on the Settings tab.", comment: "First-launch welcome message from the developer, explaining the personal motivation behind FLwatch and directing users to setup instructions and support in Settings.")
         }
     }
 

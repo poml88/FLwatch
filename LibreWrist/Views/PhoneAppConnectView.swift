@@ -92,25 +92,6 @@ struct LibreLinkUpConnectView: View {
             
             Form {
                 
-                Section {
-                    HStack(alignment: .top, spacing: 12) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                            .padding(.top, 1)
-                        
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Important note")
-                                .font(.headline)
-                            
-                            Text("FLwatch currently supports the LibreLinkUp 4.x API. Abbott has released API 5.0.0, which is not yet supported.")
-                            
-                            Text("If Abbott disables API 4.x in the future, glucose data in FLwatch may stop working without notice. IOB-related features will still continue to work.")
-                        }
-                        .font(.subheadline)
-                    }
-                    .padding(.vertical, 4)
-                }
-                
                 Section(
                     header: Text("Credentials"),
                     footer: Text(
