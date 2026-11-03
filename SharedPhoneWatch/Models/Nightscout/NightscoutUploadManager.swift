@@ -515,7 +515,12 @@ final class NightscoutUploadManager {
         }
 
         var shouldContinue = true
-        if !work.glucoseUploads.isEmpty {
+        // PendingWork.merge drops old-serial glucose work only when new-serial
+        // work merges into the same queue. Deadline-bound work is queued separately
+        // and runs first, so old-serial work can still reach a pass. Skip it here:
+        // its minute confirmations would replace the current sensor's coverage.
+        if !work.glucoseUploads.isEmpty,
+           Self.isCurrentGlucoseWork(workSerial: work.glucoseSensorSerial, currentSerial: SharedData.libre3Serial) {
             shouldContinue = await reconcileGlucoseUploads(
                 Array(work.glucoseUploads.values),
                 sensorSerial: work.glucoseSensorSerial ?? "",
@@ -523,6 +528,8 @@ final class NightscoutUploadManager {
                 pass: pass,
                 deadline: work.deadline
             )
+        } else if !work.glucoseUploads.isEmpty {
+            Self.logger.info("Nightscout skipped glucose work for a replaced sensor: \(work.glucoseUploads.count, privacy: .public) uploads")
         }
         if work.drainInsulin, shouldContinue {
             await drainInsulin(context: context, pass: pass, deadline: work.deadline)
@@ -955,6 +962,24 @@ final class NightscoutUploadManager {
         return newClient
     }
 
+    nonisolated static func isCurrentGlucoseWork(
+        workSerial: String?,
+        currentSerial: String
+    ) -> Bool {
+        guard let workSerial, !workSerial.isEmpty else { return false }
+        return workSerial == currentSerial
+    }
+
+    nonisolated static func historicalCandidatesAfterSwitchMark(
+        _ candidates: [LibreLinkUpGlucose],
+        minuteMark: Date?
+    ) -> [LibreLinkUpGlucose] {
+        guard let minuteMark else { return candidates }
+        return candidates.filter {
+            $0.glucose.source != CGMReadingSource.libre3BLE || $0.glucose.date > minuteMark
+        }
+    }
+
     private func glucoseUploads(
         minuteCandidates: [LibreLinkUpGlucose],
         historicalCandidates: [LibreLinkUpGlucose]
@@ -990,7 +1015,12 @@ final class NightscoutUploadManager {
             }
         }
 
-        add(historicalCandidates, provenance: .historical)
+        // Minute coverage is per serial. A new serial's empty coverage must not
+        // expose either sensor's history over minutes retained at the switch.
+        add(Self.historicalCandidatesAfterSwitchMark(
+            historicalCandidates,
+            minuteMark: SharedData.libre3SwitchMarkMinuteEnd
+        ), provenance: .historical)
         add(minuteCandidates, provenance: .minute)
         return uploads
     }
