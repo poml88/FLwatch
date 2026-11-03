@@ -5443,9 +5443,17 @@ final class Libre3DirectManager: ObservableObject {
                 lastDecodedLifeCount = reading.lifeCount
                 // Re-assess with the fallback lifecycle when patch status hasn't
                 // landed yet (record()'s assessment then lacks warm-up/expiry).
-                let assessment = state.latestLifecycle != nil
+                var assessment = state.latestLifecycle != nil
                     ? recordedAssessment
                     : reading.currentGlucoseQualityAssessment(lifecycle: lifecycle)
+                if !assessment.isUsable,
+                   assessment.blockingIssues == [.sensorExpired],
+                   state.latestPatchStatus?.isPatchStateActive == true {
+                    // The sensor decides when readings stop: Libre 3 has sent valid
+                    // frames for minutes past wearDuration while still reporting active.
+                    assessment = reading.currentGlucoseQualityAssessment(lifecycle: nil)
+                    Logger.libre3.info("Libre3 BLE sensor-expiry override (lifeCount=\(reading.lifeCount, privacy: .public))")
+                }
                 updateStuckGlucoseEvidence(
                     for: reading,
                     assessment: assessment,
@@ -5825,7 +5833,10 @@ final class Libre3DirectManager: ObservableObject {
         // Only an advancing lifeCount proves a new minute arrived. Duplicate
         // frames must not postpone the deadline; this comparison depends on
         // `forgetSensor()` resetting the old sensor's much larger life count.
+        // Past nominal wear, do not re-arm after lifecycle reconciliation cancels:
+        // shutdown is expected and the terminal patch status might never arrive.
         guard ownershipPermitsConnection,
+              !sensorIsExpired,
               reading.lifeCount > (lastArmedLifeCount ?? 0) else { return }
         lastArmedLifeCount = reading.lifeCount
         setSignalLossState(deadline: Date().addingTimeInterval(Self.signalLossThreshold))
