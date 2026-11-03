@@ -474,6 +474,9 @@ enum DefaultsKey: String {
     case libre3PeripheralUUID = "libre3PeripheralUUIDKey"
     case libre3SensorStartDate = "libre3SensorStartDateKey"
     case libre3LastLifeCount = "libre3LastLifeCountKey"
+    case libre3PendingHistoricalResumeLifeCount = "libre3PendingHistoricalResumeLifeCountKey"
+    case libre3PendingMinuteResumeLifeCount = "libre3PendingMinuteResumeLifeCountKey"
+    case libre3RejectedMinuteLifeCounts = "libre3RejectedMinuteLifeCountsKey"
     case libre3LastGlucoseMgDL = "libre3LastGlucoseMgDLKey"
     case libre3LastGlucoseAt = "libre3LastGlucoseAtKey"
     // Sensor lifecycle + model, parsed from the NFC patch info at pair time and
@@ -1503,6 +1506,27 @@ enum SharedData {
     static var libre3LastLifeCount: Int {
         get { store.getInt(.libre3LastLifeCount) }
         set { store.setInt(newValue, forKey: .libre3LastLifeCount) }
+    }
+
+    /// Phone backfill resume points retained until a request's deadline survives
+    /// on the same connection. 0 = none; the importer's
+    /// `historicalRequestFloorLifeCount` and `clinicalRequestFloorLifeCount`
+    /// preserve initially empty series.
+    static var libre3PendingHistoricalResumeLifeCount: Int {
+        get { store.getInt(.libre3PendingHistoricalResumeLifeCount) }
+        set { store.setInt(newValue, forKey: .libre3PendingHistoricalResumeLifeCount) }
+    }
+
+    static var libre3PendingMinuteResumeLifeCount: Int {
+        get { store.getInt(.libre3PendingMinuteResumeLifeCount) }
+        set { store.setInt(newValue, forKey: .libre3PendingMinuteResumeLifeCount) }
+    }
+
+    /// Phone-only live rejections retained to exclude matching clinical minutes
+    /// after a relaunch. Store decimal strings using the existing array helpers.
+    static var libre3RejectedMinuteLifeCounts: Set<Int> {
+        get { Set(store.getStringArray(.libre3RejectedMinuteLifeCounts).compactMap { Int($0) }) }
+        set { store.setStringArray(newValue.sorted().map { String($0) }, forKey: .libre3RejectedMinuteLifeCounts) }
     }
 
     /// Last accepted glucose value (mg/dL) for quick display/seeding. 0 = none.

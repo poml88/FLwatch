@@ -35,6 +35,22 @@ enum Libre3BackfillImporter {
     /// 5-minute series and the current realtime value.
     static let clinicalWindowMinutes: UInt16 = 20
 
+    /// Valid request floors also preserve an empty series as pending work;
+    /// zero remains reserved for no pending backfill in the persisted defaults.
+    static let historicalRequestFloorLifeCount: UInt16 = 5
+    static let clinicalRequestFloorLifeCount: UInt16 = 1
+
+    /// Fresh readings saved by an interrupted connection must not advance past
+    /// its unfinished backfill. A zero pending value means no unfinished work.
+    static func effectiveResumeLifeCount(
+        saved: UInt16?,
+        pending: UInt16?
+    ) -> UInt16? {
+        guard let pending, pending > 0 else { return saved }
+        guard let saved else { return pending }
+        return min(saved, pending)
+    }
+
     /// A resume point is eligible only when it does not exceed the connected
     /// sensor's own life count.
     ///
@@ -77,13 +93,13 @@ enum Libre3BackfillImporter {
     ) -> UInt16 {
         let windowStart = Int(currentLifeCount) > Int(historicalRequestWindowMinutes)
             ? Int(currentLifeCount) - Int(historicalRequestWindowMinutes)
-            : 5
+            : Int(historicalRequestFloorLifeCount)
         let raw = max(
             windowStart,
             eligibleResumeLifeCount(lastHistoricalLifeCount, currentLifeCount: currentLifeCount)
         )
         let aligned = (raw / 5) * 5
-        return UInt16(max(5, aligned))
+        return UInt16(max(Int(historicalRequestFloorLifeCount), aligned))
     }
 
     /// Lower bound for minute-resolution clinical backfill. Unlike historical
@@ -99,7 +115,7 @@ enum Libre3BackfillImporter {
             eligibleResumeLifeCount(lastMinuteLifeCount, currentLifeCount: currentLifeCount),
             windowStart
         )
-        return UInt16(clamping: max(1, raw))
+        return UInt16(clamping: max(Int(clinicalRequestFloorLifeCount), raw))
     }
 
     /// Leave one extra minute beyond warm-up plus the requested window because

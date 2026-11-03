@@ -1579,9 +1579,72 @@ final class LibreWristTests: XCTestCase {
 
     // MARK: - Libre 3 backfill bounds
 
+    func testBackfillEffectiveResumeLifeCountKeepsOlderPoint() {
+        XCTAssertEqual(Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9205, pending: nil), 9205)
+        XCTAssertEqual(Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9205, pending: 0), 9205)
+        XCTAssertEqual(Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9205, pending: 9150), 9150)
+        XCTAssertEqual(Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9150, pending: 9205), 9150)
+        XCTAssertEqual(Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9150, pending: 9150), 9150)
+        XCTAssertEqual(Libre3BackfillImporter.effectiveResumeLifeCount(saved: nil, pending: 9150), 9150)
+        XCTAssertNil(Libre3BackfillImporter.effectiveResumeLifeCount(saved: nil, pending: nil))
+        XCTAssertNil(Libre3BackfillImporter.effectiveResumeLifeCount(saved: nil, pending: 0))
+    }
+
+    func testInterruptedBackfillResumesBeforeFreshSavedReadings() {
+        let historicalResume = Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9205, pending: 9150)
+        let minuteResume = Libre3BackfillImporter.effectiveResumeLifeCount(saved: 9224, pending: 9174)
+
+        XCTAssertEqual(
+            Libre3BackfillImporter.backfillStartLifeCount(
+                lastHistoricalLifeCount: historicalResume,
+                currentLifeCount: 9225
+            ),
+            9150
+        )
+        // Carry-over still obeys the existing 20-minute clinical window.
+        XCTAssertEqual(
+            Libre3BackfillImporter.clinicalBackfillStartLifeCount(
+                lastMinuteLifeCount: minuteResume,
+                currentLifeCount: 9225
+            ),
+            9205
+        )
+    }
+
+    func testInterruptedBackfillWithInitiallyEmptyHistoryKeepsWindow() {
+        // Match the manager's persisted representation: zero means no pending
+        // request, so an empty series must instead retain its request floor.
+        let initialResume = Libre3BackfillImporter.effectiveResumeLifeCount(saved: nil, pending: nil)
+        let pendingHistorical = initialResume ?? Libre3BackfillImporter.historicalRequestFloorLifeCount
+        let pendingMinute = initialResume ?? Libre3BackfillImporter.clinicalRequestFloorLifeCount
+
+        // The first connection saved fresh readings before its backfill finished.
+        let historicalResume = Libre3BackfillImporter.effectiveResumeLifeCount(
+            saved: 980, pending: pendingHistorical
+        )
+        let minuteResume = Libre3BackfillImporter.effectiveResumeLifeCount(
+            saved: 1000, pending: pendingMinute
+        )
+        XCTAssertEqual(
+            Libre3BackfillImporter.backfillStartLifeCount(
+                lastHistoricalLifeCount: historicalResume,
+                currentLifeCount: 1001
+            ),
+            280
+        )
+        XCTAssertEqual(
+            Libre3BackfillImporter.clinicalBackfillStartLifeCount(
+                lastMinuteLifeCount: minuteResume,
+                currentLifeCount: 1001
+            ),
+            981
+        )
+    }
+
     func testHistoricalBackfillStartLifeCountBoundsAndAligns() {
         XCTAssertEqual(Libre3BackfillImporter.displayWindowMinutes, 370)
         XCTAssertEqual(Libre3BackfillImporter.historicalRequestWindowMinutes, 720)
+        XCTAssertEqual(Libre3BackfillImporter.historicalRequestFloorLifeCount, 5)
         XCTAssertEqual(
             Libre3BackfillImporter.backfillStartLifeCount(
                 lastHistoricalLifeCount: nil,
@@ -1648,6 +1711,7 @@ final class LibreWristTests: XCTestCase {
     }
 
     func testClinicalBackfillStartLifeCountBoundsWithoutUnderflow() {
+        XCTAssertEqual(Libre3BackfillImporter.clinicalRequestFloorLifeCount, 1)
         XCTAssertEqual(
             Libre3BackfillImporter.clinicalBackfillStartLifeCount(
                 lastMinuteLifeCount: nil,
@@ -1809,6 +1873,109 @@ final class LibreWristTests: XCTestCase {
                     warmupMinutes: 60
                 ),
                 .rejectSkew
+            )
+        }
+    }
+
+    func testClinicalBackfillPolicyRejectsUnusableLiveMinute() {
+        let boundaryDate = Date(timeIntervalSince1970: 10_000)
+        let boundary = Libre3ClinicalBackfillPolicy.Boundary(lifeCount: 100, date: boundaryDate)
+
+        for wasRejectedLive in [false, true] {
+            XCTAssertEqual(
+                Libre3ClinicalBackfillPolicy.disposition(
+                    recordLifeCount: 99,
+                    mappedDate: boundaryDate.addingTimeInterval(-60),
+                    boundary: boundary,
+                    warmupMinutes: 60,
+                    wasRejectedLive: wasRejectedLive
+                ),
+                wasRejectedLive ? .rejectUnusable : .accept
+            )
+        }
+    }
+
+    func testClinicalBackfillExistingRejectionReasonsPrecedeUnusable() {
+        let boundaryDate = Date(timeIntervalSince1970: 10_000)
+        let boundary = Libre3ClinicalBackfillPolicy.Boundary(lifeCount: 100, date: boundaryDate)
+
+        // These records are all remembered live rejections, but the earlier
+        // policy checks must retain ownership of their diagnostic counters.
+        let cases: [(UInt16, Date, Libre3ClinicalBackfillPolicy.Disposition)] = [
+            (59, boundaryDate, .rejectWarmup),
+            (100, boundaryDate, .rejectNotOlder),
+            (99, boundaryDate, .rejectSkew)
+        ]
+        for (lifeCount, mappedDate, expected) in cases {
+            XCTAssertEqual(
+                Libre3ClinicalBackfillPolicy.disposition(
+                    recordLifeCount: lifeCount,
+                    mappedDate: mappedDate,
+                    boundary: boundary,
+                    warmupMinutes: 60,
+                    wasRejectedLive: true
+                ),
+                expected
+            )
+        }
+    }
+
+    func testClinicalBackfillPrunesRejectedMinutesToBoundedWindow() {
+        XCTAssertEqual(
+            Libre3ClinicalBackfillPolicy.prunedRejectedMinuteLifeCounts(
+                [0, 939, 940, 941, 999, 1_000, 1_001, 20_000],
+                currentLifeCount: 1_000
+            ),
+            Set([940, 941, 999, 1_000])
+        )
+        // Recovery continues pruning even when no new rejection is recorded.
+        XCTAssertTrue(
+            Libre3ClinicalBackfillPolicy.prunedRejectedMinuteLifeCounts(
+                [940, 941, 999, 1_000],
+                currentLifeCount: 1_061
+            ).isEmpty
+        )
+    }
+
+    func testClinicalBackfillPrunesRejectedMinutesForYoungSensor() {
+        XCTAssertEqual(
+            Libre3ClinicalBackfillPolicy.prunedRejectedMinuteLifeCounts(
+                [-1, 0, 1, 29, 30, 31, 20_000],
+                currentLifeCount: 30
+            ),
+            Set([0, 1, 29, 30])
+        )
+        XCTAssertEqual(
+            Libre3ClinicalBackfillPolicy.prunedRejectedMinuteLifeCounts(
+                [-1, 0, 1],
+                currentLifeCount: 0
+            ),
+            Set([0])
+        )
+    }
+
+    func testClinicalBackfillRetainsRejectionsAfterLastAcceptedMinute() {
+        // The last accepted minute was 100. Load the later rejections unchanged
+        // and prune against the first actual realtime count after reconnect.
+        let restoredRejections: Set<Int> = [101, 102, 103, 104, 105]
+        let rejected = Libre3ClinicalBackfillPolicy.prunedRejectedMinuteLifeCounts(
+            restoredRejections,
+            currentLifeCount: 106
+        )
+        XCTAssertEqual(rejected, restoredRejections)
+
+        let boundaryDate = Date(timeIntervalSince1970: 10_000)
+        let boundary = Libre3ClinicalBackfillPolicy.Boundary(lifeCount: 106, date: boundaryDate)
+        for lifeCount in 101...105 {
+            XCTAssertEqual(
+                Libre3ClinicalBackfillPolicy.disposition(
+                    recordLifeCount: UInt16(lifeCount),
+                    mappedDate: boundaryDate.addingTimeInterval(Double(lifeCount - 106) * 60),
+                    boundary: boundary,
+                    warmupMinutes: 60,
+                    wasRejectedLive: rejected.contains(lifeCount)
+                ),
+                .rejectUnusable
             )
         }
     }
