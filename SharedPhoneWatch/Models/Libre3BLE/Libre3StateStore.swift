@@ -12,7 +12,6 @@ import Foundation
 import RoundWhiteDiscKit
 import OSLog
 #if os(iOS)
-import StoreKit
 import CryptoKit
 #endif
 
@@ -616,17 +615,16 @@ enum Libre3StateStore {
     ///
     /// Preference order: what the stored receiver ID proves, then — for a sensor
     /// paired before this setting existed — the FreeStyle Libre 3 fold that was
-    /// the only one available then, and only otherwise the storefront guess.
+    /// the only one available then, and otherwise the current Libre by Abbott app.
     ///
-    /// Both apps are live on the US store, so that guess is a hint, not a fact; a
-    /// wrong one costs a rejected scan (`0xB1`) and a change in the picker. What
-    /// it must never do is flip somebody whose setup already works, which is what
-    /// the two earlier branches protect.
+    /// Libre by Abbott is now available in most regions as FreeStyle Libre 3
+    /// phases out. Existing choices and pairings still take precedence: changing
+    /// their receiver-ID derivation would break a working setup.
     ///
     /// `@MainActor` so the defaults write — which `@AppStorage` observes — lands
-    /// on the main actor rather than wherever the storefront lookup resumes.
+    /// on the main actor.
     @MainActor
-    static func seedActivatingAppIfUnset() async {
+    static func seedActivatingAppIfUnset() {
         // Runs before the guard below: the rescue is about the keychain identity,
         // not the picker, and must happen even for a user who has already chosen.
         adoptLegacyInstallationReceiverIDIfNeeded()
@@ -634,18 +632,8 @@ enum Libre3StateStore {
         seedActivatingAppFromStoredPairingIfUnset()
         guard !SharedData.libre3ActivatingAppIsSet else { return }
 
-        // Preserve the existing storefront seed. Libre by Abbott is no longer
-        // US-only, but changing this guess would silently change established
-        // setup behaviour; the user can choose the current app explicitly.
-        let countryCode = await Storefront.current?.countryCode
-
-        // The picker stays live across that await, so the user may have chosen in
-        // the meantime. Their choice wins over a guess.
-        guard !SharedData.libre3ActivatingAppIsSet else { return }
-
-        let seeded: Libre3ActivatingApp = countryCode == "USA" ? .libreByAbbott : .freeStyleLibre3
-        SharedData.libre3ActivatingApp = seeded
-        Logger.libre3.info("Seeded activating app to \(seeded.rawValue, privacy: .public) (storefront \(countryCode ?? "unknown", privacy: .public))")
+        SharedData.libre3ActivatingApp = .libreByAbbottServerID
+        Logger.libre3.info("Seeded activating app to libreByAbbottServerID (default for new setups)")
     }
 #endif
 

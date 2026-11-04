@@ -77,7 +77,7 @@ struct PhoneAppLibre3ConnectView: View {
     /// Which app started the sensor, deciding which account-specific input and
     /// fold produce the receiver ID. Seeded once by `seedActivatingAppIfUnset()`.
     @AppStorage(DefaultsKey.libre3ActivatingApp.rawValue, store: UserDefaults.group)
-    private var activatingApp: Libre3ActivatingApp = .freeStyleLibre3
+    private var activatingApp: Libre3ActivatingApp = .libreByAbbottServerID
 
     /// Password is a keychain secret, loaded on appear and never persisted in
     /// the app group.
@@ -171,9 +171,8 @@ struct PhoneAppLibre3ConnectView: View {
             }
         }
         .task {
-            // Storefront lookup is async and only runs until the user has an
-            // activating app on record, so this is a one-off on first visit.
-            await Libre3StateStore.seedActivatingAppIfUnset()
+            // Preserve existing pairing choices before defaulting a new setup.
+            Libre3StateStore.seedActivatingAppIfUnset()
         }
         .onReceive(NotificationCenter.default.publisher(for: .libre3DiagnosticsDidChange)) { _ in
             reloadDiagnosticsLog()
@@ -881,11 +880,13 @@ struct PhoneAppLibre3ConnectView: View {
         }
     }
 
-    /// The legacy Libre by Abbott ≤ 1.3.0 option goes last: few sensors
-    /// started with those versions should still be running, but it stays until
-    /// that is certain.
-    private static let activatingAppPickerOrder: [Libre3ActivatingApp] =
-        Libre3ActivatingApp.allCases.filter { $0 != .libreByAbbott } + [.libreByAbbott]
+    /// Prefer the current Libre by Abbott app; keep its legacy version last.
+    private static let activatingAppPickerOrder: [Libre3ActivatingApp] = [
+        .libreByAbbottServerID,
+        .freeStyleLibre3,
+        .flwatchOnly,
+        .libreByAbbott
+    ]
 
     private var activatingAppFooter: String {
         if selectedMode.startsIrreversibleWearClock {
