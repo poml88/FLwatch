@@ -1672,6 +1672,39 @@ enum Libre3PeripheralDiscoverySelection<Value> {
     case scan
 }
 
+enum Libre3KnownSensorPolicy {
+    static let maximumEntries = 5
+
+    /// Only successful authentication updates this device's identity history,
+    /// with the most recently authenticated sensor last.
+    static func recordAuthenticated(
+        entries: [Libre3KnownSensor],
+        serial: String,
+        peripheralUUID: String
+    ) -> [Libre3KnownSensor] {
+        var entries = Array(entries.suffix(maximumEntries))
+        guard !serial.isEmpty, UUID(uuidString: peripheralUUID) != nil else { return entries }
+        entries.removeAll { $0.serial == serial || $0.peripheralUUID == peripheralUUID }
+        entries.append(Libre3KnownSensor(
+            serial: serial,
+            peripheralUUID: peripheralUUID
+        ))
+        return Array(entries.suffix(maximumEntries))
+    }
+
+    /// Credentials belong to the paired serial only. Returning to an earlier
+    /// sensor exempts its UUID immediately, without restoring an old binding.
+    static func excludedPeripheralIDs(
+        entries: [Libre3KnownSensor],
+        pairedSerial: String
+    ) -> Set<UUID> {
+        Set(entries.suffix(maximumEntries).compactMap { entry -> UUID? in
+            guard entry.serial != pairedSerial else { return nil }
+            return UUID(uuidString: entry.peripheralUUID)
+        })
+    }
+}
+
 struct Libre3PeripheralDiscoveryPolicy {
     /// Keeps the normal lookup order and evaluates later sources only as needed.
     static func select<Value>(
@@ -1688,19 +1721,27 @@ struct Libre3PeripheralDiscoveryPolicy {
         return .scan
     }
 
+    /// A cache miss allows unbound discovery for this attempt. A returned
+    /// handle is not proof of reachability; disconnect remains the escape hatch.
+    static func scanSavedID(savedID: UUID?, isKnownToCentral: Bool) -> UUID? {
+        isKnownToCentral ? savedID : nil
+    }
+
     static func acceptsDiscoveredIdentifier(
         _ discoveredID: UUID,
         savedID: UUID?,
         advertisedLocalName: String?,
-        bleAddress: String
+        bleAddress: String,
+        excludedIDs: Set<UUID>
     ) -> Bool {
         if let savedID { return discoveredID == savedID }
-        // Compare names when both are available; otherwise let authentication
-        // establish the candidate's identity before its UUID is persisted.
-        guard let advertisedLocalName, !advertisedLocalName.isEmpty else { return true }
+        // Names still decide when comparable. Otherwise skip known sensors for
+        // other serials; authenticate unknown candidates before binding them.
         let expectedName = bleAddress.replacingOccurrences(of: ":", with: "").uppercased()
-        guard !expectedName.isEmpty else { return true }
-        return advertisedLocalName.uppercased() == expectedName
+        if let advertisedLocalName, !advertisedLocalName.isEmpty, !expectedName.isEmpty {
+            return advertisedLocalName.uppercased() == expectedName
+        }
+        return !excludedIDs.contains(discoveredID)
     }
 }
 
@@ -3365,7 +3406,8 @@ final class Libre3DirectManager: ObservableObject {
                 found.peripheral.identifier,
                 savedID: savedPeripheralID,
                 advertisedLocalName: found.advertisementData[CBAdvertisementDataLocalNameKey],
-                bleAddress: SharedData.libre3BleAddress
+                bleAddress: SharedData.libre3BleAddress,
+                excludedIDs: savedPeripheralID == nil ? Libre3StateStore.excludedPeripheralIDs() : []
             ) {
                 let observedAt = Date()
                 attemptDiagnostics.recordAdvertisement(
@@ -4245,6 +4287,7 @@ final class Libre3DirectManager: ObservableObject {
         // Phase 6 proves that this candidate owns the saved sensor credentials.
         if let authenticatedID = peripheralBindingTracker.authenticatedCandidate(peripheral.identifier) {
             SharedData.libre3PeripheralUUID = authenticatedID.uuidString
+            Libre3StateStore.recordAuthenticatedPeripheral(authenticatedID)
         }
         reconnectFailureTracker.recordAuthorizationSucceeded()
         patchControlSequence.reset()
@@ -4758,8 +4801,8 @@ final class Libre3DirectManager: ObservableObject {
     }
 
     /// Find the paired sensor. The phone keeps its known-peripheral-first lookup
-    /// and stops scanning when discovery returns. The watch skips retrieved
-    /// handles, retains the saved-UUID filter, and leaves its scan running for
+    /// and stops scanning when discovery returns. The watch checks retrieved
+    /// handles only to choose its scan filter, and leaves its scan running for
     /// `connectAndBuildSession` to stop after the connection attempt.
     private func discoverPeripheral(
         scanner: SensorScannerNG,
@@ -4768,14 +4811,14 @@ final class Libre3DirectManager: ObservableObject {
         try checkCurrentScanner(scanner, generation: scannerGeneration)
         let savedUUID = SharedData.libre3PeripheralUUID
         let savedID = UUID(uuidString: savedUUID)
+        let retrievedPeripheral = savedID.flatMap {
+            scanner.retrievePeripherals(withIdentifiers: [$0]).first
+        }
 
         let selection: Libre3PeripheralDiscoverySelection<CBPeripheral> =
             Libre3PeripheralDiscoveryPolicy.select(
                 preferScan: hostProfile.acquiresByActiveScan,
-                retrieveSaved: {
-                    guard let id = savedID else { return nil }
-                    return scanner.retrievePeripherals(withIdentifiers: [id]).first
-                },
+                retrieveSaved: { retrievedPeripheral },
                 retrieveConnected: {
                     guard let id = savedID else { return nil }
                     // Never adopt a different sensor that happens to be connected.
@@ -4803,6 +4846,15 @@ final class Libre3DirectManager: ObservableObject {
             break
         }
 
+        let scanSavedID = Libre3PeripheralDiscoveryPolicy.scanSavedID(
+            savedID: savedID,
+            isKnownToCentral: retrievedPeripheral != nil
+        )
+        if savedID != nil, scanSavedID == nil {
+            Libre3DiagnosticsLog.traceReconnect("saved-uuid-unknown scan=unbound")
+        }
+        let excludedIDs = scanSavedID == nil ? Libre3StateStore.excludedPeripheralIDs() : []
+
         // Subscribe before starting the scan so discovery cannot beat the waiter.
         let events = scanner.events()
         startScan(scanner, reason: "discovery")
@@ -4820,9 +4872,10 @@ final class Libre3DirectManager: ObservableObject {
             if case .didDiscover(let found) = event,
                Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
                    found.peripheral.identifier,
-                   savedID: savedID,
+                   savedID: scanSavedID,
                    advertisedLocalName: found.advertisementData[CBAdvertisementDataLocalNameKey],
-                   bleAddress: SharedData.libre3BleAddress
+                   bleAddress: SharedData.libre3BleAddress,
+                   excludedIDs: excludedIDs
                ) {
                 Libre3DiagnosticsLog.traceReconnect(
                     "discover-selection kind=scan rssi=\(found.rssi)"

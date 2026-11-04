@@ -46,6 +46,13 @@ enum Libre3WorkoutDisconnectOutcome: String, Codable, Sendable {
     case timedOut
 }
 
+/// Authenticated sensor identities local to this device's CoreBluetooth central.
+/// Never include these UUIDs in phone/watch synchronization payloads.
+struct Libre3KnownSensor: Codable, Equatable, Sendable {
+    let serial: String
+    let peripheralUUID: String
+}
+
 /// One ordered ownership transition. The owner is explicit because `released`
 /// is used in both directions: the phone releases the sensor to the watch at
 /// workout start, and the watch releases it to the phone at workout end.
@@ -472,6 +479,7 @@ enum DefaultsKey: String {
     case libre3Libre1ReceiverUUIDAccountId = "libre3Libre1ReceiverUUIDAccountIdKey"
     case libre3Libre1DeviceId = "libre3Libre1DeviceIdKey"
     case libre3PeripheralUUID = "libre3PeripheralUUIDKey"
+    case libre3KnownSensors = "libre3KnownSensorsKey"
     case libre3SensorStartDate = "libre3SensorStartDateKey"
     case libre3LastLifeCount = "libre3LastLifeCountKey"
     case libre3PendingHistoricalResumeLifeCount = "libre3PendingHistoricalResumeLifeCountKey"
@@ -1435,13 +1443,13 @@ enum SharedData {
 
     /// CoreBluetooth peripheral identifier (UUID string) of the paired sensor, so
     /// `Libre3DirectManager` reconnect can `retrievePeripherals(withIdentifiers:)`
-    /// instead of waiting for a fresh scan advertisement. Empty until first seen.
+    /// instead of waiting for a fresh scan advertisement. Empty until authenticated.
     static var libre3PeripheralUUID: String {
         get { store.getString(.libre3PeripheralUUID, defaultValue: "") }
         set {
             #if os(watchOS)
-            // Same-sensor provisioning temporarily clears the UUID for discovery;
-            // that does not clear bluetoothd's per-peripheral timeout history.
+            // Only a different non-empty UUID resets bluetoothd's estimated
+            // per-peripheral timeout history. Same-sensor pairing keeps it.
             if !newValue.isEmpty, newValue != libre3ReconnectGateSensorID {
                 libre3ReconnectGateDropTimes = []
                 libre3ReconnectGateSensorID = newValue
@@ -1449,6 +1457,14 @@ enum SharedData {
             #endif
             if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3PeripheralUUID.rawValue) }
             else { store.setString(newValue, forKey: .libre3PeripheralUUID) }
+        }
+    }
+
+    static var libre3KnownSensors: [Libre3KnownSensor] {
+        get { store.getArray(forKey: .libre3KnownSensors) ?? [] }
+        set {
+            if newValue.isEmpty { store.removeObject(forKey: DefaultsKey.libre3KnownSensors.rawValue) }
+            else { store.setArray(newValue, forKey: .libre3KnownSensors) }
         }
     }
 

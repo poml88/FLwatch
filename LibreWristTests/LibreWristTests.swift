@@ -3281,7 +3281,8 @@ final class LibreWristTests: XCTestCase {
                     discoveredID,
                     savedID: savedID,
                     advertisedLocalName: localName,
-                    bleAddress: "AA:BB:CC:DD:EE:FF"
+                    bleAddress: "AA:BB:CC:DD:EE:FF",
+                    excludedIDs: []
                 )
             )
         }
@@ -3290,7 +3291,8 @@ final class LibreWristTests: XCTestCase {
                 savedID,
                 savedID: savedID,
                 advertisedLocalName: nil,
-                bleAddress: ""
+                bleAddress: "",
+                excludedIDs: []
             )
         )
     }
@@ -3303,7 +3305,8 @@ final class LibreWristTests: XCTestCase {
                 discoveredID,
                 savedID: nil,
                 advertisedLocalName: "aabbccddeeff",
-                bleAddress: bleAddress
+                bleAddress: bleAddress,
+                excludedIDs: []
             )
         )
         for localName in ["Libre 3", "112233445566"] {
@@ -3312,7 +3315,8 @@ final class LibreWristTests: XCTestCase {
                     discoveredID,
                     savedID: nil,
                     advertisedLocalName: localName,
-                    bleAddress: bleAddress
+                    bleAddress: bleAddress,
+                    excludedIDs: []
                 )
             )
         }
@@ -3322,7 +3326,8 @@ final class LibreWristTests: XCTestCase {
                 discoveredID,
                 savedID: nil,
                 advertisedLocalName: "AABBCCDDEEFF",
-                bleAddress: ""
+                bleAddress: "",
+                excludedIDs: []
             )
         )
     }
@@ -3336,11 +3341,139 @@ final class LibreWristTests: XCTestCase {
                         discoveredID,
                         savedID: nil,
                         advertisedLocalName: localName,
-                        bleAddress: bleAddress
+                        bleAddress: bleAddress,
+                        excludedIDs: []
                     )
                 )
             }
         }
+    }
+
+    func testUnboundDiscoverySkipsUnnamedSensorsForOtherSerials() {
+        let otherID = UUID()
+        let unknownID = UUID()
+        for localName in [nil, ""] as [String?] {
+            XCTAssertFalse(Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                otherID, savedID: nil, advertisedLocalName: localName,
+                bleAddress: "AA:BB:CC:DD:EE:FF", excludedIDs: [otherID]
+            ))
+            XCTAssertTrue(Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                unknownID, savedID: nil, advertisedLocalName: localName,
+                bleAddress: "AA:BB:CC:DD:EE:FF", excludedIDs: [otherID]
+            ))
+        }
+        XCTAssertTrue(Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+            otherID, savedID: nil, advertisedLocalName: "aabbccddeeff",
+            bleAddress: "AA:BB:CC:DD:EE:FF", excludedIDs: [otherID]
+        ))
+        // A name without an NFC address cannot establish identity.
+        XCTAssertFalse(Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+            otherID, savedID: nil, advertisedLocalName: "AABBCCDDEEFF",
+            bleAddress: "", excludedIDs: [otherID]
+        ))
+    }
+
+    func testSavedDiscoveryBindingIgnoresExcludedList() {
+        let savedID = UUID()
+        let otherID = UUID()
+        XCTAssertTrue(Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+            savedID, savedID: savedID, advertisedLocalName: "wrong-name",
+            bleAddress: "AA:BB:CC:DD:EE:FF", excludedIDs: [savedID]
+        ))
+        XCTAssertFalse(Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+            otherID, savedID: savedID, advertisedLocalName: "AABBCCDDEEFF",
+            bleAddress: "AA:BB:CC:DD:EE:FF", excludedIDs: []
+        ))
+    }
+
+    func testScanDropsSavedFilterOnlyWhenCentralDoesNotKnowUUID() {
+        let savedID = UUID()
+        XCTAssertNil(Libre3PeripheralDiscoveryPolicy.scanSavedID(
+            savedID: nil, isKnownToCentral: false
+        ))
+        XCTAssertNil(Libre3PeripheralDiscoveryPolicy.scanSavedID(
+            savedID: nil, isKnownToCentral: true
+        ))
+        XCTAssertEqual(Libre3PeripheralDiscoveryPolicy.scanSavedID(
+            savedID: savedID, isKnownToCentral: true
+        ), savedID)
+        let fallbackID = Libre3PeripheralDiscoveryPolicy.scanSavedID(
+            savedID: savedID, isKnownToCentral: false
+        )
+        XCTAssertNil(fallbackID)
+        XCTAssertTrue(Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+            UUID(), savedID: fallbackID, advertisedLocalName: nil,
+            bleAddress: "AA:BB:CC:DD:EE:FF", excludedIDs: []
+        ))
+    }
+
+    func testKnownSensorsExcludeOtherSerialsAndAllowSwitchingBack() {
+        let firstID = UUID()
+        let secondID = UUID()
+        let entries = [
+            Libre3KnownSensor(serial: "A", peripheralUUID: firstID.uuidString),
+            Libre3KnownSensor(serial: "B", peripheralUUID: secondID.uuidString)
+        ]
+        for (pairedSerial, allowedID, excludedID) in [("A", firstID, secondID), ("B", secondID, firstID)] {
+            let excludedIDs = Libre3KnownSensorPolicy.excludedPeripheralIDs(
+                entries: entries, pairedSerial: pairedSerial
+            )
+            XCTAssertEqual(excludedIDs, [excludedID])
+            XCTAssertTrue(Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                allowedID, savedID: nil, advertisedLocalName: nil,
+                bleAddress: "", excludedIDs: excludedIDs
+            ))
+            XCTAssertFalse(Libre3PeripheralDiscoveryPolicy.acceptsDiscoveredIdentifier(
+                excludedID, savedID: nil, advertisedLocalName: nil,
+                bleAddress: "", excludedIDs: excludedIDs
+            ))
+        }
+        XCTAssertTrue(Libre3KnownSensorPolicy.excludedPeripheralIDs(
+            entries: [], pairedSerial: "A"
+        ).isEmpty)
+    }
+
+    func testKnownSensorAuthenticationUpdatesUUID() {
+        let old = Libre3KnownSensor(serial: "A", peripheralUUID: UUID().uuidString)
+        let other = Libre3KnownSensor(serial: "B", peripheralUUID: UUID().uuidString)
+        let newID = UUID().uuidString
+        let updated = Libre3KnownSensorPolicy.recordAuthenticated(
+            entries: [old, other], serial: "A", peripheralUUID: newID
+        )
+        XCTAssertEqual(updated, [other, Libre3KnownSensor(serial: "A", peripheralUUID: newID)])
+        XCTAssertEqual(Libre3KnownSensorPolicy.recordAuthenticated(
+            entries: updated, serial: "A", peripheralUUID: newID
+        ), updated)
+    }
+
+    func testKnownSensorAuthenticationKeepsUUIDAssociationUnique() {
+        let peripheralUUID = UUID().uuidString
+        let old = Libre3KnownSensor(serial: "A", peripheralUUID: peripheralUUID)
+        let updated = Libre3KnownSensorPolicy.recordAuthenticated(
+            entries: [old], serial: "B", peripheralUUID: peripheralUUID
+        )
+        XCTAssertEqual(updated, [Libre3KnownSensor(serial: "B", peripheralUUID: peripheralUUID)])
+        XCTAssertTrue(Libre3KnownSensorPolicy.excludedPeripheralIDs(
+            entries: updated, pairedSerial: "B"
+        ).isEmpty)
+    }
+
+    func testKnownSensorCapKeepsFiveMostRecentlyAuthenticatedEntries() {
+        let entries = (0..<5).map {
+            Libre3KnownSensor(serial: String($0), peripheralUUID: UUID().uuidString)
+        }
+        let sixthID = UUID().uuidString
+        let updated = Libre3KnownSensorPolicy.recordAuthenticated(
+            entries: entries, serial: "5", peripheralUUID: sixthID
+        )
+        XCTAssertEqual(updated.map(\.serial), ["1", "2", "3", "4", "5"])
+        let refreshed = Libre3KnownSensorPolicy.recordAuthenticated(
+            entries: entries, serial: "0", peripheralUUID: entries[0].peripheralUUID
+        )
+        let afterRefresh = Libre3KnownSensorPolicy.recordAuthenticated(
+            entries: refreshed, serial: "5", peripheralUUID: sixthID
+        )
+        XCTAssertEqual(afterRefresh.map(\.serial), ["2", "3", "4", "0", "5"])
     }
 
     func testPairingIdentityPayloadRejectsUnpinnedJSON() {

@@ -649,8 +649,11 @@ enum Libre3StateStore {
         // A fresh NFC pair establishes new authorization material. Force the
         // next BLE connect through the full handshake, not a stale cached path.
         try? Libre3PINStore.deleteReconnectKey()
-        // Every NFC re-pair must rediscover and authenticate the BLE peripheral.
-        SharedData.libre3PeripheralUUID = ""
+        // Phase 6 established this device's binding. Same-sensor NFC pairing
+        // keeps it while still replacing authorization material above.
+        if SharedData.libre3Serial != serial {
+            SharedData.libre3PeripheralUUID = ""
+        }
         SharedData.libre3AppIdentityLabel = ""
         SharedData.libre3Serial = serial
         SharedData.libre3BleAddress = state.bleAddress ?? ""
@@ -735,7 +738,11 @@ enum Libre3StateStore {
         }
 
         let sensorChanged = SharedData.libre3Serial != state.serial
-        SharedData.libre3PeripheralUUID = ""
+        // Phone credentials may change without changing the watch's local
+        // peripheral identity or its reconnect-gate timeout history.
+        if sensorChanged {
+            SharedData.libre3PeripheralUUID = ""
+        }
         SharedData.libre3Serial = state.serial
         SharedData.libre3BleAddress = state.bleAddress
         SharedData.libre3ReceiverIDHex = state.receiverIDHex
@@ -757,6 +764,23 @@ enum Libre3StateStore {
             SharedData.libre3LastGlucoseMgDL = 0
             SharedData.libre3LastGlucoseAt = nil
         }
+    }
+
+    static func recordAuthenticatedPeripheral(_ peripheralID: UUID) {
+        let entries = SharedData.libre3KnownSensors
+        let updated = Libre3KnownSensorPolicy.recordAuthenticated(
+            entries: entries,
+            serial: SharedData.libre3Serial,
+            peripheralUUID: peripheralID.uuidString
+        )
+        if updated != entries { SharedData.libre3KnownSensors = updated }
+    }
+
+    static func excludedPeripheralIDs() -> Set<UUID> {
+        Libre3KnownSensorPolicy.excludedPeripheralIDs(
+            entries: SharedData.libre3KnownSensors,
+            pairedSerial: SharedData.libre3Serial
+        )
     }
 
     private static func restoreKeychainValue(
