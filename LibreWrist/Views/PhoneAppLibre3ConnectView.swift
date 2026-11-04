@@ -16,7 +16,7 @@ import UIKit
 struct PhoneAppLibre3ConnectView: View {
     @StateObject private var coordinator = Libre3PairingCoordinator()
     @ObservedObject private var directManager = Libre3DirectManager.shared
-    @State private var selectedMode: Libre3Mode = .parallelJoin
+    @State private var selectedMode: Libre3Mode = .takeover
     @State private var showFreshActivationConfirm = false
     @State private var showReceiverIDSignOutConfirm = false
     @AppStorage(DefaultsKey.developerModeEnabled.rawValue) private var developerModeEnabled = false
@@ -145,6 +145,9 @@ struct PhoneAppLibre3ConnectView: View {
         }
         .navigationTitle("Libre 3 (Bluetooth)")
         .onAppear {
+            if !developerModeEnabled, selectedMode == .parallelJoin {
+                selectedMode = .takeover
+            }
             // Password is a keychain secret, never the app group — load it into
             // the editable field when the screen opens.
             if libreViewPassword.isEmpty, let stored = try? LibreViewPasswordKeychain.read() {
@@ -159,6 +162,13 @@ struct PhoneAppLibre3ConnectView: View {
             receiverIDOverrideInputIsInvalid = false
             reloadDiagnosticsLog()
             now = Date()
+        }
+        .onChange(of: developerModeEnabled) {
+            // Keep the draft selection valid when Settings hides Parallel;
+            // the stored mode of an existing pairing stays unchanged.
+            if !developerModeEnabled, selectedMode == .parallelJoin {
+                selectedMode = .takeover
+            }
         }
         .task {
             // Storefront lookup is async and only runs until the user has an
@@ -203,7 +213,10 @@ struct PhoneAppLibre3ConnectView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This starts the sensor’s wear period—14 days for Libre 3 or 15 days for Libre 3 Plus—and can’t be undone. Most users should activate the sensor in the FreeStyle Libre 3 app instead, then pair it here using Parallel mode.")
+            Text(
+                "This starts the sensor’s wear period—14 days for Libre 3 or 15 days for Libre 3 Plus—and can’t be undone. Most users should activate the sensor in the Libre 3 app instead, then pair it here using Take over.",
+                comment: "Warning before fresh Libre 3 sensor activation, which irreversibly starts the wear period. Recommends activation in the user's Abbott app followed by the Take over pairing mode in FLwatch. 'Libre 3 app' means either FreeStyle Libre 3 or Libre by Abbott; 'Take over' is the pairing mode label on this screen."
+            )
         }
         .confirmationDialog(
             Text(
@@ -342,15 +355,17 @@ struct PhoneAppLibre3ConnectView: View {
         
         Section {
             
-            Text("Parallel mode is recommended. It keeps the sensor’s existing Libre 3 credentials valid, allowing you to switch between FLwatch and the FreeStyle Libre 3 app without scanning the sensor again.\n\nOnly one app should access the sensor at a time. While using FLwatch, force-close the Libre 3 app and turn off Bluetooth access for it in iOS Settings. Otherwise, it may take the sensor connection from FLwatch. Switching apps can take 2–3 minutes.")
+            Text(
+                "Take over is recommended. FLwatch becomes the sensor’s receiver, and the Libre 3 app loses its connection until you scan the sensor with that app again.\n\nOnly one app can use the sensor at a time. While using FLwatch, force-close the Libre 3 app and turn off Bluetooth access for it in iOS Settings. Each switch between the apps takes an NFC scan.",
+                comment: "Libre 3 Bluetooth setup guidance recommending the Take over pairing mode. Explains that switching between FLwatch and the user's Abbott app requires an NFC scan and that the other app's Bluetooth access should be disabled. 'Libre 3 app' is defined below as either FreeStyle Libre 3 or Libre by Abbott; 'Take over' is the pairing mode label."
+            )
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
             // Defines the shorthand the rest of the screen uses, so those texts
             // can stay app-neutral without naming one app and misleading users
-            // of the other. Kept as its own string so the paragraph above keeps
-            // its existing translations.
+            // of the other.
             Text(
                 "“Libre 3 app” here means whichever Abbott app you use: FreeStyle Libre 3 or Libre by Abbott.",
                 comment: "Defines a shorthand the rest of this screen uses, so the other texts can say 'the Libre 3 app' without naming one of Abbott's two apps and misleading users of the other. Keep both product names untranslated."
@@ -626,8 +641,15 @@ struct PhoneAppLibre3ConnectView: View {
     private var pairingModeSection: some View {
         Section {
             Picker("Pairing mode", selection: $selectedMode) {
-                Text("Parallel").tag(Libre3Mode.parallelJoin)
                 Text("Take over").tag(Libre3Mode.takeover)
+                // Parallel is developer-only: since the same security update to
+                // Libre by Abbott (1.4.2) and FreeStyle Libre 3, the vendor app
+                // stops reconnecting after FLwatch used the sensor and asks for an
+                // NFC scan, which rotates the PIN and ends FLwatch's pairing.
+                // See `Libre3Mode.parallelJoin`.
+                if developerModeEnabled {
+                    Text("Parallel").tag(Libre3Mode.parallelJoin)
+                }
                 Text("Fresh").tag(Libre3Mode.activateFresh)
             }
             .pickerStyle(.segmented)
@@ -649,7 +671,7 @@ struct PhoneAppLibre3ConnectView: View {
         } header: {
             stepHeader(1, String(
                 localized: "Pairing mode",
-                comment: "Title of the first Libre 3 setup step: choosing Parallel, Take over or Fresh."
+                comment: "Title of the first Libre 3 setup step: choosing Take over or Fresh, with Parallel available only in developer mode."
             ))
         }
     }
@@ -1529,6 +1551,9 @@ struct PhoneAppLibre3ConnectView: View {
                 comment: "Explains the Take over pairing mode, which claims the sensor for FLwatch and cuts off the Libre 3 app until the user hands it back. “Start New Sensor” is a button in the Libre 3 app — use that app's own wording for it in this language."
             )
         case .parallelJoin:
+            // Developer-only (see `pairingModeSection`). The text still describes
+            // the vendor apps before Abbott's security update, when they reconnected
+            // without a scan. Left as is on purpose to keep its existing translations.
             return String(
                 localized: "Connect FLwatch without replacing the sensor’s existing Libre 3 credentials. To return to the Libre 3 app, force-close FLwatch, enable Bluetooth access for Libre 3 in iOS Settings, and open the Libre 3 app. It will reconnect without another NFC scan and resume uploading data to LibreView.",
                 comment: "Explains the Parallel pairing mode, which lets FLwatch and the Libre 3 app take turns on the same sensor without either losing access."

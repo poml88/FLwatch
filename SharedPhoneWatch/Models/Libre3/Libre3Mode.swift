@@ -17,15 +17,18 @@
 import Foundation
 
 enum Libre3Mode: String, Codable, CaseIterable, Identifiable, Sendable {
-    /// Take over an already-active sensor (NFC `0xA8`, `switchReceiver`).
+    /// Take over an already-active sensor (NFC `0xA8`, `switchReceiver`); default pairing mode.
     /// Rotates the BLE PIN → FLwatch becomes the sole receiver; the vendor app
     /// loses the sensor and its LibreView upload stops.
     case takeover
 
-    /// Non-destructive parallel join of an already-active sensor (NFC `0xA0`,
-    /// reads the *existing* PIN without rotating it), so the vendor app keeps
-    /// its credentials and can reconnect when FLwatch releases the sensor.
-    /// This is the recommended pairing mode.
+    /// Join an already-active sensor (NFC `0xA0`, reads the existing PIN without
+    /// rotating it). Kept in developer mode for testing: since the same security
+    /// update to both Abbott apps (Libre by Abbott 1.4.2, FreeStyle Libre 3 alike),
+    /// the vendor app gives up reconnecting (after about 10 minutes, measured on
+    /// Libre by Abbott) and asks for an NFC scan, which rotates the PIN and ends
+    /// FLwatch's pairing.
+    /// Keep this case and raw value: existing pairings persist it and the watch decodes it.
     case parallelJoin
 
     /// Activate a brand-new sensor (NFC `0xA0` on state `0x01`). **Irreversible**

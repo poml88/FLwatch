@@ -23695,7 +23695,7 @@
       }
     },
     "Pairing mode" : {
-      "comment" : "Title of the first Libre 3 setup step: choosing Parallel, Take over or Fresh.",
+      "comment" : "Title of the first Libre 3 setup step: choosing Take over or Fresh, with Parallel available only in developer mode.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -23814,6 +23814,7 @@
       }
     },
     "Parallel mode is recommended. It keeps the sensor’s existing Libre 3 credentials valid, allowing you to switch between FLwatch and the FreeStyle Libre 3 app without scanning the sensor again.\n\nOnly one app should access the sensor at a time. While using FLwatch, force-close the Libre 3 app and turn off Bluetooth access for it in iOS Settings. Otherwise, it may take the sensor connection from FLwatch. Switching apps can take 2–3 minutes." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -32162,6 +32163,65 @@
         }
       }
     },
+    "Take over is recommended. FLwatch becomes the sensor’s receiver, and the Libre 3 app loses its connection until you scan the sensor with that app again.\n\nOnly one app can use the sensor at a time. While using FLwatch, force-close the Libre 3 app and turn off Bluetooth access for it in iOS Settings. Each switch between the apps takes an NFC scan." : {
+      "comment" : "Libre 3 Bluetooth setup guidance recommending the Take over pairing mode. Explains that switching between FLwatch and the user's Abbott app requires an NFC scan and that the other app's Bluetooth access should be disabled. 'Libre 3 app' is defined below as either FreeStyle Libre 3 or Libre by Abbott; 'Take over' is the pairing mode label.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Übernehmen“ wird empfohlen. FLwatch wird zum Empfänger des Sensors. Die Libre 3-App verliert ihre Verbindung, bis du den Sensor erneut mit dieser App scannst.\n\nEs kann immer nur eine App den Sensor nutzen. Beende die Libre 3-App vollständig, während du FLwatch verwendest, und deaktiviere in den iOS-Einstellungen ihren Bluetooth-Zugriff. Bei jedem Wechsel zwischen den Apps ist ein NFC-Scan erforderlich."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se recomienda «Tomar el control». FLwatch se convierte en el receptor del sensor y la app Libre 3 pierde la conexión hasta que vuelvas a escanear el sensor con ella.\n\nSolo una app puede usar el sensor a la vez. Mientras uses FLwatch, fuerza el cierre de la app Libre 3 y desactiva su acceso a Bluetooth en Ajustes de iOS. Cada cambio entre las apps requiere un escaneo NFC."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le mode « Reprendre » est recommandé. FLwatch devient le récepteur du capteur et l’app Libre 3 perd sa connexion jusqu’à ce que vous scanniez à nouveau le capteur avec cette app.\n\nUne seule app peut utiliser le capteur à la fois. Lorsque vous utilisez FLwatch, forcez la fermeture de l’app Libre 3 et désactivez son accès au Bluetooth dans les réglages iOS. Chaque passage d’une app à l’autre nécessite un scan NFC."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si consiglia «Acquisisci». FLwatch diventa il ricevitore del sensore e l’app Libre 3 perde la connessione finché non scansioni di nuovo il sensore con quell’app.\n\nSolo un’app alla volta può usare il sensore. Mentre usi FLwatch, forza la chiusura dell’app Libre 3 e disattiva il suo accesso al Bluetooth nelle Impostazioni di iOS. Ogni passaggio da un’app all’altra richiede una scansione NFC."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「引き継ぐ」を推奨します。FLwatchがセンサーの受信アプリとなり、Libre 3アプリは、そのアプリでセンサーを再スキャンするまで接続できなくなります。\n\nセンサーを使用できるのは一度に1つのアプリだけです。FLwatchの使用中は、Libre 3アプリを強制終了し、iOSの「設定」でそのアプリのBluetoothアクセスをオフにしてください。アプリを切り替えるたびにNFCスキャンが必要です。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘Overnemen’ wordt aanbevolen. FLwatch wordt de ontvanger van de sensor en de Libre 3-app verliest de verbinding totdat je de sensor opnieuw met die app scant.\n\nSlechts één app tegelijk kan de sensor gebruiken. Sluit de Libre 3-app geforceerd af terwijl je FLwatch gebruikt en schakel de Bluetooth-toegang voor die app uit in de iOS-instellingen. Elke wissel tussen de apps vereist een NFC-scan."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zalecana jest opcja „Przejmij”. FLwatch staje się odbiornikiem sensora, a aplikacja Libre 3 traci połączenie do czasu ponownego zeskanowania sensora za jej pomocą.\n\nZ sensora może korzystać tylko jedna aplikacja naraz. Podczas korzystania z FLwatch wymuś zamknięcie aplikacji Libre 3 i wyłącz jej dostęp do Bluetooth w Ustawieniach iOS. Każde przełączenie między aplikacjami wymaga skanowania NFC."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рекомендуется режим «Перехватить». FLwatch становится приёмником датчика, а приложение Libre 3 теряет соединение, пока вы снова не отсканируете датчик в этом приложении.\n\nДатчик может использовать только одно приложение одновременно. При использовании FLwatch принудительно закройте приложение Libre 3 и отключите для него доступ к Bluetooth в настройках iOS. Каждый переход между приложениями требует сканирования NFC."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建议使用“接管”。FLwatch将成为传感器的接收端，Libre 3 App会失去连接，直到你再次使用该App扫描传感器。\n\n同一时间只能有一个App使用传感器。使用FLwatch时，请强制关闭Libre 3 App，并在iOS“设置”中关闭其蓝牙访问权限。每次切换App都需要进行NFC扫描。"
+          }
+        }
+      }
+    },
     "Take Sensor Back" : {
       "comment" : "Button that starts moving the Libre 3 sensor connection from Apple Watch back to iPhone.\nConfirms moving the Libre 3 sensor connection from Apple Watch back to iPhone without ending the workout.\nTitle of the iPhone confirmation shown before reclaiming the Libre 3 sensor from an Apple Watch workout.",
       "localizations" : {
@@ -34404,8 +34464,68 @@
         }
       }
     },
+    "This sensor is already active. Use Take over instead of fresh activation." : {
+      "comment" : "Pairing error when fresh activation is attempted on an already-active Libre 3 sensor. Directs the user to the Take over pairing mode; keep that name consistent with the picker label.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Sensor ist bereits aktiv. Verwende statt der Erstaktivierung den Modus „Übernehmen“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este sensor ya está activo. Usa Tomar el control en lugar de la activación inicial."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce capteur est déjà actif. Utilisez Reprendre au lieu de la première activation."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo sensore è già attivo. Usa Acquisisci invece della prima attivazione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このセンサーはすでに有効です。新品の有効化ではなく「引き継ぐ」を使用してください。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze sensor is al actief. Gebruik Overnemen in plaats van de eerste activering."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten sensor jest już aktywny. Zamiast pierwszej aktywacji użyj opcji Przejmij."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот датчик уже активен. Вместо первичной активации используйте режим «Перехватить»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此传感器已激活。请使用“接管”，而不是首次激活。"
+          }
+        }
+      }
+    },
     "This sensor is already active. Use Take over or Parallel instead of fresh activation." : {
       "comment" : "Error message when trying to activate a fresh sensor when the sensor is already active.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "de" : {
@@ -34645,6 +34765,7 @@
     },
     "This starts the sensor’s wear period—14 days for Libre 3 or 15 days for Libre 3 Plus—and can’t be undone. Most users should activate the sensor in the FreeStyle Libre 3 app instead, then pair it here using Parallel mode." : {
       "comment" : "A message displayed in a confirmation dialog.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "de" : {
@@ -34699,6 +34820,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "这会开始传感器的佩戴周期（Libre 3为14天，Libre 3 Plus为15天），且无法撤销。大多数用户应改为在FreeStyle Libre 3 App中激活传感器，然后在此处使用并行模式配对。"
+          }
+        }
+      }
+    },
+    "This starts the sensor’s wear period—14 days for Libre 3 or 15 days for Libre 3 Plus—and can’t be undone. Most users should activate the sensor in the Libre 3 app instead, then pair it here using Take over." : {
+      "comment" : "Warning before fresh Libre 3 sensor activation, which irreversibly starts the wear period. Recommends activation in the user's Abbott app followed by the Take over pairing mode in FLwatch. 'Libre 3 app' means either FreeStyle Libre 3 or Libre by Abbott; 'Take over' is the pairing mode label on this screen.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dadurch beginnt die Tragedauer des Sensors – 14 Tage beim Libre 3 oder 15 Tage beim Libre 3 Plus – und dies kann nicht rückgängig gemacht werden. Die meisten Benutzer sollten den Sensor stattdessen in der Libre 3-App aktivieren und ihn anschließend hier mit „Übernehmen“ koppeln."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto inicia el periodo de uso del sensor —14 días para Libre 3 o 15 días para Libre 3 Plus— y no se puede deshacer. La mayoría de los usuarios deberían activar el sensor en la app Libre 3 y después enlazarlo aquí mediante «Tomar el control»."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cela démarre la période de port du capteur — 14 jours pour Libre 3 ou 15 jours pour Libre 3 Plus — et ne peut pas être annulé. La plupart des utilisateurs devraient plutôt activer le capteur dans l’app Libre 3, puis l’associer ici en mode « Reprendre »."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa operazione avvia il periodo di utilizzo del sensore, 14 giorni per Libre 3 o 15 giorni per Libre 3 Plus, e non può essere annullata. La maggior parte degli utenti dovrebbe invece attivare il sensore nell’app Libre 3 e poi abbinarlo qui usando «Acquisisci»."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "センサーの装着期間（Libre 3は14日間、Libre 3 Plusは15日間）が開始され、元に戻すことはできません。通常はLibre 3アプリでセンサーを有効化し、その後ここで「引き継ぐ」を使ってペアリングすることを推奨します。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiermee begint de draagperiode van de sensor — 14 dagen voor Libre 3 of 15 dagen voor Libre 3 Plus — en dit kan niet ongedaan worden gemaakt. De meeste gebruikers kunnen de sensor beter in de Libre 3-app activeren en hem daarna hier koppelen met ‘Overnemen’."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rozpocznie to okres użytkowania sensora — 14 dni w przypadku Libre 3 lub 15 dni w przypadku Libre 3 Plus — i nie można tego cofnąć. Większość użytkowników powinna zamiast tego aktywować sensor w aplikacji Libre 3, a następnie sparować go tutaj za pomocą opcji „Przejmij”."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Это действие начинает срок ношения датчика — 14 дней для Libre 3 или 15 дней для Libre 3 Plus — и не может быть отменено. Большинству пользователей следует активировать датчик в приложении Libre 3, а затем выполнить здесь сопряжение в режиме «Перехватить»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这会开始传感器的佩戴周期（Libre 3为14天，Libre 3 Plus为15天），且无法撤销。大多数用户应改为在Libre 3 App中激活传感器，然后在此处使用“接管”配对。"
           }
         }
       }

@@ -417,7 +417,10 @@ final class Libre3PairingCoordinator: ObservableObject {
                 case .takeover, .parallelJoin:
                     return String(localized: "This sensor isn't active yet. Start it in the FreeStyle Libre 3 app first, then pair it here.")
                 case .activateFresh:
-                    return String(localized: "This sensor is already active. Use Take over or Parallel instead of fresh activation.")
+                    return String(
+                        localized: "This sensor is already active. Use Take over instead of fresh activation.",
+                        comment: "Pairing error when fresh activation is attempted on an already-active Libre 3 sensor. Directs the user to the Take over pairing mode; keep that name consistent with the picker label."
+                    )
                 }
             case .readerUnavailable:
                 return String(localized: "NFC scanning isn't available on this iPhone.")
