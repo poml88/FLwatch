@@ -3498,6 +3498,142 @@ final class LibreWristTests: XCTestCase {
         XCTAssertNil(tracker.candidateID)
     }
 
+    // MARK: - Libre 3 sensor attention
+
+    private func sensorAttentionPatchStatus(
+        errorData: Int16,
+        patchState: Int8,
+        eventLifeCount: Int16 = 8083,
+        index: Int8 = 0,
+        currentLifeCount: Int16 = 8084
+    ) throws -> PatchStatus {
+        let error = UInt16(bitPattern: errorData)
+        let event = UInt16(bitPattern: eventLifeCount)
+        let current = UInt16(bitPattern: currentLifeCount)
+        // By default the event was logged at minute 8083; currentLifeCount
+        // advances while that same entry repeats in subsequent patch statuses.
+        return try PatchStatus(plaintext: Data([
+            UInt8(truncatingIfNeeded: event), UInt8(truncatingIfNeeded: event >> 8),
+            UInt8(truncatingIfNeeded: error), UInt8(truncatingIfNeeded: error >> 8),
+            0, 0, UInt8(bitPattern: index), UInt8(bitPattern: patchState),
+            UInt8(truncatingIfNeeded: current), UInt8(truncatingIfNeeded: current >> 8),
+            0, 0
+        ]))
+    }
+
+    func testSensorAttentionUsesLivePatchStateForHistoricalErrors() throws {
+        let cases: [(error: Int16, state: Int8, expected: Libre3SensorAttention)] = [
+            (8, 4, .checkSensor),
+            (8, 6, .replaceSensor),
+            (5, 4, .checkSensor),
+            (6, 4, .checkSensor),
+            (0, 4, .none),
+            (0, 5, .sensorEnded),
+            (0, 6, .sensorEnded),
+            (0, 7, .replaceSensor),
+            (0, 8, .replaceSensor),
+            (99, 4, .checkSensor)
+        ]
+        for entry in cases {
+            let status = try sensorAttentionPatchStatus(errorData: entry.error, patchState: entry.state)
+            XCTAssertEqual(
+                Libre3SensorAttentionPolicy.attention(for: status), entry.expected,
+                "errorData=\(entry.error) patchState=\(entry.state)"
+            )
+        }
+    }
+
+    func testSensorAttentionPreservesNonActivePackageMapping() throws {
+        let states: [Int8] = [3, 5, 6, 7, 8]
+        let errors: [Int16] = [0, 3, 5, 6, 7, 8, 99]
+        for state in states {
+            for error in errors {
+                let status = try sensorAttentionPatchStatus(errorData: error, patchState: state)
+                XCTAssertEqual(
+                    Libre3SensorAttentionPolicy.attention(for: status), status.sensorAttention,
+                    "errorData=\(error) patchState=\(state)"
+                )
+                XCTAssertNil(Libre3SensorAttentionPolicy.OverrideEvidence(status: status))
+            }
+        }
+    }
+
+    func testSensorAttentionOverrideEvidenceIgnoresAdvancingClockButRetainsCodeChanges() throws {
+        let first = try sensorAttentionPatchStatus(errorData: 8, patchState: 4)
+        let repeated = try sensorAttentionPatchStatus(errorData: 8, patchState: 4, currentLifeCount: 8085)
+        let changed = try sensorAttentionPatchStatus(errorData: 99, patchState: 4)
+        let evidence = try XCTUnwrap(Libre3SensorAttentionPolicy.OverrideEvidence(status: first))
+        let repeatedEvidence = try XCTUnwrap(Libre3SensorAttentionPolicy.OverrideEvidence(status: repeated))
+        let changedEvidence = try XCTUnwrap(Libre3SensorAttentionPolicy.OverrideEvidence(status: changed))
+
+        XCTAssertEqual(evidence, repeatedEvidence)
+        XCTAssertNotEqual(evidence, changedEvidence)
+        XCTAssertEqual(evidence.reportedAttention, .replaceSensor)
+        XCTAssertEqual(evidence.errorData, 8)
+        XCTAssertEqual(evidence.patchState, 4)
+        XCTAssertEqual(evidence.eventLifeCount, 8083)
+        XCTAssertEqual(evidence.index, 0)
+        XCTAssertEqual(changedEvidence.reportedAttention, .unknown(99))
+        XCTAssertEqual(changedEvidence.errorData, 99)
+        // Both raw codes have the same effective attention, so its change gate
+        // must not be used to deduplicate the diagnostic evidence.
+        XCTAssertEqual(
+            Libre3SensorAttentionPolicy.attention(for: first),
+            Libre3SensorAttentionPolicy.attention(for: changed)
+        )
+        let healthy = try sensorAttentionPatchStatus(errorData: 0, patchState: 4)
+        XCTAssertNil(Libre3SensorAttentionPolicy.OverrideEvidence(status: healthy))
+    }
+
+    func testSensorAttentionOverrideEvidenceDistinguishesEventsWithTheSameCode() throws {
+        let first = try sensorAttentionPatchStatus(errorData: 8, patchState: 4)
+        let evidence = try XCTUnwrap(Libre3SensorAttentionPolicy.OverrideEvidence(status: first))
+        // Either part of the event identity can change independently, even
+        // though the error code and effective attention stay the same.
+        let events: [(minute: Int16, index: Int8)] = [(8084, 0), (8083, 1)]
+        for event in events {
+            let status = try sensorAttentionPatchStatus(
+                errorData: 8, patchState: 4, eventLifeCount: event.minute, index: event.index
+            )
+            let changedEvidence = try XCTUnwrap(Libre3SensorAttentionPolicy.OverrideEvidence(status: status))
+            XCTAssertNotEqual(evidence, changedEvidence)
+            XCTAssertEqual(evidence.reportedAttention, changedEvidence.reportedAttention)
+            XCTAssertEqual(
+                Libre3SensorAttentionPolicy.attention(for: first),
+                Libre3SensorAttentionPolicy.attention(for: status)
+            )
+        }
+    }
+
+    func testSensorAttentionReconcilesPersistedReplacementFlagAfterLaunch() {
+        // The manager starts with `.none` but loads the old replacement flag.
+        XCTAssertTrue(Libre3SensorAttentionPolicy.shouldUpdate(
+            attention: .none, previousAttention: .none, needsReplacement: true
+        ))
+        XCTAssertTrue(Libre3SensorAttentionPolicy.shouldUpdate(
+            attention: .checkSensor, previousAttention: .none, needsReplacement: true
+        ))
+        XCTAssertTrue(Libre3SensorAttentionPolicy.shouldUpdate(
+            attention: .none, previousAttention: .replaceSensor, needsReplacement: true
+        ))
+        // Repeated statuses stop triggering side effects once reconciled.
+        XCTAssertFalse(Libre3SensorAttentionPolicy.shouldUpdate(
+            attention: .none, previousAttention: .none, needsReplacement: false
+        ))
+        XCTAssertFalse(Libre3SensorAttentionPolicy.shouldUpdate(
+            attention: .checkSensor, previousAttention: .checkSensor, needsReplacement: false
+        ))
+        let terminalStates: [Libre3SensorAttention] = [.replaceSensor, .sensorEnded]
+        for terminal in terminalStates {
+            XCTAssertTrue(Libre3SensorAttentionPolicy.shouldUpdate(
+                attention: terminal, previousAttention: .none, needsReplacement: true
+            ))
+            XCTAssertFalse(Libre3SensorAttentionPolicy.shouldUpdate(
+                attention: terminal, previousAttention: terminal, needsReplacement: true
+            ))
+        }
+    }
+
     // MARK: - Libre 3 glucose silence recovery
 
     func testGlucoseSilenceRearmsAfterThreshold() throws {

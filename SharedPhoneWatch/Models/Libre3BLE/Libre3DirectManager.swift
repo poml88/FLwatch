@@ -1586,6 +1586,46 @@ struct Libre3ReconnectFailureTracker: Equatable {
     }
 }
 
+struct Libre3SensorAttentionPolicy {
+    /// Keep the raw evidence separate from the effective attention: different
+    /// historical errors can all become `.checkSensor` while the sensor is active.
+    /// Event minute/index distinguish separate events with the same code. The
+    /// advancing currentLifeCount is logged separately to avoid minute-by-minute duplicates.
+    struct OverrideEvidence: Equatable {
+        let reportedAttention: Libre3SensorAttention
+        let errorData: Int16
+        let patchState: Int8
+        let eventLifeCount: Int16
+        let index: Int8
+
+        init?(status: PatchStatus) {
+            guard status.isPatchStateActive, status.hasErrorData else { return nil }
+            reportedAttention = status.sensorAttention
+            errorData = status.errorData
+            patchState = status.patchState
+            eventLifeCount = status.lifeCount
+            index = status.index
+        }
+    }
+
+    static func attention(for status: PatchStatus) -> Libre3SensorAttention {
+        // Bytes 0–6 repeat the latest event-log entry, which can be old history.
+        // An error there must not end a sensor whose live patch state is active.
+        OverrideEvidence(status: status) != nil ? .checkSensor : status.sensorAttention
+    }
+
+    static func shouldUpdate(
+        attention: Libre3SensorAttention,
+        previousAttention: Libre3SensorAttention,
+        needsReplacement: Bool
+    ) -> Bool {
+        let terminal = attention == .replaceSensor || attention == .sensorEnded
+        // After launch, `.none` can match the initial attention while a stale
+        // replacement flag is still persisted. Reconcile that mismatch as well.
+        return attention != previousAttention || needsReplacement != terminal
+    }
+}
+
 struct Libre3GlucoseSilenceRecoveryPolicy {
     static let quietThreshold: TimeInterval = 150
     static let minimumRetryInterval: TimeInterval = 150
@@ -2294,6 +2334,7 @@ final class Libre3DirectManager: ObservableObject {
     private var backfillOutcomeTask: Task<Void, Never>?
     private var readingStatusEpisodeID = 0
     private var lastSensorAttention: Libre3SensorAttention = .none
+    private var lastSensorAttentionOverride: Libre3SensorAttentionPolicy.OverrideEvidence?
     /// Prevents reconnects for the same sensor anchor from replacing the warm-up reminder.
     private var lastScheduledWarmupAnchor: Date?
     /// Prevents reconnects for the same sensor anchor from repeatedly replacing
@@ -2970,6 +3011,7 @@ final class Libre3DirectManager: ObservableObject {
         sensorNeedsReplacement = false
         sensorAttention = .none
         lastSensorAttention = .none
+        lastSensorAttentionOverride = nil
         // A replacement sensor restarts near lifeCount 0, so the outgoing sensor's
         // comparison state must not carry over (a reconnect deliberately keeps it —
         // see `updateStuckGlucoseEvidence`; a new sensor is a different question).
@@ -5584,12 +5626,27 @@ final class Libre3DirectManager: ObservableObject {
             captureLivePacketIfEnabled(packet, receivedAt: receivedAt)
             let update = state.record(packet)
             dataPlaneState = state
+            // Do not clear a persisted replacement flag from the `.none`
+            // fallback before the sensor has supplied an actual patch status.
+            if let status = state.latestPatchStatus {
+                let evidence = Libre3SensorAttentionPolicy.OverrideEvidence(status: status)
+                if evidence != lastSensorAttentionOverride {
+                    lastSensorAttentionOverride = evidence
+                    if let evidence {
+                        Logger.libre3.notice("Libre3 BLE attention active-error override reported=\(String(describing: evidence.reportedAttention), privacy: .public) errorData=\(evidence.errorData, privacy: .public) patchState=\(evidence.patchState, privacy: .public) eventLifeCount=\(evidence.eventLifeCount, privacy: .public) index=\(evidence.index, privacy: .public) currentLifeCount=\(status.currentLifeCount, privacy: .public) effective=checkSensor")
+                        Libre3DiagnosticsLog.record(
+                            "attention-active-error-override reported=\(evidence.reportedAttention) errorData=\(evidence.errorData) patchState=\(evidence.patchState) eventLifeCount=\(evidence.eventLifeCount) index=\(evidence.index) currentLifeCount=\(status.currentLifeCount) effective=checkSensor"
+                        )
+                    }
+                }
+                updateSensorAttention(Libre3SensorAttentionPolicy.attention(for: status))
+            }
             // Patch status carries the authoritative lifecycle; until the first
             // one arrives, fall back to one derived from the sensor-start anchor
             // so warm-up gating works from the very first realtime reading.
+            // Apply attention first so signal-loss arming sees any cleared flag.
             let lifecycle = state.latestLifecycle ?? fallbackLifecycle()
             if let lifecycle { applyLifecycle(lifecycle) }
-            updateSensorAttention(state.latestSensorAttention)
             switch update {
             case .realtimeGlucose(let reading, let recordedAssessment):
                 lastDecodedLifeCount = reading.lifeCount
@@ -5930,12 +5987,15 @@ final class Libre3DirectManager: ObservableObject {
     }
 #endif
 
-    /// Change-gated patch-status attention classifier. Only terminal attention
-    /// (`replaceSensor` / `sensorEnded`) persists the replacement flag; unknown
-    /// and soft states are logged or surfaced conservatively without affecting
-    /// reconnect, credentials, watch snapshots, or notification delivery.
+    /// Change-gated attention side effects, also reconciling a stale persisted
+    /// replacement flag. Terminal states persist that flag and post alerts;
+    /// soft/cleared states retract alerts without suppressing signal-loss recovery.
     private func updateSensorAttention(_ attention: Libre3SensorAttention) {
-        guard attention != lastSensorAttention else { return }
+        guard Libre3SensorAttentionPolicy.shouldUpdate(
+            attention: attention,
+            previousAttention: lastSensorAttention,
+            needsReplacement: sensorNeedsReplacement
+        ) else { return }
         lastSensorAttention = attention
         sensorAttention = attention
 
