@@ -566,8 +566,8 @@ struct PhoneAppSettingsView: View {
                 Text("Appearance", comment: "Section heading for Live Activity layout and age-counter preferences.")
             } footer: {
                 Text(
-                    "The layout applies to the Lock Screen and Apple Watch Smart Stack. The Dynamic Island keeps its layout. The timer setting applies to all Live Activity presentations. When the timer is hidden, strikethrough marks outdated glucose readings. Widget timers stay visible.",
-                    comment: "Explains which Live Activity surfaces use the layout and timer preferences, how stale readings are marked, and that ordinary widgets keep their timers."
+                    "The layout applies to the Lock Screen, Apple Watch Smart Stack, and CarPlay. The Dynamic Island keeps its layout. The timer setting applies to all Live Activity presentations. When the timer is hidden, strikethrough marks outdated glucose readings. Widget timers stay visible.",
+                    comment: "Explains that the Live Activity layout applies to the Lock Screen, Apple Watch Smart Stack, and CarPlay, which share the layout preference; also explains the timer preference and stale-reading indication. Ordinary widget timers stay visible."
                 )
             }
 

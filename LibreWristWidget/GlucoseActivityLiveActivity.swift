@@ -90,6 +90,8 @@ struct FLWatchLiveActivityWidget: Widget {
                             .bold(!isStaleGlucose)
                             .foregroundStyle(context.state.latestMeasurementColor.color)
                             .lineLimit(1)
+                            // Wider digits may need a small reduction beside IOB in this region.
+                            .minimumScaleFactor(0.85)
                             .padding(.leading, 4)
                         
                         if let currentIOBText = context.state.currentIOBText {
@@ -97,6 +99,7 @@ struct FLWatchLiveActivityWidget: Widget {
                             //                                .font(.footnote)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
+                                .minimumScaleFactor(0.85)
                         }
                     }
                     .dynamicTypeSize(.large)
@@ -500,24 +503,19 @@ private struct LargeNumbersActivityView: View {
     }
 
     var body: some View {
-        HStack(spacing: isSmall ? 6 : 10) {
+        HStack(spacing: 0) {
             Text(verbatim: "\(contentState.latestGlucoseText) \(contentState.latestTrend)")
                 .font(.system(size: isSmall ? 26 : 44, weight: isStaleGlucose ? .regular : .bold))
                 .strikethrough(isStaleGlucose)
                 .foregroundStyle(contentState.latestMeasurementColor.color)
                 .lineLimit(1)
 
-            Spacer(minLength: 0)
-
-            if showsRefreshButton {
-                Button(intent: RefreshLiveActivityIntent()) {
-                    Image(systemName: "arrow.clockwise.circle.fill")
-                }
-                .buttonStyle(.plain)
-            }
-
             if contentState.showTimer || contentState.currentIOBText != nil {
-                VStack(alignment: .trailing, spacing: 2) {
+                // Give up spacing on narrow surfaces before truncating glucose.
+                Spacer(minLength: isSmall ? 8 : 16)
+                    .frame(maxWidth: isSmall ? 25 : 50)
+
+                VStack(alignment: .leading, spacing: 4) {
                     if contentState.showTimer {
                         Text(
                             .currentDate,
@@ -528,20 +526,30 @@ private struct LargeNumbersActivityView: View {
                                 maxPrecision: .seconds(1)
                             )
                         )
-                        .font(.system(size: isSmall ? 12 : 16))
+                        .font(.system(size: isSmall ? 15 : 22))
                         .monospacedDigit()
                         .lineLimit(1)
-                        .frame(width: isSmall ? 50 : 60, alignment: .trailing)
+                        .frame(width: isSmall ? 50 : 72, alignment: .leading)
                     }
 
                     if let currentIOBText = contentState.currentIOBText {
                         Text(verbatim: currentIOBText)
-                            .font(.system(size: isSmall ? 11 : 14))
+                            .font(.system(size: isSmall ? 14 : 20))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
                 }
                 .fixedSize(horizontal: true, vertical: false)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        // The refresh control must not shift the centered glucose-and-column group.
+        .overlay(alignment: .trailing) {
+            if showsRefreshButton {
+                Button(intent: RefreshLiveActivityIntent()) {
+                    Image(systemName: "arrow.clockwise.circle.fill")
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(isSmall ? 5 : 15)
@@ -1377,6 +1385,12 @@ private extension View {
     FLWatchAttributes.ContentState.preview
 }
 
+#Preview("Live Activity Content without timer", as: .content, using: FLWatchAttributes()) {
+    FLWatchLiveActivityWidget()
+} contentStates: {
+    FLWatchAttributes.ContentState.previewWithoutTimer
+}
+
 #Preview("Dynamic Island Expanded", as: .dynamicIsland(.expanded), using: FLWatchAttributes()) {
     FLWatchLiveActivityWidget()
 } contentStates: {
@@ -1408,11 +1422,15 @@ private extension View {
 }
 
 private extension FLWatchAttributes.ContentState {
+    static var previewWithoutTimer: Self {
+        var state = preview
+        state.showTimer = false
+        return state
+    }
+
     static var previewLargeNumbers: Self {
         var state = preview
         state.layout = .largeNumbers
-        state.latestGlucoseText = "388"
-        state.currentIOBText = "12.34u"
         return state
     }
 
@@ -1424,9 +1442,10 @@ private extension FLWatchAttributes.ContentState {
 
     static var preview: Self {
         let now = Date.now
-        
+
+        // Use wide display values to expose truncation in every presentation.
         return .init(
-            latestGlucoseText: "142",
+            latestGlucoseText: "388",
             latestTrend: "↗",
             latestTimestamp: now - 30,
             graphReferenceTimestamp: now,
@@ -1450,7 +1469,7 @@ private extension FLWatchAttributes.ContentState {
             targetHigh: 180,
             alarmLow: 85,
             chartYScaleMaximum: 250,
-            currentIOBText: "1.38u",
+            currentIOBText: "12.34u",
             iobPoints: [
                 .init(timestamp: now.addingTimeInterval(-3 * 60 * 60), valueInHundredths: 180),
                 .init(timestamp: now.addingTimeInterval(-2 * 60 * 60), valueInHundredths: 160),
