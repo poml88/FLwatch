@@ -27,8 +27,9 @@ import WidgetKit
 ///
 /// The "since last reading" counters below cost ~10% of the render: dropping the system
 /// `.stopwatch` text entirely removed that much (`TimeDataFormattingStorage` 10.3% → 0.2%, text
-/// layout 20.4% → 11.2%). But the counter has to stay live — it is the only element the system
-/// keeps ticking between updates, and therefore the only indication that the feed has stalled.
+/// layout 20.4% → 11.2%). When shown, the counter must stay live — it is the only element the
+/// system keeps ticking between updates. The user can hide it; the stale-date transition then
+/// still updates strikethrough through `context.isStale`, without waiting for another reading.
 /// Two replacements were tried and rejected: an absolute clock time makes the reader do the
 /// subtraction, and a self-computed "7m" string is evaluated at archive time, so it freezes
 /// exactly when it matters (no new reading means no update means the age stops moving).
@@ -71,7 +72,7 @@ import WidgetKit
 struct FLWatchLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: FLWatchAttributes.self) { context in
-            LockScreenView(contentState: context.state)
+            LockScreenView(contentState: context.state, isStaleGlucose: context.isStale)
             //                .activityBackgroundTint(Color("LABackground", bundle: nil))
             //                .activitySystemActionForegroundColor(.white)
         } dynamicIsland: { context in
@@ -80,12 +81,7 @@ struct FLWatchLiveActivityWidget: Widget {
 //                    Text("X")
                     
 //#if false
-                    //                    let isStaleActivity: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleActivityAfterInterval) <= Date()
-                    
-                    //                    var isStaleGlucose: Bool {
-                    //                        Date().timeIntervalSince(context.state.latestTimestamp ) > FLWatchAttributes.staleGlucoseAfterInterval
-                    //                    }
-                    let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
+                    let isStaleGlucose = context.isStale
                     
                     HStack {
                         Text(verbatim: "\(context.state.latestGlucoseText) \(context.state.latestTrend)")
@@ -94,6 +90,8 @@ struct FLWatchLiveActivityWidget: Widget {
                             .bold(!isStaleGlucose)
                             .foregroundStyle(context.state.latestMeasurementColor.color)
                             .lineLimit(1)
+                            // Wider digits may need a small reduction beside IOB in this region.
+                            .minimumScaleFactor(0.85)
                             .padding(.leading, 4)
                         
                         if let currentIOBText = context.state.currentIOBText {
@@ -101,6 +99,7 @@ struct FLWatchLiveActivityWidget: Widget {
                             //                                .font(.footnote)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
+                                .minimumScaleFactor(0.85)
                         }
                     }
                     .dynamicTypeSize(.large)
@@ -114,19 +113,20 @@ struct FLWatchLiveActivityWidget: Widget {
                     VStack(alignment: .trailing, spacing: 2) {
 //                        Text("12:34")
 //#if false
-                        Text(
-                            .currentDate,
-                            format: .stopwatch(
-                                startingAt: context.state.latestTimestamp,
-                                showsHours: false,
-                                maxFieldCount: 2,
-                                maxPrecision: .seconds(1)
+                        if context.state.showTimer {
+                            Text(
+                                .currentDate,
+                                format: .stopwatch(
+                                    startingAt: context.state.latestTimestamp,
+                                    showsHours: false,
+                                    maxFieldCount: 2,
+                                    maxPrecision: .seconds(1)
+                                )
                             )
-                        )
-                        //                            .bold()
-                        .monospacedDigit()
-                        .lineLimit(1)
-                        .frame(width: 50, alignment: .trailing)
+                            .monospacedDigit()
+                            .lineLimit(1)
+                            .frame(width: 50, alignment: .trailing)
+                        }
 //#endif
                         //                        if context.state.currentIOB > 0 {
                         //                            Text("IOB \(context.state.currentIOBText)")
@@ -186,7 +186,7 @@ struct FLWatchLiveActivityWidget: Widget {
 //                Text("X")
                 
 //#if false
-                let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
+                let isStaleGlucose = context.isStale
                 
                 
                 Text(verbatim: "\(context.state.latestGlucoseText) \(context.state.latestTrend)")
@@ -202,15 +202,22 @@ struct FLWatchLiveActivityWidget: Widget {
 //#if false
                 
 //#if false
-                Text(
-                    .currentDate,
-                    format: .stopwatch(
-                        startingAt: context.state.latestTimestamp,
-                        showsHours: false,
-                        maxFieldCount: 2,
-                        maxPrecision: .seconds(1)
-                    )
-                )
+                Group {
+                    if context.state.showTimer {
+                        Text(
+                            .currentDate,
+                            format: .stopwatch(
+                                startingAt: context.state.latestTimestamp,
+                                showsHours: false,
+                                maxFieldCount: 2,
+                                maxPrecision: .seconds(1)
+                            )
+                        )
+                    } else if let currentIOBText = context.state.currentIOBText {
+                        Text(verbatim: currentIOBText)
+                            .font(.caption)
+                    }
+                }
                 .bold()
                 .monospacedDigit()
                 .frame(width: 50, alignment: .trailing)
@@ -225,7 +232,7 @@ struct FLWatchLiveActivityWidget: Widget {
 //                Text("X")
                 
 //#if false
-                let isStaleGlucose: Bool = context.state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
+                let isStaleGlucose = context.isStale
                 
                 
                 Text(verbatim: context.state.latestGlucoseText)
@@ -243,15 +250,24 @@ struct FLWatchLiveActivityWidget: Widget {
 
 private struct LockScreenView: View {
     var contentState: FLWatchAttributes.ContentState
+    let isStaleGlucose: Bool
     @Environment(\.activityFamily) private var activityFamily
     
     var body: some View {
         Group {
             switch activityFamily {
             case .small:
-                SmallSupplementalActivityView(contentState: contentState)
+                if contentState.layout == .largeNumbers {
+                    LargeNumbersActivityView(contentState: contentState, isStaleGlucose: isStaleGlucose, isSmall: true)
+                } else {
+                    SmallSupplementalActivityView(contentState: contentState, isStaleGlucose: isStaleGlucose)
+                }
             case .medium:
-                MediumSupplementalActivityView(contentState: contentState)
+                if contentState.layout == .largeNumbers {
+                    LargeNumbersActivityView(contentState: contentState, isStaleGlucose: isStaleGlucose, isSmall: false)
+                } else {
+                    MediumSupplementalActivityView(contentState: contentState, isStaleGlucose: isStaleGlucose)
+                }
             @unknown default:
                 DefaultLockScreenActivityView(contentState: contentState) //currently never reached
             }
@@ -272,12 +288,12 @@ private struct DefaultLockScreenActivityView: View { // currently never displaye
 
 private struct SmallSupplementalActivityView: View {
     let contentState: FLWatchAttributes.ContentState
+    let isStaleGlucose: Bool
     
     var body: some View {
 //        Text("X")
         
 //#if false
-        let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
         
         VStack (spacing: 0){
             HStack {
@@ -299,21 +315,22 @@ private struct SmallSupplementalActivityView: View {
                 
 //                Text("12:34")
 //#if false
-                Text(
-                    .currentDate,
-                    format: .stopwatch(
-                        startingAt: contentState.latestTimestamp,
-                        showsHours: false,
-                        maxFieldCount: 2,
-                        maxPrecision: .seconds(1)
+                if contentState.showTimer {
+                    Text(
+                        .currentDate,
+                        format: .stopwatch(
+                            startingAt: contentState.latestTimestamp,
+                            showsHours: false,
+                            maxFieldCount: 2,
+                            maxPrecision: .seconds(1)
+                        )
                     )
-                )
-                .font(.footnote)
-                //                    .bold()
-                .monospacedDigit()
-                .lineLimit(1)
-                .multilineTextAlignment(.trailing)
-                .frame(width: 50, alignment: .trailing)
+                    .font(.footnote)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 50, alignment: .trailing)
+                }
 //#endif
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -365,6 +382,7 @@ private struct SmallSupplementalActivityView: View {
 
 private struct MediumSupplementalActivityView: View {
     let contentState: FLWatchAttributes.ContentState
+    let isStaleGlucose: Bool
     
     var body: some View {
 //        Text("X")
@@ -374,7 +392,6 @@ private struct MediumSupplementalActivityView: View {
         // one source cadence (Libre 1 min, Dexcom 5 min).
         let updateUIAfter = TimeInterval(SharedData.cgmProviderKind.cadenceMinutes * 60)
         let isUpdateUI: Bool = contentState.latestTimestamp.addingTimeInterval(updateUIAfter) <= Date()
-        let isStaleGlucose: Bool = contentState.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleGlucoseAfterInterval) <= Date()
         
         VStack (spacing: 5){
             HStack {
@@ -411,19 +428,21 @@ private struct MediumSupplementalActivityView: View {
                 
 //                Text("12:34")
 //#if false
-                Text(
-                    .currentDate,
-                    format: .stopwatch(
-                        startingAt: contentState.latestTimestamp,
-                        showsHours: false,
-                        maxFieldCount: 2,
-                        maxPrecision: .seconds(1)
+                if contentState.showTimer {
+                    Text(
+                        .currentDate,
+                        format: .stopwatch(
+                            startingAt: contentState.latestTimestamp,
+                            showsHours: false,
+                            maxFieldCount: 2,
+                            maxPrecision: .seconds(1)
+                        )
                     )
-                )
-                .monospacedDigit()
-                .lineLimit(1)
-                .multilineTextAlignment(.trailing)
-                .frame(width: 60, alignment: .trailing)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 60, alignment: .trailing)
+                }
 //#endif
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -469,6 +488,71 @@ private struct MediumSupplementalActivityView: View {
         .padding(15)
         .frame(height: 160)
 //#endif
+    }
+}
+
+private struct LargeNumbersActivityView: View {
+    let contentState: FLWatchAttributes.ContentState
+    let isStaleGlucose: Bool
+    let isSmall: Bool
+
+    private var showsRefreshButton: Bool {
+        !isSmall && SharedData.cgmProviderKind != .libre3BLE
+            && Date().timeIntervalSince(contentState.latestTimestamp)
+                >= TimeInterval(SharedData.cgmProviderKind.cadenceMinutes * 60)
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Text(verbatim: "\(contentState.latestGlucoseText) \(contentState.latestTrend)")
+                .font(.system(size: isSmall ? 26 : 44, weight: isStaleGlucose ? .regular : .bold))
+                .strikethrough(isStaleGlucose)
+                .foregroundStyle(contentState.latestMeasurementColor.color)
+                .lineLimit(1)
+
+            if contentState.showTimer || contentState.currentIOBText != nil {
+                // Give up spacing on narrow surfaces before truncating glucose.
+                Spacer(minLength: isSmall ? 8 : 16)
+                    .frame(maxWidth: isSmall ? 25 : 50)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    if contentState.showTimer {
+                        Text(
+                            .currentDate,
+                            format: .stopwatch(
+                                startingAt: contentState.latestTimestamp,
+                                showsHours: false,
+                                maxFieldCount: 2,
+                                maxPrecision: .seconds(1)
+                            )
+                        )
+                        .font(.system(size: isSmall ? 15 : 22))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .frame(width: isSmall ? 50 : 72, alignment: .leading)
+                    }
+
+                    if let currentIOBText = contentState.currentIOBText {
+                        Text(verbatim: currentIOBText)
+                            .font(.system(size: isSmall ? 14 : 20))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                .fixedSize(horizontal: true, vertical: false)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        // The refresh control must not shift the centered glucose-and-column group.
+        .overlay(alignment: .trailing) {
+            if showsRefreshButton {
+                Button(intent: RefreshLiveActivityIntent()) {
+                    Image(systemName: "arrow.clockwise.circle.fill")
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(isSmall ? 5 : 15)
     }
 }
 
@@ -1301,10 +1385,28 @@ private extension View {
     FLWatchAttributes.ContentState.preview
 }
 
+#Preview("Live Activity Content without timer", as: .content, using: FLWatchAttributes()) {
+    FLWatchLiveActivityWidget()
+} contentStates: {
+    FLWatchAttributes.ContentState.previewWithoutTimer
+}
+
 #Preview("Dynamic Island Expanded", as: .dynamicIsland(.expanded), using: FLWatchAttributes()) {
     FLWatchLiveActivityWidget()
 } contentStates: {
     FLWatchAttributes.ContentState.preview
+}
+
+#Preview("Large numbers", as: .content, using: FLWatchAttributes()) {
+    FLWatchLiveActivityWidget()
+} contentStates: {
+    FLWatchAttributes.ContentState.previewLargeNumbers
+}
+
+#Preview("Large numbers without timer", as: .content, using: FLWatchAttributes()) {
+    FLWatchLiveActivityWidget()
+} contentStates: {
+    FLWatchAttributes.ContentState.previewLargeNumbersWithoutTimer
 }
 
 #Preview("Dynamic Island Compact", as: .dynamicIsland(.compact), using: FLWatchAttributes()) {
@@ -1320,11 +1422,30 @@ private extension View {
 }
 
 private extension FLWatchAttributes.ContentState {
+    static var previewWithoutTimer: Self {
+        var state = preview
+        state.showTimer = false
+        return state
+    }
+
+    static var previewLargeNumbers: Self {
+        var state = preview
+        state.layout = .largeNumbers
+        return state
+    }
+
+    static var previewLargeNumbersWithoutTimer: Self {
+        var state = previewLargeNumbers
+        state.showTimer = false
+        return state
+    }
+
     static var preview: Self {
         let now = Date.now
-        
+
+        // Use wide display values to expose truncation in every presentation.
         return .init(
-            latestGlucoseText: "142",
+            latestGlucoseText: "388",
             latestTrend: "↗",
             latestTimestamp: now - 30,
             graphReferenceTimestamp: now,
@@ -1348,7 +1469,7 @@ private extension FLWatchAttributes.ContentState {
             targetHigh: 180,
             alarmLow: 85,
             chartYScaleMaximum: 250,
-            currentIOBText: "1.38u",
+            currentIOBText: "12.34u",
             iobPoints: [
                 .init(timestamp: now.addingTimeInterval(-3 * 60 * 60), valueInHundredths: 180),
                 .init(timestamp: now.addingTimeInterval(-2 * 60 * 60), valueInHundredths: 160),

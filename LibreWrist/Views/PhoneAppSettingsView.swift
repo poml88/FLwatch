@@ -61,6 +61,8 @@ struct PhoneAppSettingsView: View {
     @AppStorage(DefaultsKey.widgetUpdateFrequency.rawValue, store: UserDefaults.group) private var widgetUpdateFrequency: Int = 5
     @AppStorage(DefaultsKey.tapComplicationReloads.rawValue, store: UserDefaults.group) private var tapComplicationReloads: Bool = false
     @AppStorage(DefaultsKey.useLiveActivities.rawValue, store: UserDefaults.group) private var useLiveActivities: Bool = true
+    @AppStorage(DefaultsKey.liveActivityLayout.rawValue, store: UserDefaults.group) private var liveActivityLayout: Int = LiveActivityLayout.graph.rawValue
+    @AppStorage(DefaultsKey.liveActivityShowTimer.rawValue, store: UserDefaults.group) private var liveActivityShowTimer: Bool = true
     @AppStorage(DefaultsKey.lowGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationsEnabled: Bool = false
     @AppStorage(DefaultsKey.lowGlucoseNotificationThreshold.rawValue, store: UserDefaults.group) private var lowGlucoseNotificationThreshold: Int = 70
     @AppStorage(DefaultsKey.highGlucoseNotificationsEnabled.rawValue, store: UserDefaults.group) private var highGlucoseNotificationsEnabled: Bool = false
@@ -542,6 +544,34 @@ struct PhoneAppSettingsView: View {
             }
 
             Section {
+                Picker(selection: $liveActivityLayout) {
+                    Text("Graph", comment: "Live Activity layout option showing glucose and a graph.")
+                        .tag(LiveActivityLayout.graph.rawValue)
+                    Text("Large numbers", comment: "Live Activity layout option showing large glucose numbers without a graph.")
+                        .tag(LiveActivityLayout.largeNumbers.rawValue)
+                } label: {
+                    Text("Layout", comment: "Picker label for the Live Activity's Lock Screen and Apple Watch layout.")
+                }
+                .onChange(of: liveActivityLayout) { _, _ in
+                    refreshLiveActivityPresentation()
+                }
+
+                Toggle(isOn: $liveActivityShowTimer) {
+                    Text("Show time since last reading", comment: "Toggle for showing the age counter in Live Activities; widget timers are unaffected.")
+                }
+                .onChange(of: liveActivityShowTimer) { _, _ in
+                    refreshLiveActivityPresentation()
+                }
+            } header: {
+                Text("Appearance", comment: "Section heading for Live Activity layout and age-counter preferences.")
+            } footer: {
+                Text(
+                    "The layout applies to the Lock Screen, Apple Watch Smart Stack, and CarPlay. The Dynamic Island keeps its layout. The timer setting applies to all Live Activity presentations. When the timer is hidden, strikethrough marks outdated glucose readings. Widget timers stay visible.",
+                    comment: "Explains that the Live Activity layout applies to the Lock Screen, Apple Watch Smart Stack, and CarPlay, which share the layout preference; also explains the timer preference and stale-reading indication. Ordinary widget timers stay visible."
+                )
+            }
+
+            Section {
                 switch cgmProviderKind {
                 case .libreLinkUp:
                     Text(
@@ -628,6 +658,16 @@ struct PhoneAppSettingsView: View {
                 comment: "Navigation title for settings and information about Live Activities."
             )
         )
+    }
+
+    private func refreshLiveActivityPresentation() {
+        guard useLiveActivities else { return }
+        Task {
+            await LiveActivityManager.shared.refreshFromCurrentHistory(
+                useLiveActivities: SharedData.useLiveActivities,
+                refreshIOB: false
+            )
+        }
     }
 
     var body: some View {

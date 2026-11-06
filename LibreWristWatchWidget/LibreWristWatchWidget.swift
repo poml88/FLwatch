@@ -15,7 +15,7 @@ struct LibreWristWidgetEntryView : View {
     
     @AppStorage(DefaultsKey.tapComplicationReloads.rawValue, store: UserDefaults.group) private var tapComplicationReloads: Bool = false
     
-    private let staleThreshold: TimeInterval = 5 * 60
+    private var staleThreshold: TimeInterval { SharedData.cgmProviderKind.widgetStaleReadingAfter }
     
     var isStaleGlucose: Bool {
         Date().timeIntervalSince(entry.date) > staleThreshold && !(entry.glucoseMeasurement.value <= 0)
@@ -63,7 +63,7 @@ struct LibreWristWidgetEntryView : View {
     /// even though the watch app may stream during an explicit workout. At 3 min
     /// the prompt would therefore hide the last value almost permanently outside
     /// a workout. Up to this point we keep showing the
-    /// value — `normalBody` already marks it stale (strikethrough past 5 min +
+    /// value — `normalBody` already marks it stale (past the widget threshold +
     /// a counting "N min ago" timer) — and only escalate to the open-the-app
     /// prompt once data is genuinely dead.
     private static let libre3BLEReauthThreshold: TimeInterval = 10 * 60

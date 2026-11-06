@@ -16,7 +16,7 @@ struct FLwatchGraphWidgetEntryView : View {
     @Environment(\.widgetFamily) private var family
     @Environment(\.colorScheme) var colorScheme
     
-    private let staleThreshold: TimeInterval = 5 * 60
+    private var staleThreshold: TimeInterval { SharedData.cgmProviderKind.widgetStaleReadingAfter }
 
     private var chartTimeLabel: LocalizedStringResource {
         LocalizedStringResource(

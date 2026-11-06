@@ -73,6 +73,13 @@ enum CGMProviderKind: String, Codable {
         case .libre3BLE: return 3 * 60
         }
     }
+
+    /// Widgets update less often than Live Activities. Preserve Libre's five-minute
+    /// grace and allow eight minutes for Dexcom's slower source cadence. Their age
+    /// counters stay visible; strikethrough is evaluated when WidgetKit renders.
+    var widgetStaleReadingAfter: TimeInterval {
+        max(5 * 60, staleReadingAfter)
+    }
 }
 
 // MARK: - Protocol

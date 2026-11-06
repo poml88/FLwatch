@@ -204,7 +204,9 @@ final class LiveActivityManager {
                 insulinMarkers: insulinMarkers,
                 showIOBCurve: showIOBCurve,
                 showActivityCurve: showActivityCurve,
-                showInsulinDeliveryMarks: showInsulinDeliveryMarks
+                showInsulinDeliveryMarks: showInsulinDeliveryMarks,
+                layout: LiveActivityLayout(rawValue: SharedData.liveActivityLayout) ?? .graph,
+                showTimer: SharedData.liveActivityShowTimer
             )
 
 #if DEBUG
@@ -219,9 +221,17 @@ final class LiveActivityManager {
             await endAllActivities()
             return
         }
+        // Fast feeds use the provider's 3/8-minute grace. Background-only cloud
+        // updates get 15 minutes, allowing for both scheduling gaps and reading age
+        // at fetch time. iOS may still delay background execution beyond that.
+        let providerKind = SharedData.cgmProviderKind
+        let staleAfter = providerKind.isDirectBLE || SharedData.bluetoothHeartbeatEnabled
+            ? providerKind.staleReadingAfter
+            : 15 * 60
+        // The system's isStale transition drives strikethrough even with the timer hidden.
         let content = ActivityContent(
             state: state,
-            staleDate: state.latestTimestamp.addingTimeInterval(FLWatchAttributes.staleActivityAfterInterval)
+            staleDate: state.latestTimestamp.addingTimeInterval(staleAfter)
         )
 
         if let existing = reusableActivity() {

@@ -3088,6 +3088,65 @@
         }
       }
     },
+    "Appearance" : {
+      "comment" : "Section heading for Live Activity layout and age-counter preferences.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erscheinungsbild"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aspecto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apparence"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aspetto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外観"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weergave"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygląd"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Внешний вид"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
+          }
+        }
+      }
+    },
     "Apple Health" : {
       "comment" : "Subtitle listing Apple Health as the available service in Data Sharing settings.",
       "localizations" : {
@@ -15977,6 +16036,65 @@
     "Glucose-only deaths" : {
 
     },
+    "Graph" : {
+      "comment" : "Live Activity layout option showing glucose and a graph.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagramm"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gráfico"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graphique"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grafico"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "グラフ"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grafiek"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wykres"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "График"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图表"
+          }
+        }
+      }
+    },
     "Health data is not available on this Apple Watch." : {
       "comment" : "Workout start failure when HealthKit is unavailable.",
       "localizations" : {
@@ -18268,6 +18386,65 @@
         }
       }
     },
+    "Large numbers" : {
+      "comment" : "Live Activity layout option showing large glucose numbers without a graph.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Große Zahlen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Números grandes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grands chiffres"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numeri grandi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大きな数字"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grote cijfers"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duże cyfry"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Крупные цифры"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大号数字"
+          }
+        }
+      }
+    },
     "Last heartbeat: %@" : {
       "localizations" : {
         "de" : {
@@ -18381,6 +18558,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "上次成功上传"
+          }
+        }
+      }
+    },
+    "Layout" : {
+      "comment" : "Picker label for the Live Activity's Lock Screen and Apple Watch layout.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layout"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diseño"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disposition"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layout"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レイアウト"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indeling"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Układ"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компоновка"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "布局"
           }
         }
       }
@@ -30353,6 +30589,65 @@
         }
       }
     },
+    "Show time since last reading" : {
+      "comment" : "Toggle for showing the age counter in Live Activities; widget timers are unaffected.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeit seit letztem Messwert anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar tiempo desde la última lectura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le temps écoulé depuis la dernière mesure"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra il tempo dall’ultima lettura"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前回の測定からの経過時間を表示"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tijd sinds laatste meting tonen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokazuj czas od ostatniego odczytu"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать время с последнего измерения"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示距上次读数的时间"
+          }
+        }
+      }
+    },
     "Sign in above and tap Get Receiver ID before scanning." : {
       "comment" : "Shown under the disabled sensor-scan button when the selected vendor app's receiver ID has not been retrieved. 'Get Receiver ID' is the nearby button label.",
       "extractionState" : "stale",
@@ -32920,6 +33215,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "无法验证下载的传感器配对数据。请稍后重试。"
+          }
+        }
+      }
+    },
+    "The layout applies to the Lock Screen, Apple Watch Smart Stack, and CarPlay. The Dynamic Island keeps its layout. The timer setting applies to all Live Activity presentations. When the timer is hidden, strikethrough marks outdated glucose readings. Widget timers stay visible." : {
+      "comment" : "Explains that the Live Activity layout applies to the Lock Screen, Apple Watch Smart Stack, and CarPlay, which share the layout preference; also explains the timer preference and stale-reading indication. Ordinary widget timers stay visible.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Layout gilt für den Sperrbildschirm, den Smart-Stapel der Apple Watch und CarPlay. Die Dynamic Island behält ihr Layout bei. Die Einstellung für die Zeitanzeige gilt für alle Ansichten der Live-Aktivität. Ist die Zeitanzeige ausgeblendet, werden veraltete Glukosewerte durchgestrichen. Die Zeitanzeigen in Widgets bleiben sichtbar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El diseño se aplica a la pantalla de bloqueo, a la Pila Inteligente del Apple Watch y a CarPlay. La Dynamic Island conserva su diseño. El ajuste del contador de tiempo se aplica a todas las vistas de las actividades en directo. Cuando el contador está oculto, las lecturas de glucosa desactualizadas aparecen tachadas. Los contadores de los widgets siguen visibles."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La disposition s’applique à l’écran verrouillé, à la Smart Stack de l’Apple Watch et à CarPlay. La Dynamic Island conserve sa disposition. Le réglage du compteur de temps s’applique à toutes les présentations des activités en direct. Lorsque le compteur est masqué, les valeurs de glycémie obsolètes sont barrées. Les compteurs des widgets restent visibles."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il layout si applica alla schermata di blocco, allo Smart Stack di Apple Watch e a CarPlay. La Dynamic Island mantiene il proprio layout. L’impostazione del contatore del tempo si applica a tutte le visualizzazioni delle attività in tempo reale. Quando il contatore è nascosto, i valori del glucosio non aggiornati vengono barrati. I contatori dei widget restano visibili."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このレイアウトは、ロック画面、Apple Watchのスマートスタック、CarPlayに適用されます。Dynamic Islandのレイアウトは変わりません。経過時間の表示設定は、ライブアクティビティのすべての表示に適用されます。経過時間を非表示にすると、古い血糖値は取り消し線で示されます。ウィジェットの経過時間は引き続き表示されます。"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De indeling geldt voor het toegangsscherm, de slimme stapel van de Apple Watch en CarPlay. De Dynamic Island behoudt zijn indeling. De instelling voor de tijdteller geldt voor alle weergaven van Live Activities. Als de teller verborgen is, worden verouderde glucosemetingen doorgestreept. De tellers in widgets blijven zichtbaar."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Układ dotyczy ekranu blokady, Smart Stack na Apple Watch i CarPlay. Dynamic Island zachowuje swój układ. Ustawienie licznika czasu dotyczy wszystkich widoków Live Activities. Gdy licznik jest ukryty, nieaktualne odczyty glukozy są przekreślone. Liczniki w widżetach pozostają widoczne."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компоновка применяется к экрану блокировки, Smart Stack на Apple Watch и CarPlay. Компоновка Dynamic Island остаётся прежней. Настройка счётчика времени применяется ко всем представлениям Live Activities. Когда счётчик скрыт, устаревшие показания глюкозы отображаются зачёркнутыми. Счётчики в виджетах остаются видимыми."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此布局适用于锁定屏幕、Apple Watch智能叠放和CarPlay。灵动岛保留原有布局。计时显示设置适用于实时活动的所有显示形式。隐藏计时显示时，过时的血糖读数会加上删除线。小组件中的计时显示仍然可见。"
           }
         }
       }
