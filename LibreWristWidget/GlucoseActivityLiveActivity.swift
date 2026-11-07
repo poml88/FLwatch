@@ -189,7 +189,9 @@ struct FLWatchLiveActivityWidget: Widget {
                 let isStaleGlucose = context.isStale
                 
                 
-                Text(verbatim: "\(context.state.latestGlucoseText) \(context.state.latestTrend)")
+                Text(verbatim: context.state.showsCompactTrailingTrend
+                     ? context.state.latestGlucoseText
+                     : "\(context.state.latestGlucoseText) \(context.state.latestTrend)")
                     .strikethrough(isStaleGlucose)
                     .bold(!isStaleGlucose)
                     .foregroundStyle(context.state.latestMeasurementColor.color)
@@ -216,9 +218,13 @@ struct FLWatchLiveActivityWidget: Widget {
                     } else if let currentIOBText = context.state.currentIOBText {
                         Text(verbatim: currentIOBText)
                             .font(.caption)
+                    } else {
+                        Text(verbatim: context.state.latestTrend)
+                            .strikethrough(context.isStale)
+                            .foregroundStyle(context.state.latestMeasurementColor.color)
                     }
                 }
-                .bold()
+                .bold(!context.state.showsCompactTrailingTrend || !context.isStale)
                 .monospacedDigit()
                 .frame(width: 50, alignment: .trailing)
                 .dynamicTypeSize(.large)
@@ -505,7 +511,7 @@ private struct LargeNumbersActivityView: View {
     var body: some View {
         HStack(spacing: 0) {
             Text(verbatim: "\(contentState.latestGlucoseText) \(contentState.latestTrend)")
-                .font(.system(size: isSmall ? 26 : 44, weight: isStaleGlucose ? .regular : .bold))
+                .font(.system(size: isSmall ? 30 : 44, weight: isStaleGlucose ? .regular : .bold))
                 .strikethrough(isStaleGlucose)
                 .foregroundStyle(contentState.latestMeasurementColor.color)
                 .lineLimit(1)
@@ -513,7 +519,7 @@ private struct LargeNumbersActivityView: View {
             if contentState.showTimer || contentState.currentIOBText != nil {
                 // Give up spacing on narrow surfaces before truncating glucose.
                 Spacer(minLength: isSmall ? 8 : 16)
-                    .frame(maxWidth: isSmall ? 25 : 50)
+                    .frame(maxWidth: isSmall ? 20 : 50)
 
                 VStack(alignment: .leading, spacing: 4) {
                     if contentState.showTimer {
@@ -526,7 +532,7 @@ private struct LargeNumbersActivityView: View {
                                 maxPrecision: .seconds(1)
                             )
                         )
-                        .font(.system(size: isSmall ? 15 : 22))
+                        .font(.system(size: isSmall ? 18 : 22))
                         .monospacedDigit()
                         .lineLimit(1)
                         .frame(width: isSmall ? 50 : 72, alignment: .leading)
@@ -534,7 +540,7 @@ private struct LargeNumbersActivityView: View {
 
                     if let currentIOBText = contentState.currentIOBText {
                         Text(verbatim: currentIOBText)
-                            .font(.system(size: isSmall ? 14 : 20))
+                            .font(.system(size: isSmall ? 18 : 22))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
@@ -1413,6 +1419,8 @@ private extension View {
     FLWatchLiveActivityWidget()
 } contentStates: {
     FLWatchAttributes.ContentState.preview
+    FLWatchAttributes.ContentState.previewWithoutTimer
+    FLWatchAttributes.ContentState.previewTrendOnRight
 }
 
 #Preview("Dynamic Island Minimal", as: .dynamicIsland(.minimal), using: FLWatchAttributes()) {
@@ -1422,6 +1430,12 @@ private extension View {
 }
 
 private extension FLWatchAttributes.ContentState {
+    static var previewTrendOnRight: Self {
+        var state = previewWithoutTimer
+        state.currentIOBText = nil
+        return state
+    }
+
     static var previewWithoutTimer: Self {
         var state = preview
         state.showTimer = false
@@ -1495,6 +1509,11 @@ private extension FLWatchAttributes.ContentState {
     }
 }
 private extension FLWatchAttributes.ContentState {
+    // Use the free trailing region for trend when neither the timer nor IOB occupies it.
+    var showsCompactTrailingTrend: Bool {
+        !showTimer && currentIOBText == nil
+    }
+
     var latestMeasurementColor: MeasurementColor {
         MeasurementColor(rawValue: latestColor) ?? .gray
     }
