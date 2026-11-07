@@ -285,9 +285,17 @@ final class NightscoutOutbox {
     // to span the retained glucose window for historical fills/value changes.
     private static let glucoseFingerprintRetention: TimeInterval = 13 * 60 * 60
     private static let maximumGlucoseFingerprintsPerNamespace = 2_000
-    // Local insulin history is retained for 12 hours. The extra hour avoids a
-    // boundary race between history pruning and a user-initiated deletion.
-    private static let treatmentRouteRetention: TimeInterval = 13 * 60 * 60
+    private static func historyRetention(for payload: NightscoutTreatmentUpload) -> TimeInterval {
+        payload.isBasal
+            ? BasalDeliveryHistory.historyRetentionInterval
+            : InsulinDeliveryHistorySingleton.historyRetentionInterval
+    }
+
+    private static func treatmentRouteRetention(for payload: NightscoutTreatmentUpload) -> TimeInterval {
+        // Keep each route one hour beyond its local history window to avoid a
+        // boundary race between history pruning and a user-initiated deletion.
+        historyRetention(for: payload) + 60 * 60
+    }
 
     private let fileManager: FileManager
     private let storeURL: URL
@@ -404,12 +412,12 @@ final class NightscoutOutbox {
         var state = namespaceState(for: namespace)
         Self.pruneTreatmentRoutes(in: &state, now: now)
         Self.pruneUnresolvedInsulinItems(in: &state, now: now)
-        let oldestManageableEventDate = now.addingTimeInterval(
-            -InsulinDeliveryHistorySingleton.historyRetentionInterval
-        )
         // A dose already outside local history could be uploaded but never
         // deleted later because FLwatch no longer exposes it to the user.
-        for payload in payloads where payload.eventDate >= oldestManageableEventDate {
+        for payload in payloads {
+            guard payload.eventDate >= now.addingTimeInterval(-Self.historyRetention(for: payload)) else {
+                continue
+            }
             let key = Self.key(for: payload.identifier)
             if let existing = state.insulinItems[key],
                case .present(let existingPayload, _) = existing.desiredState,
@@ -484,11 +492,12 @@ final class NightscoutOutbox {
         now: Date = Date()
     ) -> [NightscoutBaseURL] {
         let key = Self.key(for: identifier)
-        let cutoff = now.addingTimeInterval(-Self.treatmentRouteRetention)
         return snapshot.namespaces.compactMap { namespaceString, state in
             let hasPendingState = state.insulinItems[key] != nil
             let hasRetainedRoute = state.treatmentRoutes[key].map {
-                $0.confirmedPayload.eventDate >= cutoff
+                $0.confirmedPayload.eventDate >= now.addingTimeInterval(
+                    -Self.treatmentRouteRetention(for: $0.confirmedPayload)
+                )
             } ?? false
             guard hasPendingState || hasRetainedRoute else { return nil }
             return try? NightscoutBaseURL(normalizing: namespaceString)
@@ -504,7 +513,7 @@ final class NightscoutOutbox {
         guard let route = snapshot.namespaces[namespace.absoluteString]?
             .treatmentRoutes[Self.key(for: identifier)],
               route.confirmedPayload.eventDate >= now.addingTimeInterval(
-                -Self.treatmentRouteRetention
+                -Self.treatmentRouteRetention(for: route.confirmedPayload)
               ) else {
             return nil
         }
@@ -654,9 +663,10 @@ final class NightscoutOutbox {
     }
 
     private static func pruneTreatmentRoutes(in state: inout NamespaceState, now: Date) {
-        let cutoff = now.addingTimeInterval(-treatmentRouteRetention)
         state.treatmentRoutes = state.treatmentRoutes.filter { _, route in
-            route.confirmedPayload.eventDate >= cutoff
+            route.confirmedPayload.eventDate >= now.addingTimeInterval(
+                -treatmentRouteRetention(for: route.confirmedPayload)
+            )
         }
     }
 
@@ -664,9 +674,6 @@ final class NightscoutOutbox {
         in state: inout NamespaceState,
         now: Date
     ) {
-        let cutoff = now.addingTimeInterval(
-            -InsulinDeliveryHistorySingleton.historyRetentionInterval
-        )
         state.insulinItems = state.insulinItems.filter { _, item in
             switch item.desiredState {
             case .present(let payload, _):
@@ -674,7 +681,7 @@ final class NightscoutOutbox {
                 // delete it. This also accepts losing the delete path for an
                 // attempted PUT without a confirmed route, matching the policy
                 // that prevents newly queueing equally old doses above.
-                return payload.eventDate >= cutoff
+                return payload.eventDate >= now.addingTimeInterval(-historyRetention(for: payload))
             case .absent:
                 // A DELETE remains durable until Nightscout confirms absence.
                 return true

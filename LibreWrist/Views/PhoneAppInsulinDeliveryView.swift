@@ -12,6 +12,9 @@ struct PhoneAppInsulinDeliveryView: View {
     // Existing persisted manual picker
     @AppStorage(DefaultsKey.insulinSelected.rawValue, store: UserDefaults.group)
     private var insulinSelected: Double = 0.5
+
+    @AppStorage(DefaultsKey.basalUnitsSelected.rawValue, store: UserDefaults.group)
+    private var basalUnitsSelected: Double = 10
     
     // NEW: persisted calculator settings
     @AppStorage(DefaultsKey.icrGramsPerUnit.rawValue, store: UserDefaults.group)
@@ -34,10 +37,15 @@ struct PhoneAppInsulinDeliveryView: View {
     
     @State private var pickerTimeStamp: Date = Date.now
     @State private var isShowingInsulinDeliverySubmitAlert = false
+    @State private var isShowingBasalDeliverySubmitAlert = false
     @State private var isShowingInsulinDeliveryResetAlert = false
     @State private var isShowingDifferenceTimePickerSheet = false
     @State private var isShowingInsulinDeliveryResendToWatchAlert = false
     @State private var insulinTypeSelected: InsulinType = UserDefaults.group.insulinTypeSelected
+
+    private enum DeliveryMode: Hashable { case bolus, basal }
+    // Always start on bolus: misclassifying a bolus as basal would understate IOB.
+    @State private var deliveryMode: DeliveryMode = .bolus
     
     @State private var navigationPath = NavigationPath()
     
@@ -45,6 +53,7 @@ struct PhoneAppInsulinDeliveryView: View {
     
     // Manual doses
     let insulinDoses: [Double] = Array(stride(from: 0.5, to: 60, by: 0.5))
+    private let basalDoses: [Double] = Array(stride(from: 0.5, through: 100, by: 0.5))
     
     // NEW: carb calculator transient inputs
 //    @State private var carbsPer100g: Double = 0
@@ -130,30 +139,54 @@ struct PhoneAppInsulinDeliveryView: View {
                 
                 ScrollViewReader { proxy in
                     Form {
+                        Picker(selection: $deliveryMode) {
+                            Text("Bolus", comment: "Insulin logging mode for a rapid-acting bolus injection.")
+                                .tag(DeliveryMode.bolus)
+                            Text("Basal", comment: "Insulin logging mode for a long-acting basal injection.")
+                                .tag(DeliveryMode.basal)
+                        } label: {
+                            Text("Insulin delivery", comment: "Label for choosing bolus or basal insulin logging.")
+                        }
+                        .pickerStyle(.segmented)
+                        .onChange(of: deliveryMode) { _, _ in
+                            focused = nil
+                        }
+
                         // MARK: Manual entry (existing)
                         Section {
-                            Picker(selection: $insulinTypeSelected) {
-                                ForEach(InsulinType.allCases, id: \.self) {
-                                    Text($0.description)
+                            if deliveryMode == .bolus {
+                                Picker(selection: $insulinTypeSelected) {
+                                    ForEach(InsulinType.allCases, id: \.self) {
+                                        Text($0.description)
+                                    }
+                                } label: {
+                                    Text("Bolus insulin")
                                 }
-                            } label: {
-                                Text("Bolus insulin")
-                            }
-                            //                .labelsHidden()
-                            //                                    .pickerStyle(.navigationLink)
-                            .onChange(of: insulinTypeSelected) {oldValue, newValue in
-                                UserDefaults.group.insulinTypeSelected = newValue
-                                let messageToWatch: [String: Any] = ["content": "updateInsulinTypeSelected",
-                                                                     "insulinTypeSelected": newValue.rawValue]
-                                sendMessagetoOther(message: messageToWatch)
-                            }
+                                //                .labelsHidden()
+                                //                                    .pickerStyle(.navigationLink)
+                                .onChange(of: insulinTypeSelected) {oldValue, newValue in
+                                    UserDefaults.group.insulinTypeSelected = newValue
+                                    let messageToWatch: [String: Any] = ["content": "updateInsulinTypeSelected",
+                                                                         "insulinTypeSelected": newValue.rawValue]
+                                    sendMessagetoOther(message: messageToWatch)
+                                }
                             
-                            Picker("Insulin units", selection: $insulinSelected) {
-                                ForEach(insulinDoses, id: \.self) {
-                                    Text("\($0, specifier: "%.1f")")
+                                Picker("Insulin units", selection: $insulinSelected) {
+                                    ForEach(insulinDoses, id: \.self) {
+                                        Text("\($0, specifier: "%.1f")")
+                                    }
                                 }
+                                .pickerStyle(.menu)
+                            } else {
+                                Picker(selection: $basalUnitsSelected) {
+                                    ForEach(basalDoses, id: \.self) { units in
+                                        Text(units, format: .number.precision(.fractionLength(1)))
+                                    }
+                                } label: {
+                                    Text("Insulin units", comment: "Label for the number of insulin units in an injection.")
+                                }
+                                .pickerStyle(.menu)
                             }
-                            .pickerStyle(.menu)
                             
                             DatePicker(selection: $pickerTimeStamp) {
                                 Text(
@@ -174,22 +207,31 @@ struct PhoneAppInsulinDeliveryView: View {
                             }
                             
                             Button {
-                                isShowingInsulinDeliverySubmitAlert = true
+                                if deliveryMode == .basal {
+                                    isShowingBasalDeliverySubmitAlert = true
+                                } else {
+                                    isShowingInsulinDeliverySubmitAlert = true
+                                }
                             } label: {
                                 Text("Add insulin")
                             }
                             .buttonStyle(.borderedProminent)
-                            // Enable if EITHER manual OR calculated dose is > 0
-                            .disabled(insulinSelected == 0.0 && !hasValidCalculatedDose)
+                            // Keep bolus enablement unchanged; the basal picker only offers positive doses.
+                            .disabled(deliveryMode == .bolus && insulinSelected == 0.0 && !hasValidCalculatedDose)
                             
                         } header: {
-                            Text("Record insulin units")
+                            if deliveryMode == .basal {
+                                Text("Record basal insulin units", comment: "Section heading for logging a basal insulin injection.")
+                            } else {
+                                Text("Record bolus insulin units", comment: "Section heading for logging a bolus insulin injection.")
+                            }
                         }
                         .id(manualEntryTopID)
                     
                     
                     
                         // MARK: Carb calculator (NEW)
+                        if deliveryMode == .bolus {
                         Section {
                         HStack {
                             Text("Carbs per 100 g")
@@ -377,11 +419,12 @@ struct PhoneAppInsulinDeliveryView: View {
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
+                        }
                     
                         // MARK: Existing history list
                         if !insulinDeliveryHistorySingleton.insulinDeliveryHistory.isEmpty {
                             
-                            Section(header: Text("Insulin Delivery History")) {
+                            Section(header: Text("Bolus insulin history", comment: "Section heading for previously logged bolus insulin injections.")) {
                                 Button {
                                     isShowingInsulinDeliveryResetAlert.toggle()
                                 } label: {
@@ -404,6 +447,27 @@ struct PhoneAppInsulinDeliveryView: View {
                                     Text("Resend history to watch")
                                 }
                                 .buttonStyle(.borderedProminent)
+                            }
+                        }
+                        if !BasalDeliveryHistory.shared.history.isEmpty {
+                            Section {
+                                ForEach(BasalDeliveryHistory.shared.history) { item in
+                                    let timeInterval = Date(timeIntervalSince1970: item.timeStamp).timeIntervalSinceNow
+                                    let timeSinceInjection = Duration(
+                                        secondsComponent: Int64(-timeInterval),
+                                        attosecondsComponent: 0
+                                    ).formatted(.time(pattern: .hourMinute))
+
+                                    Text(
+                                        "Time: \(Date(timeIntervalSince1970: item.timeStamp).toLocalTime())  (\(timeSinceInjection) h)      Units: \(item.insulinUnits, specifier: "%.1f")",
+                                        comment: "Insulin history row showing injection time, elapsed hours, and units."
+                                    )
+                                }
+                                .onDelete { offsets in
+                                    BasalDeliveryHistory.shared.remove(atOffsets: offsets)
+                                }
+                            } header: {
+                                Text("Basal insulin history", comment: "Section heading for previously logged basal insulin injections.")
                             }
                         }
                     }
@@ -448,7 +512,30 @@ struct PhoneAppInsulinDeliveryView: View {
                     Button("Cancel", role: .cancel, action: {})
                 } message: {
                     
-                    Text("Do you want to add \(insulinSelected, specifier: "%.1f") units?")
+                    Text(
+                        "Do you want to add \(insulinSelected, specifier: "%.1f") units of bolus insulin?",
+                        comment: "Confirmation message showing the bolus insulin dose that will be logged."
+                    )
+                }
+                .alert(Text("Confirm", comment: "Title of a confirmation alert."), isPresented: $isShowingBasalDeliverySubmitAlert) {
+                    Button {
+                        let timestamp = pickerTimeStamp
+                        let units = basalUnitsSelected
+                        Task {
+                            await BasalDeliveryHistory.shared.record(timestamp: timestamp, units: units)
+                            dismiss()
+                        }
+                    } label: {
+                        Text("Submit", comment: "Confirms the action in a confirmation alert.")
+                    }
+                    Button(role: .cancel) {} label: {
+                        Text("Cancel", comment: "Cancels logging the basal insulin injection.")
+                    }
+                } message: {
+                    Text(
+                        "Do you want to add \(basalUnitsSelected, specifier: "%.1f") units of basal insulin?",
+                        comment: "Confirmation message showing the basal insulin dose that will be logged."
+                    )
                 }
                 .alert("Confirm", isPresented: $isShowingInsulinDeliveryResetAlert) {
                     Button("Reset", action: {
@@ -464,7 +551,10 @@ struct PhoneAppInsulinDeliveryView: View {
                     })
                     Button("Cancel", role: .cancel, action: {})
                 } message: {
-                    Text("Do you want to reset insulin history?")
+                    Text(
+                        "Do you want to reset the bolus insulin history?",
+                        comment: "Confirmation before clearing the bolus insulin history and resetting IOB; basal history is kept."
+                    )
                 }
                 .alert("Confirm", isPresented: $isShowingInsulinDeliveryResendToWatchAlert) {
                     Button("Resend", action: {
@@ -483,6 +573,7 @@ struct PhoneAppInsulinDeliveryView: View {
             }
             .onAppear {
                 insulinDeliveryHistorySingleton.read()
+                BasalDeliveryHistory.shared.read()
                 if icrGramsPerUnit <= 0 { icrGramsPerUnit = 10 }
                 if roundingStep < 0 { roundingStep = 0.5 }
             }

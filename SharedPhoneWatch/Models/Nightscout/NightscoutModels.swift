@@ -113,7 +113,7 @@ struct NightscoutTreatmentBody: Codable, Equatable, Sendable {
     let utcOffset: Int
     let app: String
     let eventType: String
-    let insulin: Double
+    let insulin: Double?
     let enteredBy: String
     let notes: String
     let createdAt: String
@@ -141,19 +141,36 @@ struct NightscoutTreatmentUpload: Codable, Equatable, Sendable {
         Date(timeIntervalSince1970: Double(body.date) / 1_000)
     }
 
+    // Basal injections are the only insulin-free Notes FLwatch uploads here.
+    var isBasal: Bool {
+        body.eventType == "Note" && body.insulin == nil
+    }
+
     init(delivery: InsulinDelivery) {
         let sourceDate = Date(timeIntervalSince1970: delivery.timeStamp)
         let epochMilliseconds = NightscoutModelFactory.epochMilliseconds(for: sourceDate)
         let eventDate = Date(timeIntervalSince1970: Double(epochMilliseconds) / 1_000)
+        let notes: String
+        if delivery.isBasal {
+            // Keep exported notes independent of the user's locale.
+            let units = delivery.insulinUnits.formatted(
+                .number.locale(Locale(identifier: "en_US_POSIX"))
+                    .precision(.fractionLength(0...1)).grouping(.never)
+            )
+            notes = "Basal injection: \(units) U"
+        } else {
+            notes = NightscoutModelFactory.insulinTypeName(for: delivery.insulinType)
+        }
         self.identifier = delivery.id
         self.body = NightscoutTreatmentBody(
             date: epochMilliseconds,
             utcOffset: NightscoutModelFactory.utcOffsetMinutes(for: eventDate),
             app: NightscoutModelFactory.appName,
-            eventType: "Correction Bolus",
-            insulin: delivery.insulinUnits,
+            // A basal injection must omit insulin to stay out of Nightscout IOB.
+            eventType: delivery.isBasal ? "Note" : "Correction Bolus",
+            insulin: delivery.isBasal ? nil : delivery.insulinUnits,
             enteredBy: NightscoutModelFactory.appName,
-            notes: NightscoutModelFactory.insulinTypeName(for: delivery.insulinType),
+            notes: notes,
             createdAt: NightscoutModelFactory.iso8601String(from: eventDate)
         )
     }

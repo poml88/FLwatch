@@ -343,6 +343,7 @@ enum DefaultsKey: String {
 
     // SharedData keys
     case insulinSelected = "insulinSelectedKey"
+    case basalUnitsSelected = "basalUnitsSelectedKey"
     case showInsulinDeliveryMarksPhone = "showInsulinDeliveryMarksPhoneKey"
     case showInsulinDeliveryMarksWatch = "showInsulinDeliveryMarksWatchKey"
     case showIOBCurvePhone = "showIOBCurvePhoneKey"
@@ -444,6 +445,7 @@ enum DefaultsKey: String {
     case keyConnection = "connection"
     case keyLockTime = "lockTime"
     case insulinDeliveryHistory = "insulinDeliveryHistoryKey"
+    case basalDeliveryHistory = "basalDeliveryHistoryKey"
     case insulinTypeSelected = "insulinTypeSelectedKey"
 
     // CGM provider selection (Libre vs Dexcom Share)
@@ -673,6 +675,14 @@ extension UserDefaults {
         set {
             if let v = newValue { Self.group.setObject(v, forKey: .insulinDeliveryHistory) }
             else { Self.group.removeObject(forKey: DefaultsKey.insulinDeliveryHistory.rawValue) }
+        }
+    }
+
+    var basalDeliveryHistory: [InsulinDelivery]? {
+        get { Self.group.getObject(forKey: .basalDeliveryHistory) }
+        set {
+            if let v = newValue { Self.group.setObject(v, forKey: .basalDeliveryHistory) }
+            else { Self.group.removeObject(forKey: DefaultsKey.basalDeliveryHistory.rawValue) }
         }
     }
 

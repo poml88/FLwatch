@@ -151,6 +151,79 @@ final class LibreWristTests: XCTestCase {
         )
     }
 
+    func testLegacyBolusHistoryDecodesWithoutBasalFlag() throws {
+        let data = Data(#"[{"id":"12345678-1234-1234-1234-123456789ABC","timeStamp":1710000000,"insulinUnits":4.5,"insulinType":1}]"#.utf8)
+        let history = try JSONDecoder().decode([InsulinDelivery].self, from: data)
+
+        XCTAssertEqual(history, [InsulinDelivery(
+            id: try XCTUnwrap(UUID(uuidString: "12345678-1234-1234-1234-123456789ABC")),
+            timestamp: 1_710_000_000,
+            insulinUnits: 4.5,
+            insulinType: InsulinType.fastRapidActing.rawValue
+        )])
+        XCTAssertFalse(try XCTUnwrap(history.first).isBasal)
+    }
+
+    func testBasalHistoryRoundTripAndInsulinSyncIdentifiers() throws {
+        let bolus = InsulinDelivery(
+            id: UUID(), timestamp: 1_710_000_000.7, insulinUnits: 20.5,
+            insulinType: InsulinType.rapidActing.rawValue
+        )
+        let basal = InsulinDelivery(
+            id: UUID(), timestamp: bolus.timeStamp, insulinUnits: bolus.insulinUnits,
+            insulinType: bolus.insulinType, isBasal: true
+        )
+        let restored = try JSONDecoder().decode(
+            [InsulinDelivery].self,
+            from: JSONEncoder().encode([bolus, basal])
+        )
+
+        XCTAssertEqual(restored, [bolus, basal])
+        XCTAssertEqual(AppleHealthExportManager.insulinSyncIdentifier(for: bolus), "librewrist.insulin.1710000001.2050.0")
+        XCTAssertEqual(AppleHealthExportManager.insulinSyncIdentifier(for: basal), "librewrist.basal.1710000001.2050")
+    }
+
+    func testNightscoutBolusBodyPreservesLegacyPayload() throws {
+        let delivery = InsulinDelivery(
+            id: UUID(), timestamp: 0, insulinUnits: 4.5,
+            insulinType: InsulinType.fastRapidActing.rawValue
+        )
+        // Full legacy payload: changing any field would invalidate confirmed routes.
+        let legacyBody: [String: Any] = [
+            "date": 0,
+            "utcOffset": TimeZone.current.secondsFromGMT(for: Date(timeIntervalSince1970: 0)) / 60,
+            "app": "FLwatch",
+            "eventType": "Correction Bolus",
+            "insulin": 4.5,
+            "enteredBy": "FLwatch",
+            "notes": "Fast rapid acting",
+            "created_at": "1970-01-01T00:00:00.000Z"
+        ]
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyBody, options: [.sortedKeys])
+        let body = NightscoutTreatmentUpload(delivery: delivery).body
+
+        XCTAssertEqual(NightscoutModelFactory.canonicalData(for: body), legacyData)
+        // Persisted outbox payloads must still decode equal to newly seeded ones.
+        XCTAssertEqual(try JSONDecoder().decode(NightscoutTreatmentBody.self, from: legacyData), body)
+    }
+
+    func testNightscoutBasalBodyOmitsInsulinAndUsesNote() throws {
+        for units in [20.0, 20.5] {
+            let delivery = InsulinDelivery(
+                id: UUID(), timestamp: 0, insulinUnits: units,
+                insulinType: InsulinType.rapidActing.rawValue, isBasal: true
+            )
+            let body = NightscoutTreatmentUpload(delivery: delivery).body
+            let json = try XCTUnwrap(JSONSerialization.jsonObject(
+                with: NightscoutModelFactory.canonicalData(for: body)
+            ) as? [String: Any])
+
+            XCTAssertNil(json["insulin"])
+            XCTAssertEqual(json["eventType"] as? String, "Note")
+            XCTAssertEqual(json["notes"] as? String, units == 20 ? "Basal injection: 20 U" : "Basal injection: 20.5 U")
+        }
+    }
+
     private func directBLENightscoutReading(
         lifeCount: Int,
         date: Date,
@@ -534,6 +607,69 @@ final class LibreWristTests: XCTestCase {
             namespace: fixture.namespace
         ))
         XCTAssertEqual(fixture.outbox.persistenceWriteCount, 1)
+    }
+
+    @MainActor
+    func testEighteenHourBasalRemainsManageableWhileBolusExpires() throws {
+        let fixture = try makeNightscoutOutboxFixture()
+        let previousBasalHistory = UserDefaults.group.basalDeliveryHistory
+        defer {
+            UserDefaults.group.basalDeliveryHistory = previousBasalHistory
+            BasalDeliveryHistory.shared.read()
+            try? FileManager.default.removeItem(at: fixture.directory)
+        }
+        let now = Date()
+        let basal = InsulinDelivery(
+            id: UUID(), timestamp: now.addingTimeInterval(-18 * 60 * 60).timeIntervalSince1970,
+            insulinUnits: 20, insulinType: InsulinType.rapidActing.rawValue, isBasal: true
+        )
+        let expiredBasal = InsulinDelivery(
+            id: UUID(), timestamp: now.addingTimeInterval(-26 * 60 * 60).timeIntervalSince1970,
+            insulinUnits: 20, insulinType: InsulinType.rapidActing.rawValue, isBasal: true
+        )
+        UserDefaults.group.basalDeliveryHistory = [expiredBasal, basal]
+        BasalDeliveryHistory.shared.read()
+        XCTAssertEqual(BasalDeliveryHistory.shared.history, [basal])
+        XCTAssertEqual(BasalDeliveryHistory.retainedPersistedHistorySnapshot(), [basal])
+
+        let basalUpload = NightscoutTreatmentUpload(delivery: basal)
+        let bolusUpload = nightscoutTreatment(
+            identifier: UUID(), eventDate: Date(timeIntervalSince1970: basal.timeStamp)
+        )
+        try fixture.outbox.recordPresent(
+            [basalUpload, bolusUpload, NightscoutTreatmentUpload(delivery: expiredBasal)],
+            namespace: fixture.namespace, now: now
+        )
+        // A second pass must retain the pending basal upload, not just admit it once.
+        try fixture.outbox.recordPresent([], namespace: fixture.namespace, now: now)
+        XCTAssertNotNil(fixture.outbox.insulinItem(identifier: basal.id, namespace: fixture.namespace))
+        XCTAssertNil(fixture.outbox.insulinItem(identifier: bolusUpload.identifier, namespace: fixture.namespace))
+        XCTAssertNil(fixture.outbox.insulinItem(identifier: expiredBasal.id, namespace: fixture.namespace))
+
+        try resolveNightscoutTreatment(
+            basalUpload, in: fixture.outbox, namespace: fixture.namespace, now: now
+        )
+        XCTAssertNotNil(fixture.outbox.treatmentRoute(
+            identifier: basal.id, namespace: fixture.namespace, now: now
+        ))
+        XCTAssertEqual(
+            fixture.outbox.insulinNamespaces(for: basal.id, now: now).map(\.absoluteString),
+            [fixture.namespace.absoluteString]
+        )
+        XCTAssertEqual(
+            try fixture.outbox.recordAbsent(identifier: basal.id, namespace: fixture.namespace, now: now),
+            .queuedDeletion
+        )
+        // A queued DELETE survives even after the longer basal window expires.
+        try fixture.outbox.recordPresent(
+            [], namespace: fixture.namespace, now: now.addingTimeInterval(48 * 60 * 60)
+        )
+        let deletion = try XCTUnwrap(fixture.outbox.insulinItem(
+            identifier: basal.id, namespace: fixture.namespace
+        ))
+        guard case .absent = deletion.desiredState else {
+            return XCTFail("Expected the basal deletion tombstone to remain durable")
+        }
     }
 
     func testNightscoutPrunesStalePresentItemsButKeepsBoundaryAndTombstone() throws {

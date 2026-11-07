@@ -131,6 +131,10 @@ struct PhoneAppGraphView: View {
         let iobScale = quarterYAxisIOBCurve / safeMaxIOB
         let activityScale = quarterYAxisIOBCurve / safeMaxActivity
         let insulinMarkerShift = displaysMmol ? Double(5).toMmolL() : 5
+        // Lift basal only near a baseline bolus with both curves off. One tenth places it
+        // at 75 mg/dL on the default 50–250 axis, including the marker shift,
+        // and keeps the same on-screen lift across axis ranges and glucose units.
+        let basalMarkerLift = (chartYScaleMax - chartYScaleMin) / 10
         let trailingMarkerThreshold = timeIntervalSince1970 - 30 * 60
         let leadingMarkerThreshold = timeIntervalSince1970 - 3600 * 6 + 30 * 60
         let glucoseChartPoints: [GlucosePlotPoint] = graphData.compactMap { item in
@@ -197,6 +201,40 @@ struct PhoneAppGraphView: View {
         
         
         
+        let basalMarkerPoints: [InsulinMarkerPoint] = showInsulinDeliveryMarksPhone
+            ? BasalDeliveryHistory.shared.history.compactMap { item in
+                guard item.timeStamp > chartStartTimestamp else { return nil }
+
+                let markerDate = Date(timeIntervalSince1970: item.timeStamp)
+                let baseline = chartYScaleMinIOBCurve + insulinMarkerShift
+                // With both curves off, reuse the overlap heuristic for placement.
+                // Always show the dose label.
+                let needsLift = !showIOBCurvePhone && !showActivityCurvePhone
+                    && insulinMarkerPoints.contains { bolus in
+                        bolus.date <= chartXScaleMax
+                            && abs(bolus.date.timeIntervalSince(markerDate)) <= 30 * 60
+                            && abs(bolus.value - baseline) <= (chartYScaleMax - chartYScaleMin) * 0.08
+                    }
+
+                let alignment: Alignment
+                if item.timeStamp > trailingMarkerThreshold {
+                    alignment = .trailing
+                } else if item.timeStamp < leadingMarkerThreshold {
+                    alignment = .leading
+                } else {
+                    alignment = .center
+                }
+
+                return InsulinMarkerPoint(
+                    id: item.id,
+                    date: markerDate,
+                    value: baseline + (needsLift ? basalMarkerLift : 0),
+                    insulinUnits: item.insulinUnits,
+                    alignment: alignment
+                )
+            }
+            : []
+
         Chart {
             //                    RuleMark(y: .value("Minimum High", 300))
             //                        .foregroundStyle(.clear)
@@ -309,6 +347,22 @@ struct PhoneAppGraphView: View {
                 
 //MARK: Insulin delivery marks
                 if showInsulinDeliveryMarksPhone == true {
+                    // Draw basal first so bolus symbols and labels remain above it.
+                    ForEach(basalMarkerPoints) { item in
+                        PointMark(x: .value(chartTimeLabel, item.date),
+                                  y: .value("Insulin", item.value))
+                        .symbol {
+                            Image(systemName: "arrowtriangle.down.fill")
+                                .foregroundColor(.blue)
+                                .font(.system(size: 20))
+                        }
+                        .annotation(alignment: item.alignment) {
+                            Text(
+                                "\(item.insulinUnits, specifier: "%.1f")u",
+                                comment: "Dose annotation on an insulin injection graph marker; u means insulin units."
+                            )
+                        }
+                    }
                     if !insulinMarkerPoints.isEmpty {
                         ForEach(insulinMarkerPoints) { item in
                                 PointMark(x: .value(chartTimeLabel, item.date),

@@ -283,9 +283,9 @@ final class NightscoutUploadManager {
         var work = PendingWork(deadline: deadline)
         if let namespace = recordingNamespace(),
            let activeOutbox = try? outbox() {
-            let retainedTreatments = InsulinDeliveryHistorySingleton
-                .retainedPersistedHistorySnapshot()
-                .map { NightscoutTreatmentUpload(delivery: $0) }
+            let retainedDeliveries = InsulinDeliveryHistorySingleton.retainedPersistedHistorySnapshot()
+                + BasalDeliveryHistory.retainedPersistedHistorySnapshot()
+            let retainedTreatments = retainedDeliveries.map { NightscoutTreatmentUpload(delivery: $0) }
             do {
                 try activeOutbox.recordPresent(
                     retainedTreatments,

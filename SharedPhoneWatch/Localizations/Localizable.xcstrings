@@ -305,7 +305,7 @@
 
     },
     "%.1fu" : {
-
+      "comment" : "Dose annotation on an insulin injection graph marker; u means insulin units."
     },
     "%.2fu" : {
 
@@ -4086,6 +4086,124 @@
         }
       }
     },
+    "Basal" : {
+      "comment" : "Insulin logging mode for a long-acting basal injection.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basal"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basal"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basale"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基礎"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basaal"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bazalna"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Базальный"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基础"
+          }
+        }
+      }
+    },
+    "Basal insulin history" : {
+      "comment" : "Section heading for previously logged basal insulin injections.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basalinsulin-Verlauf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial de insulina basal"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historique de l’insuline basale"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cronologia dell’insulina basale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基礎インスリン投与履歴"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschiedenis van basale insuline"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historia podań insuliny bazalnej"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История введения базального инсулина"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基础胰岛素给药记录"
+          }
+        }
+      }
+    },
     "BG task executions last 12 hours (total): %lld" : {
 
     },
@@ -5099,6 +5217,65 @@
         }
       }
     },
+    "Bolus" : {
+      "comment" : "Insulin logging mode for a rapid-acting bolus injection.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bolus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bolo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bolus"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bolo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ボーラス"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bolus"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bolus"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Болюс"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "推注"
+          }
+        }
+      }
+    },
     "Bolus insulin" : {
       "localizations" : {
         "de" : {
@@ -5153,6 +5330,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "bolus 胰岛素"
+          }
+        }
+      }
+    },
+    "Bolus insulin history" : {
+      "comment" : "Section heading for previously logged bolus insulin injections.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bolusinsulin-Verlauf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial de insulina en bolo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historique des bolus d’insuline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cronologia dell’insulina in bolo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ボーラスインスリン投与履歴"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschiedenis van bolusinsuline"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historia podań insuliny bolusowej"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История введения болюсного инсулина"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "推注胰岛素给药记录"
           }
         }
       }
@@ -5451,7 +5687,7 @@
       }
     },
     "Cancel" : {
-      "comment" : "Button that cancels removal of the Nightscout configuration.\nCancels moving the Libre 3 sensor connection from Apple Watch back to iPhone.\nDismisses the receiver ID sign-out warning without signing in.",
+      "comment" : "Button that cancels removal of the Nightscout configuration.\nCancels logging the basal insulin injection.\nCancels moving the Libre 3 sensor connection from Apple Watch back to iPhone.\nDismisses the receiver ID sign-out warning without signing in.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6752,6 +6988,7 @@
       }
     },
     "Confirm" : {
+      "comment" : "Title of a confirmation alert.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -11054,60 +11291,120 @@
         }
       }
     },
-    "Do you want to add %.1f units?" : {
+    "Do you want to add %.1f units of basal insulin?" : {
+      "comment" : "Confirmation message showing the basal insulin dose that will be logged.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Möchten Sie %.1f Einheiten Insulin hinzufügen?"
+            "value" : "Möchten Sie %.1f Einheiten Basalinsulin hinzufügen?"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¿Quiere añadir %.1f unidades?"
+            "value" : "¿Quiere añadir %.1f unidades de insulina basal?"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voulez-vous ajouter %.1f unités ?"
+            "value" : "Voulez-vous ajouter %.1f unités d’insuline basale ?"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vuoi aggiungere %.1f unità?"
+            "value" : "Vuoi aggiungere %.1f unità di insulina basale?"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%.1f 単位を追加しますか？"
+            "value" : "基礎インスリンを %.1f 単位追加しますか？"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wil je %.1f eenheden toevoegen?"
+            "value" : "Wil je %.1f eenheden basale insuline toevoegen?"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Czy chcesz dodać %.1f jednostki?"
+            "value" : "Czy chcesz dodać %.1f jednostki insuliny bazalnej?"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Хотите добавить %.1f единицы?"
+            "value" : "Хотите добавить %.1f единицы базального инсулина?"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您要添加 %.1f 个单位吗？"
+            "value" : "您要添加 %.1f 单位的基础胰岛素吗？"
+          }
+        }
+      }
+    },
+    "Do you want to add %.1f units of bolus insulin?" : {
+      "comment" : "Confirmation message showing the bolus insulin dose that will be logged.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Möchten Sie %.1f Einheiten Bolusinsulin hinzufügen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quiere añadir %.1f unidades de insulina en bolo?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voulez-vous ajouter %.1f unités d’insuline en bolus ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoi aggiungere %.1f unità di insulina in bolo?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ボーラスインスリンを %.1f 単位追加しますか？"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wil je %.1f eenheden bolusinsuline toevoegen?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czy chcesz dodać %.1f jednostki insuliny bolusowej?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хотите добавить %.1f единицы болюсного инсулина?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您要添加 %.1f 单位的推注胰岛素吗？"
           }
         }
       }
@@ -11170,60 +11467,61 @@
         }
       }
     },
-    "Do you want to reset insulin history?" : {
+    "Do you want to reset the bolus insulin history?" : {
+      "comment" : "Confirmation before clearing the bolus insulin history and resetting IOB; basal history is kept.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Möchten Sie den Insulin Verlauf zurücksetzen?"
+            "value" : "Möchten Sie den Bolusinsulin-Verlauf zurücksetzen?"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¿Desea restablecer el historial de insulina?"
+            "value" : "¿Desea restablecer el historial de insulina en bolo?"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voulez-vous réinitialiser l'historique de l'insuline ?"
+            "value" : "Voulez-vous réinitialiser l’historique des bolus d’insuline ?"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vuoi azzerare la cronologia dell'insulina?"
+            "value" : "Vuoi azzerare la cronologia dell’insulina in bolo?"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "インスリンの履歴をリセットしますか？"
+            "value" : "ボーラスインスリンの履歴をリセットしますか？"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wil je de insulinegeschiedenis resetten?"
+            "value" : "Wil je de geschiedenis van bolusinsuline resetten?"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Czy chcesz zresetować historię insuliny?"
+            "value" : "Czy chcesz zresetować historię insuliny bolusowej?"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Хотите сбросить историю инсулина?"
+            "value" : "Хотите сбросить историю болюсного инсулина?"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您是否需要重置胰岛素使用记录？"
+            "value" : "您是否需要重置推注胰岛素使用记录？"
           }
         }
       }
@@ -17400,60 +17698,61 @@
         }
       }
     },
-    "Insulin Delivery History" : {
+    "Insulin delivery" : {
+      "comment" : "Label for choosing bolus or basal insulin logging.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Insulinabgabeverlauf"
+            "value" : "Insulingabe"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Historial de administración de insulina"
+            "value" : "Administración de insulina"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Historique des administrations d'insuline"
+            "value" : "Administration d’insuline"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cronologia della somministrazione di insulina"
+            "value" : "Somministrazione di insulina"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "インスリン投与履歴"
+            "value" : "インスリン投与"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geschiedenis van insulinetoediening"
+            "value" : "Insulinetoediening"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Historia podań insuliny"
+            "value" : "Podawanie insuliny"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "История введения инсулина"
+            "value" : "Введение инсулина"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "胰岛素输送历史"
+            "value" : "胰岛素给药"
           }
         }
       }
@@ -17635,6 +17934,7 @@
       }
     },
     "Insulin units" : {
+      "comment" : "Label for the number of insulin units in an injection.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -26231,6 +26531,124 @@
         }
       }
     },
+    "Record basal insulin units" : {
+      "comment" : "Section heading for logging a basal insulin injection.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheiten Basalinsulin erfassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar unidades de insulina basal"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer les unités d’insuline basale"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registra unità di insulina basale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基礎インスリンの単位数を記録"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eenheden basale insuline registreren"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz jednostki insuliny bazalnej"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записать единицы базального инсулина"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录基础胰岛素单位"
+          }
+        }
+      }
+    },
+    "Record bolus insulin units" : {
+      "comment" : "Section heading for logging a bolus insulin injection.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheiten Bolusinsulin erfassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar unidades de insulina en bolo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer les unités d’insuline en bolus"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registra unità di insulina in bolo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ボーラスインスリンの単位数を記録"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eenheden bolusinsuline registreren"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz jednostki insuliny bolusowej"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записать единицы болюсного инсулина"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录推注胰岛素单位"
+          }
+        }
+      }
+    },
     "Record Insulin Injection" : {
       "localizations" : {
         "de" : {
@@ -26343,64 +26761,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "记录胰岛素注射（书面）"
-          }
-        }
-      }
-    },
-    "Record insulin units" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Insulineinheiten erfassen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Registrar unidades de insulina"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enregistrer les unités d’insuline"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Registra unità di insulina"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "インスリン単位を記録"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Insuline-eenheden registreren"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zapisz jednostki insuliny"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Записать единицы инсулина"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "记录胰岛素单位"
           }
         }
       }
@@ -32115,6 +32475,7 @@
       "isCommentAutoGenerated" : true
     },
     "Submit" : {
+      "comment" : "Confirms the action in a confirmation alert.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -35538,6 +35899,7 @@
       }
     },
     "Time: %@  (%@ h)      Units: %.1f" : {
+      "comment" : "Insulin history row showing injection time, elapsed hours, and units.",
       "localizations" : {
         "de" : {
           "stringUnit" : {

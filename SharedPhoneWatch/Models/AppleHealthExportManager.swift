@@ -206,7 +206,9 @@ final class AppleHealthExportManager {
             }
             await performGlucoseExport(Self.glucoseExportCandidates(from: graphHistoryReadings(from: glucoseReadings)), isCatchUp: true)
         case .insulin:
-            await performInsulinExport(uniqueInsulinDeliveries(InsulinDeliveryHistorySingleton.persistedHistorySnapshot()), isCatchUp: true)
+            let deliveries = InsulinDeliveryHistorySingleton.persistedHistorySnapshot()
+                + BasalDeliveryHistory.persistedHistorySnapshot()
+            await performInsulinExport(uniqueInsulinDeliveries(deliveries), isCatchUp: true)
         }
     }
 #endif
@@ -317,7 +319,9 @@ final class AppleHealthExportManager {
                     HKMetadataKeySyncIdentifier: syncIdentifier,
                     HKMetadataKeySyncVersion: 1,
                     HKMetadataKeyWasUserEntered: true,
-                    HKMetadataKeyInsulinDeliveryReason: HKInsulinDeliveryReason.bolus.rawValue
+                    HKMetadataKeyInsulinDeliveryReason: delivery.isBasal
+                        ? HKInsulinDeliveryReason.basal.rawValue
+                        : HKInsulinDeliveryReason.bolus.rawValue
                 ]
                 return HKQuantitySample(
                     type: insulinType,
@@ -430,6 +434,9 @@ final class AppleHealthExportManager {
         // every already-exported injection a new identity and duplicate it once.
         let timestamp = Int(delivery.timeStamp.rounded())
         let units = Int((delivery.insulinUnits * 100).rounded())
+        if delivery.isBasal {
+            return "librewrist.basal.\(timestamp).\(units)"
+        }
         return "librewrist.insulin.\(timestamp).\(units).\(delivery.insulinType)"
     }
 

@@ -49,12 +49,24 @@ struct InsulinDelivery: Codable, Equatable, Identifiable, Sendable {
     let timeStamp: Double
     let insulinUnits: Double
     let insulinType: Int
+    let isBasal: Bool
     
-    init(id: UUID, timestamp: Double, insulinUnits: Double, insulinType: Int) {
+    init(id: UUID, timestamp: Double, insulinUnits: Double, insulinType: Int, isBasal: Bool = false) {
         self.id = id
         self.timeStamp = timestamp
         self.insulinUnits = insulinUnits
         self.insulinType = insulinType
+        self.isBasal = isBasal
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        timeStamp = try container.decode(Double.self, forKey: .timeStamp)
+        insulinUnits = try container.decode(Double.self, forKey: .insulinUnits)
+        insulinType = try container.decode(Int.self, forKey: .insulinType)
+        // Histories written before basal logging contain bolus doses only.
+        isBasal = try container.decodeIfPresent(Bool.self, forKey: .isBasal) ?? false
     }
 }
 
@@ -77,8 +89,8 @@ struct InsulinTypePresets: Codable, Identifiable {
 @MainActor @Observable class InsulinDeliveryHistorySingleton {
     
     var insulinDeliveryHistory: [InsulinDelivery] = []
-    /// Local history is the period during which a dose remains user-manageable.
-    /// Nightscout uses the same boundary when accepting new treatment routes.
+    /// Bolus history is the period during which a bolus remains user-manageable.
+    /// Nightscout uses this boundary for bolus uploads; basal has its own window.
     nonisolated static let historyRetentionInterval: Double = 12 * 60 * 60
     
     static let shared: InsulinDeliveryHistorySingleton = {
@@ -92,7 +104,7 @@ struct InsulinTypePresets: Codable, Identifiable {
         insulinDeliveryHistory = Self.canonicalized(UserDefaults.group.insulinDeliveryHistory ?? [])
     }
 
-    private nonisolated static func canonicalized(_ history: [InsulinDelivery]) -> [InsulinDelivery] {
+    fileprivate nonisolated static func canonicalized(_ history: [InsulinDelivery]) -> [InsulinDelivery] {
         var seen = Set<UUID>()
         return history
             .sorted {
@@ -104,12 +116,13 @@ struct InsulinTypePresets: Codable, Identifiable {
             .filter { seen.insert($0.id).inserted }
     }
 
-    private nonisolated static func retainedHistory(
+    fileprivate nonisolated static func retainedHistory(
         from history: [InsulinDelivery],
+        interval: Double = InsulinDeliveryHistorySingleton.historyRetentionInterval,
         now timeIntervalSince1970: Double = Date().timeIntervalSince1970
     ) -> [InsulinDelivery] {
         canonicalized(history).filter {
-            timeIntervalSince1970 - $0.timeStamp <= historyRetentionInterval
+            timeIntervalSince1970 - $0.timeStamp <= interval
         }
     }
 
@@ -294,6 +307,81 @@ struct InsulinTypePresets: Codable, Identifiable {
         let retainedPrevious = Self.retainedHistory(from: previous)
         for delivery in retainedPrevious where currentByID[delivery.id] == nil {
             NightscoutUploadManager.shared.recordInsulinAbsent(identifier: delivery.id)
+        }
+    }
+}
+
+/// Basal doses are stored separately so no bolus consumer can include them in IOB.
+@MainActor @Observable class BasalDeliveryHistory {
+    static let shared = BasalDeliveryHistory()
+    nonisolated static let historyRetentionInterval: Double = 24 * 60 * 60
+
+    private(set) var history: [InsulinDelivery] = []
+
+    private init() {
+        read()
+    }
+
+    nonisolated static func persistedHistorySnapshot() -> [InsulinDelivery] {
+        InsulinDeliveryHistorySingleton.canonicalized(UserDefaults.group.basalDeliveryHistory ?? [])
+    }
+
+    nonisolated static func retainedPersistedHistorySnapshot() -> [InsulinDelivery] {
+        InsulinDeliveryHistorySingleton.retainedHistory(
+            from: persistedHistorySnapshot(), interval: historyRetentionInterval
+        )
+    }
+
+    func read() {
+        let persisted = Self.persistedHistorySnapshot()
+        let retained = InsulinDeliveryHistorySingleton.retainedHistory(
+            from: persisted, interval: Self.historyRetentionInterval
+        )
+        if history != retained {
+            history = retained
+        }
+        if retained != persisted {
+            UserDefaults.group.basalDeliveryHistory = retained
+        }
+        // Aging out of local history is not a request to delete an exported dose.
+    }
+
+    private func save() {
+        let canonical = InsulinDeliveryHistorySingleton.canonicalized(history)
+        if history != canonical {
+            history = canonical
+        }
+        UserDefaults.group.basalDeliveryHistory = canonical
+    }
+
+    @discardableResult
+    func record(timestamp: Date, units: Double) async -> InsulinDelivery {
+        read()
+        let delivery = InsulinDelivery(
+            id: UUID(),
+            timestamp: timestamp.timeIntervalSince1970,
+            insulinUnits: units,
+            // Basal has no bolus action profile; this placeholder is never used.
+            insulinType: InsulinType.rapidActing.rawValue,
+            isBasal: true
+        )
+        history.append(delivery)
+        save()
+        NightscoutUploadManager.shared.recordInsulinPresent(delivery)
+        await AppleHealthExportManager.shared.exportInsulinDeliveriesIfNeeded([delivery])
+        return delivery
+    }
+
+    func remove(atOffsets offsets: IndexSet) {
+        // Resolve the displayed offsets before any retention pruning can shift them.
+        let removed = offsets.map { history[$0] }
+        history.remove(atOffsets: offsets)
+        save()
+        for delivery in removed {
+            NightscoutUploadManager.shared.recordInsulinAbsent(identifier: delivery.id)
+        }
+        Task {
+            await AppleHealthExportManager.shared.deleteInsulinDeliveriesIfPresent(removed)
         }
     }
 }
