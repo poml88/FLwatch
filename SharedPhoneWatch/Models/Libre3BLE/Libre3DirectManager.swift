@@ -2676,15 +2676,19 @@ final class Libre3DirectManager: ObservableObject {
 
     /// Resume Libre 3 on the host selected by the persisted ownership record.
     /// On the phone, `start()` re-arms signal loss through the normal policy.
-    func resumeAfterHandoff(immediately: Bool = false) {
+    /// A post-pair start without a workout uses a distinct diagnostic trace label.
+    func resumeAfterHandoff(
+        immediately: Bool = false,
+        traceLabel: String = "workout-handoff-resume"
+    ) {
         guard ownershipPermitsConnection ||
                 (immediately &&
                  hostProfile.device == .phone &&
                  SharedData.libre3SessionOwner.owner == .phone) else {
-            Libre3DiagnosticsLog.traceReconnect("workout-handoff-resume blocked=ownership")
+            Libre3DiagnosticsLog.traceReconnect("\(traceLabel) blocked=ownership")
             return
         }
-        Libre3DiagnosticsLog.traceReconnect("workout-handoff-resume")
+        Libre3DiagnosticsLog.traceReconnect(traceLabel)
         start(allowPendingPhoneReclaim: immediately)
     }
 

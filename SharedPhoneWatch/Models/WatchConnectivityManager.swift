@@ -1171,7 +1171,12 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate, UNUserNotificationC
         guard state.hasActiveWatchClaim,
               let workoutSessionID = state.workoutSessionID else {
             if resumeImmediately {
-                Libre3DirectManager.shared.resumeAfterHandoff(immediately: true)
+                // Even without a workout, pairing needs the immediate ownership
+                // bypass while the persisted owner is the phone.
+                Libre3DirectManager.shared.resumeAfterHandoff(
+                    immediately: true,
+                    traceLabel: "post-pair-start"
+                )
             }
             return
         }
