@@ -1,2 +1,6 @@
-* improvements of the app's text explanations
+* Log basal insulin injections and export to Apple Health and Nightscout, without affecting IOB
+* add Live Activity layout without graph, larger numbers, timer optional
+* Libre 3 pairing: “Take over” is now the default; Parallel mode is not supported anymore
+* Widgets and Live Activities: improved outdated-reading indication, including fixing premature strikethrough for Dexcom readings
+* bug fixes and improvements for Libre 3 BLE
 
