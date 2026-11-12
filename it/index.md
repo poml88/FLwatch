@@ -16,13 +16,14 @@ Le informazioni fornite da FLwatch e dalle sue estensioni non devono essere usat
 
 FLwatch mostra su iPhone e Apple Watch le letture di glucosio dei sensori Abbott FreeStyle Libre 2, Libre 2+, Libre 3 e Libre 3+, oltre a quelle dei sensori Dexcom G6, G7 e ONE+.
 
-Consente inoltre di registrare le dosi di insulina e visualizza grafici dedicati all’insulina attiva e all’attività dell’insulina, aiutandoti a comprendere meglio l’interazione tra insulina e glucosio.
+Puoi anche registrare le dosi di insulina in bolo e basale. Grafici dedicati mostrano l’insulina attiva e l’attività dell’insulina per i boli, mentre le iniezioni basali vengono registrate separatamente senza influire su questi calcoli.
 
 FLwatch è nato come progetto personale per aiutarmi nella gestione del diabete. L’ho reso pubblico, gratuito e open source nella speranza che possa essere utile anche ad altri.
 
 ### In breve
 
 - Grafici del glucosio, dell’insulina attiva e dell’attività dell’insulina su iPhone e Apple Watch
+- Registrazione dell’insulina in bolo e basale, con le dosi basali separate dall’IOB
 - Connessioni tramite Bluetooth diretto, LibreLinkUp e Dexcom Share
 - Modalità allenamento per tutti i provider CGM supportati, con letture Bluetooth di Libre 3 e Libre 3+ **direttamente su Apple Watch** durante gli allenamenti
 - Avvisi configurabili relativi al glucosio e al sensore
@@ -62,7 +63,8 @@ Gli avvisi di FLwatch vengono inviati secondo disponibilità e non sono garantit
 
 #### Monitoraggio dell’insulina
 
-- Registrazione delle dosi di insulina su iPhone o tramite Siri e Comandi rapidi su iPhone e Apple Watch
+- Registrazione delle dosi di insulina in bolo su iPhone o tramite Siri e Comandi rapidi su iPhone e Apple Watch
+- Registrazione delle iniezioni di insulina basale su iPhone senza influire sull’IOB o sui calcoli dell’attività dell’insulina
 - Calcolatore di base per carboidrati e insulina basato sulla dimensione della porzione e su un rapporto insulina/carboidrati configurabile
 - Calcolo e grafico dell’insulina attiva (IOB)
 - Grafico dell’attività dell’insulina
@@ -72,12 +74,16 @@ Gli avvisi di FLwatch vengono inviati secondo disponibilità e non sono garantit
 
 - Widget per la schermata Home, con e senza grafici
 - Widget per la schermata di blocco e StandBy
-- Attività in tempo reale per consultare rapidamente gli aggiornamenti del glucosio
+- Attività in tempo reale con scelta tra grafico e numeri grandi senza grafico
+- Contatore facoltativo del tempo dall’ultima lettura in tutte le viste delle attività in tempo reale
+- Indicazione delle letture non aggiornate nei widget e nelle attività in tempo reale, con correzione del momento in cui vengono barrate le letture Dexcom
 - App nativa per Apple Watch con numerosi widget e complicazioni per i quadranti
 - Grafico del glucosio direttamente su Apple Watch
 - Duplicazione delle attività in tempo reale nello Smart Stack a partire da watchOS 11
 - Vista CarPlay con glucosio attuale e IOB
 - Grafici del glucosio in CarPlay tramite widget e attività in tempo reale
+
+Scegli il layout e le opzioni del contatore in `Impostazioni > Attività in tempo reale` su iPhone. Il layout si applica alla schermata di blocco, allo Smart Stack di Apple Watch e a CarPlay; la Dynamic Island mantiene il proprio layout. Il contatore può essere nascosto in tutte le viste delle attività in tempo reale. Le letture non aggiornate restano barrate anche quando il contatore è nascosto. I contatori dei widget rimangono visibili.
 
 #### Allenamenti su Apple Watch
 
@@ -91,10 +97,12 @@ Gli allenamenti con LibreLinkUp o Dexcom Share richiedono accesso a internet sul
 
 #### Esportazione dei dati
 
-- Esportazione delle letture di glucosio e delle dosi di insulina registrate in Apple Health
-- Con una connessione Bluetooth diretta a un sensore FreeStyle Libre 3 o FreeStyle Libre 3+, esportazione delle letture di glucosio e delle dosi di insulina registrate sul proprio server Nightscout
+- Esportazione delle letture di glucosio e delle dosi di insulina in bolo e basale registrate in Apple Health
+- Con una connessione Bluetooth diretta a un sensore FreeStyle Libre 3 o FreeStyle Libre 3+, esportazione delle letture di glucosio e delle dosi di insulina in bolo e basale registrate sul proprio server Nightscout
 
 Configura queste esportazioni in `Impostazioni > Condivisione dati` su iPhone. Le esportazioni di glucosio e insulina in Apple Health possono essere attivate separatamente.
+
+Le iniezioni basali vengono esportate in Nightscout come note, in modo da non influire sull’IOB di Nightscout.
 
 {% include screenshots.html %}
 
@@ -116,7 +124,7 @@ Se l’app watchOS è installata, le impostazioni e le credenziali per le connes
 
 In una nuova installazione, scegli `FreeStyle Libre 3 (Bluetooth)` nel selettore CGM. FLwatch apre automaticamente la schermata di connessione Bluetooth.
 
-Per un sensore già attivato, è consigliata la modalità `Parallela`. Mantiene valide le credenziali di connessione dell’app Abbott già presenti nel sensore, rendendo più semplice tornare a quell’app in seguito.
+Per un sensore già attivato, `Acquisisci` è la modalità predefinita e consigliata. FLwatch diventa il ricevitore del sensore e invalida le credenziali di connessione attuali dell’app Abbott. La modalità `Parallela` non è più supportata. Ogni passaggio tra FLwatch e l’app Abbott richiede una scansione NFC.
 
 In `Avviato con`, seleziona l’app e la versione **utilizzate per attivare questo sensore**, anche se nel frattempo hai aggiornato l’app Abbott:
 
@@ -124,7 +132,7 @@ In `Avviato con`, seleziona l’app e la versione **utilizzate per attivare ques
 | --- | --- |
 | `FreeStyle Libre 3` | L’app FreeStyle Libre 3, inclusa FreeStyle Libre 3 – US |
 | `Libre by Abbott` | Libre by Abbott versione 1.4.0 o successiva |
-| `Libre by Abbott V ≤ 1.3.0` | Libre by Abbott versione 1.3.0 o precedente |
+| `Libre by Abbott ≤ 1.3.0 (versioni precedenti)` | Libre by Abbott versione 1.3.0 o precedente |
 
 <div class="notice-note">
 <strong>Libre by Abbott: ottenere l’ID del ricevitore disconnette dall’app</strong>
@@ -134,12 +142,13 @@ Con Libre by Abbott versione 1.4.0 o successiva, ottenere l’ID del ricevitore 
 
 Queste tre opzioni usano ID del ricevitore diversi, quindi la scelta deve corrispondere al modo in cui il sensore è stato attivato. Accedi con l’account LibreView usato da quell’app, quindi tocca `Ottieni ID ricevitore`. Usa l’account LibreView di chi indossa il sensore, non un account follower LibreLinkUp.
 
-- Solo un’app alla volta deve accedere al sensore. Prima di usare FLwatch, chiudi completamente l’app Abbott e disattivane l’accesso Bluetooth nelle impostazioni di iOS. Il passaggio da un’app all’altra può richiedere da due a tre minuti.
+- Solo un’app alla volta deve accedere al sensore. Prima di usare FLwatch, chiudi completamente l’app Abbott e disattivane l’accesso Bluetooth nelle impostazioni di iOS.
+- Per tornare all’app Abbott, chiudi completamente FLwatch, riattiva l’accesso Bluetooth per l’app Abbott e scegli la sua opzione `Avvia nuovo sensore`. Scansiona lo stesso sensore che stai già indossando. L’app potrebbe avvisare che questa operazione terminerà il sensore attuale, ma la scansione dello stesso sensore le consente di riconoscerlo e riconnettersi. Potrebbe essere necessario accedere di nuovo a LibreView prima che riprenda il caricamento dei dati.
 - Quando FLwatch ti chiede di eseguire la scansione, tieni la parte superiore dell’iPhone contro il sensore senza muoverlo finché l’abbinamento NFC non è terminato.
 
 Se l’abbinamento non riesce con l’errore `0xB1`, controlla la scelta in `Avviato con` e l’account LibreView. I sensori attivati con un lettore FreeStyle Libre 3 non possono essere abbinati a FLwatch.
 
-La modalità `Nuovo` è riservata esclusivamente a un sensore nuovo e mai utilizzato. Avvia immediatamente il periodo di utilizzo del sensore e non può essere annullata. La maggior parte degli utenti dovrebbe attivare il sensore nella propria app Abbott e poi abbinarlo a FLwatch in modalità `Parallela`.
+La modalità `Nuovo` è riservata esclusivamente a un sensore nuovo e mai utilizzato. Avvia immediatamente il periodo di utilizzo del sensore e non può essere annullata. La maggior parte degli utenti dovrebbe attivare il sensore nella propria app Abbott e poi abbinarlo a FLwatch in modalità `Acquisisci`.
 
 Se scegli `Solo FLwatch` per attivare un sensore nuovo, nessuna app Abbott potrà usare quel sensore in seguito. Se devi abbinarlo di nuovo, seleziona ancora `Solo FLwatch`; questa opzione non richiede un account LibreView.
 
@@ -221,7 +230,9 @@ La connessione Bluetooth diretta a FreeStyle Libre 3 e FreeStyle Libre 3+ non us
 
 Per configurare il calcolo dell’insulina o registrare una dose, tocca l’etichetta `IOB` nella schermata Home.
 
-Tipi di insulina attualmente supportati:
+Per registrare un’iniezione basale, seleziona `Basale` nella schermata di inserimento dell’insulina e indica dose e ora. Le iniezioni basali hanno una cronologia separata e possono essere esportate in Apple Health e Nightscout tramite le impostazioni di condivisione dati descritte sopra. Non contribuiscono all’IOB né al grafico dell’attività dell’insulina.
+
+Tipi di insulina attualmente supportati per i calcoli dei boli:
 
 - Insulina ad azione rapida, come Novolog e Novorapid
 - Insulina ad azione ultrarapida, come Fiasp e Lyumjev

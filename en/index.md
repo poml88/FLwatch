@@ -16,13 +16,14 @@ The information provided by FLwatch and its extensions must not be used for trea
 
 FLwatch displays glucose readings from Abbott FreeStyle Libre 2, Libre 2+, Libre 3, and Libre 3+ sensors, as well as Dexcom G6, G7, and ONE+ sensors, on your iPhone and Apple Watch.
 
-It also lets you record insulin doses and visualizes insulin on board and insulin activity with dedicated graphs, helping you better understand how insulin and glucose levels interact.
+It also lets you record bolus and basal insulin doses. Dedicated graphs show insulin on board and insulin activity for bolus doses, while basal injections are logged separately without affecting these calculations.
 
 FLwatch began as a personal project to support my own diabetes management. I made it publicly available, free and open source, in the hope that it can be useful to others too.
 
 ### At a Glance
 
 - Glucose, insulin-on-board, and insulin-activity graphs on iPhone and Apple Watch
+- Bolus and basal insulin logging, with basal doses kept separate from IOB
 - Direct Bluetooth, LibreLinkUp, and Dexcom Share connection options
 - Workout mode for all supported CGM providers, with **direct-to-watch** Bluetooth readings from Libre 3 and Libre 3+ during workouts
 - Configurable glucose and sensor alerts
@@ -62,7 +63,8 @@ FLwatch alerts are provided on a best-effort basis and are not guaranteed. They 
 
 #### Insulin Tracking
 
-- Record insulin doses on iPhone or with Siri and Shortcuts on iPhone and Apple Watch
+- Record bolus insulin doses on iPhone or with Siri and Shortcuts on iPhone and Apple Watch
+- Log basal insulin injections on iPhone without affecting IOB or insulin-activity calculations
 - Basic carbohydrate and insulin calculator using portion size and a configurable insulin-to-carbohydrate ratio
 - Insulin on Board (IOB) calculation and graph
 - Insulin activity graph
@@ -72,12 +74,16 @@ FLwatch alerts are provided on a best-effort basis and are not guaranteed. They 
 
 - Home Screen widgets, with and without graphs
 - Lock Screen and StandBy widgets
-- Live Activities for quick glucose updates
+- Live Activities with a graph or a `Large numbers` layout without a graph
+- Optional time-since-last-reading counter for all Live Activity views
+- Outdated-reading indication in widgets and Live Activities, with corrected strikethrough timing for Dexcom readings
 - Native Apple Watch app with a wide range of widgets and watch face complications
 - Glucose graph directly on Apple Watch
 - Live Activity mirroring to the Smart Stack on watchOS 11 or later
 - CarPlay view showing current glucose and IOB
 - Glucose graphs in CarPlay through widgets and Live Activities
+
+Choose the layout and timer options under `Settings > Live Activities` on iPhone. The layout applies to the Lock Screen, Apple Watch Smart Stack, and CarPlay; the Dynamic Island keeps its layout. The timer can be hidden in all Live Activity views. Outdated readings are still marked with strikethrough when the timer is hidden. Widget timers stay visible.
 
 #### Apple Watch Workouts
 
@@ -91,10 +97,12 @@ LibreLinkUp and Dexcom Share workouts require internet access on the watch and c
 
 #### Data Sharing
 
-- Export glucose readings and recorded insulin doses to Apple Health
-- With a direct FreeStyle Libre 3 or FreeStyle Libre 3+ Bluetooth connection, export glucose readings and recorded insulin doses to your own Nightscout server
+- Export glucose readings and recorded bolus and basal insulin doses to Apple Health
+- With a direct FreeStyle Libre 3 or FreeStyle Libre 3+ Bluetooth connection, export glucose readings and recorded bolus and basal insulin doses to your own Nightscout server
 
 Configure these exports under `Settings > Data Sharing` on iPhone. Apple Health glucose and insulin exports can be enabled independently.
+
+Basal injections are exported to Nightscout as notes, so they do not affect Nightscout IOB.
 
 {% include screenshots.html %}
 
@@ -116,7 +124,7 @@ If the watchOS app is installed, cloud-connection settings and credentials enter
 
 On a fresh installation, choose `FreeStyle Libre 3 (Bluetooth)` in the CGM picker. FLwatch then opens the Bluetooth connection screen automatically.
 
-For an already activated sensor, `Parallel` is the recommended mode. It keeps the sensor's existing Abbott app connection credentials valid, making it easier to switch back to that app later.
+For an already activated sensor, `Take over` is the default and recommended mode. It makes FLwatch the sensor's receiver and invalidates the Abbott app's current connection credentials. `Parallel` mode is no longer supported. Switching between FLwatch and the Abbott app requires an NFC scan each time.
 
 In `Started with`, select the app and version **used to activate this sensor**, even if you have updated the Abbott app since then:
 
@@ -124,7 +132,7 @@ In `Started with`, select the app and version **used to activate this sensor**, 
 | --- | --- |
 | `FreeStyle Libre 3` | The FreeStyle Libre 3 app, including FreeStyle Libre 3 – US |
 | `Libre by Abbott` | Libre by Abbott version 1.4.0 or later |
-| `Libre by Abbott V ≤ 1.3.0` | Libre by Abbott version 1.3.0 or earlier |
+| `Libre by Abbott ≤ 1.3.0 (legacy)` | Libre by Abbott version 1.3.0 or earlier |
 
 <div class="notice-note">
 <strong>Libre by Abbott: retrieving the Receiver ID signs you out</strong>
@@ -134,12 +142,13 @@ For Libre by Abbott version 1.4.0 or later, retrieving the Receiver ID logs you 
 
 These three options use different receiver IDs, so the selection must match how the sensor was activated. Sign in with the LibreView account used by that app, then tap `Get Receiver ID`. Use the sensor wearer's LibreView account, not a LibreLinkUp follower account.
 
-- Only one app should access the sensor at a time. Before using FLwatch, fully close the Abbott app and turn off its Bluetooth access in iOS Settings. Switching between apps can take two to three minutes.
+- Only one app should access the sensor at a time. Before using FLwatch, fully close the Abbott app and turn off its Bluetooth access in iOS Settings.
+- To return to the Abbott app, fully close FLwatch, re-enable Bluetooth access for the Abbott app, and choose its `Start New Sensor` option. Scan the same sensor you are already wearing. The app may warn that this will end your current sensor, but scanning that same sensor lets it recognize and reconnect to it. You may need to sign in to LibreView again before uploads resume.
 - When FLwatch asks you to scan, hold the top of your iPhone against the sensor and keep it still until NFC pairing finishes.
 
 If pairing fails with error `0xB1`, check the `Started with` selection and LibreView account. Sensors activated with a FreeStyle Libre 3 reader cannot be paired with FLwatch.
 
-The `Fresh` mode is only for a brand-new, unused sensor. It starts the sensor's wear period immediately and cannot be undone. Most users should activate the sensor in their Abbott app and then pair it with FLwatch using `Parallel` mode.
+The `Fresh` mode is only for a brand-new, unused sensor. It starts the sensor's wear period immediately and cannot be undone. Most users should activate the sensor in their Abbott app and then pair it with FLwatch using `Take over` mode.
 
 If you choose `FLwatch only` when activating a fresh sensor, no Abbott app can use that sensor later. Select `FLwatch only` again if you need to re-pair it; no LibreView account is required for this option.
 
@@ -221,7 +230,9 @@ The direct FreeStyle Libre 3 and FreeStyle Libre 3+ Bluetooth connection does no
 
 To configure insulin calculation or record a dose, tap the `IOB` label on the home screen.
 
-Currently supported insulin types:
+To log a basal injection, select `Basal` in the insulin entry screen and record the dose and time. Basal injections have a separate history and can be exported to Apple Health and Nightscout using the data-sharing settings above. They do not contribute to IOB or the insulin-activity graph.
+
+Currently supported insulin types for bolus calculations:
 
 - Rapid-acting insulin, such as Novolog and Novorapid
 - Fast rapid-acting insulin, such as Fiasp and Lyumjev
